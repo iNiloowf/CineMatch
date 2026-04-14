@@ -12,6 +12,7 @@ export default function LinkedPeoplePage() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite");
   const [inviteUrl, setInviteUrl] = useState("");
+  const [manualInviteValue, setManualInviteValue] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const {
     data,
@@ -36,6 +37,35 @@ export default function LinkedPeoplePage() {
     return data.users.find((user) => user.id === invite.inviterId) ?? null;
   }, [data.invites, data.users, inviteToken]);
 
+  const connectFromToken = async (token: string) => {
+    const result = await acceptInviteToken(token);
+    setStatusMessage(result.message);
+
+    if (result.ok) {
+      setManualInviteValue("");
+      router.replace("/linked");
+    }
+  };
+
+  const parseInviteToken = (value: string) => {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return "";
+    }
+
+    if (!trimmed.includes("http")) {
+      return trimmed;
+    }
+
+    try {
+      const url = new URL(trimmed);
+      return url.searchParams.get("invite") ?? "";
+    } catch {
+      return "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -56,14 +86,7 @@ export default function LinkedPeoplePage() {
           </div>
           <button
             type="button"
-            onClick={async () => {
-              const result = await acceptInviteToken(inviteToken);
-              setStatusMessage(result.message);
-
-              if (result.ok) {
-                router.replace("/linked");
-              }
-            }}
+            onClick={async () => await connectFromToken(inviteToken)}
             className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
           >
             Connect with this link
@@ -143,6 +166,40 @@ export default function LinkedPeoplePage() {
           </SurfaceCard>
         ) : null}
       </div>
+
+      <SurfaceCard className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-slate-900">Paste a link</p>
+          <p className="text-sm leading-6 text-slate-500">
+            Paste the full connect link here, then tap connect.
+          </p>
+        </div>
+        <div className="space-y-3">
+          <textarea
+            value={manualInviteValue}
+            onChange={(event) => setManualInviteValue(event.target.value)}
+            rows={3}
+            placeholder="Paste the invite link here"
+            className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white"
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              const token = parseInviteToken(manualInviteValue);
+
+              if (!token) {
+                setStatusMessage("Paste a valid invite link first.");
+                return;
+              }
+
+              await connectFromToken(token);
+            }}
+            className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+          >
+            Connect from pasted link
+          </button>
+        </div>
+      </SurfaceCard>
 
       <SurfaceCard className="space-y-4">
         <div className="space-y-1">
