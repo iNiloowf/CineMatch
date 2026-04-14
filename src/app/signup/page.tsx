@@ -185,30 +185,44 @@ export default function SignUpPage() {
           </form>
 
           {success && isSupabaseConfigured() ? (
-            <div className="rounded-[20px] bg-slate-50 px-4 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
+            <div className="rounded-[24px] border border-violet-100 bg-[linear-gradient(180deg,#faf7ff_0%,#f8fafc_100%)] px-4 py-4 shadow-[0_14px_30px_rgba(124,58,237,0.08)]">
+              <div className="space-y-3">
+                <div className="space-y-1">
                   <p className="text-sm font-semibold text-slate-900">
                     Need the email again?
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    You can resend the confirmation email if it did not arrive yet.
+                  <p className="text-sm leading-6 text-slate-500">
+                    You can resend the confirmation email if it has not arrived yet.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || isSubmitting}
-                  onClick={async () => {
-                    setIsSubmitting(true);
-                    await sendSignupEmail();
-                    setIsSubmitting(false);
-                  }}
-                  className="shrink-0 rounded-[18px] border border-violet-200 bg-white px-3 py-2 text-xs font-semibold text-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {resendCooldown > 0
-                    ? `Resend in ${resendCooldown}s`
-                    : "Resend email"}
-                </button>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="rounded-[18px] bg-white px-4 py-3 text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-500">
+                      Status
+                    </p>
+                    <p className="mt-1 font-medium text-slate-700">
+                      {resendCooldown > 0
+                        ? `You can request another email in ${resendCooldown} seconds.`
+                        : "You can request another email now."}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0 || isSubmitting}
+                    onClick={async () => {
+                      setIsSubmitting(true);
+                      await sendSignupEmail();
+                      setIsSubmitting(false);
+                    }}
+                    className="w-full shrink-0 rounded-[18px] border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  >
+                    {resendCooldown > 0
+                      ? `Try again in ${resendCooldown}s`
+                      : "Resend email"}
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
