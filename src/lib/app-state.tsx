@@ -831,9 +831,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (settingsResult.data) {
-        const nextDarkMode = mapSettingsRow(
+        const dbDarkMode = mapSettingsRow(
           settingsResult.data as SettingsRow,
         ).darkMode;
+        const nextDarkMode =
+          getStoredUserTheme(activeUserId) ?? dbDarkMode;
         setPreferredDarkMode(nextDarkMode);
         persistUserTheme(activeUserId, nextDarkMode);
       }
