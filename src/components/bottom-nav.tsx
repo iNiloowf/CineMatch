@@ -17,7 +17,7 @@ export function BottomNav() {
   const { isDarkMode } = useAppState();
 
   return (
-    <nav className="sticky bottom-4 z-20 mt-auto">
+    <nav className="z-20 mt-auto shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
       <div
         className={`mx-auto flex max-w-md items-center justify-between rounded-[30px] px-2 py-2 backdrop-blur-2xl ${
           isDarkMode

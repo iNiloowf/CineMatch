@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
@@ -14,53 +14,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [magicLinkMessage, setMagicLinkMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMagicLinkSubmitting, setIsMagicLinkSubmitting] = useState(false);
-  const [magicLinkCooldown, setMagicLinkCooldown] = useState(0);
-
-  useEffect(() => {
-    if (magicLinkCooldown <= 0) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setMagicLinkCooldown((current) => Math.max(0, current - 1));
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [magicLinkCooldown]);
-
-  async function sendMagicLink() {
-    const response = await fetch("/api/auth/send-magic-link", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    const payload = (await response.json()) as {
-      message?: string;
-      error?: string;
-      retryAfterSeconds?: number;
-    };
-
-    if (!response.ok) {
-      setMagicLinkMessage("");
-      setError(payload.error ?? "We couldn’t send the magic link right now.");
-      if (payload.retryAfterSeconds) {
-        setMagicLinkCooldown(payload.retryAfterSeconds);
-      }
-      return;
-    }
-
-    setError("");
-    setMagicLinkMessage(
-      payload.message ?? "A magic link is on the way. Check your inbox.",
-    );
-    setMagicLinkCooldown(payload.retryAfterSeconds ?? 60);
-  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,7 +25,6 @@ export default function SignInPage() {
     setIsSubmitting(false);
 
     if (!result.ok) {
-      setMagicLinkMessage("");
       setError(result.message);
       return;
     }
@@ -146,46 +99,6 @@ export default function SignInPage() {
                 {isSubmitting ? "Signing in..." : "Continue"}
               </button>
             </form>
-
-            {isSupabaseConfigured() ? (
-              <div className="rounded-[22px] bg-slate-50 px-4 py-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Or use a magic link
-                  </p>
-                  <p className="text-sm leading-6 text-slate-500">
-                    We can email you a one-tap login link instead of using your password.
-                  </p>
-                </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={
-                      isMagicLinkSubmitting ||
-                      magicLinkCooldown > 0 ||
-                      email.trim().length === 0
-                    }
-                    onClick={async () => {
-                      setIsMagicLinkSubmitting(true);
-                      await sendMagicLink();
-                      setIsMagicLinkSubmitting(false);
-                    }}
-                    className="w-full rounded-[20px] border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isMagicLinkSubmitting
-                      ? "Sending magic link..."
-                      : magicLinkCooldown > 0
-                        ? `Resend in ${magicLinkCooldown}s`
-                        : "Email me a magic link"}
-                  </button>
-                </div>
-                {magicLinkMessage ? (
-                  <p className="mt-3 rounded-[18px] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    {magicLinkMessage}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
 
             <p className="text-center text-sm text-slate-500">
               New here?{" "}
