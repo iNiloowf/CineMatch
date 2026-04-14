@@ -1392,6 +1392,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
         return `${window.location.origin}/linked?invite=${token}`;
       }
+
+      return null;
     }
 
     setData((current) => ({
