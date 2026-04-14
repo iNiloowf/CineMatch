@@ -382,9 +382,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
-  const isDarkMode = currentUserId
-    ? (data.settings[currentUserId]?.darkMode ?? preferredDarkMode)
-    : preferredDarkMode;
+  const isDarkMode = preferredDarkMode;
   const refreshDiscoverShuffle = (userId: string | null) => {
     setDiscoverShuffleSeed(
       userId ? `${userId}-${Date.now()}-${Math.random()}` : Date.now().toString(),
@@ -553,6 +551,41 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             nextRow?.target_id === currentUserId ||
             previousRow?.requester_id === currentUserId ||
             previousRow?.target_id === currentUserId;
+
+          if (touchesCurrentUser) {
+            setAccountRefreshKey((current) => current + 1);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase || !currentUserId) {
+      return;
+    }
+
+    const channel = supabase
+      .channel(`invite-links-${currentUserId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "invite_links",
+        },
+        (payload) => {
+          const nextRow = payload.new as Partial<InviteRow> | null;
+          const previousRow = payload.old as Partial<InviteRow> | null;
+          const touchesCurrentUser =
+            nextRow?.inviter_id === currentUserId ||
+            previousRow?.inviter_id === currentUserId;
 
           if (touchesCurrentUser) {
             setAccountRefreshKey((current) => current + 1);
@@ -1586,7 +1619,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         .eq("id", invite.inviter_id)
         .maybeSingle();
       const inviterProfile = inviterProfileResult.data as ProfileRow | null;
-      const partnerName = inviterProfile?.full_name ?? "your new match";
+      const knownInviter = data.users.find((user) => user.id === invite.inviter_id);
+      const partnerName =
+        inviterProfile?.full_name ??
+        knownInviter?.name ??
+        invite.inviter_id;
 
       const existingLinkResult = await supabase
         .from("linked_users")

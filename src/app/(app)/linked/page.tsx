@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
@@ -20,6 +20,8 @@ export default function LinkedPeoplePage() {
     id: string;
     name: string;
   } | null>(null);
+  const acceptedLinkedIdsRef = useRef<string[]>([]);
+  const hasBootstrappedAcceptedLinks = useRef(false);
   const {
     data,
     createInviteLink,
@@ -28,6 +30,30 @@ export default function LinkedPeoplePage() {
     isSyncingAccountData,
     unlinkUser,
   } = useAppState();
+
+  useEffect(() => {
+    const acceptedLinkedUsers = linkedUsers.filter(
+      (linked) => linked.status === "accepted",
+    );
+    const acceptedIds = acceptedLinkedUsers.map((linked) => linked.user.id);
+
+    if (!hasBootstrappedAcceptedLinks.current) {
+      acceptedLinkedIdsRef.current = acceptedIds;
+      hasBootstrappedAcceptedLinks.current = true;
+      return;
+    }
+
+    const newLinkedUser = acceptedLinkedUsers.find(
+      (linked) => !acceptedLinkedIdsRef.current.includes(linked.user.id),
+    );
+
+    if (newLinkedUser) {
+      setConnectedPartnerName(newLinkedUser.user.name);
+      setStatusMessage("");
+    }
+
+    acceptedLinkedIdsRef.current = acceptedIds;
+  }, [linkedUsers]);
 
   const inviteOwner = useMemo(() => {
     if (!inviteToken) {
