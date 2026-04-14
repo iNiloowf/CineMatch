@@ -117,6 +117,7 @@ type AppStateContextValue = {
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
   linkUser: (targetUserId: string) => Promise<void>;
+  unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
   createInviteLink: () => Promise<string | null>;
   acceptInviteToken: (token: string) => Promise<{ ok: boolean; message: string }>;
   toggleWatched: (
@@ -1249,6 +1250,50 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const unlinkUser = async (
+    targetUserId: string,
+  ): Promise<{ ok: boolean; message: string }> => {
+    if (!currentUserId || currentUserId === targetUserId) {
+      return { ok: false, message: "We couldn’t remove this connection." };
+    }
+
+    const existingLink = data.links.find(
+      (link) =>
+        link.users.includes(currentUserId) && link.users.includes(targetUserId),
+    );
+
+    if (!existingLink) {
+      return { ok: false, message: "This connection no longer exists." };
+    }
+
+    const supabase = getSupabaseBrowserClient();
+
+    if (supabase && isSupabaseConfigured()) {
+      const { error } = await supabase
+        .from("linked_users")
+        .delete()
+        .eq("id", existingLink.id);
+
+      if (error) {
+        return {
+          ok: false,
+          message: "We couldn’t remove this connection yet.",
+        };
+      }
+    }
+
+    setData((current) => ({
+      ...current,
+      links: current.links.filter((link) => link.id !== existingLink.id),
+      sharedWatch: current.sharedWatch.filter(
+        (entry) => entry.pairKey !== existingLink.id,
+      ),
+    }));
+    setAccountRefreshKey((current) => current + 1);
+
+    return { ok: true, message: "Connection removed." };
+  };
+
   const removePick = async (movieId: string) => {
     if (!currentUserId) {
       return;
@@ -1656,6 +1701,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         swipeMovie,
         removePick,
         linkUser,
+        unlinkUser,
         createInviteLink,
         acceptInviteToken,
         toggleWatched,

@@ -313,6 +313,13 @@ to authenticated
 using (auth.uid() = requester_id or auth.uid() = target_id)
 with check (auth.uid() = requester_id or auth.uid() = target_id);
 
+drop policy if exists "links_delete_members" on public.linked_users;
+create policy "links_delete_members"
+on public.linked_users
+for delete
+to authenticated
+using (auth.uid() = requester_id or auth.uid() = target_id);
+
 drop policy if exists "invite_links_select_owner" on public.invite_links;
 create policy "invite_links_select_owner"
 on public.invite_links

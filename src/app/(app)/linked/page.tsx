@@ -13,8 +13,14 @@ export default function LinkedPeoplePage() {
   const inviteToken = searchParams.get("invite");
   const [inviteUrl, setInviteUrl] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const { data, createInviteLink, acceptInviteToken, linkedUsers, isSyncingAccountData } =
-    useAppState();
+  const {
+    data,
+    createInviteLink,
+    acceptInviteToken,
+    linkedUsers,
+    isSyncingAccountData,
+    unlinkUser,
+  } = useAppState();
 
   const inviteOwner = useMemo(() => {
     if (!inviteToken) {
@@ -111,6 +117,18 @@ export default function LinkedPeoplePage() {
                 ? `${linked.sharedCount} shared accepted movie${linked.sharedCount === 1 ? "" : "s"}`
                 : "No shared picks yet. Keep swiping."}
             </div>
+            {linked.status === "accepted" ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  const result = await unlinkUser(linked.user.id);
+                  setStatusMessage(result.message);
+                }}
+                className="w-full rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
+              >
+                Remove linked person
+              </button>
+            ) : null}
           </SurfaceCard>
         ))}
 
