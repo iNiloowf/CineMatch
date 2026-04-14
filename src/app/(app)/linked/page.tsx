@@ -16,6 +16,7 @@ export default function LinkedPeoplePage() {
   const [manualInviteToken, setManualInviteToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [connectedPartnerName, setConnectedPartnerName] = useState("");
+  const [removedPartnerName, setRemovedPartnerName] = useState("");
   const [pendingRemove, setPendingRemove] = useState<{
     id: string;
     name: string;
@@ -28,7 +29,6 @@ export default function LinkedPeoplePage() {
     createInviteLink,
     acceptInviteToken,
     linkedUsers,
-    isSyncingAccountData,
     unlinkUser,
   } = useAppState();
 
@@ -54,6 +54,7 @@ export default function LinkedPeoplePage() {
 
     if (newLinkedUser) {
       setConnectedPartnerName(newLinkedUser.user.name);
+      setRemovedPartnerName("");
       setStatusMessage("");
     }
 
@@ -65,7 +66,8 @@ export default function LinkedPeoplePage() {
       const removedName =
         acceptedLinkedNamesRef.current[removedLinkedId] ?? "this person";
       setConnectedPartnerName("");
-      setStatusMessage(`Your connection with ${removedName} was removed.`);
+      setRemovedPartnerName(removedName);
+      setStatusMessage("");
     }
 
     acceptedLinkedIdsRef.current = acceptedIds;
@@ -134,7 +136,7 @@ export default function LinkedPeoplePage() {
   return (
     <div className="space-y-4">
       {pendingRemove ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/28 px-4 pb-8 pt-16 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/32 px-4 backdrop-blur-md">
           <div className="w-full max-w-md rounded-[30px] border border-white/70 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
             <div className="space-y-2">
               <p className="text-lg font-semibold text-slate-900">
@@ -156,7 +158,12 @@ export default function LinkedPeoplePage() {
                 type="button"
                 onClick={async () => {
                   const result = await unlinkUser(pendingRemove.id);
-                  setStatusMessage(result.message);
+                  if (result.ok) {
+                    setRemovedPartnerName(pendingRemove.name);
+                    setStatusMessage("");
+                  } else {
+                    setStatusMessage(result.message);
+                  }
                   setPendingRemove(null);
                 }}
                 className="flex-1 rounded-[18px] bg-rose-500 px-4 py-3 text-sm font-semibold text-white"
@@ -186,6 +193,30 @@ export default function LinkedPeoplePage() {
               <button
                 type="button"
                 onClick={() => setConnectedPartnerName("")}
+                className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {removedPartnerName ? (
+        <div className="fixed inset-x-4 top-6 z-50 mx-auto max-w-md">
+          <div className="achievement-toast-pop rounded-[28px] border border-rose-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(244,63,94,0.14)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-500">
+                  Removed
+                </p>
+                <p className="text-lg font-semibold text-slate-900">
+                  Your connection with {removedPartnerName} was removed.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRemovedPartnerName("")}
                 className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600"
               >
                 Close
@@ -277,7 +308,7 @@ export default function LinkedPeoplePage() {
           </SurfaceCard>
         ))}
 
-        {!isSyncingAccountData && linkedUsers.length === 0 ? (
+        {linkedUsers.length === 0 ? (
           <SurfaceCard className="space-y-2 text-center">
             <p className="text-lg font-semibold text-slate-900">
               No linked people yet
