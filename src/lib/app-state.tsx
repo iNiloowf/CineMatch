@@ -19,8 +19,8 @@ import {
   User,
 } from "@/lib/types";
 
-const STORAGE_KEY = "cinematch-demo-state-v3";
-const CURRENT_USER_KEY = "cinematch-current-user-v3";
+const STORAGE_KEY = "cinematch-demo-state-v4";
+const CURRENT_USER_KEY = "cinematch-current-user-v4";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 
 type AuthResult =
