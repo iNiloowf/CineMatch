@@ -1374,39 +1374,53 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (supabase && isSupabaseConfigured()) {
       try {
-        const invitePayload = {
-          inviter_id: currentUserId,
-          token,
-          created_at: createdAt,
-          used_at: null,
-        };
-        const { data: insertedInvite, error } = await supabase
-          .from("invite_links")
-          .insert(invitePayload as never)
-          .select("id, inviter_id, token, created_at, used_at")
-          .single();
+        const sessionResult = await supabase.auth.getSession();
+        const accessToken = sessionResult.data.session?.access_token;
 
-        if (!error && insertedInvite) {
+        if (!accessToken) {
+          return {
+            ok: false,
+            message: "Your login session is missing. Please sign in again.",
+          };
+        }
+
+        const response = await fetch("/api/invite-links", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const payload = (await response.json()) as {
+          error?: string;
+          url?: string;
+          invite?: InviteRow;
+        };
+
+        const insertedInvite = payload.invite;
+        const inviteUrl = payload.url;
+
+        if (response.ok && insertedInvite && inviteUrl) {
           setData((current) => ({
             ...current,
             invites: [
               ...current.invites.filter(
                 (invite) => invite.inviterId !== currentUserId,
               ),
-              mapInviteRow(insertedInvite as InviteRow),
+              mapInviteRow(insertedInvite),
             ],
           }));
 
           return {
             ok: true,
-            url: `${window.location.origin}/linked?invite=${token}`,
+            url: inviteUrl,
           };
         }
 
         return {
           ok: false,
           message:
-            error?.message ??
+            payload.error ??
             "We couldn’t save this invite in the database yet.",
         };
       } catch (error) {

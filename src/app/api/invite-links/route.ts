@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "@/server/supabase-admin";
+
+function getAppUrl(request: NextRequest) {
+  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
+}
+
+export async function POST(request: NextRequest) {
+  const authorizationHeader = request.headers.get("authorization") ?? "";
+  const accessToken = authorizationHeader.startsWith("Bearer ")
+    ? authorizationHeader.slice(7).trim()
+    : "";
+
+  if (!accessToken) {
+    return NextResponse.json(
+      { error: "You need to be logged in to create an invite link." },
+      { status: 401 },
+    );
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: "Invite creation is not configured on the server yet." },
+      { status: 500 },
+    );
+  }
+
+  const userResult = await supabaseAdmin.auth.getUser(accessToken);
+  const currentUserId = userResult.data.user?.id;
+
+  if (userResult.error || !currentUserId) {
+    return NextResponse.json(
+      { error: "Your login session could not be verified." },
+      { status: 401 },
+    );
+  }
+
+  const token = `invite-${crypto.randomUUID()}`;
+  const createdAt = new Date().toISOString();
+  const invitePayload = {
+    inviter_id: currentUserId,
+    token,
+    created_at: createdAt,
+    used_at: null,
+  };
+
+  const insertResult = (await supabaseAdmin
+    .from("invite_links")
+    .insert(invitePayload as never)
+    .select("id, inviter_id, token, created_at, used_at")
+    .single()) as {
+    data: {
+      id: string;
+      inviter_id: string;
+      token: string;
+      created_at: string;
+      used_at: string | null;
+    } | null;
+    error: { message?: string } | null;
+  };
+
+  if (insertResult.error || !insertResult.data) {
+    return NextResponse.json(
+      {
+        error:
+          insertResult.error?.message ??
+          "We couldn’t save this invite link right now.",
+      },
+      { status: 400 },
+    );
+  }
+
+  return NextResponse.json({
+    invite: insertResult.data,
+    url: `${getAppUrl(request)}/linked?invite=${token}`,
+  });
+}
