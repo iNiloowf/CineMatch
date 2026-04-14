@@ -6,7 +6,17 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const AUTH_STORAGE_KEY = "cinematch-supabase-auth";
 
-let browserClient: SupabaseClient<any> | null = null;
+type SupabaseDatabase = {
+  public: {
+    Tables: Record<string, never>;
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+let browserClient: SupabaseClient<SupabaseDatabase> | null = null;
 
 function clearLegacySupabaseCookies() {
   if (typeof document === "undefined" || !supabaseUrl) {
@@ -47,7 +57,10 @@ export function getSupabaseBrowserClient() {
   if (!browserClient) {
     clearLegacySupabaseCookies();
 
-    browserClient = createClient<any>(supabaseUrl, supabasePublishableKey, {
+    browserClient = createClient<SupabaseDatabase>(
+      supabaseUrl,
+      supabasePublishableKey,
+      {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -55,7 +68,8 @@ export function getSupabaseBrowserClient() {
         flowType: "pkce",
         storageKey: AUTH_STORAGE_KEY,
       },
-    });
+      },
+    );
   }
 
   return browserClient;

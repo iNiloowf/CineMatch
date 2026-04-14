@@ -81,6 +81,21 @@ type SharedWatchRow = {
   updated_at: string;
 };
 
+type MovieRow = {
+  id: string;
+  title: string;
+  release_year: number;
+  runtime: string;
+  rating: number;
+  genres: string[];
+  description: string;
+  poster_eyebrow: string;
+  poster_image_url?: string | null;
+  accent_from: string;
+  accent_to: string;
+  trailer_url?: string | null;
+};
+
 type AppStateContextValue = {
   data: AppData;
   currentUserId: string | null;
@@ -242,6 +257,24 @@ function mapInviteRow(invite: InviteRow) {
     token: invite.token,
     createdAt: invite.created_at,
     usedAt: invite.used_at,
+  };
+}
+
+function mapMovieRow(movie: MovieRow): Movie {
+  return {
+    id: movie.id,
+    title: movie.title,
+    year: movie.release_year,
+    runtime: movie.runtime,
+    rating: Number(movie.rating),
+    genre: movie.genres ?? [],
+    description: movie.description,
+    poster: {
+      eyebrow: movie.poster_eyebrow,
+      imageUrl: movie.poster_image_url ?? undefined,
+      accentFrom: movie.accent_from,
+      accentTo: movie.accent_to,
+    },
   };
 }
 
@@ -523,6 +556,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      const swipeRows = ((partnerSwipesResult as { data: SwipeRow[] }).data ?? []) as SwipeRow[];
+      const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
+      const moviesResult =
+        movieIds.length > 0
+          ? await supabaseClient
+              .from("movies")
+              .select(
+                "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
+              )
+              .in("id", movieIds)
+          : { data: [] as MovieRow[] };
+
+      if (!active) {
+        return;
+      }
+
       setData((current) => {
         let next = current;
 
@@ -545,9 +594,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
 
         const ownSettings = settingsResult.data as SettingsRow | null;
+        next = mergeMoviesIntoData(
+          next,
+          (((moviesResult as { data: MovieRow[] }).data ?? []) as MovieRow[]).map(
+            mapMovieRow,
+          ),
+        );
         const currentSwipes = [
           ...next.swipes.filter((swipe) => !acceptedUserIds.includes(swipe.userId)),
-          ...((partnerSwipesResult as { data: SwipeRow[] }).data ?? []).map(mapSwipeRow),
+          ...swipeRows.map(mapSwipeRow),
         ];
         const currentLinks = [
           ...next.links.filter((link) => !link.users.includes(activeUserId)),
