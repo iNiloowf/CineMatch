@@ -565,6 +565,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [currentUserId]);
 
   useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setAccountRefreshKey((current) => current + 1);
+      }
+    }, 7000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
     const supabase = getSupabaseBrowserClient();
 
     if (!supabase || !currentUserId) {

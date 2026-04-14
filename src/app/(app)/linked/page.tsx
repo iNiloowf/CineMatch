@@ -21,6 +21,7 @@ export default function LinkedPeoplePage() {
     name: string;
   } | null>(null);
   const acceptedLinkedIdsRef = useRef<string[]>([]);
+  const acceptedLinkedNamesRef = useRef<Record<string, string>>({});
   const hasBootstrappedAcceptedLinks = useRef(false);
   const {
     data,
@@ -36,9 +37,13 @@ export default function LinkedPeoplePage() {
       (linked) => linked.status === "accepted",
     );
     const acceptedIds = acceptedLinkedUsers.map((linked) => linked.user.id);
+    const acceptedNames = Object.fromEntries(
+      acceptedLinkedUsers.map((linked) => [linked.user.id, linked.user.name]),
+    );
 
     if (!hasBootstrappedAcceptedLinks.current) {
       acceptedLinkedIdsRef.current = acceptedIds;
+      acceptedLinkedNamesRef.current = acceptedNames;
       hasBootstrappedAcceptedLinks.current = true;
       return;
     }
@@ -52,7 +57,19 @@ export default function LinkedPeoplePage() {
       setStatusMessage("");
     }
 
+    const removedLinkedId = acceptedLinkedIdsRef.current.find(
+      (linkedId) => !acceptedIds.includes(linkedId),
+    );
+
+    if (removedLinkedId) {
+      const removedName =
+        acceptedLinkedNamesRef.current[removedLinkedId] ?? "this person";
+      setConnectedPartnerName("");
+      setStatusMessage(`Your connection with ${removedName} was removed.`);
+    }
+
     acceptedLinkedIdsRef.current = acceptedIds;
+    acceptedLinkedNamesRef.current = acceptedNames;
   }, [linkedUsers]);
 
   const inviteOwner = useMemo(() => {
