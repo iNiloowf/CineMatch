@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
@@ -14,8 +14,6 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const [isSearchCompact, setIsSearchCompact] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -73,33 +71,6 @@ export default function DiscoverPage() {
       window.clearTimeout(timer);
     };
   }, [currentUserId, normalizedSearchQuery, registerMovies, searchQuery]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-
-    if (!root) {
-      return;
-    }
-
-    const scrollContainer = root.closest(
-      '[data-app-scroll-container="true"]',
-    ) as HTMLElement | null;
-
-    if (!scrollContainer) {
-      return;
-    }
-
-    const handleScroll = () => {
-      setIsSearchCompact(scrollContainer.scrollTop > 24);
-    };
-
-    handleScroll();
-    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      scrollContainer.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
 
   const genres = useMemo(() => {
     return [
@@ -160,21 +131,13 @@ export default function DiscoverPage() {
   const previewResults = filteredQueue.slice(0, 5);
 
   return (
-    <div ref={rootRef} className="space-y-4">
-      <div
-        className={`sticky top-0 z-20 -mx-1 rounded-[26px] px-1 pt-0 transition-all duration-300 ${
-          isSearchCompact ? "space-y-0 pb-3" : "space-y-2 pb-2"
-        }`}
-      >
+    <div className="flex min-h-full flex-col gap-3 overflow-hidden">
+      <div className="space-y-2">
         <div
-          className={`rounded-[24px] border backdrop-blur-xl transition-all duration-300 ${
-            isSearchCompact
-              ? "mx-2 rounded-[20px] px-3 py-2 shadow-[0_14px_26px_rgba(15,23,42,0.14)]"
-              : "px-3 py-3"
-          } ${
+          className={`rounded-[24px] border px-3 py-3 backdrop-blur-xl ${
             isDarkMode
-              ? "border-white/10 bg-slate-950/82"
-              : "border-white/80 bg-white/94 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
+              ? "border-white/10 bg-slate-950/72"
+              : "border-white/70 bg-white/90 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -183,9 +146,7 @@ export default function DiscoverPage() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search a movie or series"
-                className={`w-full rounded-[18px] border pl-10 pr-4 text-sm outline-none transition-all duration-300 ${
-                  isSearchCompact ? "py-2.5" : "py-3"
-                } ${
+                className={`w-full rounded-[18px] border py-3 pl-10 pr-4 text-sm outline-none transition ${
                   isDarkMode
                     ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
                     : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-violet-400"
@@ -212,9 +173,7 @@ export default function DiscoverPage() {
               type="button"
               onClick={() => setIsFilterOpen(true)}
               aria-label="Open genre filter"
-              className={`relative flex shrink-0 items-center justify-center rounded-[18px] border transition-all duration-300 ${
-                isSearchCompact ? "h-10 w-10" : "h-11 w-11"
-              } ${
+              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border transition ${
                 isDarkMode
                   ? "border-white/10 bg-white/8 text-white hover:bg-white/12"
                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -228,12 +187,12 @@ export default function DiscoverPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 className="h-4 w-4"
-                aria-hidden="true"
-              >
-                <path d="M4 6h16" />
-                <path d="M7 12h10" />
-                <path d="M10 18h4" />
-              </svg>
+              aria-hidden="true"
+            >
+              <path d="M4 6h16" />
+              <path d="M7 12h10" />
+              <path d="M10 18h4" />
+            </svg>
               {selectedGenres.length > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white">
                   {selectedGenres.length}
@@ -242,8 +201,7 @@ export default function DiscoverPage() {
             </button>
           </div>
 
-          {!isSearchCompact &&
-          (normalizedSearchQuery.length > 0 || selectedGenres.length > 0) ? (
+          {normalizedSearchQuery.length > 0 || selectedGenres.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {normalizedSearchQuery.length > 0 && filteredQueue.length > 0 ? (
                 <span
@@ -259,9 +217,7 @@ export default function DiscoverPage() {
             </div>
           ) : null}
 
-          {!isSearchCompact &&
-          normalizedSearchQuery.length > 0 &&
-          previewResults.length > 0 ? (
+          {normalizedSearchQuery.length > 0 && previewResults.length > 0 ? (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {previewResults.map((result) => (
                 <button
@@ -282,13 +238,6 @@ export default function DiscoverPage() {
             </div>
           ) : null}
         </div>
-        <div
-          className={`pointer-events-none h-4 rounded-b-[24px] bg-gradient-to-b ${
-            isDarkMode
-              ? "from-slate-950/28 to-transparent"
-              : "from-white/78 to-transparent"
-          }`}
-        />
       </div>
 
       {isFilterOpen ? (
@@ -390,20 +339,21 @@ export default function DiscoverPage() {
         </div>
       ) : null}
 
-      {movie ? (
-        <MovieSwipeCard
-          movie={movie}
-          onAccept={async () => {
-            registerMovies([movie]);
-            await swipeMovie(movie.id, "accepted");
-          }}
-          onReject={async () => {
-            registerMovies([movie]);
-            await swipeMovie(movie.id, "rejected");
-          }}
-        />
-      ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
-        <SurfaceCard className="space-y-4 text-center">
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {movie ? (
+          <MovieSwipeCard
+            movie={movie}
+            onAccept={async () => {
+              registerMovies([movie]);
+              await swipeMovie(movie.id, "accepted");
+            }}
+            onReject={async () => {
+              registerMovies([movie]);
+              await swipeMovie(movie.id, "rejected");
+            }}
+          />
+        ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
+          <SurfaceCard className="space-y-4 text-center">
           <div className="space-y-2">
             <h2
               className={`text-xl font-semibold ${
@@ -430,9 +380,9 @@ export default function DiscoverPage() {
           >
             Clear filters
           </button>
-        </SurfaceCard>
-      ) : (
-        <SurfaceCard className="space-y-4 text-center">
+          </SurfaceCard>
+        ) : (
+          <SurfaceCard className="space-y-4 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-lg font-semibold text-violet-700">
             8
           </div>
@@ -467,8 +417,9 @@ export default function DiscoverPage() {
               Shared list
             </Link>
           </div>
-        </SurfaceCard>
-      )}
+          </SurfaceCard>
+        )}
+      </div>
     </div>
   );
 }

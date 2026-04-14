@@ -1,7 +1,6 @@
- "use client";
+"use client";
 
 import { useState } from "react";
-import { MoviePoster } from "@/components/movie-poster";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 
@@ -17,47 +16,83 @@ export function MovieSwipeCard({
   onReject,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const shouldClamp = movie.description.length > 150;
+  const shouldClamp = movie.description.length > 110;
   const previewText =
     shouldClamp && !isExpanded
-      ? `${movie.description.slice(0, 150).trimEnd()}...`
+      ? `${movie.description.slice(0, 110).trimEnd()}...`
       : movie.description;
 
   return (
-    <div className="space-y-4">
-      <MoviePoster movie={movie} />
-      <SurfaceCard className="flex min-h-[19rem] flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-            {movie.rating.toFixed(1)} rating
-          </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-            {movie.runtime}
-          </span>
-          {movie.genre.map((entry) => (
+    <SurfaceCard className="flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)]">
+      <div
+        className="relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+        style={{
+          backgroundImage: movie.poster.imageUrl
+            ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
+            : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
+        <div className="relative flex min-h-[15.5rem] flex-col justify-between">
+          <div className="flex items-center justify-between gap-3">
             <span
-              key={entry}
-              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+              className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/92"
             >
-              {entry}
+              {movie.mediaType === "series" ? "Series" : "Movie"}
             </span>
-          ))}
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
+                {movie.year}
+              </span>
+              <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
+                {movie.rating.toFixed(1)}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-white/76">
+              {movie.genre.slice(0, 3).join(" • ")}
+            </p>
+            <h2 className="max-w-[13rem] text-3xl font-semibold leading-tight">
+              {movie.title}
+            </h2>
+          </div>
         </div>
-        <div className="flex min-h-[8.5rem] flex-1 flex-col justify-between">
-          <p className="text-sm leading-7 text-slate-600">{previewText}</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+          {movie.rating.toFixed(1)} rating
+        </span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          {movie.runtime}
+        </span>
+        {movie.genre.slice(0, 3).map((entry) => (
+          <span
+            key={entry}
+            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+          >
+            {entry}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
+        <div className="min-h-0">
+          <p className="text-sm leading-6 text-slate-600">{previewText}</p>
           {shouldClamp ? (
             <button
               type="button"
               onClick={() => setIsExpanded((current) => !current)}
-              className="text-sm font-semibold text-violet-600"
+              className="mt-2 text-sm font-semibold text-violet-600"
             >
               {isExpanded ? "Less" : "More"}
             </button>
-          ) : (
-            <div className="h-5" aria-hidden="true" />
-          )}
+          ) : null}
         </div>
-        <div className="mt-auto grid grid-cols-2 gap-3">
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={onReject}
@@ -73,7 +108,7 @@ export function MovieSwipeCard({
             Accept
           </button>
         </div>
-      </SurfaceCard>
-    </div>
+      </div>
+    </SurfaceCard>
   );
 }
