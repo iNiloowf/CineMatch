@@ -23,6 +23,7 @@ const STORAGE_KEY = "cinematch-demo-state-v5";
 const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
+const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 
 type AuthResult =
   | { ok: true; message?: string; shouldRedirect?: boolean }
@@ -280,6 +281,37 @@ function mapMovieRow(movie: MovieRow): Movie {
   };
 }
 
+function getStoredUserTheme(userId: string) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const value = window.localStorage.getItem(
+    `${USER_THEME_STORAGE_PREFIX}-${userId}`,
+  );
+
+  if (value === "dark") {
+    return true;
+  }
+
+  if (value === "light") {
+    return false;
+  }
+
+  return null;
+}
+
+function persistUserTheme(userId: string, isDark: boolean) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    `${USER_THEME_STORAGE_PREFIX}-${userId}`,
+    isDark ? "dark" : "light",
+  );
+}
+
 function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
   if (movies.length === 0) {
     return current;
@@ -415,7 +447,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
       setCurrentUserId(sessionUser.id);
       setPreferredDarkMode(
-        window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+        getStoredUserTheme(sessionUser.id) ??
+          window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
       );
       setIsReady(true);
     })();
@@ -449,7 +482,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         );
         setCurrentUserId(sessionUser.id);
         setPreferredDarkMode(
-          window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+          getStoredUserTheme(sessionUser.id) ??
+            window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
         );
         setIsReady(true);
       },
@@ -669,9 +703,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (settingsResult.data) {
-        setPreferredDarkMode(
-          mapSettingsRow(settingsResult.data as SettingsRow).darkMode,
-        );
+        const nextDarkMode = mapSettingsRow(
+          settingsResult.data as SettingsRow,
+        ).darkMode;
+        setPreferredDarkMode(nextDarkMode);
+        persistUserTheme(activeUserId, nextDarkMode);
       }
 
       setIsSyncingAccountData(false);
@@ -1669,6 +1705,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         nextSettings.darkMode ? "dark" : "light",
       );
     }
+    persistUserTheme(currentUserId, nextSettings.darkMode);
     setPreferredDarkMode(nextSettings.darkMode);
 
     setData((current) => ({

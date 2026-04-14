@@ -13,6 +13,7 @@ export default function LinkedPeoplePage() {
   const inviteToken = searchParams.get("invite");
   const [inviteUrl, setInviteUrl] = useState("");
   const [manualInviteValue, setManualInviteValue] = useState("");
+  const [manualInviteToken, setManualInviteToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const {
     data,
@@ -36,6 +37,20 @@ export default function LinkedPeoplePage() {
 
     return data.users.find((user) => user.id === invite.inviterId) ?? null;
   }, [data.invites, data.users, inviteToken]);
+
+  const manualInviteOwner = useMemo(() => {
+    if (!manualInviteToken) {
+      return null;
+    }
+
+    const invite = data.invites.find((entry) => entry.token === manualInviteToken);
+
+    if (!invite) {
+      return null;
+    }
+
+    return data.users.find((user) => user.id === invite.inviterId) ?? null;
+  }, [data.invites, data.users, manualInviteToken]);
 
   const connectFromToken = async (token: string) => {
     const result = await acceptInviteToken(token);
@@ -177,11 +192,20 @@ export default function LinkedPeoplePage() {
         <div className="space-y-3">
           <textarea
             value={manualInviteValue}
-            onChange={(event) => setManualInviteValue(event.target.value)}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              setManualInviteValue(nextValue);
+              setManualInviteToken(parseInviteToken(nextValue));
+            }}
             rows={3}
             placeholder="Paste the invite link here"
             className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white"
           />
+          {manualInviteOwner ? (
+            <p className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              This link belongs to <span className="font-semibold text-slate-900">{manualInviteOwner.name}</span>.
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={async () => {
@@ -196,7 +220,7 @@ export default function LinkedPeoplePage() {
             }}
             className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
           >
-            Connect from pasted link
+            {manualInviteOwner ? `Connect with ${manualInviteOwner.name}` : "Connect"}
           </button>
         </div>
       </SurfaceCard>

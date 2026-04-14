@@ -41,22 +41,10 @@ export default function SettingsPage() {
           onChange={(checked) => updateSettings({ notifications: checked })}
         />
         <SettingToggle
-          label="Autoplay trailers"
-          description="Prepare for richer media cards later on."
-          checked={settings.autoplayTrailers}
-          onChange={(checked) => updateSettings({ autoplayTrailers: checked })}
-        />
-        <SettingToggle
           label="Hide spoilers"
           description="Keep descriptions gentle and spoiler-light."
           checked={settings.hideSpoilers}
           onChange={(checked) => updateSettings({ hideSpoilers: checked })}
-        />
-        <SettingToggle
-          label="Cellular sync"
-          description="Sync watch progress even away from Wi-Fi."
-          checked={settings.cellularSync}
-          onChange={(checked) => updateSettings({ cellularSync: checked })}
         />
       </SurfaceCard>
 
