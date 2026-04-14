@@ -11,7 +11,7 @@ export default function DiscoverPage() {
   const { currentUserId, discoverQueue, registerMovies, swipeMovie, isDarkMode } =
     useAppState();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -97,7 +97,8 @@ export default function DiscoverPage() {
         String(movie.year).includes(normalizedSearchQuery);
 
       const matchesGenre =
-        selectedGenre === "All" || movie.genre.includes(selectedGenre);
+        selectedGenres.length === 0 ||
+        selectedGenres.some((genre) => movie.genre.includes(genre));
 
       return matchesQuery && matchesGenre;
     });
@@ -128,46 +129,28 @@ export default function DiscoverPage() {
 
       return left.title.localeCompare(right.title);
     });
-  }, [normalizedSearchQuery, searchableMovies, selectedGenre]);
+  }, [normalizedSearchQuery, searchableMovies, selectedGenres]);
 
   const movie = filteredQueue[0];
-  const hasFilters = selectedGenre !== "All" || searchQuery.trim().length > 0;
+  const hasFilters = selectedGenres.length > 0 || searchQuery.trim().length > 0;
   const previewResults = filteredQueue.slice(0, 5);
 
   return (
     <div className="space-y-4">
-      <SurfaceCard className="space-y-4 overflow-hidden p-0">
-        <div
-          className={`px-5 pb-4 pt-5 ${
-            isDarkMode
-              ? "bg-[linear-gradient(135deg,rgba(139,92,246,0.22),rgba(15,23,42,0.08))]"
-              : "bg-[linear-gradient(135deg,rgba(245,243,255,0.95),rgba(255,255,255,0.88))]"
-          }`}
-        >
-          <div className="space-y-1">
-            <p
-              className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${
-                isDarkMode ? "text-violet-200/80" : "text-violet-500"
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search movies"
+              className={`w-full rounded-[22px] border px-4 py-3 pl-11 text-sm outline-none transition ${
+                isDarkMode
+                  ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
+                  : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-violet-400"
               }`}
-            >
-              Movie matching
-            </p>
-            <h1
-              className={`text-2xl font-semibold tracking-tight ${
-                isDarkMode ? "text-white" : "text-slate-900"
-              }`}
-            >
-              Discover
-            </h1>
-          </div>
-
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsFilterOpen(true)}
-              aria-label="Open genre filter"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-violet-600 text-white shadow-[0_14px_24px_rgba(124,58,237,0.25)] transition hover:bg-violet-500"
-            >
+            />
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -178,59 +161,70 @@ export default function DiscoverPage() {
                 className="h-4 w-4"
                 aria-hidden="true"
               >
-                <path d="M4 6h16" />
-                <path d="M7 12h10" />
-                <path d="M10 18h4" />
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
               </svg>
-            </button>
-
-            <div className="relative flex-1">
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search title or description"
-                className={`w-full rounded-[22px] border px-4 py-3 pr-11 text-sm outline-none transition ${
-                  isDarkMode
-                    ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
-                    : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-violet-400"
-                }`}
-              />
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
-              </span>
-            </div>
+            </span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen(true)}
+            aria-label="Open genre filter"
+            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border transition ${
+              isDarkMode
+                ? "border-white/10 bg-white/8 text-white hover:bg-white/12"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M4 6h16" />
+              <path d="M7 12h10" />
+              <path d="M10 18h4" />
+            </svg>
+            {selectedGenres.length > 0 ? (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white">
+                {selectedGenres.length}
+              </span>
+            ) : null}
+          </button>
         </div>
 
-        <div className="space-y-3 px-5 pb-5">
+        {(selectedGenres.length > 0 || normalizedSearchQuery.length > 0) ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                isDarkMode
-                  ? "bg-white/8 text-slate-200"
-                  : "bg-slate-100 text-slate-700"
-              }`}
-            >
-              {selectedGenre === "All" ? "All genres" : selectedGenre}
-            </span>
-            {searchQuery.trim().length > 0 ? (
+            {selectedGenres.map((genre) => (
+              <button
+                key={genre}
+                type="button"
+                onClick={() =>
+                  setSelectedGenres((current) =>
+                    current.filter((entry) => entry !== genre),
+                  )
+                }
+                className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                  isDarkMode
+                    ? "bg-violet-500/15 text-violet-100 hover:bg-violet-500/22"
+                    : "bg-violet-100 text-violet-700 hover:bg-violet-200"
+                }`}
+              >
+                {genre} ×
+              </button>
+            ))}
+            {normalizedSearchQuery.length > 0 ? (
               <span
                 className={`rounded-full px-3 py-2 text-xs font-semibold ${
                   isDarkMode
-                    ? "bg-violet-500/15 text-violet-100"
-                    : "bg-violet-100 text-violet-700"
+                    ? "bg-white/8 text-slate-200"
+                    : "bg-slate-100 text-slate-700"
                 }`}
               >
                 Search: {searchQuery.trim()}
@@ -241,7 +235,7 @@ export default function DiscoverPage() {
                 type="button"
                 onClick={() => {
                   setSearchQuery("");
-                  setSelectedGenre("All");
+                  setSelectedGenres([]);
                 }}
                 className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
                   isDarkMode
@@ -253,69 +247,60 @@ export default function DiscoverPage() {
               </button>
             ) : null}
           </div>
+        ) : null}
 
-          <p
-            className={`text-sm leading-6 ${
-              isDarkMode ? "text-slate-300" : "text-slate-500"
+        {normalizedSearchQuery.length > 0 ? (
+          <div
+            className={`rounded-[22px] border px-4 py-3 ${
+              isDarkMode
+                ? "border-white/10 bg-white/6"
+                : "border-slate-200 bg-slate-50/90"
             }`}
           >
-            Browse one movie at a time, keep what feels right, and skip the
-            rest.
-          </p>
-
-          {normalizedSearchQuery.length > 0 ? (
-            <div
-              className={`rounded-[22px] border px-4 py-3 ${
-                isDarkMode
-                  ? "border-white/10 bg-white/6"
-                  : "border-slate-200 bg-slate-50/90"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p
-                  className={`text-sm font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}
-                >
-                  Search results
-                </p>
-                <p
-                  className={`text-xs font-medium ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
-                  }`}
-                >
-                  {isSearching
-                    ? "Searching..."
-                    : `${filteredQueue.length} match${
-                        filteredQueue.length === 1 ? "" : "es"
-                      }`}
-                </p>
-              </div>
-
-              {previewResults.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {previewResults.map((result) => (
-                    <button
-                      key={result.id}
-                      type="button"
-                      onClick={() => setSearchQuery(result.title)}
-                      className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
-                        movie?.id === result.id
-                          ? "bg-violet-600 text-white"
-                          : isDarkMode
-                            ? "bg-white/8 text-slate-200 hover:bg-white/12"
-                            : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
-                      }`}
-                    >
-                      {result.title}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+            <div className="flex items-center justify-between gap-3">
+              <p
+                className={`text-sm font-semibold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                Search results
+              </p>
+              <p
+                className={`text-xs font-medium ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                {isSearching
+                  ? "Searching..."
+                  : `${filteredQueue.length} match${
+                      filteredQueue.length === 1 ? "" : "es"
+                    }`}
+              </p>
             </div>
-          ) : null}
-        </div>
-      </SurfaceCard>
+
+            {previewResults.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {previewResults.map((result) => (
+                  <button
+                    key={result.id}
+                    type="button"
+                    onClick={() => setSearchQuery(result.title)}
+                    className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                      movie?.id === result.id
+                        ? "bg-violet-600 text-white"
+                        : isDarkMode
+                          ? "bg-white/8 text-slate-200 hover:bg-white/12"
+                          : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
+                    }`}
+                  >
+                    {result.title}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
       {isFilterOpen ? (
         <div className="fixed inset-0 z-40 flex items-end bg-slate-950/35 px-4 pb-4 pt-12 backdrop-blur-sm">
@@ -340,7 +325,7 @@ export default function DiscoverPage() {
                     isDarkMode ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
-                  Choose one genre to narrow the movie list.
+                  Pick one or more genres for this swipe queue.
                 </p>
               </div>
               <button
@@ -358,15 +343,26 @@ export default function DiscoverPage() {
 
             <div className="mt-4 flex max-h-[55vh] flex-wrap gap-2 overflow-y-auto">
               {genres.map((genre) => {
-                const active = selectedGenre === genre;
+                const active =
+                  genre === "All"
+                    ? selectedGenres.length === 0
+                    : selectedGenres.includes(genre);
 
                 return (
                   <button
                     key={genre}
                     type="button"
                     onClick={() => {
-                      setSelectedGenre(genre);
-                      setIsFilterOpen(false);
+                      if (genre === "All") {
+                        setSelectedGenres([]);
+                        return;
+                      }
+
+                      setSelectedGenres((current) =>
+                        current.includes(genre)
+                          ? current.filter((entry) => entry !== genre)
+                          : [...current, genre],
+                      );
                     }}
                     className={`rounded-full px-4 py-2 text-sm font-semibold ${
                       active
@@ -380,6 +376,26 @@ export default function DiscoverPage() {
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedGenres([])}
+                className={`flex-1 rounded-[20px] px-4 py-3 text-sm font-semibold ${
+                  isDarkMode
+                    ? "bg-white/8 text-slate-200"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(false)}
+                className="flex-1 rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
