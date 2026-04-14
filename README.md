@@ -4,16 +4,16 @@ Mobile-first movie matching app built with Next.js and Tailwind CSS.
 
 ## What is included
 
-- Login and signup flow with seeded demo access
+- Login and signup flow with Supabase auth support
 - Discover screen with accept and reject movie actions
 - Accepted Movies / Your Picks page
 - Linked People page
-- Shared Watchlist with watched checkboxes and progress sliders
-- Ongoing page for unfinished shared movies
+- Shared Watchlist with watched checkboxes
 - Profile and Settings pages
 - Mock-first state layer so the UI works immediately
 - Backend route handlers for auth, movies, swipes, links, shared watchlists, profile, and settings
 - Beginner-friendly SQL schema in [database/schema.sql](/C:/Users/niloo/Documents/New%20project/database/schema.sql)
+- Capacitor Android wrapper for APK builds in [android](/C:/Users/niloo/Documents/New%20project/android)
 
 ## Run it
 
@@ -37,8 +37,34 @@ When the key is present, the app keeps the current mock data for safety and also
 
 ## Demo account
 
-- Email: `mia@cinematch.app`
-- Password: `password123`
+- Email: `admin@cinematch.app`
+- Password: `admin123`
+
+## Android APK
+
+This repo is now prepared for Capacitor-based Android builds and points to the hosted app at `https://cinematch.ca`.
+
+1. Sync the native project after web-side changes:
+```bash
+npm run cap:sync
+```
+
+2. Open Android Studio:
+```bash
+npm run cap:open:android
+```
+
+3. In Android Studio, build the APK:
+- `Build`
+- `Build Bundle(s) / APK(s)`
+- `Build APK(s)`
+
+4. Android Studio will show the generated APK location when the build finishes.
+
+Helpful scripts:
+- `npm run cap:sync`
+- `npm run cap:open:android`
+- `npm run cap:run:android`
 
 ## Project notes
 
