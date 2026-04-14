@@ -403,7 +403,7 @@ export default function DiscoverPage() {
             type="button"
             onClick={() => {
               setSearchQuery("");
-              setSelectedGenre("All");
+              setSelectedGenres([]);
             }}
             className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
           >
