@@ -1373,39 +1373,52 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
-      const invitePayload = {
-        inviter_id: currentUserId,
-        token,
-        created_at: createdAt,
-        used_at: null,
-      };
-      const { data: insertedInvite, error } = await supabase
-        .from("invite_links")
-        .insert(invitePayload as never)
-        .select("id, inviter_id, token, created_at, used_at")
-        .single();
+      try {
+        const invitePayload = {
+          inviter_id: currentUserId,
+          token,
+          created_at: createdAt,
+          used_at: null,
+        };
+        const { data: insertedInvite, error } = await supabase
+          .from("invite_links")
+          .insert(invitePayload as never)
+          .select("id, inviter_id, token, created_at, used_at")
+          .single();
 
-      if (!error && insertedInvite) {
-        setData((current) => ({
-          ...current,
-          invites: [
-            ...current.invites.filter((invite) => invite.inviterId !== currentUserId),
-            mapInviteRow(insertedInvite as InviteRow),
-          ],
-        }));
+        if (!error && insertedInvite) {
+          setData((current) => ({
+            ...current,
+            invites: [
+              ...current.invites.filter(
+                (invite) => invite.inviterId !== currentUserId,
+              ),
+              mapInviteRow(insertedInvite as InviteRow),
+            ],
+          }));
+
+          return {
+            ok: true,
+            url: `${window.location.origin}/linked?invite=${token}`,
+          };
+        }
 
         return {
-          ok: true,
-          url: `${window.location.origin}/linked?invite=${token}`,
+          ok: false,
+          message:
+            error?.message ??
+            "We couldn’t save this invite in the database yet.",
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          message:
+            error instanceof Error &&
+            error.message.toLowerCase().includes("failed to fetch")
+              ? "The app couldn’t reach Supabase right now. Check your internet, Supabase project status, and browser/network blockers, then try again."
+              : "We couldn’t reach the invite service right now.",
         };
       }
-
-      return {
-        ok: false,
-        message:
-          error?.message ??
-          "We couldn’t save this invite in the database yet.",
-      };
     }
 
     setData((current) => ({
