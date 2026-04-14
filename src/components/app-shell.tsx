@@ -28,7 +28,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto overscroll-contain pb-2">
+          <div
+            data-app-scroll-container="true"
+            className="flex-1 overflow-y-auto overscroll-contain pb-2"
+          >
             {children}
           </div>
         </div>
