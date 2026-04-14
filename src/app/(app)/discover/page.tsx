@@ -17,18 +17,22 @@ export default function DiscoverPage() {
   const [isSearchCompact, setIsSearchCompact] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const visibleDiscoverIds = useMemo(
+    () => new Set(discoverQueue.map((movie) => movie.id)),
+    [discoverQueue],
+  );
   const searchableMovies = useMemo(() => {
     if (normalizedSearchQuery.length < 2) {
       return discoverQueue;
     }
 
     return [
-      ...searchResults,
+      ...searchResults.filter((movie) => visibleDiscoverIds.has(movie.id)),
       ...discoverQueue.filter(
         (movie) => !searchResults.some((entry) => entry.id === movie.id),
       ),
     ];
-  }, [discoverQueue, normalizedSearchQuery, searchResults]);
+  }, [discoverQueue, normalizedSearchQuery, searchResults, visibleDiscoverIds]);
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {
@@ -176,7 +180,7 @@ export default function DiscoverPage() {
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search a movie"
+                placeholder="Search a movie or series"
                 className={`w-full rounded-[18px] border pl-10 pr-4 text-sm outline-none transition-all duration-300 ${
                   isSearchCompact ? "py-2.5" : "py-3"
                 } ${
@@ -298,7 +302,7 @@ export default function DiscoverPage() {
                     isDarkMode ? "text-slate-400" : "text-slate-500"
                   }`}
                 >
-                  Pick one or more genres for this swipe queue.
+                  Pick one or more genres for this queue.
                 </p>
               </div>
               <button
@@ -394,14 +398,14 @@ export default function DiscoverPage() {
                 isDarkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              No movies match this search
+              No titles match this search
             </h2>
             <p
               className={`text-sm leading-6 ${
                 isDarkMode ? "text-slate-400" : "text-slate-500"
               }`}
             >
-              Try another title or switch the genre filter back to all movies.
+              Try another title or switch the genre filter back to all genres.
             </p>
           </div>
           <button
@@ -426,7 +430,7 @@ export default function DiscoverPage() {
                 isDarkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              You’ve gone through every mock movie.
+              You’ve gone through every title for now.
             </h2>
             <p
               className={`text-sm leading-6 ${

@@ -1,6 +1,7 @@
 export type Movie = {
   id: string;
   title: string;
+  mediaType: "movie" | "series";
   year: number;
   runtime: string;
   rating: number;

@@ -1,6 +1,6 @@
 import { initialAppData } from "@/lib/mock-data";
 import { AppData, ProfileSettings } from "@/lib/types";
-import { fetchTmdbMoviePool, isTmdbConfigured } from "@/server/tmdb";
+import { fetchTmdbMediaPool, isTmdbConfigured } from "@/server/tmdb";
 
 // This module acts like a tiny in-memory database for local development.
 // Route handlers can mutate it while the dev server is running.
@@ -24,7 +24,7 @@ export async function getMergedMovies() {
   }
 
   try {
-    const tmdbMovies = await fetchTmdbMoviePool(5, 10);
+    const tmdbMovies = await fetchTmdbMediaPool(5, 10);
     const seenIds = new Set(database.movies.map((movie) => movie.id));
 
     return clone([

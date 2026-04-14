@@ -3,18 +3,20 @@ import { Movie } from "@/lib/types";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
-type TmdbDiscoverMovie = {
+type TmdbDiscoverMedia = {
   id: number;
-  title: string;
+  title?: string;
+  name?: string;
   overview: string;
   vote_average: number;
   poster_path: string | null;
   release_date: string | null;
+  first_air_date?: string | null;
   genre_ids: number[];
 };
 
 type TmdbPagedResults = {
-  results: TmdbDiscoverMovie[];
+  results: TmdbDiscoverMedia[];
 };
 
 type TmdbMovieDetails = {
@@ -25,6 +27,17 @@ type TmdbMovieDetails = {
   poster_path: string | null;
   release_date: string | null;
   runtime: number | null;
+  genres: { id: number; name: string }[];
+};
+
+type TmdbTvDetails = {
+  id: number;
+  name: string;
+  overview: string;
+  vote_average: number;
+  poster_path: string | null;
+  first_air_date: string | null;
+  episode_run_time: number[];
   genres: { id: number; name: string }[];
 };
 
@@ -101,6 +114,7 @@ function mapTmdbMovie(details: TmdbMovieDetails): Movie {
   return {
     id: `tmdb-${details.id}`,
     title: details.title,
+    mediaType: "movie",
     year: details.release_date
       ? Number(details.release_date.slice(0, 4))
       : new Date().getFullYear(),
@@ -112,6 +126,36 @@ function mapTmdbMovie(details: TmdbMovieDetails): Movie {
       "No description is available for this movie yet on TMDB.",
     poster: {
       eyebrow: genres[0] ?? "Featured",
+      accentFrom,
+      accentTo,
+      imageUrl: details.poster_path
+        ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}`
+        : undefined,
+    },
+  };
+}
+
+function mapTmdbSeries(details: TmdbTvDetails): Movie {
+  const genres = details.genres.map((genre) => genre.name);
+  const { accentFrom, accentTo } = makeAccentPalette(details.id);
+  const averageRuntime =
+    details.episode_run_time.find((runtime) => runtime > 0) ?? null;
+
+  return {
+    id: `tmdb-tv-${details.id}`,
+    title: details.name,
+    mediaType: "series",
+    year: details.first_air_date
+      ? Number(details.first_air_date.slice(0, 4))
+      : new Date().getFullYear(),
+    runtime: minutesToRuntimeLabel(averageRuntime),
+    rating: Number(details.vote_average.toFixed(1)),
+    genre: genres.length > 0 ? genres : ["Series"],
+    description:
+      details.overview ||
+      "No description is available for this series yet on TMDB.",
+    poster: {
+      eyebrow: genres[0] ?? "Series",
       accentFrom,
       accentTo,
       imageUrl: details.poster_path
@@ -147,50 +191,98 @@ export async function fetchTmdbDiscoverMovies(page = 1, limit = 12) {
   return detailResults.map(mapTmdbMovie);
 }
 
-export async function fetchTmdbMoviePool(pages = 4, limitPerPage = 12) {
+export async function fetchTmdbDiscoverSeries(page = 1, limit = 12) {
+  if (!isTmdbConfigured()) {
+    return [];
+  }
+
+  const discover = await tmdbFetch<TmdbPagedResults>(
+    `/discover/tv?language=en-US&include_adult=false&sort_by=popularity.desc&page=${page}${getTmdbQueryParams()}`,
+  );
+
+  const detailCandidates = discover.results
+    .filter((series) => series.poster_path && series.overview)
+    .slice(0, limit);
+
+  const detailResults = await Promise.all(
+    detailCandidates.map((series) =>
+      tmdbFetch<TmdbTvDetails>(
+        `/tv/${series.id}?language=en-US${getTmdbQueryParams()}`,
+      ),
+    ),
+  );
+
+  return detailResults.map(mapTmdbSeries);
+}
+
+export async function fetchTmdbMediaPool(pages = 4, limitPerPage = 12) {
   if (!isTmdbConfigured()) {
     return [];
   }
 
   const pageNumbers = Array.from({ length: pages }, (_, index) => index + 1);
   const results = await Promise.all(
-    pageNumbers.map((page) => fetchTmdbDiscoverMovies(page, limitPerPage)),
+    pageNumbers.flatMap((page) => [
+      fetchTmdbDiscoverMovies(page, limitPerPage),
+      fetchTmdbDiscoverSeries(page, limitPerPage),
+    ]),
   );
 
   const seenIds = new Set<string>();
 
-  return results.flat().filter((movie) => {
-    if (seenIds.has(movie.id)) {
+  return results.flat().filter((entry) => {
+    if (seenIds.has(entry.id)) {
       return false;
     }
 
-    seenIds.add(movie.id);
+    seenIds.add(entry.id);
     return true;
   });
 }
 
-export async function searchTmdbMovies(query: string, limit = 10) {
+export async function searchTmdbMedia(query: string, limit = 8) {
   if (!isTmdbConfigured() || query.trim().length === 0) {
     return [];
   }
 
-  const search = await tmdbFetch<TmdbPagedResults>(
-    `/search/movie?language=en-US&include_adult=false&query=${encodeURIComponent(
-      query.trim(),
-    )}&page=1${getTmdbQueryParams()}`,
-  );
+  const [movieSearch, tvSearch] = await Promise.all([
+    tmdbFetch<TmdbPagedResults>(
+      `/search/movie?language=en-US&include_adult=false&query=${encodeURIComponent(
+        query.trim(),
+      )}&page=1${getTmdbQueryParams()}`,
+    ),
+    tmdbFetch<TmdbPagedResults>(
+      `/search/tv?language=en-US&include_adult=false&query=${encodeURIComponent(
+        query.trim(),
+      )}&page=1${getTmdbQueryParams()}`,
+    ),
+  ]);
 
-  const detailCandidates = search.results
+  const movieCandidates = movieSearch.results
     .filter((movie) => movie.poster_path && movie.overview)
     .slice(0, limit);
+  const seriesCandidates = tvSearch.results
+    .filter((series) => series.poster_path && series.overview)
+    .slice(0, limit);
 
-  const detailResults = await Promise.all(
-    detailCandidates.map((movie) =>
-      tmdbFetch<TmdbMovieDetails>(
-        `/movie/${movie.id}?language=en-US${getTmdbQueryParams()}`,
+  const [movieDetails, seriesDetails] = await Promise.all([
+    Promise.all(
+      movieCandidates.map((movie) =>
+        tmdbFetch<TmdbMovieDetails>(
+          `/movie/${movie.id}?language=en-US${getTmdbQueryParams()}`,
+        ),
       ),
     ),
-  );
+    Promise.all(
+      seriesCandidates.map((series) =>
+        tmdbFetch<TmdbTvDetails>(
+          `/tv/${series.id}?language=en-US${getTmdbQueryParams()}`,
+        ),
+      ),
+    ),
+  ]);
 
-  return detailResults.map(mapTmdbMovie);
+  return [...movieDetails.map(mapTmdbMovie), ...seriesDetails.map(mapTmdbSeries)]
+    .sort((left, right) => left.title.localeCompare(right.title))
+    .slice(0, limit * 2);
 }

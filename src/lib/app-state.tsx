@@ -24,6 +24,7 @@ const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
+const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 type AuthResult =
   | { ok: true; message?: string; shouldRedirect?: boolean }
@@ -273,6 +274,7 @@ function mapMovieRow(movie: MovieRow): Movie {
   return {
     id: movie.id,
     title: movie.title,
+    mediaType: movie.genres?.includes("Series") ? "series" : "movie",
     year: movie.release_year,
     runtime: movie.runtime,
     rating: Number(movie.rating),
@@ -336,6 +338,16 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
   };
 }
 
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+
+  return Math.abs(hash);
+}
+
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(() => {
     if (typeof window === "undefined") {
@@ -362,11 +374,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
   const [accountRefreshKey, setAccountRefreshKey] = useState(0);
+  const [discoverShuffleSeed, setDiscoverShuffleSeed] = useState(() =>
+    Date.now().toString(),
+  );
+  const [discoverVisibilityTimestamp, setDiscoverVisibilityTimestamp] = useState(
+    () => Date.now(),
+  );
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
   const isDarkMode = currentUserId
     ? (data.settings[currentUserId]?.darkMode ?? preferredDarkMode)
     : preferredDarkMode;
+  const refreshDiscoverShuffle = (userId: string | null) => {
+    setDiscoverShuffleSeed(
+      userId ? `${userId}-${Date.now()}-${Math.random()}` : Date.now().toString(),
+    );
+    setDiscoverVisibilityTimestamp(Date.now());
+  };
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -432,6 +456,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (!sessionUser) {
         setCurrentUserId(null);
+        refreshDiscoverShuffle(null);
         setIsReady(true);
         return;
       }
@@ -452,6 +477,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }),
       );
       setCurrentUserId(sessionUser.id);
+      refreshDiscoverShuffle(sessionUser.id);
       setPreferredDarkMode(
         getStoredUserTheme(sessionUser.id) ??
           window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
@@ -467,6 +493,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
         if (!sessionUser) {
           setCurrentUserId(null);
+          refreshDiscoverShuffle(null);
           setIsReady(true);
           return;
         }
@@ -487,6 +514,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           }),
         );
         setCurrentUserId(sessionUser.id);
+        refreshDiscoverShuffle(sessionUser.id);
         setPreferredDarkMode(
           getStoredUserTheme(sessionUser.id) ??
             window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
@@ -783,15 +811,42 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const acceptedMovies = data.movies.filter((movie) => acceptedIds.has(movie.id));
 
-  const seenMovieIds = new Set(
+  const hiddenMovieIds = new Set(
     data.swipes
-      .filter((swipe) => swipe.userId === currentUserId)
+      .filter((swipe) => {
+        if (swipe.userId !== currentUserId) {
+          return false;
+        }
+
+        if (swipe.decision === "accepted") {
+          return true;
+        }
+
+        if (swipe.decision !== "rejected") {
+          return false;
+        }
+
+        const rejectedAt = new Date(swipe.createdAt).getTime();
+        return (
+          Number.isFinite(rejectedAt) &&
+          discoverVisibilityTimestamp - rejectedAt < REJECT_HIDE_WINDOW_MS
+        );
+      })
       .map((swipe) => swipe.movieId),
   );
 
+  const sortBySessionShuffle = (movies: Movie[]) =>
+    [...movies].sort(
+      (left, right) =>
+        hashString(`${left.id}:${discoverShuffleSeed}`) -
+        hashString(`${right.id}:${discoverShuffleSeed}`),
+    );
+
   const discoverQueue = currentUserId
-    ? data.movies.filter((movie) => !seenMovieIds.has(movie.id))
-    : data.movies;
+    ? sortBySessionShuffle(
+        data.movies.filter((movie) => !hiddenMovieIds.has(movie.id)),
+      )
+    : sortBySessionShuffle(data.movies);
 
   const sharedMovies: SharedMovieView[] = currentUserId
     ? data.links
@@ -1027,6 +1082,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }),
       );
       setCurrentUserId(authData.user.id);
+      refreshDiscoverShuffle(authData.user.id);
 
       return { ok: true, shouldRedirect: true };
     }
@@ -1045,6 +1101,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     setCurrentUserId(match.id);
+    refreshDiscoverShuffle(match.id);
     return { ok: true, shouldRedirect: true };
   };
 
@@ -1096,6 +1153,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (authData.session) {
         setCurrentUserId(authUser.id);
+        refreshDiscoverShuffle(authUser.id);
         return { ok: true, shouldRedirect: true };
       }
 
@@ -1143,6 +1201,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       },
     }));
     setCurrentUserId(nextUser.id);
+    refreshDiscoverShuffle(nextUser.id);
 
     return { ok: true, shouldRedirect: true };
   };
@@ -1155,6 +1214,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     setCurrentUserId(null);
+    refreshDiscoverShuffle(null);
   };
 
   const registerMovies = (movies: Movie[]) => {
@@ -1175,7 +1235,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       release_year: movie.year,
       runtime: movie.runtime,
       rating: movie.rating,
-      genres: movie.genre,
+      genres: Array.from(
+        new Set([
+          ...movie.genre,
+          movie.mediaType === "series" ? "Series" : "Movie",
+        ]),
+      ),
       description: movie.description,
       poster_eyebrow: movie.poster.eyebrow,
       poster_image_url: movie.poster.imageUrl ?? null,
