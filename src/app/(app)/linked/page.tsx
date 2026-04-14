@@ -16,6 +16,10 @@ export default function LinkedPeoplePage() {
   const [manualInviteToken, setManualInviteToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [connectedPartnerName, setConnectedPartnerName] = useState("");
+  const [pendingRemove, setPendingRemove] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const {
     data,
     createInviteLink,
@@ -86,6 +90,41 @@ export default function LinkedPeoplePage() {
 
   return (
     <div className="space-y-4">
+      {pendingRemove ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/28 px-4 pb-8 pt-16 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[30px] border border-white/70 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+            <div className="space-y-2">
+              <p className="text-lg font-semibold text-slate-900">
+                Remove linked person?
+              </p>
+              <p className="text-sm leading-6 text-slate-500">
+                Do you want to remove the link with {pendingRemove.name}?
+              </p>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingRemove(null)}
+                className="flex-1 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const result = await unlinkUser(pendingRemove.id);
+                  setStatusMessage(result.message);
+                  setPendingRemove(null);
+                }}
+                className="flex-1 rounded-[18px] bg-rose-500 px-4 py-3 text-sm font-semibold text-white"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {connectedPartnerName ? (
         <div className="fixed inset-x-4 top-6 z-50 mx-auto max-w-md">
           <div className="achievement-toast-pop rounded-[28px] border border-violet-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(124,58,237,0.22)]">
@@ -186,16 +225,20 @@ export default function LinkedPeoplePage() {
                 : "No shared picks yet. Keep swiping."}
             </div>
             {linked.status === "accepted" ? (
-              <button
-                type="button"
-                onClick={async () => {
-                  const result = await unlinkUser(linked.user.id);
-                  setStatusMessage(result.message);
-                }}
-                className="w-full rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
-              >
-                Remove linked person
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPendingRemove({
+                      id: linked.user.id,
+                      name: linked.user.name,
+                    })
+                  }
+                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600"
+                >
+                  Remove
+                </button>
+              </div>
             ) : null}
           </SurfaceCard>
         ))}

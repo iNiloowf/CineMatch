@@ -850,27 +850,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           )
       : [];
 
-  const sharedMovieGroups: SharedMovieGroup[] = sharedMovies.reduce(
-    (groups, entry) => {
-      const existingGroup = groups.find(
-        (group) => group.partner.id === entry.partner.id,
+  const sharedMovieGroups: SharedMovieGroup[] = linkedUsers
+    .filter((linked) => linked.status === "accepted")
+    .map((linked) => {
+      const sharedEntries = sharedMovies.filter(
+        (entry) => entry.partner.id === linked.user.id,
       );
 
-      if (existingGroup) {
-        existingGroup.movies.push(entry);
-        return groups;
-      }
-
-      groups.push({
-        linkId: entry.linkId,
-        partner: entry.partner,
-        movies: [entry],
-      });
-
-      return groups;
-    },
-    [] as SharedMovieGroup[],
-  );
+      return {
+        linkId: sharedEntries[0]?.linkId ?? `link-${linked.user.id}`,
+        partner: linked.user,
+        movies: sharedEntries,
+      };
+    });
 
   const ongoingMovies: SharedMovieView[] = [];
   const totalSwipes = currentUserId

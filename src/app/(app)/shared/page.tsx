@@ -15,14 +15,14 @@ export default function SharedWatchlistPage() {
       <PageHeader
         eyebrow="Together"
         title="Shared Watchlist"
-        description="Open each person to see the full list of movies you both accepted."
+        description="Open each person to see what you matched on together."
       />
 
       {sharedMovieGroups.length === 0 ? (
         <SurfaceCard className="space-y-2 text-center">
-          <p className="text-lg font-semibold text-slate-900">No overlap yet</p>
+          <p className="text-lg font-semibold text-slate-900">No linked people yet</p>
           <p className="text-sm leading-6 text-slate-500">
-            Link with someone and accept some of the same movies to unlock this page.
+            Link with someone and their name will show up here right away.
           </p>
         </SurfaceCard>
       ) : null}
@@ -49,7 +49,9 @@ export default function SharedWatchlistPage() {
                     You share with {group.partner.name}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {group.movies.length} movie{group.movies.length === 1 ? "" : "s"} matched
+                    {group.movies.length > 0
+                      ? `${group.movies.length} movie${group.movies.length === 1 ? "" : "s"} matched`
+                      : "No shared picks yet"}
                   </p>
                 </div>
               </div>
@@ -60,6 +62,12 @@ export default function SharedWatchlistPage() {
 
             {openPartnerId === group.partner.id ? (
               <div className="expand-soft space-y-3">
+                {group.movies.length === 0 ? (
+                  <div className="rounded-[24px] bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+                    You are connected with {group.partner.name}, but you have not accepted the same movie yet.
+                  </div>
+                ) : null}
+
                 {group.movies.map((entry) => (
                   <div
                     key={`${entry.partner.id}-${entry.movie.id}`}
