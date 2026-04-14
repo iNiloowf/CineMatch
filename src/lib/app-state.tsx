@@ -446,26 +446,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const supabaseClient = supabase;
     const activeUserId = currentUserId;
 
     async function loadSupabaseAppData() {
-      const profilePromise = supabase
+      const profilePromise = supabaseClient
         .from("profiles")
         .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
         .eq("id", activeUserId)
         .maybeSingle();
-      const settingsPromise = supabase
+      const settingsPromise = supabaseClient
         .from("settings")
         .select(
           "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
         )
         .eq("user_id", activeUserId)
         .maybeSingle();
-      const linksPromise = supabase
+      const linksPromise = supabaseClient
         .from("linked_users")
         .select("id, requester_id, target_id, status, created_at")
         .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`);
-      const invitesPromise = supabase
+      const invitesPromise = supabaseClient
         .from("invite_links")
         .select("id, inviter_id, token, created_at, used_at")
         .eq("inviter_id", activeUserId)
@@ -499,19 +500,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const [partnerProfilesResult, sharedWatchResult, partnerSwipesResult] =
         await Promise.all([
           partnerIds.length > 0
-            ? supabase
+            ? supabaseClient
                 .from("profiles")
                 .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
                 .in("id", partnerIds)
             : Promise.resolve({ data: [] as ProfileRow[] }),
           sharedLinkIds.length > 0
-            ? supabase
+            ? supabaseClient
                 .from("shared_watchlist")
                 .select("id, linked_user_id, movie_id, watched, updated_at")
                 .in("linked_user_id", sharedLinkIds)
             : Promise.resolve({ data: [] as SharedWatchRow[] }),
           acceptedUserIds.length > 0
-            ? supabase
+            ? supabaseClient
                 .from("swipes")
                 .select("user_id, movie_id, decision, created_at")
                 .in("user_id", acceptedUserIds)
@@ -926,16 +927,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      const authUser = authData.user;
+
       setData((current) =>
         ensureLocalUser(current, {
-          id: authData.user.id,
+          id: authUser.id,
           name,
-          email: authData.user.email ?? email,
+          email: authUser.email ?? email,
         }),
       );
 
       if (authData.session) {
-        setCurrentUserId(authData.user.id);
+        setCurrentUserId(authUser.id);
         return { ok: true, shouldRedirect: true };
       }
 

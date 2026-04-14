@@ -1,11 +1,39 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const AUTH_STORAGE_KEY = "cinematch-supabase-auth";
 
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+let browserClient: SupabaseClient<any> | null = null;
+
+function clearLegacySupabaseCookies() {
+  if (typeof document === "undefined" || !supabaseUrl) {
+    return;
+  }
+
+  let projectRef = "";
+
+  try {
+    projectRef = new URL(supabaseUrl).hostname.split(".")[0] ?? "";
+  } catch {
+    projectRef = "";
+  }
+
+  if (!projectRef) {
+    return;
+  }
+
+  const cookieNames = document.cookie
+    .split(";")
+    .map((entry) => entry.trim().split("=")[0])
+    .filter((name) => name.startsWith(`sb-${projectRef}-`));
+
+  for (const name of cookieNames) {
+    document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+  }
+}
 
 export function isSupabaseConfigured() {
   return Boolean(supabaseUrl && supabasePublishableKey);
@@ -17,7 +45,17 @@ export function getSupabaseBrowserClient() {
   }
 
   if (!browserClient) {
-    browserClient = createBrowserClient(supabaseUrl, supabasePublishableKey);
+    clearLegacySupabaseCookies();
+
+    browserClient = createClient<any>(supabaseUrl, supabasePublishableKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: "pkce",
+        storageKey: AUTH_STORAGE_KEY,
+      },
+    });
   }
 
   return browserClient;
