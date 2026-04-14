@@ -320,6 +320,14 @@ function persistUserTheme(userId: string, isDark: boolean) {
   );
 }
 
+function getGlobalStoredTheme() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+}
+
 function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
   if (movies.length === 0) {
     return current;
@@ -478,7 +486,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       refreshDiscoverShuffle(sessionUser.id);
       setPreferredDarkMode(
         getStoredUserTheme(sessionUser.id) ??
-          window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+          getGlobalStoredTheme(),
       );
       setIsReady(true);
     })();
@@ -515,7 +523,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         refreshDiscoverShuffle(sessionUser.id);
         setPreferredDarkMode(
           getStoredUserTheme(sessionUser.id) ??
-            window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+            getGlobalStoredTheme(),
         );
         setIsReady(true);
       },
@@ -1132,6 +1140,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
       setCurrentUserId(authData.user.id);
       refreshDiscoverShuffle(authData.user.id);
+      const settingsResult = await supabase
+        .from("settings")
+        .select("dark_mode")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
+      const storedUserTheme = getStoredUserTheme(authData.user.id);
+      const nextDarkMode =
+        storedUserTheme ??
+        (settingsResult.data as { dark_mode?: boolean } | null)?.dark_mode ??
+        getGlobalStoredTheme();
+      setPreferredDarkMode(nextDarkMode);
+      persistUserTheme(authData.user.id, nextDarkMode);
 
       return { ok: true, shouldRedirect: true };
     }
@@ -1151,6 +1171,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     setCurrentUserId(match.id);
     refreshDiscoverShuffle(match.id);
+    const storedUserTheme = getStoredUserTheme(match.id);
+    const nextDarkMode =
+      storedUserTheme ??
+      data.settings[match.id]?.darkMode ??
+      getGlobalStoredTheme();
+    setPreferredDarkMode(nextDarkMode);
+    persistUserTheme(match.id, nextDarkMode);
     return { ok: true, shouldRedirect: true };
   };
 
@@ -1203,6 +1230,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (authData.session) {
         setCurrentUserId(authUser.id);
         refreshDiscoverShuffle(authUser.id);
+        setPreferredDarkMode(getStoredUserTheme(authUser.id) ?? false);
         return { ok: true, shouldRedirect: true };
       }
 
@@ -1251,6 +1279,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
     setCurrentUserId(nextUser.id);
     refreshDiscoverShuffle(nextUser.id);
+    setPreferredDarkMode(false);
+    persistUserTheme(nextUser.id, false);
 
     return { ok: true, shouldRedirect: true };
   };
