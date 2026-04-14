@@ -32,6 +32,10 @@ type AuthResult =
       message: string;
     };
 
+type InviteLinkResult =
+  | { ok: true; url: string }
+  | { ok: false; message: string };
+
 type ProfileRow = {
   id: string;
   email: string;
@@ -119,7 +123,7 @@ type AppStateContextValue = {
   removePick: (movieId: string) => Promise<void>;
   linkUser: (targetUserId: string) => Promise<void>;
   unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
-  createInviteLink: () => Promise<string | null>;
+  createInviteLink: () => Promise<InviteLinkResult>;
   acceptInviteToken: (token: string) => Promise<{ ok: boolean; message: string }>;
   toggleWatched: (
     partnerId: string,
@@ -1359,9 +1363,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const createInviteLink = async () => {
+  const createInviteLink = async (): Promise<InviteLinkResult> => {
     if (!currentUserId || typeof window === "undefined") {
-      return null;
+      return { ok: false, message: "Log in first to create a connect link." };
     }
 
     const token = `invite-${crypto.randomUUID()}`;
@@ -1390,10 +1394,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           ],
         }));
 
-        return `${window.location.origin}/linked?invite=${token}`;
+        return {
+          ok: true,
+          url: `${window.location.origin}/linked?invite=${token}`,
+        };
       }
 
-      return null;
+      return {
+        ok: false,
+        message:
+          error?.message ??
+          "We couldn’t save this invite in the database yet.",
+      };
     }
 
     setData((current) => ({
@@ -1412,7 +1424,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ],
     }));
 
-    return `${window.location.origin}/linked?invite=${token}`;
+    return {
+      ok: true,
+      url: `${window.location.origin}/linked?invite=${token}`,
+    };
   };
 
   const acceptInviteToken = async (token: string) => {

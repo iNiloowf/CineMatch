@@ -235,18 +235,18 @@ export default function LinkedPeoplePage() {
         <button
           type="button"
           onClick={async () => {
-            const nextInviteUrl = await createInviteLink();
+            const result = await createInviteLink();
 
-            if (!nextInviteUrl) {
-              setStatusMessage("We couldn’t create an invite right now.");
+            if (!result.ok) {
+              setStatusMessage(result.message);
               return;
             }
 
-            setInviteUrl(nextInviteUrl);
+            setInviteUrl(result.url);
             setStatusMessage("Invite link created.");
 
             if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(nextInviteUrl);
+              await navigator.clipboard.writeText(result.url);
               setStatusMessage("Invite link copied. Send it to the other person.");
             }
           }}
