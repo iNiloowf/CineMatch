@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       data: {
         full_name: name,
       },
-      redirectTo: `${getAppUrl(request)}/discover`,
+      redirectTo: `${getAppUrl(request)}/auth/callback?next=/discover`,
     },
   });
 

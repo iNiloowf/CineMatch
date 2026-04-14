@@ -124,7 +124,9 @@ type AppStateContextValue = {
   linkUser: (targetUserId: string) => Promise<void>;
   unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
   createInviteLink: () => Promise<InviteLinkResult>;
-  acceptInviteToken: (token: string) => Promise<{ ok: boolean; message: string }>;
+  acceptInviteToken: (
+    token: string,
+  ) => Promise<{ ok: boolean; message: string; partnerName?: string }>;
   toggleWatched: (
     partnerId: string,
     movieId: string,
@@ -1484,6 +1486,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, message: "This invite link has already been used." };
       }
 
+      const inviterProfileResult = await supabase
+        .from("profiles")
+        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+        .eq("id", invite.inviter_id)
+        .maybeSingle();
+      const inviterProfile = inviterProfileResult.data as ProfileRow | null;
+      const partnerName = inviterProfile?.full_name ?? "your new match";
+
       const existingLinkResult = await supabase
         .from("linked_users")
         .select("id")
@@ -1526,7 +1536,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         .eq("id", invite.id);
 
       setData((current) => ({
-        ...current,
+        ...ensureLocalUser(current, {
+          id: inviterProfile?.id ?? invite.inviter_id,
+          name: inviterProfile?.full_name ?? partnerName,
+          email: inviterProfile?.email ?? "",
+          avatar: inviterProfile?.avatar_text ?? getAvatarText(partnerName, ""),
+          avatarImageUrl: inviterProfile?.avatar_image_url ?? undefined,
+          bio: inviterProfile?.bio ?? "Connected on CineMatch.",
+          city: inviterProfile?.city ?? "",
+        }),
         links: [...current.links, mapLinkRow(insertResult.data as LinkRow)],
         invites: current.invites.map((entry) =>
           entry.id === invite.id
@@ -1537,8 +1555,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             : entry,
         ),
       }));
+      setAccountRefreshKey((current) => current + 1);
 
-      return { ok: true, message: "You’re connected now." };
+      return {
+        ok: true,
+        message: "You’re connected now.",
+        partnerName,
+      };
     }
 
     const invite = data.invites.find((entry) => entry.token === token);

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${getAppUrl(request)}/discover`,
+      redirectTo: `${getAppUrl(request)}/auth/callback?next=/discover`,
     },
   });
 
