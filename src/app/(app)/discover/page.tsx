@@ -14,7 +14,6 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const searchableMovies = useMemo(() => {
     if (normalizedSearchQuery.length < 2) {
@@ -31,8 +30,6 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
       return;
     }
 
@@ -40,7 +37,6 @@ export default function DiscoverPage() {
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
-        setIsSearching(true);
         const response = await fetch(
           `/api/movies?source=tmdb&query=${encodeURIComponent(
             searchQuery.trim(),
@@ -61,10 +57,6 @@ export default function DiscoverPage() {
       } catch {
         if (active) {
           setSearchResults([]);
-        }
-      } finally {
-        if (active) {
-          setIsSearching(false);
         }
       }
     }, 280);
@@ -137,14 +129,21 @@ export default function DiscoverPage() {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-10 -mx-1 space-y-2 rounded-[26px] px-1 pb-1 pt-0">
+        <div
+          className={`rounded-[24px] border px-3 py-3 backdrop-blur-xl ${
+            isDarkMode
+              ? "border-white/10 bg-slate-950/72"
+              : "border-white/70 bg-white/88 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
+          }`}
+        >
+          <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search movies"
-              className={`w-full rounded-[22px] border px-4 py-3 pl-11 text-sm outline-none transition ${
+              className={`w-full rounded-[18px] border px-4 py-3 pl-10 text-sm outline-none transition ${
                 isDarkMode
                   ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
                   : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-violet-400"
@@ -171,7 +170,7 @@ export default function DiscoverPage() {
             type="button"
             onClick={() => setIsFilterOpen(true)}
             aria-label="Open genre filter"
-            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border transition ${
+            className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border transition ${
               isDarkMode
                 ? "border-white/10 bg-white/8 text-white hover:bg-white/12"
                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
@@ -200,7 +199,7 @@ export default function DiscoverPage() {
         </div>
 
         {(selectedGenres.length > 0 || normalizedSearchQuery.length > 0) ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             {selectedGenres.map((genre) => (
               <button
                 key={genre}
@@ -219,7 +218,7 @@ export default function DiscoverPage() {
                 {genre} ×
               </button>
             ))}
-            {normalizedSearchQuery.length > 0 ? (
+            {normalizedSearchQuery.length > 0 && filteredQueue.length > 0 ? (
               <span
                 className={`rounded-full px-3 py-2 text-xs font-semibold ${
                   isDarkMode
@@ -227,7 +226,7 @@ export default function DiscoverPage() {
                     : "bg-slate-100 text-slate-700"
                 }`}
               >
-                Search: {searchQuery.trim()}
+                {filteredQueue.length} found
               </span>
             ) : null}
             {hasFilters ? (
@@ -248,58 +247,27 @@ export default function DiscoverPage() {
             ) : null}
           </div>
         ) : null}
-
-        {normalizedSearchQuery.length > 0 ? (
-          <div
-            className={`rounded-[22px] border px-4 py-3 ${
-              isDarkMode
-                ? "border-white/10 bg-white/6"
-                : "border-slate-200 bg-slate-50/90"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p
-                className={`text-sm font-semibold ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Search results
-              </p>
-              <p
-                className={`text-xs font-medium ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                {isSearching
-                  ? "Searching..."
-                  : `${filteredQueue.length} match${
-                      filteredQueue.length === 1 ? "" : "es"
-                    }`}
-              </p>
+          {normalizedSearchQuery.length > 0 && previewResults.length > 0 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {previewResults.map((result) => (
+                <button
+                  key={result.id}
+                  type="button"
+                  onClick={() => setSearchQuery(result.title)}
+                  className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                    movie?.id === result.id
+                      ? "bg-violet-600 text-white"
+                      : isDarkMode
+                        ? "bg-white/8 text-slate-200 hover:bg-white/12"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {result.title}
+                </button>
+              ))}
             </div>
-
-            {previewResults.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {previewResults.map((result) => (
-                  <button
-                    key={result.id}
-                    type="button"
-                    onClick={() => setSearchQuery(result.title)}
-                    className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
-                      movie?.id === result.id
-                        ? "bg-violet-600 text-white"
-                        : isDarkMode
-                          ? "bg-white/8 text-slate-200 hover:bg-white/12"
-                          : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
-                    }`}
-                  >
-                    {result.title}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
 
       {isFilterOpen ? (
