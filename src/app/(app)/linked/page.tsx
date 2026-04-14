@@ -229,17 +229,6 @@ export default function LinkedPeoplePage() {
       ) : null}
 
       <div className="space-y-3">
-        {isSyncingAccountData ? (
-          <SurfaceCard className="space-y-2 text-center">
-            <p className="text-lg font-semibold text-slate-900">
-              Loading your connections
-            </p>
-            <p className="text-sm leading-6 text-slate-500">
-              Bringing in your latest linked people and shared matches.
-            </p>
-          </SurfaceCard>
-        ) : null}
-
         {linkedUsers.map((linked) => (
           <SurfaceCard key={linked.user.id} className="space-y-3">
             <div className="flex items-center justify-between gap-3">
