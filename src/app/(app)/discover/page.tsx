@@ -142,7 +142,7 @@ export default function DiscoverPage() {
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search movies"
+              placeholder="Search a movie"
               className={`w-full rounded-[18px] border px-4 py-3 pl-10 text-sm outline-none transition ${
                 isDarkMode
                   ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
