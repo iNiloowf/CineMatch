@@ -57,14 +57,14 @@ export default function LinkedPeoplePage() {
     return data.users.find((user) => user.id === invite.inviterId) ?? null;
   }, [data.invites, data.users, manualInviteToken]);
 
-  const connectFromToken = async (token: string) => {
+  const connectFromToken = async (token: string, fallbackName = "") => {
     const result = await acceptInviteToken(token);
     setStatusMessage(result.message);
 
     if (result.ok) {
       setManualInviteValue("");
       setManualInviteToken("");
-      setConnectedPartnerName(result.partnerName ?? "");
+      setConnectedPartnerName(result.partnerName ?? fallbackName);
       router.replace("/linked");
     }
   };
@@ -170,7 +170,9 @@ export default function LinkedPeoplePage() {
           </div>
           <button
             type="button"
-            onClick={async () => await connectFromToken(inviteToken)}
+            onClick={async () =>
+              await connectFromToken(inviteToken, inviteOwner?.name ?? "")
+            }
             className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
           >
             Connect with this link
@@ -289,7 +291,7 @@ export default function LinkedPeoplePage() {
                 return;
               }
 
-              await connectFromToken(token);
+              await connectFromToken(token, manualInviteOwner?.name ?? "");
             }}
             className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
           >
