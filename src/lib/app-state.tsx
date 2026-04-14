@@ -110,6 +110,7 @@ type AppStateContextValue = {
   ) => Promise<void>;
   updateProgress: (partnerId: string, movieId: string, progress: number) => Promise<void>;
   updateProfile: (payload: {
+    name: string;
     bio: string;
     city: string;
     avatarImageUrl?: string;
@@ -1437,10 +1438,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async ({
+    name,
     bio,
     city,
     avatarImageUrl,
   }: {
+    name: string;
     bio: string;
     city: string;
     avatarImageUrl?: string;
@@ -1452,9 +1455,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
+      await supabase.auth.updateUser({
+        data: {
+          full_name: name,
+          avatar_image_url: avatarImageUrl ?? null,
+        },
+      });
+
       await supabase
         .from("profiles")
         .update({
+          full_name: name,
+          avatar_text: getAvatarText(name, currentUser?.email ?? ""),
           bio,
           city,
           avatar_image_url: avatarImageUrl ?? null,
@@ -1467,7 +1479,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ...current,
       users: current.users.map((user) =>
         user.id === currentUserId
-          ? { ...user, bio, city, avatarImageUrl }
+          ? {
+              ...user,
+              name,
+              avatar: getAvatarText(name, user.email),
+              bio,
+              city,
+              avatarImageUrl,
+            }
           : user,
       ),
     }));

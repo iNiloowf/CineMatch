@@ -40,6 +40,7 @@ export default function ProfilePage() {
     const formData = new FormData(event.currentTarget);
 
     await updateProfile({
+      name: String(formData.get("name") ?? currentUser.name).trim() || currentUser.name,
       bio: String(formData.get("bio") ?? ""),
       city: String(formData.get("city") ?? ""),
       avatarImageUrl: avatarPreview ?? currentUser.avatarImageUrl,
@@ -175,6 +176,14 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+            <label className="block space-y-2 text-sm font-medium text-slate-700">
+              Username
+              <input
+                name="name"
+                defaultValue={currentUser.name}
+                className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-violet-400 focus:bg-white"
+              />
+            </label>
             <label className="block space-y-2 text-sm font-medium text-slate-700">
               City
               <input
