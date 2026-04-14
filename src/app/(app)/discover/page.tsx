@@ -162,17 +162,19 @@ export default function DiscoverPage() {
   return (
     <div ref={rootRef} className="space-y-4">
       <div
-        className={`sticky top-0 z-10 -mx-1 rounded-[26px] px-1 pb-1 pt-0 transition-all duration-300 ${
-          isSearchCompact ? "space-y-1" : "space-y-2"
+        className={`sticky top-0 z-20 -mx-1 rounded-[26px] px-1 pt-0 transition-all duration-300 ${
+          isSearchCompact ? "space-y-0 pb-3" : "space-y-2 pb-2"
         }`}
       >
         <div
           className={`rounded-[24px] border backdrop-blur-xl transition-all duration-300 ${
-            isSearchCompact ? "px-3 py-2.5" : "px-3 py-3"
+            isSearchCompact
+              ? "mx-2 rounded-[20px] px-3 py-2 shadow-[0_14px_26px_rgba(15,23,42,0.14)]"
+              : "px-3 py-3"
           } ${
             isDarkMode
-              ? "border-white/10 bg-slate-950/72"
-              : "border-white/70 bg-white/88 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
+              ? "border-white/10 bg-slate-950/82"
+              : "border-white/80 bg-white/94 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -240,7 +242,8 @@ export default function DiscoverPage() {
             </button>
           </div>
 
-          {normalizedSearchQuery.length > 0 || selectedGenres.length > 0 ? (
+          {!isSearchCompact &&
+          (normalizedSearchQuery.length > 0 || selectedGenres.length > 0) ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {normalizedSearchQuery.length > 0 && filteredQueue.length > 0 ? (
                 <span
@@ -256,7 +259,9 @@ export default function DiscoverPage() {
             </div>
           ) : null}
 
-          {normalizedSearchQuery.length > 0 && previewResults.length > 0 ? (
+          {!isSearchCompact &&
+          normalizedSearchQuery.length > 0 &&
+          previewResults.length > 0 ? (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {previewResults.map((result) => (
                 <button
@@ -277,6 +282,13 @@ export default function DiscoverPage() {
             </div>
           ) : null}
         </div>
+        <div
+          className={`pointer-events-none h-4 rounded-b-[24px] bg-gradient-to-b ${
+            isDarkMode
+              ? "from-slate-950/28 to-transparent"
+              : "from-white/78 to-transparent"
+          }`}
+        />
       </div>
 
       {isFilterOpen ? (
