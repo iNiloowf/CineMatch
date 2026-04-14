@@ -40,30 +40,9 @@ export const initialAppData: AppData = {
   ],
   movies: [],
   swipes: [],
-  links: [
-    {
-      id: "link-admin-alex",
-      users: ["user-admin", "user-alex"],
-      status: "accepted",
-      createdAt: "2026-04-09T19:00:00.000Z",
-    },
-    {
-      id: "link-admin-jordan",
-      users: ["user-admin", "user-jordan"],
-      status: "pending",
-      createdAt: "2026-04-11T11:30:00.000Z",
-    },
-  ],
+  links: [],
   sharedWatch: [],
-  invites: [
-    {
-      id: "invite-admin-1",
-      inviterId: "user-admin",
-      token: "invite-admin-main",
-      createdAt: "2026-04-10T12:00:00.000Z",
-      usedAt: null,
-    },
-  ],
+  invites: [],
   settings: {
     "user-admin": { ...defaultSettings },
     "user-alex": { darkMode: true, notifications: true, autoplayTrailers: true, hideSpoilers: false, cellularSync: true },

@@ -19,8 +19,8 @@ import {
   User,
 } from "@/lib/types";
 
-const STORAGE_KEY = "cinematch-demo-state-v4";
-const CURRENT_USER_KEY = "cinematch-current-user-v4";
+const STORAGE_KEY = "cinematch-demo-state-v5";
+const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 
@@ -102,6 +102,7 @@ type AppStateContextValue = {
   currentUser: User | null;
   isDarkMode: boolean;
   isReady: boolean;
+  isSyncingAccountData: boolean;
   achievements: Achievement[];
   unlockedAchievement: Achievement | null;
   dismissUnlockedAchievement: () => void;
@@ -320,6 +321,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
   });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
+  const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
   const isDarkMode = currentUserId
@@ -483,6 +485,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const activeUserId = currentUserId;
 
     async function loadSupabaseAppData() {
+      setIsSyncingAccountData(true);
       const profilePromise = supabaseClient
         .from("profiles")
         .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
@@ -648,9 +651,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           mapSettingsRow(settingsResult.data as SettingsRow).darkMode,
         );
       }
+
+      setIsSyncingAccountData(false);
     }
 
-    void loadSupabaseAppData();
+    void loadSupabaseAppData().catch(() => {
+      if (active) {
+        setIsSyncingAccountData(false);
+      }
+    });
 
     return () => {
       active = false;
@@ -1067,21 +1076,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const moviePayload = {
+      id: movie.id,
+      title: movie.title,
+      release_year: movie.year,
+      runtime: movie.runtime,
+      rating: movie.rating,
+      genres: movie.genre,
+      description: movie.description,
+      poster_eyebrow: movie.poster.eyebrow,
+      poster_image_url: movie.poster.imageUrl ?? null,
+      accent_from: movie.poster.accentFrom,
+      accent_to: movie.poster.accentTo,
+      trailer_url: null,
+    };
+
     await supabase.from("movies").upsert(
-      {
-        id: movie.id,
-        title: movie.title,
-        release_year: movie.year,
-        runtime: movie.runtime,
-        rating: movie.rating,
-        genres: movie.genre,
-        description: movie.description,
-        poster_eyebrow: movie.poster.eyebrow,
-        poster_image_url: movie.poster.imageUrl ?? null,
-        accent_from: movie.poster.accentFrom,
-        accent_to: movie.poster.accentTo,
-        trailer_url: null,
-      },
+      moviePayload as never,
       { onConflict: "id" },
     );
   };
@@ -1097,13 +1108,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       await persistMovie(movieId);
 
       const createdAt = new Date().toISOString();
+      const swipePayload = {
+        user_id: currentUserId,
+        movie_id: movieId,
+        decision,
+        created_at: createdAt,
+      };
       const { error } = await supabase.from("swipes").upsert(
-        {
-          user_id: currentUserId,
-          movie_id: movieId,
-          decision,
-          created_at: createdAt,
-        },
+        swipePayload as never,
         { onConflict: "user_id,movie_id" },
       );
 
@@ -1169,15 +1181,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
 
       const createdAt = new Date().toISOString();
+      const linkPayload = {
+        requester_id: currentUserId,
+        target_id: targetUserId,
+        status: "accepted",
+        created_at: createdAt,
+        accepted_at: createdAt,
+      };
       const { data: insertedLink, error } = await supabase
         .from("linked_users")
-        .insert({
-          requester_id: currentUserId,
-          target_id: targetUserId,
-          status: "accepted",
-          created_at: createdAt,
-          accepted_at: createdAt,
-        })
+        .insert(linkPayload as never)
         .select("id, requester_id, target_id, status, created_at")
         .single();
 
@@ -1254,14 +1267,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
+      const invitePayload = {
+        inviter_id: currentUserId,
+        token,
+        created_at: createdAt,
+        used_at: null,
+      };
       const { data: insertedInvite, error } = await supabase
         .from("invite_links")
-        .insert({
-          inviter_id: currentUserId,
-          token,
-          created_at: createdAt,
-          used_at: null,
-        })
+        .insert(invitePayload as never)
         .select("id, inviter_id, token, created_at, used_at")
         .single();
 
@@ -1340,17 +1354,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
 
       const createdAt = new Date().toISOString();
-      const insertResult = await supabase
+      const acceptedLinkPayload = {
+        requester_id: currentUserId,
+        target_id: invite.inviter_id,
+        status: "accepted",
+        created_at: createdAt,
+        accepted_at: createdAt,
+      };
+      const insertResult = (await supabase
         .from("linked_users")
-        .insert({
-          requester_id: currentUserId,
-          target_id: invite.inviter_id,
-          status: "accepted",
-          created_at: createdAt,
-          accepted_at: createdAt,
-        })
+        .insert(acceptedLinkPayload as never)
         .select("id, requester_id, target_id, status, created_at")
-        .single();
+        .single()) as {
+        data: LinkRow | null;
+        error: unknown;
+      };
 
       if (insertResult.error || !insertResult.data) {
         return { ok: false, message: "We couldn’t connect these accounts yet." };
@@ -1358,7 +1376,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       await supabase
         .from("invite_links")
-        .update({ used_at: new Date().toISOString() })
+        .update({ used_at: new Date().toISOString() } as never)
         .eq("id", invite.id);
 
       setData((current) => ({
@@ -1438,13 +1456,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (supabase && isSupabaseConfigured()) {
       await persistMovie(movieId);
+      const sharedWatchPayload = {
+        linked_user_id: pairKey,
+        movie_id: movieId,
+        watched,
+        updated_at: new Date().toISOString(),
+      };
       await supabase.from("shared_watchlist").upsert(
-        {
-          linked_user_id: pairKey,
-          movie_id: movieId,
-          watched,
-          updated_at: new Date().toISOString(),
-        },
+        sharedWatchPayload as never,
         { onConflict: "linked_user_id,movie_id" },
       );
     }
@@ -1529,7 +1548,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           city,
           avatar_image_url: avatarImageUrl ?? null,
           updated_at: new Date().toISOString(),
-        })
+        } as never)
         .eq("id", currentUserId);
     }
 
@@ -1562,16 +1581,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
 
     if (supabase && isSupabaseConfigured()) {
+      const settingsPayload = {
+        user_id: currentUserId,
+        dark_mode: nextSettings.darkMode,
+        notifications: nextSettings.notifications,
+        autoplay_trailers: nextSettings.autoplayTrailers,
+        hide_spoilers: nextSettings.hideSpoilers,
+        cellular_sync: nextSettings.cellularSync,
+        updated_at: new Date().toISOString(),
+      };
       await supabase.from("settings").upsert(
-        {
-          user_id: currentUserId,
-          dark_mode: nextSettings.darkMode,
-          notifications: nextSettings.notifications,
-          autoplay_trailers: nextSettings.autoplayTrailers,
-          hide_spoilers: nextSettings.hideSpoilers,
-          cellular_sync: nextSettings.cellularSync,
-          updated_at: new Date().toISOString(),
-        },
+        settingsPayload as never,
         { onConflict: "user_id" },
       );
     }
@@ -1603,6 +1623,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         isDarkMode,
         isReady,
+        isSyncingAccountData,
         achievements,
         unlockedAchievement,
         dismissUnlockedAchievement: () => setUnlockedAchievement(null),

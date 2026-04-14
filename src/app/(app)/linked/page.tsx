@@ -13,7 +13,8 @@ export default function LinkedPeoplePage() {
   const inviteToken = searchParams.get("invite");
   const [inviteUrl, setInviteUrl] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const { data, createInviteLink, acceptInviteToken, linkedUsers } = useAppState();
+  const { data, createInviteLink, acceptInviteToken, linkedUsers, isSyncingAccountData } =
+    useAppState();
 
   const inviteOwner = useMemo(() => {
     if (!inviteToken) {
@@ -70,6 +71,17 @@ export default function LinkedPeoplePage() {
       ) : null}
 
       <div className="space-y-3">
+        {isSyncingAccountData ? (
+          <SurfaceCard className="space-y-2 text-center">
+            <p className="text-lg font-semibold text-slate-900">
+              Loading your connections
+            </p>
+            <p className="text-sm leading-6 text-slate-500">
+              Bringing in your latest linked people and shared matches.
+            </p>
+          </SurfaceCard>
+        ) : null}
+
         {linkedUsers.map((linked) => (
           <SurfaceCard key={linked.user.id} className="space-y-3">
             <div className="flex items-center justify-between gap-3">
@@ -101,6 +113,17 @@ export default function LinkedPeoplePage() {
             </div>
           </SurfaceCard>
         ))}
+
+        {!isSyncingAccountData && linkedUsers.length === 0 ? (
+          <SurfaceCard className="space-y-2 text-center">
+            <p className="text-lg font-semibold text-slate-900">
+              No linked people yet
+            </p>
+            <p className="text-sm leading-6 text-slate-500">
+              Create a special link below and open it from another account to connect.
+            </p>
+          </SurfaceCard>
+        ) : null}
       </div>
 
       <SurfaceCard className="space-y-4">
