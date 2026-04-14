@@ -22,6 +22,7 @@ import {
 const STORAGE_KEY = "cinematch-demo-state-v4";
 const CURRENT_USER_KEY = "cinematch-current-user-v4";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
+const THEME_STORAGE_KEY = "cinematch-theme-mode";
 
 type AuthResult =
   | { ok: true; message?: string; shouldRedirect?: boolean }
@@ -277,12 +278,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return window.localStorage.getItem(CURRENT_USER_KEY);
   });
+  const [preferredDarkMode, setPreferredDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
+  });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
   const isDarkMode = currentUserId
-    ? (data.settings[currentUserId]?.darkMode ?? false)
-    : false;
+    ? (data.settings[currentUserId]?.darkMode ?? preferredDarkMode)
+    : preferredDarkMode;
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -296,6 +304,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("theme-dark", isDarkMode);
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      THEME_STORAGE_KEY,
+      isDarkMode ? "dark" : "light",
+    );
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -337,6 +356,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }),
       );
       setCurrentUserId(sessionUser.id);
+      setPreferredDarkMode(
+        window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+      );
       setIsReady(true);
     })();
 
@@ -368,6 +390,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           }),
         );
         setCurrentUserId(sessionUser.id);
+        setPreferredDarkMode(
+          window.localStorage.getItem(THEME_STORAGE_KEY) === "dark",
+        );
         setIsReady(true);
       },
     );
@@ -560,6 +585,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             : next.settings,
         };
       });
+
+      if (settingsResult.data) {
+        setPreferredDarkMode(
+          mapSettingsRow(settingsResult.data as SettingsRow).darkMode,
+        );
+      }
     }
 
     void loadSupabaseAppData();
@@ -1467,6 +1498,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         { onConflict: "user_id" },
       );
     }
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        THEME_STORAGE_KEY,
+        nextSettings.darkMode ? "dark" : "light",
+      );
+    }
+    setPreferredDarkMode(nextSettings.darkMode);
 
     setData((current) => ({
       ...current,
