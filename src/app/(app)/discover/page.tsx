@@ -153,7 +153,6 @@ export default function DiscoverPage() {
   }, [normalizedSearchQuery, searchableMovies, selectedGenres]);
 
   const movie = filteredQueue[0];
-  const hasFilters = selectedGenres.length > 0 || searchQuery.trim().length > 0;
   const previewResults = filteredQueue.slice(0, 5);
 
   return (
@@ -249,22 +248,6 @@ export default function DiscoverPage() {
                 >
                   {filteredQueue.length} found
                 </span>
-              ) : null}
-              {hasFilters ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedGenres([]);
-                  }}
-                  className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
-                    isDarkMode
-                      ? "bg-white/8 text-slate-200 hover:bg-white/12"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  Clear
-                </button>
               ) : null}
             </div>
           ) : null}

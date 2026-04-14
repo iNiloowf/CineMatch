@@ -322,6 +322,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
+  const [accountRefreshKey, setAccountRefreshKey] = useState(0);
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
   const isDarkMode = currentUserId
@@ -352,6 +353,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       isDarkMode ? "dark" : "light",
     );
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const handleRefreshSignal = () => {
+      setAccountRefreshKey((current) => current + 1);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleRefreshSignal();
+      }
+    };
+
+    window.addEventListener("focus", handleRefreshSignal);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleRefreshSignal);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -664,7 +685,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [currentUserId]);
+  }, [accountRefreshKey, currentUserId]);
 
   const currentUser =
     currentUserId
@@ -1567,6 +1588,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           : user,
       ),
     }));
+    setAccountRefreshKey((current) => current + 1);
   };
 
   const updateSettings = async (payload: Partial<ProfileSettings>) => {
