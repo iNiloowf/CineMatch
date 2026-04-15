@@ -626,10 +626,14 @@ function DiscoverPageContent({
                     type="button"
                     onClick={() => {
                       if (genre === "All") {
+                        setBrowseIndex(0);
+                        setFocusedMovieId(null);
                         setSelectedGenres([]);
                         return;
                       }
 
+                      setBrowseIndex(0);
+                      setFocusedMovieId(null);
                       setSelectedGenres((current) =>
                         current.includes(genre)
                           ? current.filter((entry) => entry !== genre)
@@ -652,7 +656,11 @@ function DiscoverPageContent({
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
-                onClick={() => setSelectedGenres([])}
+                onClick={() => {
+                  setBrowseIndex(0);
+                  setFocusedMovieId(null);
+                  setSelectedGenres([]);
+                }}
                 className={`flex-1 rounded-[20px] px-4 py-3 text-sm font-semibold ${
                   isDarkMode
                     ? "bg-white/8 text-slate-200"
@@ -693,11 +701,21 @@ function DiscoverPageContent({
               movie={movie}
               onAccept={async () => {
                 setFocusedMovieId(null);
+                setBrowseIndex((current) =>
+                  filteredQueue.length <= 1
+                    ? 0
+                    : Math.min(current, filteredQueue.length - 2),
+                );
                 registerMovies([movie]);
                 await swipeMovie(movie.id, "accepted");
               }}
               onReject={async () => {
                 setFocusedMovieId(null);
+                setBrowseIndex((current) =>
+                  filteredQueue.length <= 1
+                    ? 0
+                    : Math.min(current, filteredQueue.length - 2),
+                );
                 registerMovies([movie]);
                 await swipeMovie(movie.id, "rejected");
               }}
