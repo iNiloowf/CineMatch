@@ -113,7 +113,7 @@ export function MovieSwipeCard({
 
   return (
     <SurfaceCard
-      className={`flex h-[calc(100dvh-15.5rem)] min-h-[calc(100dvh-15.5rem)] max-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-16.5rem)] sm:min-h-[calc(100dvh-16.5rem)] sm:max-h-[calc(100dvh-16.5rem)] ${
+      className={`flex h-[calc(100dvh-13.75rem)] min-h-[calc(100dvh-13.75rem)] max-h-[calc(100dvh-13.75rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-14.75rem)] sm:min-h-[calc(100dvh-14.75rem)] sm:max-h-[calc(100dvh-14.75rem)] ${
         isSnapAnimating
           ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
           : "duration-150 ease-out"
@@ -136,7 +136,7 @@ export function MovieSwipeCard({
         }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
-        <div className="relative flex min-h-[15.5rem] flex-col justify-between">
+        <div className="relative flex min-h-[14.25rem] flex-col justify-between sm:min-h-[15rem]">
           <div className="flex items-center justify-between gap-3">
             <span
               className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/92"
@@ -213,7 +213,7 @@ export function MovieSwipeCard({
         </div>
       </div>
 
-      <div className="grid min-h-[4.5rem] max-h-[4.5rem] grid-cols-3 content-start gap-2 overflow-hidden">
+      <div className="flex min-h-[2.5rem] max-h-[2.5rem] flex-nowrap items-start gap-2 overflow-hidden">
         <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
           {movie.rating.toFixed(1)} rating
         </span>
@@ -223,7 +223,7 @@ export function MovieSwipeCard({
         {movie.genre.slice(0, 3).map((entry) => (
           <span
             key={entry}
-            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+            className="max-w-[6.5rem] truncate rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
           >
             {entry}
           </span>
@@ -231,7 +231,7 @@ export function MovieSwipeCard({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
-        <div className="min-h-[5.75rem] max-h-[5.75rem] overflow-hidden">
+        <div className="min-h-[6.5rem] max-h-[6.5rem] overflow-hidden sm:min-h-[7rem] sm:max-h-[7rem]">
           <p className="text-sm leading-6 text-slate-600">{previewText}</p>
           {shouldClamp ? (
             <button
