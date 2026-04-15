@@ -176,7 +176,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <label className="block space-y-2 text-sm font-medium text-slate-700">
+            <label className="block space-y-3 text-sm font-medium text-slate-700">
               Username
               <input
                 name="name"
@@ -184,7 +184,7 @@ export default function ProfilePage() {
                 className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-violet-400 focus:bg-white"
               />
             </label>
-            <label className="block space-y-2 text-sm font-medium text-slate-700">
+            <label className="block space-y-3 text-sm font-medium text-slate-700">
               City
               <input
                 name="city"
@@ -192,7 +192,7 @@ export default function ProfilePage() {
                 className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-violet-400 focus:bg-white"
               />
             </label>
-            <label className="block space-y-2 text-sm font-medium text-slate-700">
+            <label className="block space-y-3 text-sm font-medium text-slate-700">
               Bio
               <textarea
                 name="bio"

@@ -46,7 +46,7 @@ export default function SharedWatchlistPage() {
                 />
                 <div>
                   <p className="text-lg font-semibold text-slate-900">
-                    You share with {group.partner.name}
+                    {group.partner.name}
                   </p>
                   <p className="text-sm text-slate-500">
                     {group.movies.length > 0

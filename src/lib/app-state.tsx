@@ -144,6 +144,7 @@ type AppStateContextValue = {
   updateSettings: (payload: Partial<ProfileSettings>) => Promise<void>;
   acceptedMovies: Movie[];
   discoverQueue: Movie[];
+  discoverSessionKey: string;
   linkedUsers: {
     user: User;
     status: "accepted" | "pending";
@@ -457,6 +458,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [discoverShuffleSeed, setDiscoverShuffleSeed] = useState(() =>
     Date.now().toString(),
   );
+  const [discoverStartOffset, setDiscoverStartOffset] = useState(() =>
+    Math.floor(Math.random() * 1000),
+  );
   const [discoverVisibilityTimestamp, setDiscoverVisibilityTimestamp] = useState(
     () => Date.now(),
   );
@@ -465,9 +469,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
   const refreshDiscoverShuffle = (userId: string | null) => {
+    const nextShuffleSeed =
+      userId && typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? `${userId}-${crypto.randomUUID()}`
+        : userId
+          ? `${userId}-${Date.now()}-${Math.random()}`
+          : `${Date.now()}-${Math.random()}`;
+    const nextOffset =
+      typeof crypto !== "undefined" && "getRandomValues" in crypto
+        ? crypto.getRandomValues(new Uint32Array(1))[0]
+        : Math.floor(Math.random() * 100000);
+
     setDiscoverShuffleSeed(
-      userId ? `${userId}-${Date.now()}-${Math.random()}` : Date.now().toString(),
+      nextShuffleSeed,
     );
+    setDiscoverStartOffset(nextOffset);
     setDiscoverVisibilityTimestamp(Date.now());
   };
 
@@ -990,16 +1006,34 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
     });
 
+  const rotateDiscoverQueue = (movies: Movie[]) => {
+    if (movies.length <= 1) {
+      return movies;
+    }
+
+    const offset = discoverStartOffset % movies.length;
+
+    if (offset === 0) {
+      return movies;
+    }
+
+    return [...movies.slice(offset), ...movies.slice(0, offset)];
+  };
+
   const discoverQueue = currentUserId
-    ? sortDiscoverQueue(
-        data.movies.filter(
-          (movie) =>
-            passesDiscoverQualityThreshold(movie) &&
-            !hiddenMovieIds.has(movie.id),
+    ? rotateDiscoverQueue(
+        sortDiscoverQueue(
+          data.movies.filter(
+            (movie) =>
+              passesDiscoverQualityThreshold(movie) &&
+              !hiddenMovieIds.has(movie.id),
+          ),
         ),
       )
-    : sortBySessionShuffle(
-        data.movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+    : rotateDiscoverQueue(
+        sortBySessionShuffle(
+          data.movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+        ),
       );
 
   const sharedMovies: SharedMovieView[] = currentUserId
@@ -2106,6 +2140,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         updateSettings,
         acceptedMovies,
         discoverQueue,
+        discoverSessionKey: discoverShuffleSeed,
         linkedUsers,
         sharedMovies,
         sharedMovieGroups,

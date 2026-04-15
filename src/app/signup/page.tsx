@@ -138,7 +138,7 @@ export default function SignUpPage() {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+            <label className={`block space-y-4 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
               Name
               <input
                 name="name"
@@ -153,7 +153,7 @@ export default function SignUpPage() {
                 }`}
               />
             </label>
-            <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+            <label className={`block space-y-4 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
               Email
               <input
                 name="email"
@@ -169,7 +169,7 @@ export default function SignUpPage() {
                 }`}
               />
             </label>
-            <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+            <label className={`block space-y-4 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
               Password
               <PasswordInput
                 name="password"

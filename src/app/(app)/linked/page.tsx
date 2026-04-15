@@ -184,7 +184,7 @@ export default function LinkedPeoplePage() {
                   Connected
                 </p>
                 <p className="text-lg font-semibold text-slate-900">
-                  You and {connectedPartnerName} are connected now.
+                  You are connected now.
                 </p>
                 <p className="text-sm leading-6 text-slate-500">
                   Your shared matches will start showing up here as you both accept the same movies.

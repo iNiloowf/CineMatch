@@ -7,9 +7,21 @@ import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
-export default function DiscoverPage() {
-  const { currentUserId, discoverQueue, registerMovies, swipeMovie, isDarkMode } =
-    useAppState();
+type DiscoverPageContentProps = {
+  currentUserId: string | null;
+  discoverQueue: Movie[];
+  registerMovies: (movies: Movie[]) => void;
+  swipeMovie: (movieId: string, decision: "accepted" | "rejected") => Promise<void>;
+  isDarkMode: boolean;
+};
+
+function DiscoverPageContent({
+  currentUserId,
+  discoverQueue,
+  registerMovies,
+  swipeMovie,
+  isDarkMode,
+}: DiscoverPageContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -769,5 +781,27 @@ export default function DiscoverPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DiscoverPage() {
+  const {
+    currentUserId,
+    discoverQueue,
+    discoverSessionKey,
+    registerMovies,
+    swipeMovie,
+    isDarkMode,
+  } = useAppState();
+
+  return (
+    <DiscoverPageContent
+      key={`${currentUserId ?? "guest"}-${discoverSessionKey}`}
+      currentUserId={currentUserId}
+      discoverQueue={discoverQueue}
+      registerMovies={registerMovies}
+      swipeMovie={swipeMovie}
+      isDarkMode={isDarkMode}
+    />
   );
 }
