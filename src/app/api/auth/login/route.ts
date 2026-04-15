@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { loginUser } from "@/server/mock-db";
+import { getSupabaseAdminClient } from "@/server/supabase-admin";
+
+const MAX_SAFE_AUTH_METADATA_FIELD_LENGTH = 4096;
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -8,14 +11,16 @@ export async function POST(request: NextRequest) {
   const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (supabaseUrl && supabasePublishableKey) {
-    const supabase = createClient(supabaseUrl, supabasePublishableKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
+    const createBrowserStyleClient = () =>
+      createClient(supabaseUrl, supabasePublishableKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      });
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    let supabase = createBrowserStyleClient();
+    let { data, error } = await supabase.auth.signInWithPassword({
       email: body.email,
       password: body.password,
     });
@@ -25,6 +30,37 @@ export async function POST(request: NextRequest) {
         { error: error?.message ?? "Invalid email or password." },
         { status: 401 },
       );
+    }
+
+    const avatarMetadata = data.user.user_metadata?.avatar_image_url;
+
+    if (
+      typeof avatarMetadata === "string" &&
+      avatarMetadata.length > MAX_SAFE_AUTH_METADATA_FIELD_LENGTH
+    ) {
+      const supabaseAdmin = getSupabaseAdminClient();
+
+      if (supabaseAdmin) {
+        const sanitizedMetadata = {
+          ...(data.user.user_metadata ?? {}),
+          avatar_image_url: null,
+        };
+
+        await supabaseAdmin.auth.admin.updateUserById(data.user.id, {
+          user_metadata: sanitizedMetadata,
+        });
+
+        supabase = createBrowserStyleClient();
+        const retryResult = await supabase.auth.signInWithPassword({
+          email: body.email,
+          password: body.password,
+        });
+
+        if (!retryResult.error && retryResult.data.user && retryResult.data.session) {
+          data = retryResult.data;
+          error = null;
+        }
+      }
     }
 
     return NextResponse.json({

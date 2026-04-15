@@ -2494,7 +2494,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.updateUser({
         data: {
           full_name: name,
-          avatar_image_url: avatarImageUrl ?? null,
+          avatar_image_url: null,
         },
       });
 
