@@ -25,6 +25,7 @@ const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
+const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 type AuthResult =
@@ -101,6 +102,13 @@ type MovieRow = {
   accent_from: string;
   accent_to: string;
   trailer_url?: string | null;
+};
+
+type StoredAuthSession = {
+  userId: string;
+  email?: string | null;
+  accessToken: string;
+  refreshToken: string;
 };
 
 type AccountSyncPayload = {
@@ -334,6 +342,39 @@ function persistUserTheme(userId: string, isDark: boolean) {
   );
 }
 
+function getStoredAuthSession() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredAuthSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistStoredAuthSession(session: StoredAuthSession) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function clearStoredAuthSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+}
+
 function getAccountCacheKey(userId: string) {
   return `${ACCOUNT_CACHE_STORAGE_PREFIX}-${userId}`;
 }
@@ -428,6 +469,12 @@ function hashString(value: string) {
 }
 
 async function getCurrentAccessToken() {
+  const storedSession = getStoredAuthSession();
+
+  if (storedSession?.accessToken) {
+    return storedSession.accessToken;
+  }
+
   const supabase = getSupabaseBrowserClient();
 
   if (!supabase || !isSupabaseConfigured()) {
@@ -807,11 +854,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
 
       const sessionUser = sessionResponse.data.session?.user;
+      const storedSession = getStoredAuthSession();
 
-      if (!sessionUser) {
+      if (!sessionUser && !storedSession?.userId) {
         setCurrentUserId(null);
         refreshDiscoverShuffle(null);
         setAccountRefreshKey((current) => current + 1);
+        setIsReady(true);
+        return;
+      }
+
+      if (!sessionUser && storedSession?.userId) {
+        setCurrentUserId(storedSession.userId);
+        refreshDiscoverShuffle(storedSession.userId);
+        setAccountRefreshKey((current) => current + 1);
+        setPreferredDarkMode(
+          getStoredUserTheme(storedSession.userId) ?? getGlobalStoredTheme(),
+        );
+        setIsReady(true);
+        return;
+      }
+
+      if (!sessionUser) {
         setIsReady(true);
         return;
       }
@@ -848,6 +912,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const sessionUser = session?.user;
 
         if (!sessionUser) {
+          const storedSession = getStoredAuthSession();
+
+          if (storedSession?.userId) {
+            setCurrentUserId(storedSession.userId);
+            refreshDiscoverShuffle(storedSession.userId);
+            setAccountRefreshKey((current) => current + 1);
+            setPreferredDarkMode(
+              getStoredUserTheme(storedSession.userId) ?? getGlobalStoredTheme(),
+            );
+            setIsReady(true);
+            return;
+          }
+
           setCurrentUserId(null);
           refreshDiscoverShuffle(null);
           setAccountRefreshKey((current) => current + 1);
@@ -855,26 +932,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        const activeSessionUser = sessionUser;
+
         const fullName =
-          (sessionUser.user_metadata.full_name as string | undefined) ??
-          sessionUser.email?.split("@")[0] ??
+          (activeSessionUser.user_metadata.full_name as string | undefined) ??
+          activeSessionUser.email?.split("@")[0] ??
           "CineMatch User";
 
         setData((current) =>
           ensureLocalUser(current, {
-            id: sessionUser.id,
+            id: activeSessionUser.id,
             name: fullName,
-            email: sessionUser.email ?? "",
+            email: activeSessionUser.email ?? "",
             avatarImageUrl:
-              (sessionUser.user_metadata.avatar_image_url as string | undefined) ??
+              (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
               undefined,
           }),
         );
-        setCurrentUserId(sessionUser.id);
-        refreshDiscoverShuffle(sessionUser.id);
+        setCurrentUserId(activeSessionUser.id);
+        refreshDiscoverShuffle(activeSessionUser.id);
         setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
-          getStoredUserTheme(sessionUser.id) ??
+          getStoredUserTheme(activeSessionUser.id) ??
             getGlobalStoredTheme(),
         );
         setIsReady(true);
@@ -1473,20 +1552,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             };
           };
 
-          if (loginResponse.ok && loginPayload.user && loginPayload.session) {
-            const setSessionResult = await supabase.auth.setSession({
+        if (loginResponse.ok && loginPayload.user && loginPayload.session) {
+            persistStoredAuthSession({
+              userId: loginPayload.user.id,
+              email: loginPayload.user.email ?? email,
+              accessToken: loginPayload.session.access_token,
+              refreshToken: loginPayload.session.refresh_token,
+            });
+
+            await supabase.auth.setSession({
               access_token: loginPayload.session.access_token,
               refresh_token: loginPayload.session.refresh_token,
             });
-
-            if (setSessionResult.error) {
-              return {
-                ok: false,
-                message:
-                  setSessionResult.error.message ??
-                  "We couldn’t sign you in. Double-check your email and password.",
-              };
-            }
 
             authUser = loginPayload.user;
           } else if (loginResponse.ok) {
@@ -1521,6 +1598,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             email: directLoginResult.data.user.email,
             user_metadata: directLoginResult.data.user.user_metadata,
           };
+
+          if (directLoginResult.data.session) {
+            persistStoredAuthSession({
+              userId: directLoginResult.data.user.id,
+              email: directLoginResult.data.user.email ?? email,
+              accessToken: directLoginResult.data.session.access_token,
+              refreshToken: directLoginResult.data.session.refresh_token,
+            });
+          }
         }
 
         const fullName =
@@ -1649,6 +1735,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
 
       if (authData.session) {
+        persistStoredAuthSession({
+          userId: authUser.id,
+          email: authUser.email ?? email,
+          accessToken: authData.session.access_token,
+          refreshToken: authData.session.refresh_token,
+        });
         setCurrentUserId(authUser.id);
         refreshDiscoverShuffle(authUser.id);
         setAccountRefreshKey((current) => current + 1);
@@ -1715,6 +1807,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     }
 
+    clearStoredAuthSession();
     setCurrentUserId(null);
     refreshDiscoverShuffle(null);
     setAccountRefreshKey((current) => current + 1);
