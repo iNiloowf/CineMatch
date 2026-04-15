@@ -11,6 +11,7 @@ export default function SettingsPage() {
     currentUser,
     data,
     achievements,
+    isDarkMode,
     logout,
     updateSettings,
   } = useAppState();
@@ -31,7 +32,7 @@ export default function SettingsPage() {
         <SettingToggle
           label="Dark mode"
           description="Switch the app to a darker evening-friendly theme."
-          checked={settings.darkMode}
+          checked={isDarkMode}
           onChange={(checked) => updateSettings({ darkMode: checked })}
         />
         <SettingToggle

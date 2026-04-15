@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       className={`min-h-[100dvh] px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3 sm:px-4 sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
-          : "bg-[linear-gradient(180deg,#f7f4ff_0%,#f8fafc_28%,#eef2ff_100%)] text-slate-900"
+          : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.55),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(251,207,232,0.42),transparent_26%),linear-gradient(180deg,#fcfbff_0%,#f6f8ff_30%,#eef4ff_68%,#fdf7ff_100%)] text-slate-900"
       }`}
     >
       <AchievementToast
