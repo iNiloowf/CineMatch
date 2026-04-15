@@ -20,13 +20,13 @@ function TogglePill({
     <button
       type="button"
       onClick={() => void onChange(!checked)}
-      className={`flex flex-1 items-center justify-between rounded-[18px] px-4 py-3 text-[13px] font-semibold transition ${
+      className={`flex flex-1 items-center justify-between gap-4 rounded-[18px] px-4 py-3 text-xs font-semibold transition ${
         checked
           ? "bg-violet-600 text-white shadow-[0_14px_28px_rgba(124,58,237,0.22)]"
           : "bg-white text-slate-700"
       }`}
     >
-      <span>{label}</span>
+      <span className="pr-2">{label}</span>
       <span
         className={`inline-flex h-6 w-10 items-center rounded-full p-1 transition ${
           checked ? "bg-white/25" : "bg-slate-200"
