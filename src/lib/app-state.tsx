@@ -356,6 +356,49 @@ function hashString(value: string) {
   return Math.abs(hash);
 }
 
+async function getCurrentAccessToken() {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase || !isSupabaseConfigured()) {
+    return null;
+  }
+
+  const sessionResult = await supabase.auth.getSession();
+  return sessionResult.data.session?.access_token ?? null;
+}
+
+async function persistMovieToSupabase(movie: Movie) {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase || !isSupabaseConfigured()) {
+    return;
+  }
+
+  const moviePayload = {
+    id: movie.id,
+    title: movie.title,
+    release_year: movie.year,
+    runtime: movie.runtime,
+    rating: movie.rating,
+    genres: Array.from(
+      new Set([
+        ...movie.genre,
+        movie.mediaType === "series" ? "Series" : "Movie",
+      ]),
+    ),
+    description: movie.description,
+    poster_eyebrow: movie.poster.eyebrow,
+    poster_image_url: movie.poster.imageUrl ?? null,
+    accent_from: movie.poster.accentFrom,
+    accent_to: movie.poster.accentTo,
+    trailer_url: null,
+  };
+
+  await supabase.from("movies").upsert(moviePayload as never, {
+    onConflict: "id",
+  });
+}
+
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(() => {
     if (typeof window === "undefined") {
@@ -1303,95 +1346,68 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setData((current) => mergeMoviesIntoData(current, movies));
   };
 
-  const persistMovie = async (movieId: string) => {
-    const supabase = getSupabaseBrowserClient();
-    const movie = data.movies.find((entry) => entry.id === movieId);
-
-    if (!supabase || !isSupabaseConfigured() || !movie) {
-      return;
-    }
-
-    const moviePayload = {
-      id: movie.id,
-      title: movie.title,
-      release_year: movie.year,
-      runtime: movie.runtime,
-      rating: movie.rating,
-      genres: Array.from(
-        new Set([
-          ...movie.genre,
-          movie.mediaType === "series" ? "Series" : "Movie",
-        ]),
-      ),
-      description: movie.description,
-      poster_eyebrow: movie.poster.eyebrow,
-      poster_image_url: movie.poster.imageUrl ?? null,
-      accent_from: movie.poster.accentFrom,
-      accent_to: movie.poster.accentTo,
-      trailer_url: null,
-    };
-
-    await supabase.from("movies").upsert(
-      moviePayload as never,
-      { onConflict: "id" },
-    );
-  };
-
   const swipeMovie = async (movieId: string, decision: SwipeDecision) => {
     if (!currentUserId) {
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
+    const movie = data.movies.find((entry) => entry.id === movieId);
+    const accessToken = await getCurrentAccessToken();
 
-    if (supabase && isSupabaseConfigured()) {
-      await persistMovie(movieId);
+    if (movie && accessToken) {
+      try {
+        const response = await fetch("/api/swipes", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            movie,
+            decision,
+          }),
+        });
 
-      const createdAt = new Date().toISOString();
-      const swipePayload = {
-        user_id: currentUserId,
-        movie_id: movieId,
-        decision,
-        created_at: createdAt,
-      };
-      const { error } = await supabase.from("swipes").upsert(
-        swipePayload as never,
-        { onConflict: "user_id,movie_id" },
-      );
+        const payload = (await response.json()) as {
+          swipe?: SwipeRow;
+          error?: string;
+        };
 
-      if (!error) {
-        setData((current) => ({
-          ...current,
-          swipes: [
-            ...current.swipes.filter(
-              (swipe) =>
-                !(swipe.userId === currentUserId && swipe.movieId === movieId),
-            ),
-            {
-              userId: currentUserId,
-              movieId,
-              decision,
-              createdAt,
-            },
-          ],
-        }));
-        return;
+        if (response.ok && payload.swipe) {
+          const createdAt = payload.swipe.created_at;
+          setData((current) => ({
+            ...mergeMoviesIntoData(current, [movie]),
+            swipes: [
+              ...current.swipes.filter(
+                (swipe) =>
+                  !(swipe.userId === currentUserId && swipe.movieId === movieId),
+              ),
+              {
+                userId: currentUserId,
+                movieId,
+                decision,
+                createdAt,
+              },
+            ],
+          }));
+          setAccountRefreshKey((current) => current + 1);
+          return;
+        }
+      } catch {
+        // Fall through to local optimistic storage so the app stays usable.
       }
     }
 
     setData((current) => {
-      const alreadyExists = current.swipes.some(
-        (swipe) => swipe.userId === currentUserId && swipe.movieId === movieId,
+      const existingWithoutCurrentChoice = current.swipes.filter(
+        (swipe) =>
+          !(swipe.userId === currentUserId && swipe.movieId === movieId),
       );
 
-      if (alreadyExists) {
-        return current;
-      }
-
       return {
-        ...current,
+        ...mergeMoviesIntoData(current, movie ? [movie] : []),
         swipes: [
-          ...current.swipes,
+          ...existingWithoutCurrentChoice,
           {
             userId: currentUserId,
             movieId,
@@ -1439,6 +1455,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           ...current,
           links: [...current.links, mapLinkRow(insertedLink as LinkRow)],
         }));
+        setAccountRefreshKey((current) => current + 1);
         return;
       }
     }
@@ -1517,15 +1534,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
+    const accessToken = await getCurrentAccessToken();
 
-    if (supabase && isSupabaseConfigured()) {
-      await supabase
-        .from("swipes")
-        .delete()
-        .eq("user_id", currentUserId)
-        .eq("movie_id", movieId)
-        .eq("decision", "accepted");
+    if (accessToken) {
+      try {
+        await fetch("/api/swipes", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ movieId }),
+        });
+      } catch {
+        // Keep local removal even if the network fails.
+      }
     }
 
     setData((current) => ({
@@ -1640,108 +1663,75 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, message: "Log in first to use an invite link." };
     }
 
-    const supabase = getSupabaseBrowserClient();
+    const accessToken = await getCurrentAccessToken();
 
-    if (supabase && isSupabaseConfigured()) {
-      const inviteResult = await supabase
-        .from("invite_links")
-        .select("id, inviter_id, token, created_at, used_at")
-        .eq("token", token)
-        .maybeSingle();
-      const invite = inviteResult.data as InviteRow | null;
+    if (accessToken) {
+      try {
+        const response = await fetch("/api/invite-links/accept", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token }),
+        });
 
-      if (!invite) {
-        return { ok: false, message: "This invite link is invalid." };
-      }
+        const payload = (await response.json()) as {
+          error?: string;
+          link?: LinkRow;
+          partnerProfile?: ProfileRow | null;
+          invite?: InviteRow;
+        };
 
-      if (invite.inviter_id === currentUserId) {
-        return { ok: false, message: "You can’t use your own invite link." };
-      }
+        if (!response.ok || !payload.link) {
+          return {
+            ok: false,
+            message: payload.error ?? "We couldn’t connect these accounts yet.",
+          };
+        }
 
-      if (invite.used_at) {
-        return { ok: false, message: "This invite link has already been used." };
-      }
+        const acceptedLink = payload.link;
+        const partnerProfile = payload.partnerProfile ?? null;
+        const partnerName =
+          partnerProfile?.full_name ??
+          data.users.find((user) => user.id === acceptedLink.target_id)?.name ??
+          "your match";
 
-      const inviterProfileResult = await supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
-        .eq("id", invite.inviter_id)
-        .maybeSingle();
-      const inviterProfile = inviterProfileResult.data as ProfileRow | null;
-      const knownInviter = data.users.find((user) => user.id === invite.inviter_id);
-      const partnerName =
-        inviterProfile?.full_name ??
-        knownInviter?.name ??
-        invite.inviter_id;
+        setData((current) => ({
+          ...ensureLocalUser(current, {
+            id: partnerProfile?.id ?? acceptedLink.target_id,
+            name: partnerName,
+            email: partnerProfile?.email ?? "",
+            avatar: partnerProfile?.avatar_text ?? getAvatarText(partnerName, ""),
+            avatarImageUrl: partnerProfile?.avatar_image_url ?? undefined,
+            bio: partnerProfile?.bio ?? "Connected on CineMatch.",
+            city: partnerProfile?.city ?? "",
+          }),
+          links: [
+            ...current.links.filter((link) => link.id !== acceptedLink.id),
+            mapLinkRow(acceptedLink),
+          ],
+          invites: payload.invite
+            ? current.invites.map((entry) =>
+                entry.id === payload.invite?.id
+                  ? mapInviteRow(payload.invite)
+                  : entry,
+              )
+            : current.invites,
+        }));
+        setAccountRefreshKey((current) => current + 1);
 
-      const existingLinkResult = await supabase
-        .from("linked_users")
-        .select("id")
-        .or(
-          `and(requester_id.eq.${currentUserId},target_id.eq.${invite.inviter_id}),and(requester_id.eq.${invite.inviter_id},target_id.eq.${currentUserId})`,
-        )
-        .maybeSingle();
-
-      if (existingLinkResult.data) {
+        return {
+          ok: true,
+          message: "You’re connected now.",
+          partnerName,
+        };
+      } catch {
         return {
           ok: false,
-          message: "You’re already connected with this person.",
+          message: "We couldn’t reach the connection service right now.",
         };
       }
-
-      const createdAt = new Date().toISOString();
-      const acceptedLinkPayload = {
-        requester_id: currentUserId,
-        target_id: invite.inviter_id,
-        status: "accepted",
-        created_at: createdAt,
-        accepted_at: createdAt,
-      };
-      const insertResult = (await supabase
-        .from("linked_users")
-        .insert(acceptedLinkPayload as never)
-        .select("id, requester_id, target_id, status, created_at")
-        .single()) as {
-        data: LinkRow | null;
-        error: unknown;
-      };
-
-      if (insertResult.error || !insertResult.data) {
-        return { ok: false, message: "We couldn’t connect these accounts yet." };
-      }
-
-      await supabase
-        .from("invite_links")
-        .update({ used_at: new Date().toISOString() } as never)
-        .eq("id", invite.id);
-
-      setData((current) => ({
-        ...ensureLocalUser(current, {
-          id: inviterProfile?.id ?? invite.inviter_id,
-          name: inviterProfile?.full_name ?? partnerName,
-          email: inviterProfile?.email ?? "",
-          avatar: inviterProfile?.avatar_text ?? getAvatarText(partnerName, ""),
-          avatarImageUrl: inviterProfile?.avatar_image_url ?? undefined,
-          bio: inviterProfile?.bio ?? "Connected on CineMatch.",
-          city: inviterProfile?.city ?? "",
-        }),
-        links: [...current.links, mapLinkRow(insertResult.data as LinkRow)],
-        invites: current.invites.map((entry) =>
-          entry.id === invite.id
-            ? {
-                ...entry,
-                usedAt: new Date().toISOString(),
-              }
-            : entry,
-        ),
-      }));
-      setAccountRefreshKey((current) => current + 1);
-
-      return {
-        ok: true,
-        message: "You’re connected now.",
-        partnerName,
-      };
     }
 
     const invite = data.invites.find((entry) => entry.token === token);
@@ -1802,9 +1792,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         (link) => link.users.includes(currentUserId) && link.users.includes(partnerId),
       )?.id ?? getPairKey(currentUserId, partnerId);
     const supabase = getSupabaseBrowserClient();
+    const movie = data.movies.find((entry) => entry.id === movieId);
 
-    if (supabase && isSupabaseConfigured()) {
-      await persistMovie(movieId);
+    if (supabase && isSupabaseConfigured() && movie) {
+      await persistMovieToSupabase(movie);
       const sharedWatchPayload = {
         linked_user_id: pairKey,
         movie_id: movieId,
