@@ -670,41 +670,45 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     async function loadSupabaseAppData() {
       setIsSyncingAccountData(true);
-      const profilePromise = supabaseClient
-        .from("profiles")
-        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
-        .eq("id", activeUserId)
-        .maybeSingle();
-      const settingsPromise = supabaseClient
-        .from("settings")
-        .select(
-          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
-        )
-        .eq("user_id", activeUserId)
-        .maybeSingle();
-      const linksPromise = supabaseClient
-        .from("linked_users")
-        .select("id, requester_id, target_id, status, created_at")
-        .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`);
-      const invitesPromise = supabaseClient
-        .from("invite_links")
-        .select("id, inviter_id, token, created_at, used_at")
-        .eq("inviter_id", activeUserId)
-        .order("created_at", { ascending: false });
-
-      const [profileResult, settingsResult, linksResult, invitesResult] =
-        await Promise.all([
-          profilePromise,
-          settingsPromise,
-          linksPromise,
-          invitesPromise,
+      const [profileSettled, settingsSettled, linksSettled, invitesSettled] =
+        await Promise.allSettled([
+          supabaseClient
+            .from("profiles")
+            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+            .eq("id", activeUserId)
+            .maybeSingle(),
+          supabaseClient
+            .from("settings")
+            .select(
+              "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
+            )
+            .eq("user_id", activeUserId)
+            .maybeSingle(),
+          supabaseClient
+            .from("linked_users")
+            .select("id, requester_id, target_id, status, created_at")
+            .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`),
+          supabaseClient
+            .from("invite_links")
+            .select("id, inviter_id, token, created_at, used_at")
+            .eq("inviter_id", activeUserId)
+            .order("created_at", { ascending: false }),
         ]);
 
       if (!active) {
         return;
       }
 
-      const linkRows = (linksResult.data ?? []) as LinkRow[];
+      const profileResult =
+        profileSettled.status === "fulfilled" ? profileSettled.value : null;
+      const settingsResult =
+        settingsSettled.status === "fulfilled" ? settingsSettled.value : null;
+      const linksResult =
+        linksSettled.status === "fulfilled" ? linksSettled.value : null;
+      const invitesResult =
+        invitesSettled.status === "fulfilled" ? invitesSettled.value : null;
+
+      const linkRows = ((linksResult?.data ?? []) as LinkRow[]) ?? [];
       const partnerIds = Array.from(
         new Set(
           linkRows.map((link) =>
@@ -712,13 +716,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           ),
         ),
       );
-      const sharedLinkIds = linkRows.map((link) => link.id);
-      const acceptedUserIds = Array.from(
+      const hydratedSwipeUserIds = Array.from(
         new Set([activeUserId, ...partnerIds]),
       );
-
-      const [partnerProfilesResult, sharedWatchResult, partnerSwipesResult] =
-        await Promise.all([
+      const sharedLinkIds = linkRows.map((link) => link.id);
+      const [partnerProfilesSettled, sharedWatchSettled, ownSwipesSettled, partnerAcceptedSwipesSettled] =
+        await Promise.allSettled([
           partnerIds.length > 0
             ? supabaseClient
                 .from("profiles")
@@ -731,11 +734,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 .select("id, linked_user_id, movie_id, watched, updated_at")
                 .in("linked_user_id", sharedLinkIds)
             : Promise.resolve({ data: [] as SharedWatchRow[] }),
-          acceptedUserIds.length > 0
+          supabaseClient
+            .from("swipes")
+            .select("user_id, movie_id, decision, created_at")
+            .eq("user_id", activeUserId),
+          partnerIds.length > 0
             ? supabaseClient
                 .from("swipes")
                 .select("user_id, movie_id, decision, created_at")
-                .in("user_id", acceptedUserIds)
+                .in("user_id", partnerIds)
+                .eq("decision", "accepted")
             : Promise.resolve({ data: [] as SwipeRow[] }),
         ]);
 
@@ -743,7 +751,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const swipeRows = ((partnerSwipesResult as { data: SwipeRow[] }).data ?? []) as SwipeRow[];
+      const partnerProfilesResult =
+        partnerProfilesSettled.status === "fulfilled"
+          ? partnerProfilesSettled.value
+          : { data: [] as ProfileRow[] };
+      const sharedWatchResult =
+        sharedWatchSettled.status === "fulfilled"
+          ? sharedWatchSettled.value
+          : { data: [] as SharedWatchRow[] };
+      const ownSwipesResult =
+        ownSwipesSettled.status === "fulfilled"
+          ? ownSwipesSettled.value
+          : { data: [] as SwipeRow[] };
+      const partnerAcceptedSwipesResult =
+        partnerAcceptedSwipesSettled.status === "fulfilled"
+          ? partnerAcceptedSwipesSettled.value
+          : { data: [] as SwipeRow[] };
+
+      const swipeRows = [
+        ...(((ownSwipesResult.data ?? []) as SwipeRow[]) ?? []),
+        ...(((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? []),
+      ];
       const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
       const moviesResult =
         movieIds.length > 0
@@ -762,7 +790,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setData((current) => {
         let next = current;
 
-        const ownProfile = profileResult.data as ProfileRow | null;
+        const ownProfile = (profileResult?.data ?? null) as ProfileRow | null;
         const allProfiles = [
           ...(ownProfile ? [ownProfile] : []),
           ...(((partnerProfilesResult as { data: ProfileRow[] }).data ?? []) as ProfileRow[]),
@@ -780,7 +808,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
-        const ownSettings = settingsResult.data as SettingsRow | null;
+        const ownSettings = (settingsResult?.data ?? null) as SettingsRow | null;
         next = mergeMoviesIntoData(
           next,
           (((moviesResult as { data: MovieRow[] }).data ?? []) as MovieRow[]).map(
@@ -788,7 +816,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           ),
         );
         const currentSwipes = [
-          ...next.swipes.filter((swipe) => !acceptedUserIds.includes(swipe.userId)),
+          ...next.swipes.filter((swipe) => !hydratedSwipeUserIds.includes(swipe.userId)),
           ...swipeRows.map(mapSwipeRow),
         ];
         const currentLinks = [
@@ -797,7 +825,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ];
         const currentInvites = [
           ...next.invites.filter((invite) => invite.inviterId !== activeUserId),
-          ...((invitesResult.data ?? []) as InviteRow[]).map(mapInviteRow),
+          ...(((invitesResult?.data ?? []) as InviteRow[]) ?? []).map(mapInviteRow),
         ];
         const currentSharedWatch = [
           ...next.sharedWatch.filter(
@@ -830,7 +858,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         };
       });
 
-      if (settingsResult.data) {
+      if (settingsResult?.data) {
         const dbDarkMode = mapSettingsRow(
           settingsResult.data as SettingsRow,
         ).darkMode;
@@ -1111,51 +1139,71 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      try {
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (error || !authData.user) {
+        if (error || !authData.user) {
+          return {
+            ok: false,
+            message:
+              error?.message ??
+              "We couldn’t sign you in. Double-check your email and password.",
+          };
+        }
+
+        const fullName =
+          (authData.user.user_metadata.full_name as string | undefined) ??
+          authData.user.email?.split("@")[0] ??
+          "CineMatch User";
+
+        setData((current) =>
+          ensureLocalUser(current, {
+            id: authData.user.id,
+            name: fullName,
+            email: authData.user.email ?? email,
+            avatarImageUrl:
+              (authData.user.user_metadata.avatar_image_url as string | undefined) ??
+              undefined,
+          }),
+        );
+        setCurrentUserId(authData.user.id);
+        refreshDiscoverShuffle(authData.user.id);
+
+        const storedUserTheme = getStoredUserTheme(authData.user.id);
+        setPreferredDarkMode(storedUserTheme ?? getGlobalStoredTheme());
+
+        void (async () => {
+          try {
+            const settingsResult = await supabase
+              .from("settings")
+              .select("dark_mode")
+              .eq("user_id", authData.user.id)
+              .maybeSingle();
+            const nextDarkMode =
+              getStoredUserTheme(authData.user.id) ??
+              (settingsResult.data as { dark_mode?: boolean } | null)?.dark_mode ??
+              getGlobalStoredTheme();
+            setPreferredDarkMode(nextDarkMode);
+            persistUserTheme(authData.user.id, nextDarkMode);
+          } catch {
+            // Keep the restored local theme if this background fetch fails.
+          }
+        })();
+
+        return { ok: true, shouldRedirect: true };
+      } catch (error) {
         return {
           ok: false,
           message:
-            error?.message ??
-            "We couldn’t sign you in. Double-check your email and password.",
+            error instanceof Error &&
+            error.message.toLowerCase().includes("failed to fetch")
+              ? "The app couldn’t reach the sign-in service right now. Please try again in a moment."
+              : "We couldn’t sign you in right now. Please try again.",
         };
       }
-
-      const fullName =
-        (authData.user.user_metadata.full_name as string | undefined) ??
-        authData.user.email?.split("@")[0] ??
-        "CineMatch User";
-
-      setData((current) =>
-        ensureLocalUser(current, {
-          id: authData.user.id,
-          name: fullName,
-          email: authData.user.email ?? email,
-          avatarImageUrl:
-            (authData.user.user_metadata.avatar_image_url as string | undefined) ??
-            undefined,
-        }),
-      );
-      setCurrentUserId(authData.user.id);
-      refreshDiscoverShuffle(authData.user.id);
-      const settingsResult = await supabase
-        .from("settings")
-        .select("dark_mode")
-        .eq("user_id", authData.user.id)
-        .maybeSingle();
-      const storedUserTheme = getStoredUserTheme(authData.user.id);
-      const nextDarkMode =
-        storedUserTheme ??
-        (settingsResult.data as { dark_mode?: boolean } | null)?.dark_mode ??
-        getGlobalStoredTheme();
-      setPreferredDarkMode(nextDarkMode);
-      persistUserTheme(authData.user.id, nextDarkMode);
-
-      return { ok: true, shouldRedirect: true };
     }
 
     const match = data.users.find(
