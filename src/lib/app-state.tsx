@@ -1,7 +1,7 @@
 "use client";
 
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import {
   getSupabaseBrowserClient,
@@ -390,6 +390,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
+  const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
   const refreshDiscoverShuffle = (userId: string | null) => {
     setDiscoverShuffleSeed(
@@ -463,6 +464,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (!sessionUser) {
         setCurrentUserId(null);
         refreshDiscoverShuffle(null);
+        setAccountRefreshKey((current) => current + 1);
         setIsReady(true);
         return;
       }
@@ -484,6 +486,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
       setCurrentUserId(sessionUser.id);
       refreshDiscoverShuffle(sessionUser.id);
+      setAccountRefreshKey((current) => current + 1);
       setPreferredDarkMode(
         getStoredUserTheme(sessionUser.id) ??
           getGlobalStoredTheme(),
@@ -500,6 +503,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         if (!sessionUser) {
           setCurrentUserId(null);
           refreshDiscoverShuffle(null);
+          setAccountRefreshKey((current) => current + 1);
           setIsReady(true);
           return;
         }
@@ -521,6 +525,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         );
         setCurrentUserId(sessionUser.id);
         refreshDiscoverShuffle(sessionUser.id);
+        setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
           getStoredUserTheme(sessionUser.id) ??
             getGlobalStoredTheme(),
@@ -675,6 +680,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (!accessToken) {
         setIsSyncingAccountData(false);
+        if (syncRetryCountRef.current < 3) {
+          syncRetryCountRef.current += 1;
+          window.setTimeout(() => {
+            setAccountRefreshKey((current) => current + 1);
+          }, 900);
+        }
         return;
       }
 
@@ -687,6 +698,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         setIsSyncingAccountData(false);
+        if (syncRetryCountRef.current < 3) {
+          syncRetryCountRef.current += 1;
+          window.setTimeout(() => {
+            setAccountRefreshKey((current) => current + 1);
+          }, 1200);
+        }
         return;
       }
 
@@ -798,6 +815,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         persistUserTheme(activeUserId, nextDarkMode);
       }
 
+      syncRetryCountRef.current = 0;
       setIsSyncingAccountData(false);
     }
 
@@ -1101,6 +1119,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         );
         setCurrentUserId(authData.user.id);
         refreshDiscoverShuffle(authData.user.id);
+        setAccountRefreshKey((current) => current + 1);
 
         const storedUserTheme = getStoredUserTheme(authData.user.id);
         setPreferredDarkMode(storedUserTheme ?? getGlobalStoredTheme());
@@ -1151,6 +1170,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     setCurrentUserId(match.id);
     refreshDiscoverShuffle(match.id);
+    setAccountRefreshKey((current) => current + 1);
     const storedUserTheme = getStoredUserTheme(match.id);
     const nextDarkMode =
       storedUserTheme ??
@@ -1210,6 +1230,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (authData.session) {
         setCurrentUserId(authUser.id);
         refreshDiscoverShuffle(authUser.id);
+        setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(getStoredUserTheme(authUser.id) ?? false);
         return { ok: true, shouldRedirect: true };
       }
@@ -1259,6 +1280,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
     setCurrentUserId(nextUser.id);
     refreshDiscoverShuffle(nextUser.id);
+    setAccountRefreshKey((current) => current + 1);
     setPreferredDarkMode(false);
     persistUserTheme(nextUser.id, false);
 
@@ -1274,6 +1296,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     setCurrentUserId(null);
     refreshDiscoverShuffle(null);
+    setAccountRefreshKey((current) => current + 1);
   };
 
   const registerMovies = (movies: Movie[]) => {
