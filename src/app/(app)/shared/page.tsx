@@ -27,9 +27,9 @@ export default function SharedWatchlistPage() {
         </SurfaceCard>
       ) : null}
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {sharedMovieGroups.map((group) => (
-          <SurfaceCard key={group.partner.id} className="space-y-4">
+          <SurfaceCard key={group.partner.id} className="space-y-5">
             <button
               type="button"
               onClick={() =>
@@ -61,7 +61,7 @@ export default function SharedWatchlistPage() {
             </button>
 
             {openPartnerId === group.partner.id ? (
-              <div className="expand-soft space-y-4 pt-2">
+              <div className="expand-soft space-y-5 pt-4">
                 {group.movies.length === 0 ? (
                   <div className="rounded-[24px] bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
                     You are connected with {group.partner.name}, but you have not accepted the same movie yet.
