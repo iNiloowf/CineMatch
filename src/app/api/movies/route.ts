@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Movie } from "@/lib/types";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
 import { isTmdbConfigured, searchTmdbMedia } from "@/server/tmdb";
 
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const MIN_DISCOVER_RATING = 3;
+const MIN_DISCOVER_RUNTIME_MINUTES = 20;
+
+function getRuntimeMinutes(runtimeLabel: string) {
+  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+    return null;
+  }
+
+  const hoursMatch = runtimeLabel.match(/(\d+)h/);
+  const minutesMatch = runtimeLabel.match(/(\d+)m/);
+  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+  const totalMinutes = hours * 60 + minutes;
+
+  return totalMinutes > 0 ? totalMinutes : null;
+}
+
+function passesDiscoverQualityThreshold(movie: Movie) {
+  if (movie.rating < MIN_DISCOVER_RATING) {
+    return false;
+  }
+
+  const runtimeMinutes = getRuntimeMinutes(movie.runtime);
+
+  if (runtimeMinutes !== null && runtimeMinutes < MIN_DISCOVER_RUNTIME_MINUTES) {
+    return false;
+  }
+
+  return true;
+}
 
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");
@@ -15,10 +46,11 @@ export async function GET(request: NextRequest) {
         ? await searchTmdbMedia(query)
         : await getMergedMovies()
       : database.movies;
+  const filteredMovies = movies.filter(passesDiscoverQualityThreshold);
 
   if (!userId) {
     return NextResponse.json({
-      movies,
+      movies: filteredMovies,
       source: isTmdbConfigured() ? "tmdb+mock" : "mock",
     });
   }
@@ -46,7 +78,7 @@ export async function GET(request: NextRequest) {
   );
 
   return NextResponse.json({
-    movies: movies.filter((movie) => !hiddenMovies.has(movie.id)),
+    movies: filteredMovies.filter((movie) => !hiddenMovies.has(movie.id)),
     source: isTmdbConfigured() ? "tmdb+mock" : "mock",
   });
 }
