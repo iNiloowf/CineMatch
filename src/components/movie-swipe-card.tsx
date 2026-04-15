@@ -203,7 +203,7 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-          <div className="space-y-2">
+          <div className="space-y-3 pt-1">
             <p className="text-xs font-medium text-white/76">
               {movie.genre.slice(0, 3).join(" • ")}
             </p>

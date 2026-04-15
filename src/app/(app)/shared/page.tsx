@@ -61,7 +61,7 @@ export default function SharedWatchlistPage() {
             </button>
 
             {openPartnerId === group.partner.id ? (
-              <div className="expand-soft space-y-3">
+              <div className="expand-soft space-y-4 pt-2">
                 {group.movies.length === 0 ? (
                   <div className="rounded-[24px] bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
                     You are connected with {group.partner.name}, but you have not accepted the same movie yet.
