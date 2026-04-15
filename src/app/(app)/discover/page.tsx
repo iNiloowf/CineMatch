@@ -14,27 +14,17 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [focusedMovieId, setFocusedMovieId] = useState<string | null>(null);
   const [browseIndex, setBrowseIndex] = useState(0);
   const [transitionState, setTransitionState] = useState<"idle" | "out" | "in">("idle");
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
   const transitionTimeoutRef = useRef<number | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const isSearchOpen = normalizedSearchQuery.length >= 2;
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
     [discoverQueue],
   );
-  const searchableMovies = useMemo(() => {
-    if (normalizedSearchQuery.length < 2) {
-      return discoverQueue;
-    }
-
-    return [
-      ...searchResults.filter((movie) => visibleDiscoverIds.has(movie.id)),
-      ...discoverQueue.filter(
-        (movie) => !searchResults.some((entry) => entry.id === movie.id),
-      ),
-    ];
-  }, [discoverQueue, normalizedSearchQuery, searchResults, visibleDiscoverIds]);
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {
@@ -80,64 +70,62 @@ export default function DiscoverPage() {
     return [
       "All",
       ...Array.from(
-        new Set(searchableMovies.flatMap((movie) => movie.genre)),
+        new Set(discoverQueue.flatMap((movie) => movie.genre)),
       ).sort((left, right) => left.localeCompare(right)),
     ];
-  }, [searchableMovies]);
+  }, [discoverQueue]);
 
   const filteredQueue = useMemo(() => {
-    const matchingMovies = searchableMovies.filter((movie) => {
-      const matchesQuery =
-        normalizedSearchQuery.length === 0 ||
-        movie.title.toLowerCase().includes(normalizedSearchQuery) ||
-        movie.description.toLowerCase().includes(normalizedSearchQuery) ||
-        movie.genre.some((entry) =>
-          entry.toLowerCase().includes(normalizedSearchQuery),
-        ) ||
-        String(movie.year).includes(normalizedSearchQuery);
-
+    return discoverQueue.filter((movie) => {
       const matchesGenre =
         selectedGenres.length === 0 ||
         selectedGenres.some((genre) => movie.genre.includes(genre));
 
-      return matchesQuery && matchesGenre;
+      return matchesGenre;
     });
+  }, [discoverQueue, selectedGenres]);
 
-    const sortedMatches =
-      normalizedSearchQuery.length === 0
-        ? matchingMovies
-        : [...matchingMovies].sort((left, right) => {
-      const leftTitle = left.title.toLowerCase();
-      const rightTitle = right.title.toLowerCase();
-      const leftStarts = leftTitle.startsWith(normalizedSearchQuery) ? 1 : 0;
-      const rightStarts = rightTitle.startsWith(normalizedSearchQuery) ? 1 : 0;
+  const sortedSearchResults = useMemo(() => {
+    if (normalizedSearchQuery.length < 2) {
+      return [];
+    }
 
-      if (leftStarts !== rightStarts) {
-        return rightStarts - leftStarts;
-      }
+    return [...searchResults]
+      .filter((movie) => visibleDiscoverIds.has(movie.id))
+      .sort((left, right) => {
+        const leftTitle = left.title.toLowerCase();
+        const rightTitle = right.title.toLowerCase();
+        const leftStarts = leftTitle.startsWith(normalizedSearchQuery) ? 1 : 0;
+        const rightStarts = rightTitle.startsWith(normalizedSearchQuery) ? 1 : 0;
 
-      const leftIndex = leftTitle.indexOf(normalizedSearchQuery);
-      const rightIndex = rightTitle.indexOf(normalizedSearchQuery);
-      const safeLeftIndex = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
-      const safeRightIndex =
-        rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
+        if (leftStarts !== rightStarts) {
+          return rightStarts - leftStarts;
+        }
 
-      if (safeLeftIndex !== safeRightIndex) {
-        return safeLeftIndex - safeRightIndex;
-      }
+        const leftIndex = leftTitle.indexOf(normalizedSearchQuery);
+        const rightIndex = rightTitle.indexOf(normalizedSearchQuery);
+        const safeLeftIndex = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
+        const safeRightIndex =
+          rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
 
-      return left.title.localeCompare(right.title);
-    });
+        if (safeLeftIndex !== safeRightIndex) {
+          return safeLeftIndex - safeRightIndex;
+        }
 
-    return sortedMatches;
-  }, [normalizedSearchQuery, searchableMovies, selectedGenres]);
+        return left.title.localeCompare(right.title);
+      });
+  }, [normalizedSearchQuery, searchResults, visibleDiscoverIds]);
 
   const safeBrowseIndex =
     filteredQueue.length === 0
       ? 0
       : Math.min(browseIndex, filteredQueue.length - 1);
-  const movie = filteredQueue[safeBrowseIndex];
-  const previewResults = filteredQueue.slice(0, 5);
+  const focusedMovie =
+    (focusedMovieId
+      ? filteredQueue.find((entry) => entry.id === focusedMovieId) ??
+        searchResults.find((entry) => entry.id === focusedMovieId)
+      : null) ?? null;
+  const movie = focusedMovie ?? filteredQueue[safeBrowseIndex];
 
   useEffect(() => {
     return () => {
@@ -149,6 +137,21 @@ export default function DiscoverPage() {
 
   const navigateCard = (direction: "next" | "previous") => {
     if (transitionState !== "idle") {
+      return;
+    }
+
+    if (focusedMovieId) {
+      setFocusedMovieId(null);
+
+      if (filteredQueue.length === 0) {
+        return;
+      }
+
+      if (direction === "next") {
+        setBrowseIndex((current) => Math.min(current, filteredQueue.length - 1));
+      } else {
+        setBrowseIndex((current) => Math.max(current - 1, 0));
+      }
       return;
     }
 
@@ -174,6 +177,20 @@ export default function DiscoverPage() {
     }, 190);
   };
 
+  const handleSelectSearchMovie = (selectedMovie: Movie) => {
+    registerMovies([selectedMovie]);
+    setFocusedMovieId(selectedMovie.id);
+    const movieIndex = discoverQueue.findIndex((entry) => entry.id === selectedMovie.id);
+
+    if (movieIndex >= 0) {
+      setBrowseIndex(movieIndex);
+    }
+
+    setSelectedGenres([]);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   return (
     <div className="flex min-h-full flex-col gap-3 overflow-hidden">
       <div className="space-y-2">
@@ -188,7 +205,14 @@ export default function DiscoverPage() {
             <div className="relative flex-1">
               <input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setSearchQuery(nextValue);
+
+                  if (nextValue.trim().length < 2) {
+                    setSearchResults([]);
+                  }
+                }}
                 placeholder="Search a movie or series"
                 className={`w-full rounded-[18px] border py-3 pl-10 pr-4 text-sm outline-none transition ${
                   isDarkMode
@@ -211,6 +235,35 @@ export default function DiscoverPage() {
                   <path d="m20 20-3.5-3.5" />
                 </svg>
               </span>
+              {searchQuery.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  aria-label="Clear search"
+                  className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${
+                    isDarkMode
+                      ? "bg-white/8 text-slate-300"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-3.5 w-3.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              ) : null}
             </div>
 
             <button
@@ -247,7 +300,7 @@ export default function DiscoverPage() {
 
           {normalizedSearchQuery.length > 0 || selectedGenres.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              {normalizedSearchQuery.length > 0 && filteredQueue.length > 0 ? (
+              {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
                 <span
                   className={`rounded-full px-3 py-2 text-xs font-semibold ${
                     isDarkMode
@@ -255,34 +308,154 @@ export default function DiscoverPage() {
                       : "bg-slate-100 text-slate-700"
                   }`}
                 >
-                  {filteredQueue.length} found
+                  {sortedSearchResults.length} found
                 </span>
               ) : null}
             </div>
           ) : null}
-
-          {normalizedSearchQuery.length > 0 && previewResults.length > 0 ? (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {previewResults.map((result) => (
-                <button
-                  key={result.id}
-                  type="button"
-                  onClick={() => setSearchQuery(result.title)}
-                  className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
-                    movie?.id === result.id
-                      ? "bg-violet-600 text-white"
-                      : isDarkMode
-                        ? "bg-white/8 text-slate-200 hover:bg-white/12"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {result.title}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
       </div>
+
+      {isSearchOpen ? (
+        <div
+          className={`fixed inset-0 z-[120] px-4 pb-4 pt-[5.35rem] backdrop-blur-2xl ${
+            isDarkMode ? "bg-slate-950/88" : "bg-slate-950/48"
+          }`}
+        >
+          <div
+            className={`mx-auto flex h-full w-full max-w-md flex-col overflow-hidden rounded-[30px] border ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950"
+                : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(246,242,255,0.92))]"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-black/5 px-4 py-4">
+              <div>
+                <h2
+                  className={`text-lg font-semibold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  Search results
+                </h2>
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  Pick one title to open in Discover.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                }}
+                className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                  isDarkMode
+                    ? "bg-white/8 text-slate-200"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+              {sortedSearchResults.length > 0 ? (
+                <div className="space-y-3">
+                  {sortedSearchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      type="button"
+                      onClick={() => handleSelectSearchMovie(result)}
+                      className={`flex w-full items-start gap-3 rounded-[24px] border px-4 py-4 text-left ${
+                        isDarkMode
+                          ? "border-white/10 bg-white/6"
+                          : "border-white/80 bg-white/80 shadow-[0_14px_34px_rgba(148,163,184,0.08)]"
+                      }`}
+                    >
+                      <div
+                        className="flex h-16 w-14 shrink-0 items-end rounded-[16px] p-2 text-white"
+                        style={{
+                          backgroundImage: result.poster.imageUrl
+                            ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${result.poster.imageUrl})`
+                            : `linear-gradient(145deg, ${result.poster.accentFrom}, ${result.poster.accentTo})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
+                          {result.mediaType === "series" ? "Series" : "Movie"}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3
+                            className={`truncate text-sm font-semibold ${
+                              isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {result.title}
+                          </h3>
+                          <span
+                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                              isDarkMode
+                                ? "bg-white/8 text-slate-300"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {result.year}
+                          </span>
+                        </div>
+                        <p
+                          className={`mt-1 line-clamp-2 text-sm leading-6 ${
+                            isDarkMode ? "text-slate-300" : "text-slate-600"
+                          }`}
+                        >
+                          {result.description}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-violet-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                            {result.rating.toFixed(1)}
+                          </span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                              isDarkMode
+                                ? "bg-white/8 text-slate-300"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {result.runtime}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <SurfaceCard className="space-y-3 text-center">
+                  <h3
+                    className={`text-lg font-semibold ${
+                      isDarkMode ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    No results yet
+                  </h3>
+                  <p
+                    className={`text-sm leading-6 ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Try another title and I’ll bring matching movies or series here.
+                  </p>
+                </SurfaceCard>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isFilterOpen ? (
         <div className="fixed inset-0 z-40 flex items-end bg-slate-950/35 px-4 pb-4 pt-12 backdrop-blur-sm">
@@ -402,17 +575,23 @@ export default function DiscoverPage() {
               key={movie.id}
               movie={movie}
               onAccept={async () => {
+                setFocusedMovieId(null);
                 registerMovies([movie]);
                 await swipeMovie(movie.id, "accepted");
               }}
               onReject={async () => {
+                setFocusedMovieId(null);
                 registerMovies([movie]);
                 await swipeMovie(movie.id, "rejected");
               }}
               onPrevious={() => navigateCard("previous")}
               onNext={() => navigateCard("next")}
-              canGoPrevious={safeBrowseIndex > 0}
-              canGoNext={safeBrowseIndex < filteredQueue.length - 1}
+              canGoPrevious={focusedMovieId ? filteredQueue.length > 0 : safeBrowseIndex > 0}
+              canGoNext={
+                focusedMovieId
+                  ? filteredQueue.length > 0
+                  : safeBrowseIndex < filteredQueue.length - 1
+              }
               isInteractionLocked={transitionState !== "idle"}
             />
           </div>
