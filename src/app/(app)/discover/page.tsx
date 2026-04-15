@@ -180,8 +180,8 @@ export default function DiscoverPage() {
         <div
           className={`rounded-[24px] border px-3 py-3 backdrop-blur-xl ${
             isDarkMode
-              ? "border-white/10 bg-slate-950/72"
-              : "border-white/70 bg-white/90 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
+              ? "border-white/10 bg-slate-950/66"
+              : "border-white/70 bg-white/78 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -192,8 +192,8 @@ export default function DiscoverPage() {
                 placeholder="Search a movie or series"
                 className={`w-full rounded-[18px] border py-3 pl-10 pr-4 text-sm outline-none transition ${
                   isDarkMode
-                    ? "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
-                    : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-violet-400"
+                    ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
+                    : "border-slate-200 bg-white/72 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/88"
                 }`}
               />
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -219,8 +219,8 @@ export default function DiscoverPage() {
               aria-label="Open genre filter"
               className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border transition ${
                 isDarkMode
-                  ? "border-white/10 bg-white/8 text-white hover:bg-white/12"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  ? "border-white/10 bg-white/6 text-white backdrop-blur-md hover:bg-white/12"
+                  : "border-slate-200 bg-white/72 text-slate-700 backdrop-blur-md hover:bg-slate-50/90"
               }`}
             >
               <svg

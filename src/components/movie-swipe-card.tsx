@@ -203,18 +203,18 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/76">
-                {movie.genre.slice(0, 3).join(" • ")}
-              </p>
-              <h2
-                className={`max-w-[13rem] font-semibold leading-tight ${
-                  isLongTitle ? "text-[1.7rem]" : "text-3xl"
-                }`}
-              >
-                {movie.title}
-              </h2>
-            </div>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-white/76">
+              {movie.genre.slice(0, 3).join(" • ")}
+            </p>
+            <h2
+              className={`max-w-[13rem] truncate font-semibold leading-tight ${
+                isLongTitle ? "text-[1.55rem]" : "text-[1.9rem]"
+              }`}
+            >
+              {movie.title}
+            </h2>
+          </div>
           </div>
         </div>
 
@@ -233,12 +233,14 @@ export function MovieSwipeCard({
             {movie.title}
           </h3>
           <div className="rounded-[18px] bg-slate-50 px-3 py-3">
-            <p className="text-sm leading-6 text-slate-600">{previewText}</p>
+            <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+              {previewText}
+            </p>
             {shouldClamp ? (
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(true)}
-                className="mt-2 text-sm font-semibold text-violet-600"
+                className="mt-1 block text-sm font-semibold text-violet-600"
               >
                 More
               </button>
@@ -266,7 +268,7 @@ export function MovieSwipeCard({
 
       {isDetailsOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-4 pb-4 pt-6 backdrop-blur-md"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/60 px-4 pb-4 pt-6 backdrop-blur-xl"
           onClick={() => setIsDetailsOpen(false)}
         >
           <div
@@ -304,13 +306,26 @@ export function MovieSwipeCard({
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(false)}
-                className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                aria-label="Close details"
+                className={`flex h-9 w-9 items-center justify-center rounded-full ${
                   isDarkMode
                     ? "bg-white/8 text-slate-200"
                     : "bg-slate-100 text-slate-600"
                 }`}
               >
-                Close
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
             </div>
 
