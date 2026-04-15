@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { getUserIdFromBearerToken } from "@/server/auth-token";
 
 type SwipeDecision = "accepted" | "rejected";
 
@@ -29,11 +30,9 @@ type SwipeMoviePayload = {
 
 async function getAuthorizedUserId(request: NextRequest) {
   const authorizationHeader = request.headers.get("authorization") ?? "";
-  const accessToken = authorizationHeader.startsWith("Bearer ")
-    ? authorizationHeader.slice(7).trim()
-    : "";
+  const authToken = getUserIdFromBearerToken(authorizationHeader);
 
-  if (!accessToken) {
+  if (!authToken) {
     return { error: "You need to be logged in first.", status: 401 as const };
   }
 
@@ -46,15 +45,7 @@ async function getAuthorizedUserId(request: NextRequest) {
     };
   }
 
-  const userResult = await supabaseAdmin.auth.getUser(accessToken);
-  const currentUserId = userResult.data.user?.id;
-
-  if (userResult.error || !currentUserId) {
-    return {
-      error: "Your login session could not be verified.",
-      status: 401 as const,
-    };
-  }
+  const currentUserId = authToken.userId;
 
   return { supabaseAdmin, currentUserId } as const;
 }

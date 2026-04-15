@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { getUserIdFromBearerToken } from "@/server/auth-token";
 
 type ProfileRow = {
   id: string;
@@ -78,11 +79,9 @@ function chunk<T>(items: T[], size: number) {
 
 export async function GET(request: NextRequest) {
   const authorizationHeader = request.headers.get("authorization") ?? "";
-  const accessToken = authorizationHeader.startsWith("Bearer ")
-    ? authorizationHeader.slice(7).trim()
-    : "";
+  const authToken = getUserIdFromBearerToken(authorizationHeader);
 
-  if (!accessToken) {
+  if (!authToken) {
     return NextResponse.json(
       { error: "You need to be logged in to sync account data." },
       { status: 401 },
@@ -98,15 +97,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const userResult = await supabaseAdmin.auth.getUser(accessToken);
-  const currentUserId = userResult.data.user?.id;
-
-  if (userResult.error || !currentUserId) {
-    return NextResponse.json(
-      { error: "Your login session could not be verified." },
-      { status: 401 },
-    );
-  }
+  const currentUserId = authToken.userId;
 
   const [profileResult, settingsResult, linksResult, invitesResult] =
     await Promise.all([

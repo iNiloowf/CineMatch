@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { getUserIdFromBearerToken } from "@/server/auth-token";
 
 function getAppUrl(request: NextRequest) {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
@@ -7,11 +8,9 @@ function getAppUrl(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const authorizationHeader = request.headers.get("authorization") ?? "";
-  const accessToken = authorizationHeader.startsWith("Bearer ")
-    ? authorizationHeader.slice(7).trim()
-    : "";
+  const authToken = getUserIdFromBearerToken(authorizationHeader);
 
-  if (!accessToken) {
+  if (!authToken) {
     return NextResponse.json(
       { error: "You need to be logged in to create an invite link." },
       { status: 401 },
@@ -27,15 +26,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const userResult = await supabaseAdmin.auth.getUser(accessToken);
-  const currentUserId = userResult.data.user?.id;
-
-  if (userResult.error || !currentUserId) {
-    return NextResponse.json(
-      { error: "Your login session could not be verified." },
-      { status: 401 },
-    );
-  }
+  const currentUserId = authToken.userId;
 
   const token = `invite-${crypto.randomUUID()}`;
   const createdAt = new Date().toISOString();
