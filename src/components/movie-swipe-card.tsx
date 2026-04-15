@@ -8,12 +8,14 @@ type MovieSwipeCardProps = {
   movie: Movie;
   onAccept: () => void;
   onReject: () => void;
+  onSkip: () => void;
 };
 
 export function MovieSwipeCard({
   movie,
   onAccept,
   onReject,
+  onSkip,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const shouldClamp = movie.description.length > 110;
@@ -92,13 +94,20 @@ export function MovieSwipeCard({
             </button>
           ) : null}
         </div>
-        <div className="mt-auto grid grid-cols-2 gap-3 pt-1">
+        <div className="mt-auto grid grid-cols-3 gap-3 pt-1">
           <button
             type="button"
             onClick={onReject}
             className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
           >
             Reject
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="rounded-[22px] border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
+          >
+            Skip
           </button>
           <button
             type="button"

@@ -14,6 +14,7 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [skippedMovieIds, setSkippedMovieIds] = useState<string[]>([]);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -99,11 +100,10 @@ export default function DiscoverPage() {
       return matchesQuery && matchesGenre;
     });
 
-    if (normalizedSearchQuery.length === 0) {
-      return matchingMovies;
-    }
-
-    return [...matchingMovies].sort((left, right) => {
+    const sortedMatches =
+      normalizedSearchQuery.length === 0
+        ? matchingMovies
+        : [...matchingMovies].sort((left, right) => {
       const leftTitle = left.title.toLowerCase();
       const rightTitle = right.title.toLowerCase();
       const leftStarts = leftTitle.startsWith(normalizedSearchQuery) ? 1 : 0;
@@ -125,7 +125,23 @@ export default function DiscoverPage() {
 
       return left.title.localeCompare(right.title);
     });
-  }, [normalizedSearchQuery, searchableMovies, selectedGenres]);
+
+    const validSkippedMovieIds = skippedMovieIds.filter((movieId) =>
+      sortedMatches.some((movie) => movie.id === movieId),
+    );
+
+    if (validSkippedMovieIds.length === 0) {
+      return sortedMatches;
+    }
+
+    const skippedSet = new Set(validSkippedMovieIds);
+    const visibleMatches = sortedMatches.filter((entry) => !skippedSet.has(entry.id));
+    const skippedMatches = validSkippedMovieIds
+      .map((id) => sortedMatches.find((entry) => entry.id === id))
+      .filter((entry): entry is Movie => Boolean(entry));
+
+    return [...visibleMatches, ...skippedMatches];
+  }, [normalizedSearchQuery, searchableMovies, selectedGenres, skippedMovieIds]);
 
   const movie = filteredQueue[0];
   const previewResults = filteredQueue.slice(0, 5);
@@ -344,12 +360,24 @@ export default function DiscoverPage() {
           <MovieSwipeCard
             movie={movie}
             onAccept={async () => {
+              setSkippedMovieIds((current) =>
+                current.filter((movieId) => movieId !== movie.id),
+              );
               registerMovies([movie]);
               await swipeMovie(movie.id, "accepted");
             }}
             onReject={async () => {
+              setSkippedMovieIds((current) =>
+                current.filter((movieId) => movieId !== movie.id),
+              );
               registerMovies([movie]);
               await swipeMovie(movie.id, "rejected");
+            }}
+            onSkip={() => {
+              setSkippedMovieIds((current) => [
+                ...current.filter((movieId) => movieId !== movie.id),
+                movie.id,
+              ]);
             }}
           />
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
