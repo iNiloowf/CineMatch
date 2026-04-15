@@ -228,28 +228,28 @@ export function MovieSwipeCard({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
-          <div className="space-y-2">
-            <h3 className="line-clamp-2 text-lg font-semibold leading-6 text-slate-900">
-              {movie.title}
-            </h3>
-            <div className="rounded-[18px] bg-slate-50 px-3 py-3">
-              <p className="text-sm leading-6 text-slate-600">{previewText}</p>
-            </div>
+        <div className="space-y-2">
+          <h3 className="line-clamp-2 text-lg font-semibold leading-6 text-slate-900">
+            {movie.title}
+          </h3>
+          <div className="rounded-[18px] bg-slate-50 px-3 py-3">
+            <p className="text-sm leading-6 text-slate-600">{previewText}</p>
             {shouldClamp ? (
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(true)}
-                className="text-sm font-semibold text-violet-600"
+                className="mt-2 text-sm font-semibold text-violet-600"
               >
                 More
               </button>
             ) : null}
           </div>
-          <div className="mt-auto grid grid-cols-2 gap-3 pt-6 pb-2">
-            <button
-              type="button"
-              onClick={onReject}
-              className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+        </div>
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-3 pb-2">
+          <button
+            type="button"
+            onClick={onReject}
+            className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
             >
               Reject
             </button>
@@ -265,14 +265,25 @@ export function MovieSwipeCard({
       </SurfaceCard>
 
       {isDetailsOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-slate-950/40 px-4 pb-4 pt-10 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-4 pb-4 pt-6 backdrop-blur-md"
+          onClick={() => setIsDetailsOpen(false)}
+        >
           <div
-            className={`expand-soft mx-auto w-full max-w-md rounded-[30px] p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+            onClick={(event) => event.stopPropagation()}
+            className={`expand-soft mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden rounded-[30px] p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
             }`}
           >
+            <div className="mb-3 flex justify-center">
+              <div
+                className={`h-1.5 w-12 rounded-full ${
+                  isDarkMode ? "bg-white/12" : "bg-slate-200"
+                }`}
+              />
+            </div>
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <p
