@@ -346,6 +346,34 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
   };
 }
 
+function getRuntimeMinutes(runtimeLabel: string) {
+  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+    return null;
+  }
+
+  const hoursMatch = runtimeLabel.match(/(\d+)h/);
+  const minutesMatch = runtimeLabel.match(/(\d+)m/);
+  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+  const totalMinutes = hours * 60 + minutes;
+
+  return totalMinutes > 0 ? totalMinutes : null;
+}
+
+function passesDiscoverQualityThreshold(movie: Movie) {
+  if (movie.rating < 3) {
+    return false;
+  }
+
+  const runtimeMinutes = getRuntimeMinutes(movie.runtime);
+
+  if (runtimeMinutes !== null && runtimeMinutes < 20) {
+    return false;
+  }
+
+  return true;
+}
+
 function hashString(value: string) {
   let hash = 0;
 
@@ -888,6 +916,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
 
   const acceptedMovies = data.movies.filter((movie) => acceptedIds.has(movie.id));
+  const acceptedGenreCounts = acceptedMovies.reduce<Map<string, number>>(
+    (counts, movie) => {
+      movie.genre.forEach((entry) => {
+        const normalized = entry.trim();
+
+        if (
+          !normalized ||
+          normalized === "Movie" ||
+          normalized === "Series"
+        ) {
+          return;
+        }
+
+        counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+      });
+
+      return counts;
+    },
+    new Map<string, number>(),
+  );
 
   const hiddenMovieIds = new Set(
     data.swipes
@@ -920,11 +968,38 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         hashString(`${right.id}:${discoverShuffleSeed}`),
     );
 
+  const sortDiscoverQueue = (movies: Movie[]) =>
+    [...movies].sort((left, right) => {
+      const leftGenreScore = left.genre.reduce(
+        (score, entry) => score + (acceptedGenreCounts.get(entry) ?? 0),
+        0,
+      );
+      const rightGenreScore = right.genre.reduce(
+        (score, entry) => score + (acceptedGenreCounts.get(entry) ?? 0),
+        0,
+      );
+
+      if (leftGenreScore !== rightGenreScore) {
+        return rightGenreScore - leftGenreScore;
+      }
+
+      return (
+        hashString(`${left.id}:${discoverShuffleSeed}`) -
+        hashString(`${right.id}:${discoverShuffleSeed}`)
+      );
+    });
+
   const discoverQueue = currentUserId
-    ? sortBySessionShuffle(
-        data.movies.filter((movie) => !hiddenMovieIds.has(movie.id)),
+    ? sortDiscoverQueue(
+        data.movies.filter(
+          (movie) =>
+            passesDiscoverQualityThreshold(movie) &&
+            !hiddenMovieIds.has(movie.id),
+        ),
       )
-    : sortBySessionShuffle(data.movies);
+    : sortBySessionShuffle(
+        data.movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+      );
 
   const sharedMovies: SharedMovieView[] = currentUserId
     ? data.links

@@ -268,12 +268,12 @@ export function MovieSwipeCard({
 
       {isDetailsOpen ? (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/72 px-4 py-6 backdrop-blur-2xl"
+          className="fixed inset-0 z-[140] flex items-stretch justify-center bg-slate-950/86 backdrop-blur-2xl sm:items-center"
           onClick={() => setIsDetailsOpen(false)}
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`expand-soft mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden rounded-[32px] p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] ${
+            className={`expand-soft flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:mx-auto sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:max-w-md sm:rounded-[32px] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
@@ -362,7 +362,7 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`mt-4 max-h-[13rem] overflow-y-auto rounded-[20px] px-1 pr-2 ${
+              className={`mt-4 min-h-0 flex-1 overflow-y-auto rounded-[20px] px-1 pr-2 ${
                 isDarkMode ? "bg-white/8" : "bg-slate-50"
               }`}
             >

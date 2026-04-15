@@ -93,6 +93,34 @@ function minutesToRuntimeLabel(runtime: number | null) {
   return `${hours}h ${minutes}m`;
 }
 
+function getRuntimeMinutes(runtimeLabel: string) {
+  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+    return null;
+  }
+
+  const hoursMatch = runtimeLabel.match(/(\d+)h/);
+  const minutesMatch = runtimeLabel.match(/(\d+)m/);
+  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+  const totalMinutes = hours * 60 + minutes;
+
+  return totalMinutes > 0 ? totalMinutes : null;
+}
+
+function passesQualityThreshold(movie: Movie) {
+  if (movie.rating < 3) {
+    return false;
+  }
+
+  const runtimeMinutes = getRuntimeMinutes(movie.runtime);
+
+  if (runtimeMinutes !== null && runtimeMinutes < 20) {
+    return false;
+  }
+
+  return true;
+}
+
 function makeAccentPalette(seed: number) {
   const palettes = [
     ["#4a245f", "#c595ff"],
@@ -188,7 +216,7 @@ export async function fetchTmdbDiscoverMovies(page = 1, limit = 12) {
     ),
   );
 
-  return detailResults.map(mapTmdbMovie);
+  return detailResults.map(mapTmdbMovie).filter(passesQualityThreshold);
 }
 
 export async function fetchTmdbDiscoverSeries(page = 1, limit = 12) {
@@ -212,7 +240,7 @@ export async function fetchTmdbDiscoverSeries(page = 1, limit = 12) {
     ),
   );
 
-  return detailResults.map(mapTmdbSeries);
+  return detailResults.map(mapTmdbSeries).filter(passesQualityThreshold);
 }
 
 export async function fetchTmdbMediaPool(pages = 4, limitPerPage = 12) {
@@ -231,7 +259,7 @@ export async function fetchTmdbMediaPool(pages = 4, limitPerPage = 12) {
   const seenIds = new Set<string>();
 
   return results.flat().filter((entry) => {
-    if (seenIds.has(entry.id)) {
+    if (!passesQualityThreshold(entry) || seenIds.has(entry.id)) {
       return false;
     }
 
@@ -283,6 +311,7 @@ export async function searchTmdbMedia(query: string, limit = 8) {
   ]);
 
   return [...movieDetails.map(mapTmdbMovie), ...seriesDetails.map(mapTmdbSeries)]
+    .filter(passesQualityThreshold)
     .sort((left, right) => left.title.localeCompare(right.title))
     .slice(0, limit * 2);
 }
