@@ -49,7 +49,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="You"
         title="Profile"

@@ -21,7 +21,7 @@ export default function SettingsPage() {
     return null;
   }
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
