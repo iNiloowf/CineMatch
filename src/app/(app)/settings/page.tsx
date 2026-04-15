@@ -69,14 +69,24 @@ export default function SettingsPage() {
             return (
               <div
                 key={achievement.id}
-                className="rounded-[24px] bg-slate-50 px-4 py-4"
+                className={`rounded-[24px] px-4 py-4 ${
+                  isDarkMode ? "bg-white/6" : "bg-slate-50"
+                }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p
+                      className={`text-sm font-semibold ${
+                        isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
+                    >
                       {achievement.title}
                     </p>
-                    <p className="text-xs leading-5 text-slate-500">
+                    <p
+                      className={`text-xs leading-5 ${
+                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                    >
                       {achievement.description}
                     </p>
                   </div>
@@ -92,7 +102,11 @@ export default function SettingsPage() {
                       : `${achievement.progress}/${achievement.target}`}
                   </span>
                 </div>
-                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white">
+                <div
+                  className={`mt-3 h-2.5 overflow-hidden rounded-full ${
+                    isDarkMode ? "bg-white/10" : "bg-white"
+                  }`}
+                >
                   <div
                     className={`h-full rounded-full ${
                       completed
@@ -110,8 +124,18 @@ export default function SettingsPage() {
 
       <SurfaceCard className="space-y-5">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-900">About this build</p>
-          <p className="text-sm leading-6 text-slate-500">
+          <p
+            className={`text-sm font-semibold ${
+              isDarkMode ? "text-white" : "text-slate-900"
+            }`}
+          >
+            About this build
+          </p>
+          <p
+            className={`text-sm leading-6 ${
+              isDarkMode ? "text-slate-400" : "text-slate-500"
+            }`}
+          >
             The UI is fully runnable with mock data first, and the repo also ships
             with API routes plus a SQL schema for the next backend step.
           </p>
