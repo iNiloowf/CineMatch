@@ -24,6 +24,7 @@ const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
+const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 type AuthResult =
@@ -333,6 +334,35 @@ function persistUserTheme(userId: string, isDark: boolean) {
   );
 }
 
+function getAccountCacheKey(userId: string) {
+  return `${ACCOUNT_CACHE_STORAGE_PREFIX}-${userId}`;
+}
+
+function getStoredAccountSnapshot(userId: string) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getAccountCacheKey(userId));
+    return raw ? (JSON.parse(raw) as AccountSyncPayload) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistAccountSnapshot(userId: string, payload: AccountSyncPayload) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(getAccountCacheKey(userId), JSON.stringify(payload));
+  } catch {
+    // Ignore snapshot cache failures.
+  }
+}
+
 function getGlobalStoredTheme() {
   if (typeof window === "undefined") {
     return false;
@@ -502,6 +532,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     activeUserId: string,
     payload: AccountSyncPayload,
   ) => {
+    persistAccountSnapshot(activeUserId, payload);
+
     const linkRows = payload.links ?? [];
     const partnerIds = Array.from(
       new Set(
@@ -994,6 +1026,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const accessToken = sessionResult.data.session?.access_token;
 
       if (!accessToken) {
+        const storedSnapshot = getStoredAccountSnapshot(activeUserId);
+
+        if (storedSnapshot) {
+          applyHydratedAccountPayload(activeUserId, storedSnapshot);
+          syncRetryCountRef.current = 0;
+          setIsSyncingAccountData(false);
+          return;
+        }
+
         const browserFallbackPayload = await fetchAccountSyncFromBrowser(
           supabaseClient,
           activeUserId,
@@ -1031,6 +1072,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
       } catch {
         payload = null;
+      }
+
+      if (!payload) {
+        payload = getStoredAccountSnapshot(activeUserId);
       }
 
       if (!payload) {
