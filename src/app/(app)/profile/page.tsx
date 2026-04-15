@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
@@ -12,6 +12,15 @@ export default function ProfilePage() {
     useAppState();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   if (!currentUser) {
     return null;
@@ -26,13 +35,12 @@ export default function ProfilePage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatarPreview(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    if (avatarPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -43,8 +51,14 @@ export default function ProfilePage() {
       name: String(formData.get("name") ?? currentUser.name).trim() || currentUser.name,
       bio: String(formData.get("bio") ?? ""),
       city: String(formData.get("city") ?? ""),
-      avatarImageUrl: avatarPreview ?? currentUser.avatarImageUrl,
+      avatarImageUrl: currentUser.avatarImageUrl,
+      avatarFile,
     });
+    if (avatarPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setAvatarPreview(undefined);
+    setAvatarFile(null);
     setIsEditing(false);
   };
 
@@ -74,7 +88,21 @@ export default function ProfilePage() {
           </div>
           <button
             type="button"
-            onClick={() => setIsEditing((current) => !current)}
+            onClick={() => {
+              setIsEditing((current) => {
+                const next = !current;
+
+                if (!next) {
+                  if (avatarPreview?.startsWith("blob:")) {
+                    URL.revokeObjectURL(avatarPreview);
+                  }
+                  setAvatarPreview(undefined);
+                  setAvatarFile(null);
+                }
+
+                return next;
+              });
+            }}
             aria-label={isEditing ? "Close profile editor" : "Edit profile"}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 text-violet-700 shadow-sm hover:bg-violet-200"
           >

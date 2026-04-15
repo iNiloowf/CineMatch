@@ -10,6 +10,7 @@
 -- - Linked people connections
 -- - Invite links used to connect accounts
 -- - Shared watch status for movies both people accepted
+-- - Profile photo uploads via Supabase Storage
 --
 -- Notes:
 -- - Login and signup are handled by Supabase Auth, not by a custom passwords table
@@ -152,6 +153,10 @@ create index if not exists idx_linked_users_target_id on public.linked_users(tar
 create index if not exists idx_invite_links_inviter_id on public.invite_links(inviter_id);
 create index if not exists idx_shared_watchlist_linked_user_id on public.shared_watchlist(linked_user_id);
 
+insert into storage.buckets (id, name, public)
+values ('profile-photos', 'profile-photos', true)
+on conflict (id) do nothing;
+
 create or replace view public.shared_matches as
 select
   l.id as linked_user_id,
@@ -180,6 +185,47 @@ alter table public.swipes enable row level security;
 alter table public.linked_users enable row level security;
 alter table public.invite_links enable row level security;
 alter table public.shared_watchlist enable row level security;
+
+drop policy if exists "profile_photos_public_read" on storage.objects;
+create policy "profile_photos_public_read"
+on storage.objects
+for select
+to public
+using (bucket_id = 'profile-photos');
+
+drop policy if exists "profile_photos_insert_own" on storage.objects;
+create policy "profile_photos_insert_own"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'profile-photos'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+drop policy if exists "profile_photos_update_own" on storage.objects;
+create policy "profile_photos_update_own"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'profile-photos'
+  and auth.uid()::text = (storage.foldername(name))[1]
+)
+with check (
+  bucket_id = 'profile-photos'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+drop policy if exists "profile_photos_delete_own" on storage.objects;
+create policy "profile_photos_delete_own"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'profile-photos'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
 
 drop policy if exists "profiles_select_own_or_linked" on public.profiles;
 create policy "profiles_select_own_or_linked"

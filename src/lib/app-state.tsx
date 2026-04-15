@@ -39,6 +39,7 @@ const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
 type AuthResult =
   | { ok: true; message?: string; shouldRedirect?: boolean }
@@ -179,6 +180,7 @@ type AppStateContextValue = {
     bio: string;
     city: string;
     avatarImageUrl?: string;
+    avatarFile?: File | null;
   }) => Promise<void>;
   updateSettings: (payload: Partial<ProfileSettings>) => Promise<void>;
   acceptedMovies: Movie[];
@@ -563,6 +565,39 @@ async function persistMovieToSupabase(movie: Movie) {
   await supabase.from("movies").upsert(moviePayload as never, {
     onConflict: "id",
   });
+}
+
+async function uploadProfilePhoto(
+  userId: string,
+  file: File,
+): Promise<string | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase || !isSupabaseConfigured()) {
+    return null;
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+  const filePath = `${userId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
+
+  const uploadResult = await supabase.storage
+    .from(PROFILE_PHOTOS_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: file.type || undefined,
+    });
+
+  if (uploadResult.error) {
+    return null;
+  }
+
+  const { data } = supabase.storage
+    .from(PROFILE_PHOTOS_BUCKET)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl || null;
 }
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
@@ -2511,19 +2546,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     bio,
     city,
     avatarImageUrl,
+    avatarFile,
   }: {
     name: string;
     bio: string;
     city: string;
     avatarImageUrl?: string;
+    avatarFile?: File | null;
   }) => {
     if (!currentUserId) {
       return;
     }
 
     const supabase = getSupabaseBrowserClient();
+    let nextAvatarImageUrl = avatarImageUrl;
 
     if (supabase && isSupabaseConfigured()) {
+      if (avatarFile) {
+        const uploadedUrl = await uploadProfilePhoto(currentUserId, avatarFile);
+
+        if (uploadedUrl) {
+          nextAvatarImageUrl = uploadedUrl;
+        }
+      }
+
       await supabase.auth.updateUser({
         data: {
           full_name: name,
@@ -2538,7 +2584,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           avatar_text: getAvatarText(name, currentUser?.email ?? ""),
           bio,
           city,
-          avatar_image_url: avatarImageUrl ?? null,
+          avatar_image_url: nextAvatarImageUrl ?? null,
           updated_at: new Date().toISOString(),
         } as never)
         .eq("id", currentUserId);
@@ -2554,7 +2600,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               avatar: getAvatarText(name, user.email),
               bio,
               city,
-              avatarImageUrl,
+              avatarImageUrl: nextAvatarImageUrl,
             }
           : user,
       ),
