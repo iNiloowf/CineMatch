@@ -1,7 +1,19 @@
 "use client";
 
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createClient,
+  type AuthChangeEvent,
+  type Session,
+} from "@supabase/supabase-js";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import {
   getSupabaseBrowserClient,
@@ -103,6 +115,9 @@ type MovieRow = {
   accent_to: string;
   trailer_url?: string | null;
 };
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 type StoredAuthSession = {
   userId: string;
@@ -478,6 +493,25 @@ function chunkItems<T>(items: T[], size: number) {
   return chunks;
 }
 
+function createTokenBoundSupabaseClient(accessToken: string) {
+  if (!supabaseUrl || !supabasePublishableKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, supabasePublishableKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
+}
+
 async function getCurrentAccessToken() {
   const storedSession = getStoredAuthSession();
 
@@ -680,7 +714,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchAccountSyncFromBrowser = async (
+  const fetchAccountSyncFromBrowser = useCallback(async (
     supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
     activeUserId: string,
   ): Promise<AccountSyncPayload | null> => {
@@ -828,7 +862,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         (result) => ((result.data ?? []) as MovieRow[]) ?? [],
       ),
     };
-  };
+  }, []);
+
+  const fetchAccountSyncFromToken = useCallback(async (
+    accessToken: string,
+    activeUserId: string,
+  ): Promise<AccountSyncPayload | null> => {
+    const tokenClient = createTokenBoundSupabaseClient(accessToken);
+
+    if (!tokenClient) {
+      return null;
+    }
+
+    return fetchAccountSyncFromBrowser(tokenClient, activeUserId);
+  }, [fetchAccountSyncFromBrowser]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1193,13 +1240,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      let payload = await fetchAccountSyncFromBrowser(
-        supabaseClient,
-        activeUserId,
-      );
+      let payload = await fetchAccountSyncFromToken(accessToken, activeUserId);
 
       if (!payload) {
         payload = getStoredAccountSnapshot(activeUserId);
+      }
+
+      if (!payload) {
+        payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
       }
 
       if (!payload) {
@@ -1248,7 +1296,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [accountRefreshKey, currentUserId]);
+  }, [
+    accountRefreshKey,
+    currentUserId,
+    fetchAccountSyncFromBrowser,
+    fetchAccountSyncFromToken,
+  ]);
 
   const currentUser =
     currentUserId
