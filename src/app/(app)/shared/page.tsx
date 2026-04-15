@@ -74,14 +74,37 @@ export default function SharedWatchlistPage() {
                     className="rounded-[24px] bg-slate-50 px-4 py-4 hover:-translate-y-0.5 hover:bg-slate-100/90"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-semibold text-slate-900">
-                          {entry.movie.title}
+                          <span>{entry.movie.title}</span>
+                          <span className="ml-2 inline-flex rounded-full bg-white px-3 py-1 align-middle text-xs font-semibold text-violet-700 shadow-sm">
+                            {entry.movie.rating.toFixed(1)}
+                          </span>
                         </h3>
                       </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
-                        {entry.movie.rating.toFixed(1)}
-                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${entry.movie.title} from shared list with ${entry.partner.name}`}
+                        onClick={async () =>
+                          await removeSharedMovie(entry.partner.id, entry.movie.id)
+                        }
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          className="h-4 w-4"
+                        >
+                          <path
+                            d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
                     </div>
 
                     <div
@@ -118,15 +141,6 @@ export default function SharedWatchlistPage() {
                           className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
                         />
                       </label>
-                      <button
-                        type="button"
-                        onClick={async () =>
-                          await removeSharedMovie(entry.partner.id, entry.movie.id)
-                        }
-                        className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
-                      >
-                        Remove
-                      </button>
                     </div>
                   </div>
                 ))}
