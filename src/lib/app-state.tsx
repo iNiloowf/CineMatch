@@ -1102,7 +1102,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     async function loadSupabaseAppData() {
       setIsSyncingAccountData(true);
       const sessionResult = await supabaseClient.auth.getSession();
-      const accessToken = sessionResult.data.session?.access_token;
+      const storedAuthSession = getStoredAuthSession();
+      const accessToken =
+        sessionResult.data.session?.access_token ??
+        (storedAuthSession?.userId === activeUserId
+          ? storedAuthSession.accessToken
+          : null);
+
+      if (
+        !sessionResult.data.session &&
+        storedAuthSession?.userId === activeUserId &&
+        storedAuthSession.refreshToken
+      ) {
+        try {
+          await supabaseClient.auth.setSession({
+            access_token: storedAuthSession.accessToken,
+            refresh_token: storedAuthSession.refreshToken,
+          });
+        } catch {
+          // Keep going with the stored access token for server sync.
+        }
+      }
 
       if (!accessToken) {
         const storedSnapshot = getStoredAccountSnapshot(activeUserId);
