@@ -122,6 +122,7 @@ type AppStateContextValue = {
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
+  removeSharedMovie: (partnerId: string, movieId: string) => Promise<void>;
   linkUser: (targetUserId: string) => Promise<void>;
   unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
   createInviteLink: () => Promise<InviteLinkResult>;
@@ -1036,6 +1037,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
           return acceptedMovies
             .filter((movie) => partnerAccepted.has(movie.id))
+            .filter(
+              (movie) =>
+                !data.sharedHiddenMovies.some(
+                  (hidden) =>
+                    hidden.pairKey === link.id && hidden.movieId === movie.id,
+                ),
+            )
             .map((movie) => {
               const savedState = data.sharedWatch.find(
                 (item) =>
@@ -1639,6 +1647,43 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const removeSharedMovie = async (partnerId: string, movieId: string) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const linkId =
+      data.links.find(
+        (link) =>
+          link.status === "accepted" &&
+          link.users.includes(currentUserId) &&
+          link.users.includes(partnerId),
+      )?.id ?? getPairKey(currentUserId, partnerId);
+
+    setData((current) => {
+      const alreadyHidden = current.sharedHiddenMovies.some(
+        (entry) => entry.pairKey === linkId && entry.movieId === movieId,
+      );
+
+      if (alreadyHidden) {
+        return current;
+      }
+
+      return {
+        ...current,
+        sharedHiddenMovies: [
+          ...current.sharedHiddenMovies,
+          {
+            id: `shared-hidden-${crypto.randomUUID()}`,
+            pairKey: linkId,
+            movieId,
+            hiddenAt: new Date().toISOString(),
+          },
+        ],
+      };
+    });
+  };
+
   const createInviteLink = async (): Promise<InviteLinkResult> => {
     if (!currentUserId || typeof window === "undefined") {
       return { ok: false, message: "Log in first to create a connect link." };
@@ -2050,6 +2095,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         registerMovies,
         swipeMovie,
         removePick,
+        removeSharedMovie,
         linkUser,
         unlinkUser,
         createInviteLink,

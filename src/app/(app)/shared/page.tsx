@@ -7,7 +7,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 
 export default function SharedWatchlistPage() {
-  const { sharedMovieGroups, toggleWatched } = useAppState();
+  const { sharedMovieGroups, toggleWatched, removeSharedMovie } = useAppState();
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
 
   return (
@@ -100,23 +100,34 @@ export default function SharedWatchlistPage() {
                       </p>
                     </div>
 
-                    <label className="mt-4 flex items-center justify-between rounded-[20px] bg-white px-4 py-3">
-                      <p className="text-sm font-semibold text-slate-800">
-                        Watched together
-                      </p>
-                      <input
-                        type="checkbox"
-                        checked={entry.watched}
-                        onChange={async (event) =>
-                          await toggleWatched(
-                            entry.partner.id,
-                            entry.movie.id,
-                            event.target.checked,
-                          )
+                    <div className="mt-4 flex items-center gap-3">
+                      <label className="flex flex-1 items-center justify-between rounded-[20px] bg-white px-4 py-3">
+                        <p className="text-sm font-semibold text-slate-800">
+                          Watched together
+                        </p>
+                        <input
+                          type="checkbox"
+                          checked={entry.watched}
+                          onChange={async (event) =>
+                            await toggleWatched(
+                              entry.partner.id,
+                              entry.movie.id,
+                              event.target.checked,
+                            )
+                          }
+                          className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={async () =>
+                          await removeSharedMovie(entry.partner.id, entry.movie.id)
                         }
-                        className="h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
-                      />
-                    </label>
+                        className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

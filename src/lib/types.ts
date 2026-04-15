@@ -54,6 +54,13 @@ export type SharedWatch = {
   updatedAt: string;
 };
 
+export type SharedHiddenMovie = {
+  id: string;
+  pairKey: string;
+  movieId: string;
+  hiddenAt: string;
+};
+
 export type InviteLink = {
   id: string;
   inviterId: string;
@@ -76,6 +83,7 @@ export type AppData = {
   swipes: SwipeRecord[];
   links: LinkedUser[];
   sharedWatch: SharedWatch[];
+  sharedHiddenMovies: SharedHiddenMovie[];
   invites: InviteLink[];
   settings: Record<string, ProfileSettings>;
 };

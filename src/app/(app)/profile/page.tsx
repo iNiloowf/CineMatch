@@ -214,13 +214,13 @@ export default function ProfilePage() {
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/linked"
-          className="rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
+          className="flex items-center justify-center rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-center text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
         >
           Linked People
         </Link>
         <Link
           href="/settings"
-          className="rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
+          className="flex items-center justify-center rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-center text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
         >
           Settings
         </Link>
