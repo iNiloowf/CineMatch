@@ -14,7 +14,7 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const [skippedMovieIds, setSkippedMovieIds] = useState<string[]>([]);
+  const [browseIndex, setBrowseIndex] = useState(0);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -126,24 +126,14 @@ export default function DiscoverPage() {
       return left.title.localeCompare(right.title);
     });
 
-    const validSkippedMovieIds = skippedMovieIds.filter((movieId) =>
-      sortedMatches.some((movie) => movie.id === movieId),
-    );
+    return sortedMatches;
+  }, [normalizedSearchQuery, searchableMovies, selectedGenres]);
 
-    if (validSkippedMovieIds.length === 0) {
-      return sortedMatches;
-    }
-
-    const skippedSet = new Set(validSkippedMovieIds);
-    const visibleMatches = sortedMatches.filter((entry) => !skippedSet.has(entry.id));
-    const skippedMatches = validSkippedMovieIds
-      .map((id) => sortedMatches.find((entry) => entry.id === id))
-      .filter((entry): entry is Movie => Boolean(entry));
-
-    return [...visibleMatches, ...skippedMatches];
-  }, [normalizedSearchQuery, searchableMovies, selectedGenres, skippedMovieIds]);
-
-  const movie = filteredQueue[0];
+  const safeBrowseIndex =
+    filteredQueue.length === 0
+      ? 0
+      : Math.min(browseIndex, filteredQueue.length - 1);
+  const movie = filteredQueue[safeBrowseIndex];
   const previewResults = filteredQueue.slice(0, 5);
 
   return (
@@ -360,25 +350,23 @@ export default function DiscoverPage() {
           <MovieSwipeCard
             movie={movie}
             onAccept={async () => {
-              setSkippedMovieIds((current) =>
-                current.filter((movieId) => movieId !== movie.id),
-              );
               registerMovies([movie]);
               await swipeMovie(movie.id, "accepted");
             }}
             onReject={async () => {
-              setSkippedMovieIds((current) =>
-                current.filter((movieId) => movieId !== movie.id),
-              );
               registerMovies([movie]);
               await swipeMovie(movie.id, "rejected");
             }}
-            onSkip={() => {
-              setSkippedMovieIds((current) => [
-                ...current.filter((movieId) => movieId !== movie.id),
-                movie.id,
-              ]);
-            }}
+            onPrevious={() =>
+              setBrowseIndex((current) => Math.max(current - 1, 0))
+            }
+            onNext={() =>
+              setBrowseIndex((current) =>
+                Math.min(current + 1, filteredQueue.length - 1),
+              )
+            }
+            canGoPrevious={safeBrowseIndex > 0}
+            canGoNext={safeBrowseIndex < filteredQueue.length - 1}
           />
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
           <SurfaceCard className="space-y-4 text-center">

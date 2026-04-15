@@ -8,14 +8,20 @@ type MovieSwipeCardProps = {
   movie: Movie;
   onAccept: () => void;
   onReject: () => void;
-  onSkip: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
 };
 
 export function MovieSwipeCard({
   movie,
   onAccept,
   onReject,
-  onSkip,
+  onPrevious,
+  onNext,
+  canGoPrevious,
+  canGoNext,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const shouldClamp = movie.description.length > 110;
@@ -52,6 +58,56 @@ export function MovieSwipeCard({
                 {movie.rating.toFixed(1)}
               </span>
             </div>
+          </div>
+          <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-3">
+            <button
+              type="button"
+              onClick={onPrevious}
+              disabled={!canGoPrevious}
+              aria-label="Show previous title"
+              className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                canGoPrevious
+                  ? "opacity-100 hover:bg-black/32"
+                  : "cursor-not-allowed opacity-35"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!canGoNext}
+              aria-label="Show next title"
+              className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                canGoNext
+                  ? "opacity-100 hover:bg-black/32"
+                  : "cursor-not-allowed opacity-35"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
           </div>
           <div className="space-y-2">
             <p className="text-xs font-medium text-white/76">
@@ -94,20 +150,13 @@ export function MovieSwipeCard({
             </button>
           ) : null}
         </div>
-        <div className="mt-auto grid grid-cols-3 gap-3 pt-1">
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={onReject}
             className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
           >
             Reject
-          </button>
-          <button
-            type="button"
-            onClick={onSkip}
-            className="rounded-[22px] border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-700 transition hover:bg-violet-100"
-          >
-            Skip
           </button>
           <button
             type="button"
