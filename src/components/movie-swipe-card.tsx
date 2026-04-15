@@ -227,7 +227,7 @@ export function MovieSwipeCard({
           </span>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
         <div className="space-y-2">
           <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-900">
             {movie.title}
@@ -247,7 +247,7 @@ export function MovieSwipeCard({
             ) : null}
           </div>
         </div>
-        <div className="mt-auto grid grid-cols-2 gap-3 pt-3 pb-2">
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-1 pb-2">
           <button
             type="button"
             onClick={onReject}
