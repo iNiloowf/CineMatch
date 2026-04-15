@@ -74,15 +74,15 @@ export default function SignInPage() {
             </div>
           </div>
 
-          <SurfaceCard className="space-y-5">
-            <div className="space-y-1">
+          <SurfaceCard className="space-y-8">
+            <div className="space-y-3">
               <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign in</p>
               <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 Welcome back. Continue to your movie lounge.
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <label
                 className={`block space-y-2 text-sm font-medium ${
                   isDarkMode ? "text-slate-200" : "text-slate-700"
@@ -132,7 +132,7 @@ export default function SignInPage() {
               </button>
             </form>
 
-            <p className={`text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+            <p className={`pt-5 text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               New here?{" "}
               <Link href="/signup" className="font-semibold text-violet-600">
                 Create an account

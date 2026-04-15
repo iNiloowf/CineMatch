@@ -28,25 +28,27 @@ export default function SettingsPage() {
         description={`Preferences and achievements for ${currentUser?.name ?? "your account"}.`}
       />
 
-      <SurfaceCard className="space-y-6">
-        <SettingToggle
-          label="Dark mode"
-          description="Switch the app to a darker evening-friendly theme."
-          checked={isDarkMode}
-          onChange={(checked) => updateSettings({ darkMode: checked })}
-        />
-        <SettingToggle
-          label="Notifications"
-          description="Get nudges when new shared matches appear."
-          checked={settings.notifications}
-          onChange={(checked) => updateSettings({ notifications: checked })}
-        />
-        <SettingToggle
-          label="Hide spoilers"
-          description="Keep descriptions gentle and spoiler-light."
-          checked={settings.hideSpoilers}
-          onChange={(checked) => updateSettings({ hideSpoilers: checked })}
-        />
+      <SurfaceCard className="space-y-4">
+        <div className="space-y-4">
+          <SettingToggle
+            label="Dark mode"
+            description="Switch the app to a darker evening-friendly theme."
+            checked={isDarkMode}
+            onChange={(checked) => updateSettings({ darkMode: checked })}
+          />
+          <SettingToggle
+            label="Notifications"
+            description="Get nudges when new shared matches appear."
+            checked={settings.notifications}
+            onChange={(checked) => updateSettings({ notifications: checked })}
+          />
+          <SettingToggle
+            label="Hide spoilers"
+            description="Keep descriptions gentle and spoiler-light."
+            checked={settings.hideSpoilers}
+            onChange={(checked) => updateSettings({ hideSpoilers: checked })}
+          />
+        </div>
       </SurfaceCard>
 
       <SurfaceCard className="space-y-6">
