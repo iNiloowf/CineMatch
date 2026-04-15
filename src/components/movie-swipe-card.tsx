@@ -139,7 +139,7 @@ export function MovieSwipeCard({
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
-          <div className="relative flex min-h-[13.5rem] flex-col justify-between sm:min-h-[14.25rem]">
+          <div className="relative flex min-h-[12rem] flex-col justify-between sm:min-h-[12.75rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/92">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -229,7 +229,7 @@ export function MovieSwipeCard({
 
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
         <div className="space-y-2">
-          <h3 className="line-clamp-2 text-lg font-semibold leading-6 text-slate-900">
+          <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-900">
             {movie.title}
           </h3>
           <div className="rounded-[18px] bg-slate-50 px-3 py-3">
@@ -268,24 +268,17 @@ export function MovieSwipeCard({
 
       {isDetailsOpen ? (
         <div
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/60 px-4 pb-4 pt-6 backdrop-blur-xl"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/72 px-4 py-6 backdrop-blur-2xl"
           onClick={() => setIsDetailsOpen(false)}
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`expand-soft mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden rounded-[30px] p-5 shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+            className={`expand-soft mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-hidden rounded-[32px] p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
             }`}
           >
-            <div className="mb-3 flex justify-center">
-              <div
-                className={`h-1.5 w-12 rounded-full ${
-                  isDarkMode ? "bg-white/12" : "bg-slate-200"
-                }`}
-              />
-            </div>
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <p
@@ -307,10 +300,10 @@ export function MovieSwipeCard({
                 type="button"
                 onClick={() => setIsDetailsOpen(false)}
                 aria-label="Close details"
-                className={`flex h-9 w-9 items-center justify-center rounded-full ${
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                   isDarkMode
-                    ? "bg-white/8 text-slate-200"
-                    : "bg-slate-100 text-slate-600"
+                    ? "bg-white/10 text-white"
+                    : "bg-slate-100 text-slate-700"
                 }`}
               >
                 <svg
@@ -339,7 +332,7 @@ export function MovieSwipeCard({
                 backgroundPosition: "center",
               }}
             >
-              <div className="min-h-[13rem]">
+              <div className="min-h-[10.5rem]">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/92">
                     {movie.mediaType === "series" ? "Series" : "Movie"}
