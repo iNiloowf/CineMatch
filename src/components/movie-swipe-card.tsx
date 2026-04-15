@@ -12,6 +12,7 @@ type MovieSwipeCardProps = {
   onNext: () => void;
   canGoPrevious: boolean;
   canGoNext: boolean;
+  isInteractionLocked?: boolean;
 };
 
 export function MovieSwipeCard({
@@ -22,6 +23,7 @@ export function MovieSwipeCard({
   onNext,
   canGoPrevious,
   canGoNext,
+  isInteractionLocked = false,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -35,6 +37,10 @@ export function MovieSwipeCard({
       : movie.description;
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (isInteractionLocked) {
+      return;
+    }
+
     const touch = event.touches[0];
     touchStartXRef.current = touch.clientX;
     touchStartYRef.current = touch.clientY;
@@ -42,6 +48,10 @@ export function MovieSwipeCard({
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (isInteractionLocked) {
+      return;
+    }
+
     if (touchStartXRef.current === null || touchStartYRef.current === null) {
       return;
     }
@@ -54,10 +64,14 @@ export function MovieSwipeCard({
       return;
     }
 
-    setDragOffset(Math.max(-72, Math.min(72, deltaX)));
+    setDragOffset(Math.max(-42, Math.min(42, deltaX)));
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (isInteractionLocked) {
+      return;
+    }
+
     if (touchStartXRef.current === null || touchStartYRef.current === null) {
       return;
     }
@@ -74,7 +88,7 @@ export function MovieSwipeCard({
       setDragOffset(0);
       window.setTimeout(() => {
         setIsSnapAnimating(false);
-      }, 220);
+      }, 260);
     };
 
     if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) {
@@ -83,15 +97,13 @@ export function MovieSwipeCard({
     }
 
     if (deltaX > 0 && canGoPrevious) {
-      setIsSnapAnimating(true);
-      setDragOffset(84);
+      setDragOffset(0);
       onPrevious();
       return;
     }
 
     if (deltaX < 0 && canGoNext) {
-      setIsSnapAnimating(true);
-      setDragOffset(-84);
+      setDragOffset(0);
       onNext();
       return;
     }
@@ -103,7 +115,7 @@ export function MovieSwipeCard({
     <SurfaceCard className="flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)]">
       <div
         className={`relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)] ${
-          isSnapAnimating ? "duration-200 ease-out" : "duration-75 ease-out"
+          isSnapAnimating ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]" : "duration-150 ease-out"
         } transition-transform`}
         style={{
           backgroundImage: movie.poster.imageUrl
@@ -111,7 +123,7 @@ export function MovieSwipeCard({
             : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          transform: `translateX(${dragOffset}px) scale(${dragOffset === 0 ? 1 : 0.992})`,
+          transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -134,13 +146,13 @@ export function MovieSwipeCard({
               </span>
             </div>
           </div>
-          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-[2px]">
+          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-0">
             <button
               type="button"
               onClick={onPrevious}
               disabled={!canGoPrevious}
               aria-label="Show previous title"
-              className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+              className={`-ml-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                 canGoPrevious
                   ? "opacity-100 hover:bg-black/32 active:scale-95"
                   : "cursor-not-allowed opacity-35"
@@ -164,7 +176,7 @@ export function MovieSwipeCard({
               onClick={onNext}
               disabled={!canGoNext}
               aria-label="Show next title"
-              className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+              className={`-mr-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                 canGoNext
                   ? "opacity-100 hover:bg-black/32 active:scale-95"
                   : "cursor-not-allowed opacity-35"

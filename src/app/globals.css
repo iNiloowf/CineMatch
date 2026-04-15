@@ -117,6 +117,26 @@ input[type="range"] {
   animation: achievementPop 560ms var(--ease-soft) both;
 }
 
+.discover-card-stage {
+  will-change: transform, opacity, filter;
+}
+
+.discover-card-out-left {
+  animation: discoverCardOutLeft 190ms var(--ease-soft) both;
+}
+
+.discover-card-out-right {
+  animation: discoverCardOutRight 190ms var(--ease-soft) both;
+}
+
+.discover-card-in-left {
+  animation: discoverCardInLeft 260ms var(--ease-soft) both;
+}
+
+.discover-card-in-right {
+  animation: discoverCardInRight 260ms var(--ease-soft) both;
+}
+
 .achievement-badge-glow {
   animation: achievementBadgePulse 1.6s ease-in-out 2;
 }
@@ -204,6 +224,62 @@ input[type="range"] {
   50% {
     transform: scale(1.14);
     box-shadow: 0 18px 36px rgba(124, 58, 237, 0.38);
+  }
+}
+
+@keyframes discoverCardOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-34px) scale(0.985);
+    filter: blur(4px);
+  }
+}
+
+@keyframes discoverCardOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(34px) scale(0.985);
+    filter: blur(4px);
+  }
+}
+
+@keyframes discoverCardInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.988);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes discoverCardInRight {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.988);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
   }
 }
 

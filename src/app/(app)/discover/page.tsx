@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
@@ -15,6 +15,9 @@ export default function DiscoverPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [browseIndex, setBrowseIndex] = useState(0);
+  const [transitionState, setTransitionState] = useState<"idle" | "out" | "in">("idle");
+  const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
+  const transitionTimeoutRef = useRef<number | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -135,6 +138,41 @@ export default function DiscoverPage() {
       : Math.min(browseIndex, filteredQueue.length - 1);
   const movie = filteredQueue[safeBrowseIndex];
   const previewResults = filteredQueue.slice(0, 5);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const navigateCard = (direction: "next" | "previous") => {
+    if (transitionState !== "idle") {
+      return;
+    }
+
+    const nextIndex =
+      direction === "next"
+        ? Math.min(safeBrowseIndex + 1, filteredQueue.length - 1)
+        : Math.max(safeBrowseIndex - 1, 0);
+
+    if (nextIndex === safeBrowseIndex) {
+      return;
+    }
+
+    setTransitionDirection(direction);
+    setTransitionState("out");
+
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setBrowseIndex(nextIndex);
+      setTransitionState("in");
+
+      transitionTimeoutRef.current = window.setTimeout(() => {
+        setTransitionState("idle");
+      }, 260);
+    }, 190);
+  };
 
   return (
     <div className="flex min-h-full flex-col gap-3 overflow-hidden">
@@ -347,28 +385,37 @@ export default function DiscoverPage() {
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
-          <MovieSwipeCard
-            key={movie.id}
-            movie={movie}
-            onAccept={async () => {
-              registerMovies([movie]);
-              await swipeMovie(movie.id, "accepted");
-            }}
-            onReject={async () => {
-              registerMovies([movie]);
-              await swipeMovie(movie.id, "rejected");
-            }}
-            onPrevious={() =>
-              setBrowseIndex((current) => Math.max(current - 1, 0))
-            }
-            onNext={() =>
-              setBrowseIndex((current) =>
-                Math.min(current + 1, filteredQueue.length - 1),
-              )
-            }
-            canGoPrevious={safeBrowseIndex > 0}
-            canGoNext={safeBrowseIndex < filteredQueue.length - 1}
-          />
+          <div
+            className={`discover-card-stage ${
+              transitionState === "idle"
+                ? ""
+                : transitionState === "out"
+                  ? transitionDirection === "next"
+                    ? "discover-card-out-left"
+                    : "discover-card-out-right"
+                  : transitionDirection === "next"
+                    ? "discover-card-in-right"
+                    : "discover-card-in-left"
+            }`}
+          >
+            <MovieSwipeCard
+              key={movie.id}
+              movie={movie}
+              onAccept={async () => {
+                registerMovies([movie]);
+                await swipeMovie(movie.id, "accepted");
+              }}
+              onReject={async () => {
+                registerMovies([movie]);
+                await swipeMovie(movie.id, "rejected");
+              }}
+              onPrevious={() => navigateCard("previous")}
+              onNext={() => navigateCard("next")}
+              canGoPrevious={safeBrowseIndex > 0}
+              canGoNext={safeBrowseIndex < filteredQueue.length - 1}
+              isInteractionLocked={transitionState !== "idle"}
+            />
+          </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
           <SurfaceCard className="space-y-4 text-center">
           <div className="space-y-2">
