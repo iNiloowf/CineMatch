@@ -19,7 +19,11 @@ type SupabaseDatabase = {
 let browserClient: SupabaseClient<SupabaseDatabase> | null = null;
 
 function clearLegacySupabaseCookies() {
-  if (typeof document === "undefined" || !supabaseUrl) {
+  if (
+    typeof document === "undefined" ||
+    typeof window === "undefined" ||
+    !supabaseUrl
+  ) {
     return;
   }
 
@@ -35,6 +39,10 @@ function clearLegacySupabaseCookies() {
     return;
   }
 
+  const hostname = window.location.hostname;
+  const hostParts = hostname.split(".");
+  const rootDomain =
+    hostParts.length >= 2 ? `.${hostParts.slice(-2).join(".")}` : "";
   const cookieNames = document.cookie
     .split(";")
     .map((entry) => entry.trim().split("=")[0])
@@ -42,6 +50,11 @@ function clearLegacySupabaseCookies() {
 
   for (const name of cookieNames) {
     document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+    document.cookie = `${name}=; Max-Age=0; path=/; domain=${hostname}; SameSite=Lax`;
+
+    if (rootDomain) {
+      document.cookie = `${name}=; Max-Age=0; path=/; domain=${rootDomain}; SameSite=Lax`;
+    }
   }
 }
 

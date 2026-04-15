@@ -1398,50 +1398,83 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (supabase && isSupabaseConfigured()) {
       try {
-        const loginResponse = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        });
+        let authUser:
+          | {
+              id: string;
+              email?: string | null;
+              user_metadata?: Record<string, unknown>;
+            }
+          | undefined;
 
-        const loginPayload = (await loginResponse.json()) as {
-          error?: string;
-          user?: {
-            id: string;
-            email?: string | null;
-            user_metadata?: Record<string, unknown>;
-          };
-          session?: {
-            access_token: string;
-            refresh_token: string;
-          };
-        };
+        try {
+          const loginResponse = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
 
-        if (!loginResponse.ok || !loginPayload.user || !loginPayload.session) {
-          return {
-            ok: false,
-            message:
-              loginPayload.error ??
-              "We couldn’t sign you in. Double-check your email and password.",
+          const loginPayload = (await loginResponse.json()) as {
+            error?: string;
+            user?: {
+              id: string;
+              email?: string | null;
+              user_metadata?: Record<string, unknown>;
+            };
+            session?: {
+              access_token: string;
+              refresh_token: string;
+            };
           };
+
+          if (loginResponse.ok && loginPayload.user && loginPayload.session) {
+            const setSessionResult = await supabase.auth.setSession({
+              access_token: loginPayload.session.access_token,
+              refresh_token: loginPayload.session.refresh_token,
+            });
+
+            if (setSessionResult.error) {
+              return {
+                ok: false,
+                message:
+                  setSessionResult.error.message ??
+                  "We couldn’t sign you in. Double-check your email and password.",
+              };
+            }
+
+            authUser = loginPayload.user;
+          } else if (loginResponse.ok) {
+            return {
+              ok: false,
+              message:
+                loginPayload.error ??
+                "We couldn’t sign you in. Double-check your email and password.",
+            };
+          }
+        } catch {
+          authUser = undefined;
         }
 
-        const authUser = loginPayload.user;
-        const authSession = loginPayload.session;
+        if (!authUser) {
+          const directLoginResult = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-        const { error } = await supabase.auth.setSession({
-          access_token: authSession.access_token,
-          refresh_token: authSession.refresh_token,
-        });
+          if (directLoginResult.error || !directLoginResult.data.user) {
+            return {
+              ok: false,
+              message:
+                directLoginResult.error?.message ??
+                "We couldn’t sign you in. Double-check your email and password.",
+            };
+          }
 
-        if (error) {
-          return {
-            ok: false,
-            message:
-              error?.message ??
-              "We couldn’t sign you in. Double-check your email and password.",
+          authUser = {
+            id: directLoginResult.data.user.id,
+            email: directLoginResult.data.user.email,
+            user_metadata: directLoginResult.data.user.user_metadata,
           };
         }
 
