@@ -586,6 +586,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    const storedCurrentUserId = window.localStorage.getItem(CURRENT_USER_KEY);
+    const storedUserTheme = storedCurrentUserId
+      ? window.localStorage.getItem(
+          `${USER_THEME_STORAGE_PREFIX}-${storedCurrentUserId}`,
+        )
+      : null;
+
+    if (storedUserTheme === "dark") {
+      return true;
+    }
+
+    if (storedUserTheme === "light") {
+      return false;
+    }
+
     return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
   });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());

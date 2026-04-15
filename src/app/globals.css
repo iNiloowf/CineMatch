@@ -438,6 +438,24 @@ input[type="range"] {
   background-color: rgba(251, 113, 133, 0.12) !important;
 }
 
+.theme-dark .shared-description-card {
+  background-color: rgba(15, 23, 42, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.theme-dark .shared-description-card p {
+  color: #dbe4f0 !important;
+}
+
+.theme-dark .shared-details-modal {
+  background: linear-gradient(180deg, rgba(20, 16, 32, 0.98) 0%, rgba(12, 10, 20, 0.98) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.theme-dark .shared-details-description {
+  color: #dbe4f0 !important;
+}
+
 ::selection {
   background: rgba(124, 58, 237, 0.16);
 }

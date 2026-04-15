@@ -51,6 +51,11 @@ export default function RootLayout({
               var globalTheme = window.localStorage.getItem("cinematch-theme-mode");
               var shouldUseDark = userTheme ? userTheme === "dark" : globalTheme === "dark";
               document.documentElement.classList.toggle("theme-dark", !!shouldUseDark);
+              document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+              if (document.body) {
+                document.body.style.background = shouldUseDark ? "#0d0a14" : "#f6f7fb";
+                document.body.style.color = shouldUseDark ? "#f8fafc" : "#0f172a";
+              }
             } catch (error) {}
           `}
         </Script>

@@ -20,7 +20,7 @@ function TogglePill({
     <button
       type="button"
       onClick={() => void onChange(!checked)}
-      className={`flex flex-1 items-center justify-between rounded-[18px] px-4 py-3 text-sm font-semibold transition ${
+      className={`flex flex-1 items-center justify-between rounded-[18px] px-4 py-3 text-[13px] font-semibold transition ${
         checked
           ? "bg-violet-600 text-white shadow-[0_14px_28px_rgba(124,58,237,0.22)]"
           : "bg-white text-slate-700"
@@ -129,7 +129,7 @@ export default function SharedWatchlistPage() {
                         {entry.movie.genre.join(" • ")}
                       </p>
 
-                      <div className="mt-3 rounded-[20px] bg-white/75 px-4 py-3">
+                      <div className="shared-description-card mt-3 rounded-[20px] bg-white/75 px-4 py-3">
                         <p className="line-clamp-3 text-sm leading-6 text-slate-600">
                           {entry.movie.description}
                         </p>
@@ -183,7 +183,7 @@ export default function SharedWatchlistPage() {
             onClick={() => setDetailsMovie(null)}
             className="absolute inset-0"
           />
-          <div className="relative z-10 max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[30px] bg-white p-4 shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
+          <div className="shared-details-modal relative z-10 max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[30px] bg-white p-4 shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
             <button
               type="button"
               aria-label="Close details"
@@ -228,7 +228,7 @@ export default function SharedWatchlistPage() {
                 {detailsMovie.movie.genre.join(" • ")}
               </p>
 
-              <p className="text-sm leading-7 text-slate-600">
+              <p className="shared-details-description text-sm leading-7 text-slate-600">
                 {detailsMovie.movie.description}
               </p>
             </div>
