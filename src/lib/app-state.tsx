@@ -102,6 +102,17 @@ type MovieRow = {
   trailer_url?: string | null;
 };
 
+type AccountSyncPayload = {
+  profile: ProfileRow | null;
+  settings: SettingsRow | null;
+  links: LinkRow[];
+  invites: InviteRow[];
+  partnerProfiles: ProfileRow[];
+  swipes: SwipeRow[];
+  sharedWatch: SharedWatchRow[];
+  movies: MovieRow[];
+};
+
 type AppStateContextValue = {
   data: AppData;
   currentUserId: string | null;
@@ -487,6 +498,222 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setDiscoverVisibilityTimestamp(Date.now());
   };
 
+  const applyHydratedAccountPayload = (
+    activeUserId: string,
+    payload: AccountSyncPayload,
+  ) => {
+    const linkRows = payload.links ?? [];
+    const partnerIds = Array.from(
+      new Set(
+        linkRows.map((link) =>
+          link.requester_id === activeUserId ? link.target_id : link.requester_id,
+        ),
+      ),
+    );
+    const hydratedSwipeUserIds = Array.from(
+      new Set([activeUserId, ...partnerIds]),
+    );
+    const sharedLinkIds = linkRows.map((link) => link.id);
+    const swipeRows = payload.swipes ?? [];
+
+    setData((current) => {
+      let next = current;
+
+      const ownProfile = payload.profile ?? null;
+      const allProfiles = [
+        ...(ownProfile ? [ownProfile] : []),
+        ...(payload.partnerProfiles ?? []),
+      ];
+
+      for (const profile of allProfiles) {
+        next = ensureLocalUser(next, {
+          id: profile.id,
+          name: profile.full_name,
+          email: profile.email,
+          avatar: profile.avatar_text,
+          avatarImageUrl: profile.avatar_image_url ?? undefined,
+          bio: profile.bio,
+          city: profile.city,
+        });
+      }
+
+      const ownSettings = payload.settings ?? null;
+      next = mergeMoviesIntoData(next, (payload.movies ?? []).map(mapMovieRow));
+
+      const currentSwipes = [
+        ...next.swipes.filter(
+          (swipe) => !hydratedSwipeUserIds.includes(swipe.userId),
+        ),
+        ...swipeRows.map(mapSwipeRow),
+      ];
+      const currentLinks = [
+        ...next.links.filter((link) => !link.users.includes(activeUserId)),
+        ...linkRows.map(mapLinkRow),
+      ];
+      const currentInvites = [
+        ...next.invites.filter((invite) => invite.inviterId !== activeUserId),
+        ...(payload.invites ?? []).map(mapInviteRow),
+      ];
+      const currentSharedWatch = [
+        ...next.sharedWatch.filter(
+          (item) => !sharedLinkIds.includes(item.pairKey),
+        ),
+        ...(payload.sharedWatch ?? []).map((item) => ({
+          id: item.id,
+          pairKey: item.linked_user_id,
+          movieId: item.movie_id,
+          watched: item.watched,
+          progress: item.watched ? 100 : 0,
+          updatedAt: item.updated_at,
+        })),
+      ];
+
+      return {
+        ...next,
+        swipes: currentSwipes,
+        links: currentLinks,
+        invites: currentInvites,
+        sharedWatch: currentSharedWatch,
+        settings: ownSettings
+          ? {
+              ...next.settings,
+              [activeUserId]: mapSettingsRow(ownSettings),
+            }
+          : next.settings,
+      };
+    });
+
+    if (payload.settings) {
+      const dbDarkMode = mapSettingsRow(payload.settings).darkMode;
+      const nextDarkMode = getStoredUserTheme(activeUserId) ?? dbDarkMode;
+      setPreferredDarkMode(nextDarkMode);
+      persistUserTheme(activeUserId, nextDarkMode);
+    }
+  };
+
+  const fetchAccountSyncFromBrowser = async (
+    supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
+    activeUserId: string,
+  ): Promise<AccountSyncPayload | null> => {
+    const profileResult = await supabaseClient
+      .from("profiles")
+      .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+      .eq("id", activeUserId)
+      .maybeSingle();
+
+    if (profileResult.error) {
+      return null;
+    }
+
+    const [settingsResult, linksResult, invitesResult] = await Promise.all([
+      supabaseClient
+        .from("settings")
+        .select(
+          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
+        )
+        .eq("user_id", activeUserId)
+        .maybeSingle(),
+      supabaseClient
+        .from("linked_users")
+        .select("id, requester_id, target_id, status, created_at")
+        .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`),
+      supabaseClient
+        .from("invite_links")
+        .select("id, inviter_id, token, created_at, used_at")
+        .eq("inviter_id", activeUserId)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    if (settingsResult.error || linksResult.error || invitesResult.error) {
+      return null;
+    }
+
+    const linkRows = ((linksResult.data ?? []) as LinkRow[]) ?? [];
+    const partnerIds = Array.from(
+      new Set(
+        linkRows.map((link) =>
+          link.requester_id === activeUserId ? link.target_id : link.requester_id,
+        ),
+      ),
+    );
+    const sharedLinkIds = linkRows.map((link) => link.id);
+
+    const partnerProfilesPromise =
+      partnerIds.length > 0
+        ? supabaseClient
+            .from("profiles")
+            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+            .in("id", partnerIds)
+        : Promise.resolve({
+            data: [] as ProfileRow[],
+            error: null,
+          });
+
+    const swipesPromise = supabaseClient
+      .from("swipes")
+      .select("user_id, movie_id, decision, created_at")
+      .in("user_id", [activeUserId, ...partnerIds]);
+
+    const sharedWatchPromise =
+      sharedLinkIds.length > 0
+        ? supabaseClient
+            .from("shared_watchlist")
+            .select("id, linked_user_id, movie_id, watched, updated_at")
+            .in("linked_user_id", sharedLinkIds)
+        : Promise.resolve({
+            data: [] as SharedWatchRow[],
+            error: null,
+          });
+
+    const [partnerProfilesResult, swipesResult, sharedWatchResult] =
+      await Promise.all([
+        partnerProfilesPromise,
+        swipesPromise,
+        sharedWatchPromise,
+      ]);
+
+    if (
+      partnerProfilesResult.error ||
+      swipesResult.error ||
+      sharedWatchResult.error
+    ) {
+      return null;
+    }
+
+    const swipeRows = ((swipesResult.data ?? []) as SwipeRow[]) ?? [];
+    const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
+
+    const moviesResult =
+      movieIds.length > 0
+        ? await supabaseClient
+            .from("movies")
+            .select(
+              "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
+            )
+            .in("id", movieIds)
+        : {
+            data: [] as MovieRow[],
+            error: null,
+          };
+
+    if (moviesResult.error) {
+      return null;
+    }
+
+    return {
+      profile: (profileResult.data ?? null) as ProfileRow | null,
+      settings: (settingsResult.data ?? null) as SettingsRow | null,
+      links: linkRows,
+      invites: ((invitesResult.data ?? []) as InviteRow[]) ?? [],
+      partnerProfiles:
+        ((partnerProfilesResult.data ?? []) as ProfileRow[]) ?? [],
+      swipes: swipeRows,
+      sharedWatch:
+        ((sharedWatchResult.data ?? []) as SharedWatchRow[]) ?? [],
+      movies: ((moviesResult.data ?? []) as MovieRow[]) ?? [],
+    };
+  };
+
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
@@ -767,142 +994,65 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const accessToken = sessionResult.data.session?.access_token;
 
       if (!accessToken) {
+        const browserFallbackPayload = await fetchAccountSyncFromBrowser(
+          supabaseClient,
+          activeUserId,
+        );
+
+        if (browserFallbackPayload) {
+          applyHydratedAccountPayload(activeUserId, browserFallbackPayload);
+          syncRetryCountRef.current = 0;
+          setIsSyncingAccountData(false);
+          return;
+        }
+
         setIsSyncingAccountData(false);
-        if (syncRetryCountRef.current < 3) {
+        if (syncRetryCountRef.current < 5) {
           syncRetryCountRef.current += 1;
           window.setTimeout(() => {
             setAccountRefreshKey((current) => current + 1);
-          }, 900);
+          }, 900 + syncRetryCountRef.current * 250);
         }
         return;
       }
 
-      const response = await fetch("/api/account-sync", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        cache: "no-store",
-      });
+      let payload: AccountSyncPayload | null = null;
 
-      if (!response.ok) {
+      try {
+        const response = await fetch("/api/account-sync", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          payload = (await response.json()) as AccountSyncPayload;
+        }
+      } catch {
+        payload = null;
+      }
+
+      if (!payload) {
+        payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
+      }
+
+      if (!payload) {
         setIsSyncingAccountData(false);
-        if (syncRetryCountRef.current < 3) {
+        if (syncRetryCountRef.current < 5) {
           syncRetryCountRef.current += 1;
           window.setTimeout(() => {
             setAccountRefreshKey((current) => current + 1);
-          }, 1200);
+          }, 1200 + syncRetryCountRef.current * 300);
         }
         return;
       }
-
-      const payload = (await response.json()) as {
-        profile: ProfileRow | null;
-        settings: SettingsRow | null;
-        links: LinkRow[];
-        invites: InviteRow[];
-        partnerProfiles: ProfileRow[];
-        swipes: SwipeRow[];
-        sharedWatch: SharedWatchRow[];
-        movies: MovieRow[];
-      };
 
       if (!active) {
         return;
       }
 
-      const linkRows = payload.links ?? [];
-      const partnerIds = Array.from(
-        new Set(
-          linkRows.map((link) =>
-            link.requester_id === activeUserId ? link.target_id : link.requester_id,
-          ),
-        ),
-      );
-      const hydratedSwipeUserIds = Array.from(
-        new Set([activeUserId, ...partnerIds]),
-      );
-      const sharedLinkIds = linkRows.map((link) => link.id);
-      const swipeRows = payload.swipes ?? [];
-
-      setData((current) => {
-        let next = current;
-
-        const ownProfile = payload.profile ?? null;
-        const allProfiles = [
-          ...(ownProfile ? [ownProfile] : []),
-          ...(payload.partnerProfiles ?? []),
-        ];
-
-        for (const profile of allProfiles) {
-          next = ensureLocalUser(next, {
-            id: profile.id,
-            name: profile.full_name,
-            email: profile.email,
-            avatar: profile.avatar_text,
-            avatarImageUrl: profile.avatar_image_url ?? undefined,
-            bio: profile.bio,
-            city: profile.city,
-          });
-        }
-
-        const ownSettings = payload.settings ?? null;
-        next = mergeMoviesIntoData(
-          next,
-          (payload.movies ?? []).map(mapMovieRow),
-        );
-        const currentSwipes = [
-          ...next.swipes.filter((swipe) => !hydratedSwipeUserIds.includes(swipe.userId)),
-          ...swipeRows.map(mapSwipeRow),
-        ];
-        const currentLinks = [
-          ...next.links.filter((link) => !link.users.includes(activeUserId)),
-          ...linkRows.map(mapLinkRow),
-        ];
-        const currentInvites = [
-          ...next.invites.filter((invite) => invite.inviterId !== activeUserId),
-          ...(payload.invites ?? []).map(mapInviteRow),
-        ];
-        const currentSharedWatch = [
-          ...next.sharedWatch.filter(
-            (item) => !sharedLinkIds.includes(item.pairKey),
-          ),
-          ...(payload.sharedWatch ?? []).map(
-            (item) => ({
-              id: item.id,
-              pairKey: item.linked_user_id,
-              movieId: item.movie_id,
-              watched: item.watched,
-              progress: item.watched ? 100 : 0,
-              updatedAt: item.updated_at,
-            }),
-          ),
-        ];
-
-        return {
-          ...next,
-          swipes: currentSwipes,
-          links: currentLinks,
-          invites: currentInvites,
-          sharedWatch: currentSharedWatch,
-          settings: ownSettings
-            ? {
-                ...next.settings,
-                [activeUserId]: mapSettingsRow(ownSettings),
-              }
-            : next.settings,
-        };
-      });
-
-      if (payload.settings) {
-        const dbDarkMode = mapSettingsRow(
-          payload.settings,
-        ).darkMode;
-        const nextDarkMode =
-          getStoredUserTheme(activeUserId) ?? dbDarkMode;
-        setPreferredDarkMode(nextDarkMode);
-        persistUserTheme(activeUserId, nextDarkMode);
-      }
-
+      applyHydratedAccountPayload(activeUserId, payload);
       syncRetryCountRef.current = 0;
       setIsSyncingAccountData(false);
     }
