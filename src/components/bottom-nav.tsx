@@ -17,8 +17,12 @@ export function BottomNav() {
   const { isDarkMode } = useAppState();
 
   return (
-    <nav className="z-20 mt-auto shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
+    <nav
+      data-bottom-nav="true"
+      className="z-20 mt-auto shrink-0 pb-[env(safe-area-inset-bottom,0px)]"
+    >
       <div
+        data-bottom-nav-panel="true"
         className={`mx-auto flex max-w-md items-center justify-between rounded-[30px] px-2 py-2 backdrop-blur-2xl ${
           isDarkMode
             ? "border border-white/10 bg-black/35 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
@@ -32,6 +36,8 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              data-bottom-nav-link="true"
+              data-active={active ? "true" : "false"}
               className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[22px] px-1 py-2 text-[11px] font-medium transition ${
                 active
                   ? "bg-violet-100 text-violet-700"
@@ -41,6 +47,7 @@ export function BottomNav() {
               }`}
             >
               <span
+                data-bottom-nav-icon="true"
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
                   active
                     ? "bg-violet-600 text-white"
