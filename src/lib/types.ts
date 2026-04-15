@@ -92,6 +92,7 @@ export type SharedMovieView = {
   linkId: string;
   partner: User;
   movie: Movie;
+  shared: boolean;
   watched: boolean;
   progress: number;
 };

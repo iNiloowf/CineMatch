@@ -157,7 +157,11 @@ type AppStateContextValue = {
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
-  removeSharedMovie: (partnerId: string, movieId: string) => Promise<void>;
+  toggleSharedMovie: (
+    partnerId: string,
+    movieId: string,
+    shared: boolean,
+  ) => Promise<void>;
   linkUser: (targetUserId: string) => Promise<void>;
   unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
   createInviteLink: () => Promise<InviteLinkResult>;
@@ -1456,14 +1460,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
           return acceptedMovies
             .filter((movie) => partnerAccepted.has(movie.id))
-            .filter(
-              (movie) =>
-                !data.sharedHiddenMovies.some(
-                  (hidden) =>
-                    hidden.pairKey === link.id && hidden.movieId === movie.id,
-                ),
-            )
             .map((movie) => {
+              const isHidden = data.sharedHiddenMovies.some(
+                (hidden) => hidden.pairKey === link.id && hidden.movieId === movie.id,
+              );
               const savedState = data.sharedWatch.find(
                 (item) =>
                   item.pairKey === link.id &&
@@ -1474,6 +1474,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 linkId: link.id,
                 partner: partnerInfo,
                 movie,
+                shared: !isHidden,
                 watched: savedState?.watched ?? false,
                 progress: savedState?.progress ?? 0,
               };
@@ -2146,7 +2147,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const removeSharedMovie = async (partnerId: string, movieId: string) => {
+  const toggleSharedMovie = async (
+    partnerId: string,
+    movieId: string,
+    shared: boolean,
+  ) => {
     if (!currentUserId) {
       return;
     }
@@ -2163,6 +2168,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const alreadyHidden = current.sharedHiddenMovies.some(
         (entry) => entry.pairKey === linkId && entry.movieId === movieId,
       );
+
+      if (shared && !alreadyHidden) {
+        return current;
+      }
+
+      if (shared) {
+        return {
+          ...current,
+          sharedHiddenMovies: current.sharedHiddenMovies.filter(
+            (entry) => !(entry.pairKey === linkId && entry.movieId === movieId),
+          ),
+        };
+      }
 
       if (alreadyHidden) {
         return current;
@@ -2594,7 +2612,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         registerMovies,
         swipeMovie,
         removePick,
-        removeSharedMovie,
+        toggleSharedMovie,
         linkUser,
         unlinkUser,
         createInviteLink,
