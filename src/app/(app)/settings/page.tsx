@@ -28,7 +28,7 @@ export default function SettingsPage() {
         description={`Preferences and achievements for ${currentUser?.name ?? "your account"}.`}
       />
 
-      <SurfaceCard className="space-y-3">
+      <SurfaceCard className="space-y-4">
         <SettingToggle
           label="Dark mode"
           description="Switch the app to a darker evening-friendly theme."
@@ -49,7 +49,7 @@ export default function SettingsPage() {
         />
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-4">
+      <SurfaceCard className="space-y-5">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-900">Achievements</p>
           <p className="text-sm leading-6 text-slate-500">
@@ -106,7 +106,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-4">
+      <SurfaceCard className="space-y-5">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-900">About this build</p>
           <p className="text-sm leading-6 text-slate-500">
@@ -117,7 +117,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={logout}
-          className="w-full rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
+          className="mt-2 w-full rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
         >
           Log out
         </button>

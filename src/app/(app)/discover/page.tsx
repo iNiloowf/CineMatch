@@ -19,6 +19,7 @@ export default function DiscoverPage() {
   const [transitionState, setTransitionState] = useState<"idle" | "out" | "in">("idle");
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
   const transitionTimeoutRef = useRef<number | null>(null);
+  const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = normalizedSearchQuery.length >= 2;
   const visibleDiscoverIds = useMemo(
@@ -134,6 +135,20 @@ export default function DiscoverPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      overlaySearchInputRef.current?.focus();
+      const currentLength = overlaySearchInputRef.current?.value.length ?? 0;
+      overlaySearchInputRef.current?.setSelectionRange(currentLength, currentLength);
+    }, 30);
+
+    return () => window.clearTimeout(timer);
+  }, [isSearchOpen]);
 
   const navigateCard = (direction: "next" | "previous") => {
     if (transitionState !== "idle") {
@@ -366,6 +381,7 @@ export default function DiscoverPage() {
               </div>
               <div className="relative mt-4">
                 <input
+                  ref={overlaySearchInputRef}
                   value={searchQuery}
                   onChange={(event) => {
                     const nextValue = event.target.value;

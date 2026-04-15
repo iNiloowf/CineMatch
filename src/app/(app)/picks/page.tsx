@@ -38,7 +38,7 @@ export default function PicksPage() {
             .map((entry) => entry.partner.name);
 
           return (
-            <SurfaceCard key={movie.id} className="space-y-3 p-4">
+            <SurfaceCard key={movie.id} className="space-y-4 p-4">
               <div className="flex items-start gap-3">
                 <div
                   className="h-24 w-[4.8rem] shrink-0 overflow-hidden rounded-[22px] shadow-[0_12px_28px_rgba(107,70,193,0.22)]"
@@ -79,7 +79,7 @@ export default function PicksPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3 pt-1">
                 <p className="min-w-0 text-xs leading-5 text-slate-500">
                   {matchingPartners.length > 0
                     ? `Also matched with ${matchingPartners.join(", ")}`
@@ -88,7 +88,7 @@ export default function PicksPage() {
                 <button
                   type="button"
                   onClick={() => removePick(movie.id)}
-                  className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
+                  className="shrink-0 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-100"
                 >
                   Remove
                 </button>

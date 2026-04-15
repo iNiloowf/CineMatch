@@ -129,8 +129,8 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <SurfaceCard className="space-y-5">
-          <div className="space-y-1">
+        <SurfaceCard className="space-y-6">
+          <div className="space-y-2">
             <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign up</p>
             <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Make your profile and start swiping.
@@ -253,7 +253,7 @@ export default function SignUpPage() {
             </div>
           ) : null}
 
-            <p className={`text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+            <p className={`pt-2 text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Already have an account?{" "}
               <Link href="/" className="font-semibold text-violet-600">
                 Sign in
