@@ -35,6 +35,7 @@ export function MovieSwipeCard({
     shouldClamp && !isExpanded
       ? `${movie.description.slice(0, 110).trimEnd()}...`
       : movie.description;
+  const isLongTitle = movie.title.length > 18;
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isInteractionLocked) {
@@ -206,33 +207,37 @@ export function MovieSwipeCard({
             <p className="text-xs font-medium text-white/76">
               {movie.genre.slice(0, 3).join(" • ")}
             </p>
-            <h2 className="max-w-[13rem] text-3xl font-semibold leading-tight">
+            <h2
+              className={`max-w-[13rem] font-semibold leading-tight ${
+                isLongTitle ? "text-[1.7rem]" : "text-3xl"
+              }`}
+            >
               {movie.title}
             </h2>
           </div>
         </div>
       </div>
 
-      <div className="flex min-h-[2.5rem] max-h-[2.5rem] flex-nowrap items-start gap-2 overflow-hidden">
-        <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-          {movie.rating.toFixed(1)} rating
-        </span>
+      <div className="min-h-[1.75rem] max-h-[1.75rem]">
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
           {movie.runtime}
         </span>
-        {movie.genre.slice(0, 3).map((entry) => (
-          <span
-            key={entry}
-            className="max-w-[6.5rem] truncate rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
-          >
-            {entry}
-          </span>
-        ))}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
-        <div className="min-h-[6.5rem] max-h-[6.5rem] overflow-hidden sm:min-h-[7rem] sm:max-h-[7rem]">
-          <p className="text-sm leading-6 text-slate-600">{previewText}</p>
+        <div className="space-y-2">
+          <h3 className="line-clamp-2 text-lg font-semibold leading-6 text-slate-900">
+            {movie.title}
+          </h3>
+          <div
+            className={`rounded-[18px] bg-slate-50/80 pr-1 ${
+              isExpanded
+                ? "h-[8.75rem] overflow-y-auto"
+                : "h-[6.25rem] overflow-hidden"
+            }`}
+          >
+            <p className="text-sm leading-6 text-slate-600">{previewText}</p>
+          </div>
           {shouldClamp ? (
             <button
               type="button"
@@ -243,7 +248,7 @@ export function MovieSwipeCard({
             </button>
           ) : null}
         </div>
-        <div className="mt-auto grid grid-cols-2 gap-3 pt-1">
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
           <button
             type="button"
             onClick={onReject}
