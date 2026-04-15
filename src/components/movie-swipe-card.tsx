@@ -114,7 +114,7 @@ export function MovieSwipeCard({
 
   return (
     <SurfaceCard
-      className={`flex h-[calc(100dvh-13.75rem)] min-h-[calc(100dvh-13.75rem)] max-h-[calc(100dvh-13.75rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-14.75rem)] sm:min-h-[calc(100dvh-14.75rem)] sm:max-h-[calc(100dvh-14.75rem)] ${
+      className={`flex h-[calc(100dvh-12.5rem)] min-h-[calc(100dvh-12.5rem)] max-h-[calc(100dvh-12.5rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-13.5rem)] sm:min-h-[calc(100dvh-13.5rem)] sm:max-h-[calc(100dvh-13.5rem)] ${
         isSnapAnimating
           ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
           : "duration-150 ease-out"
@@ -218,7 +218,10 @@ export function MovieSwipeCard({
         </div>
       </div>
 
-      <div className="min-h-[1.75rem] max-h-[1.75rem]">
+      <div className="flex min-h-[2rem] items-center gap-2">
+        <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+          {movie.rating.toFixed(1)} rating
+        </span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
           {movie.runtime}
         </span>
@@ -230,25 +233,27 @@ export function MovieSwipeCard({
             {movie.title}
           </h3>
           <div
-            className={`rounded-[18px] bg-slate-50/80 pr-1 ${
+            className={`rounded-[18px] px-1 pr-2 ${
               isExpanded
-                ? "h-[8.75rem] overflow-y-auto"
-                : "h-[6.25rem] overflow-hidden"
+                ? "h-[8.5rem] overflow-y-auto bg-slate-50"
+                : "h-[5.75rem] overflow-hidden bg-slate-50"
             }`}
           >
-            <p className="text-sm leading-6 text-slate-600">{previewText}</p>
+            <p className="px-2 py-2 text-sm leading-6 text-slate-600">
+              {previewText}
+            </p>
           </div>
           {shouldClamp ? (
             <button
               type="button"
               onClick={() => setIsExpanded((current) => !current)}
-              className="mt-2 text-sm font-semibold text-violet-600"
+              className="text-sm font-semibold text-violet-600"
             >
               {isExpanded ? "Less" : "More"}
             </button>
           ) : null}
         </div>
-        <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-5 pb-1">
           <button
             type="button"
             onClick={onReject}
