@@ -129,15 +129,15 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <SurfaceCard className="space-y-6">
-          <div className="space-y-2">
+        <SurfaceCard className="space-y-7">
+          <div className="space-y-3">
             <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign up</p>
             <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Make your profile and start swiping.
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
               Name
               <input
@@ -253,7 +253,7 @@ export default function SignUpPage() {
             </div>
           ) : null}
 
-            <p className={`pt-2 text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+            <p className={`pt-4 text-center text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Already have an account?{" "}
               <Link href="/" className="font-semibold text-violet-600">
                 Sign in

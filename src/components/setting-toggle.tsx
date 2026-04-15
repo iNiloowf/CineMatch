@@ -22,7 +22,7 @@ export function SettingToggle({
       type="button"
       onClick={() => onChange(!checked)}
       aria-pressed={checked}
-      className={`flex items-center justify-between gap-5 rounded-[24px] px-4 py-5 ${
+      className={`flex items-center justify-between gap-5 rounded-[24px] px-4 py-6 ${
         isDarkMode ? "bg-white/6" : "bg-slate-50"
       }`}
     >
