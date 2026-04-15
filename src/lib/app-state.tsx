@@ -1398,12 +1398,45 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (supabase && isSupabaseConfigured()) {
       try {
-        const { data: authData, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        const loginResponse = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
         });
 
-        if (error || !authData.user) {
+        const loginPayload = (await loginResponse.json()) as {
+          error?: string;
+          user?: {
+            id: string;
+            email?: string | null;
+            user_metadata?: Record<string, unknown>;
+          };
+          session?: {
+            access_token: string;
+            refresh_token: string;
+          };
+        };
+
+        if (!loginResponse.ok || !loginPayload.user || !loginPayload.session) {
+          return {
+            ok: false,
+            message:
+              loginPayload.error ??
+              "We couldn’t sign you in. Double-check your email and password.",
+          };
+        }
+
+        const authUser = loginPayload.user;
+        const authSession = loginPayload.session;
+
+        const { error } = await supabase.auth.setSession({
+          access_token: authSession.access_token,
+          refresh_token: authSession.refresh_token,
+        });
+
+        if (error) {
           return {
             ok: false,
             message:
@@ -1413,25 +1446,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
 
         const fullName =
-          (authData.user.user_metadata.full_name as string | undefined) ??
-          authData.user.email?.split("@")[0] ??
+          (authUser.user_metadata?.full_name as string | undefined) ??
+          authUser.email?.split("@")[0] ??
           "CineMatch User";
 
         setData((current) =>
           ensureLocalUser(current, {
-            id: authData.user.id,
+            id: authUser.id,
             name: fullName,
-            email: authData.user.email ?? email,
+            email: authUser.email ?? email,
             avatarImageUrl:
-              (authData.user.user_metadata.avatar_image_url as string | undefined) ??
+              (authUser.user_metadata?.avatar_image_url as string | undefined) ??
               undefined,
           }),
         );
-        setCurrentUserId(authData.user.id);
-        refreshDiscoverShuffle(authData.user.id);
+        setCurrentUserId(authUser.id);
+        refreshDiscoverShuffle(authUser.id);
         setAccountRefreshKey((current) => current + 1);
 
-        const storedUserTheme = getStoredUserTheme(authData.user.id);
+        const storedUserTheme = getStoredUserTheme(authUser.id);
         setPreferredDarkMode(storedUserTheme ?? getGlobalStoredTheme());
 
         void (async () => {
@@ -1439,14 +1472,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             const settingsResult = await supabase
               .from("settings")
               .select("dark_mode")
-              .eq("user_id", authData.user.id)
+              .eq("user_id", authUser.id)
               .maybeSingle();
             const nextDarkMode =
-              getStoredUserTheme(authData.user.id) ??
+              getStoredUserTheme(authUser.id) ??
               (settingsResult.data as { dark_mode?: boolean } | null)?.dark_mode ??
               getGlobalStoredTheme();
             setPreferredDarkMode(nextDarkMode);
-            persistUserTheme(authData.user.id, nextDarkMode);
+            persistUserTheme(authUser.id, nextDarkMode);
           } catch {
             // Keep the restored local theme if this background fetch fails.
           }
