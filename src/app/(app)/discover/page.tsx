@@ -193,6 +193,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="flex min-h-full flex-col gap-3 overflow-hidden">
+      {!isSearchOpen ? (
       <div className="space-y-2">
         <div
           className={`rounded-[24px] border px-3 py-3 backdrop-blur-xl ${
@@ -315,6 +316,7 @@ export default function DiscoverPage() {
           ) : null}
         </div>
       </div>
+      ) : null}
 
       {isSearchOpen ? (
         <div
@@ -329,37 +331,115 @@ export default function DiscoverPage() {
                 : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(246,242,255,0.92))]"
             }`}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-black/5 px-4 py-4">
-              <div>
-                <h2
-                  className={`text-lg font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
+            <div className="border-b border-black/5 px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2
+                    className={`text-lg font-semibold ${
+                      isDarkMode ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    Search results
+                  </h2>
+                  <p
+                    className={`text-sm ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Pick one title to open in Discover.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                    isDarkMode
+                      ? "bg-white/8 text-slate-200"
+                      : "bg-slate-100 text-slate-600"
                   }`}
                 >
-                  Search results
-                </h2>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
-                  }`}
-                >
-                  Pick one title to open in Discover.
-                </p>
+                  Close
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSearchResults([]);
-                }}
-                className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                  isDarkMode
-                    ? "bg-white/8 text-slate-200"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                Close
-              </button>
+              <div className="relative mt-4">
+                <input
+                  value={searchQuery}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setSearchQuery(nextValue);
+
+                    if (nextValue.trim().length < 2) {
+                      setSearchResults([]);
+                    }
+                  }}
+                  placeholder="Search a movie or series"
+                  className={`w-full rounded-[18px] border py-3 pl-10 pr-11 text-sm outline-none transition ${
+                    isDarkMode
+                      ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
+                      : "border-slate-200 bg-white/80 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white"
+                  }`}
+                />
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                  </svg>
+                </span>
+                {searchQuery.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                    }}
+                    aria-label="Clear search"
+                    className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${
+                      isDarkMode
+                        ? "bg-white/8 text-slate-300"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                ) : null}
+              </div>
+              {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                      isDarkMode
+                        ? "bg-white/8 text-slate-200"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {sortedSearchResults.length} found
+                  </span>
+                </div>
+              ) : null}
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
