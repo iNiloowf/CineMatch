@@ -219,28 +219,56 @@ export function MovieSwipeCard({
         </div>
 
         <div className="flex min-h-[2rem] items-center gap-2">
-          <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              isDarkMode
+                ? "bg-violet-500/14 text-violet-200"
+                : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,236,255,0.88))] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_20px_rgba(168,85,247,0.12)]"
+            }`}
+          >
             {movie.rating.toFixed(1)} rating
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              isDarkMode
+                ? "bg-white/8 text-slate-300"
+                : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(238,244,255,0.84))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_18px_rgba(148,163,184,0.12)]"
+            }`}
+          >
             {movie.runtime}
           </span>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
         <div className="space-y-2">
-          <h3 className="line-clamp-2 text-base font-semibold leading-6 text-slate-900">
+          <h3
+            className={`line-clamp-2 text-base font-semibold leading-6 ${
+              isDarkMode ? "text-white" : "text-slate-900"
+            }`}
+          >
             {movie.title}
           </h3>
-          <div className="rounded-[18px] bg-slate-50 px-3 py-3">
-            <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+          <div
+            className={`rounded-[20px] px-3 py-3 ${
+              isDarkMode
+                ? "bg-white/8"
+                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+            }`}
+          >
+            <p
+              className={`line-clamp-3 text-sm leading-6 ${
+                isDarkMode ? "text-slate-200" : "text-slate-600"
+              }`}
+            >
               {previewText}
             </p>
             {shouldClamp ? (
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(true)}
-                className="mt-1 block text-sm font-semibold text-violet-600"
+                className={`mt-1 block text-sm font-semibold ${
+                  isDarkMode ? "text-violet-300" : "text-violet-600"
+                }`}
               >
                 More
               </button>
@@ -251,14 +279,18 @@ export function MovieSwipeCard({
           <button
             type="button"
             onClick={onReject}
-            className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+            className={`rounded-[22px] px-4 py-3 text-sm font-semibold transition ${
+              isDarkMode
+                ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
+                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(242,244,249,0.88))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_14px_28px_rgba(148,163,184,0.12)] hover:bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(244,236,255,0.9))]"
+            }`}
             >
               Reject
             </button>
             <button
               type="button"
               onClick={onAccept}
-              className="rounded-[22px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_rgba(124,58,237,0.3)] transition hover:bg-violet-500"
+              className="rounded-[22px] bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.3)] transition hover:brightness-[1.04]"
             >
               Accept
             </button>
