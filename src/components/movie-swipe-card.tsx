@@ -112,22 +112,28 @@ export function MovieSwipeCard({
   };
 
   return (
-    <SurfaceCard className="flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)]">
+    <SurfaceCard
+      className={`flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)] ${
+        isSnapAnimating
+          ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          : "duration-150 ease-out"
+      } transition-transform`}
+      style={{
+        transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div
-        className={`relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)] ${
-          isSnapAnimating ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]" : "duration-150 ease-out"
-        } transition-transform`}
+        className="relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
         style={{
           backgroundImage: movie.poster.imageUrl
             ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
             : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
         <div className="relative flex min-h-[15.5rem] flex-col justify-between">
