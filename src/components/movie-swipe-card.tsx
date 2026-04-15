@@ -113,7 +113,7 @@ export function MovieSwipeCard({
 
   return (
     <SurfaceCard
-      className={`flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)] ${
+      className={`flex h-[calc(100dvh-15.5rem)] min-h-[calc(100dvh-15.5rem)] max-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-16.5rem)] sm:min-h-[calc(100dvh-16.5rem)] sm:max-h-[calc(100dvh-16.5rem)] ${
         isSnapAnimating
           ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
           : "duration-150 ease-out"
@@ -213,7 +213,7 @@ export function MovieSwipeCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid min-h-[4.5rem] max-h-[4.5rem] grid-cols-3 content-start gap-2 overflow-hidden">
         <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
           {movie.rating.toFixed(1)} rating
         </span>
@@ -231,7 +231,7 @@ export function MovieSwipeCard({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
-        <div className="min-h-0">
+        <div className="min-h-[5.75rem] max-h-[5.75rem] overflow-hidden">
           <p className="text-sm leading-6 text-slate-600">{previewText}</p>
           {shouldClamp ? (
             <button
