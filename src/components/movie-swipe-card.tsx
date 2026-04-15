@@ -24,6 +24,8 @@ export function MovieSwipeCard({
   canGoNext,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isSnapAnimating, setIsSnapAnimating] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const shouldClamp = movie.description.length > 110;
@@ -36,6 +38,23 @@ export function MovieSwipeCard({
     const touch = event.touches[0];
     touchStartXRef.current = touch.clientX;
     touchStartYRef.current = touch.clientY;
+    setIsSnapAnimating(false);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+      return;
+    }
+
+    setDragOffset(Math.max(-72, Math.min(72, deltaX)));
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -50,32 +69,52 @@ export function MovieSwipeCard({
     touchStartXRef.current = null;
     touchStartYRef.current = null;
 
+    const resetDrag = () => {
+      setIsSnapAnimating(true);
+      setDragOffset(0);
+      window.setTimeout(() => {
+        setIsSnapAnimating(false);
+      }, 220);
+    };
+
     if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) {
+      resetDrag();
       return;
     }
 
     if (deltaX > 0 && canGoPrevious) {
+      setIsSnapAnimating(true);
+      setDragOffset(84);
       onPrevious();
       return;
     }
 
     if (deltaX < 0 && canGoNext) {
+      setIsSnapAnimating(true);
+      setDragOffset(-84);
       onNext();
+      return;
     }
+
+    resetDrag();
   };
 
   return (
     <SurfaceCard className="flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)]">
       <div
-        className="relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+        className={`relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)] ${
+          isSnapAnimating ? "duration-200 ease-out" : "duration-75 ease-out"
+        } transition-transform`}
         style={{
           backgroundImage: movie.poster.imageUrl
             ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
             : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+          transform: `translateX(${dragOffset}px) scale(${dragOffset === 0 ? 1 : 0.992})`,
         }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
@@ -95,7 +134,7 @@ export function MovieSwipeCard({
               </span>
             </div>
           </div>
-          <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-1.5">
+          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-[2px]">
             <button
               type="button"
               onClick={onPrevious}
@@ -103,7 +142,7 @@ export function MovieSwipeCard({
               aria-label="Show previous title"
               className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                 canGoPrevious
-                  ? "opacity-100 hover:bg-black/32"
+                  ? "opacity-100 hover:bg-black/32 active:scale-95"
                   : "cursor-not-allowed opacity-35"
               }`}
             >
@@ -127,7 +166,7 @@ export function MovieSwipeCard({
               aria-label="Show next title"
               className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                 canGoNext
-                  ? "opacity-100 hover:bg-black/32"
+                  ? "opacity-100 hover:bg-black/32 active:scale-95"
                   : "cursor-not-allowed opacity-35"
               }`}
             >

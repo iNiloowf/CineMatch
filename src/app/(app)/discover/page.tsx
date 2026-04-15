@@ -348,6 +348,7 @@ export default function DiscoverPage() {
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
           <MovieSwipeCard
+            key={movie.id}
             movie={movie}
             onAccept={async () => {
               registerMovies([movie]);
