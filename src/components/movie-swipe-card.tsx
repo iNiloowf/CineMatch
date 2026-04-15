@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 
@@ -24,11 +24,45 @@ export function MovieSwipeCard({
   canGoNext,
 }: MovieSwipeCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const shouldClamp = movie.description.length > 110;
   const previewText =
     shouldClamp && !isExpanded
       ? `${movie.description.slice(0, 110).trimEnd()}...`
       : movie.description;
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) {
+      return;
+    }
+
+    if (deltaX > 0 && canGoPrevious) {
+      onPrevious();
+      return;
+    }
+
+    if (deltaX < 0 && canGoNext) {
+      onNext();
+    }
+  };
 
   return (
     <SurfaceCard className="flex min-h-[calc(100dvh-15.5rem)] flex-col gap-3 overflow-hidden p-4 sm:min-h-[calc(100dvh-16.5rem)]">
@@ -41,6 +75,8 @@ export function MovieSwipeCard({
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
         <div className="relative flex min-h-[15.5rem] flex-col justify-between">
@@ -59,7 +95,7 @@ export function MovieSwipeCard({
               </span>
             </div>
           </div>
-          <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-3">
+          <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-1.5">
             <button
               type="button"
               onClick={onPrevious}
