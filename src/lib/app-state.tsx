@@ -670,45 +670,42 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     async function loadSupabaseAppData() {
       setIsSyncingAccountData(true);
-      const [profileSettled, settingsSettled, linksSettled, invitesSettled] =
-        await Promise.allSettled([
-          supabaseClient
-            .from("profiles")
-            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
-            .eq("id", activeUserId)
-            .maybeSingle(),
-          supabaseClient
-            .from("settings")
-            .select(
-              "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
-            )
-            .eq("user_id", activeUserId)
-            .maybeSingle(),
-          supabaseClient
-            .from("linked_users")
-            .select("id, requester_id, target_id, status, created_at")
-            .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`),
-          supabaseClient
-            .from("invite_links")
-            .select("id, inviter_id, token, created_at, used_at")
-            .eq("inviter_id", activeUserId)
-            .order("created_at", { ascending: false }),
-        ]);
+      const sessionResult = await supabaseClient.auth.getSession();
+      const accessToken = sessionResult.data.session?.access_token;
+
+      if (!accessToken) {
+        setIsSyncingAccountData(false);
+        return;
+      }
+
+      const response = await fetch("/api/account-sync", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        setIsSyncingAccountData(false);
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        profile: ProfileRow | null;
+        settings: SettingsRow | null;
+        links: LinkRow[];
+        invites: InviteRow[];
+        partnerProfiles: ProfileRow[];
+        swipes: SwipeRow[];
+        sharedWatch: SharedWatchRow[];
+        movies: MovieRow[];
+      };
 
       if (!active) {
         return;
       }
 
-      const profileResult =
-        profileSettled.status === "fulfilled" ? profileSettled.value : null;
-      const settingsResult =
-        settingsSettled.status === "fulfilled" ? settingsSettled.value : null;
-      const linksResult =
-        linksSettled.status === "fulfilled" ? linksSettled.value : null;
-      const invitesResult =
-        invitesSettled.status === "fulfilled" ? invitesSettled.value : null;
-
-      const linkRows = ((linksResult?.data ?? []) as LinkRow[]) ?? [];
+      const linkRows = payload.links ?? [];
       const partnerIds = Array.from(
         new Set(
           linkRows.map((link) =>
@@ -720,80 +717,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         new Set([activeUserId, ...partnerIds]),
       );
       const sharedLinkIds = linkRows.map((link) => link.id);
-      const [partnerProfilesSettled, sharedWatchSettled, ownSwipesSettled, partnerAcceptedSwipesSettled] =
-        await Promise.allSettled([
-          partnerIds.length > 0
-            ? supabaseClient
-                .from("profiles")
-                .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
-                .in("id", partnerIds)
-            : Promise.resolve({ data: [] as ProfileRow[] }),
-          sharedLinkIds.length > 0
-            ? supabaseClient
-                .from("shared_watchlist")
-                .select("id, linked_user_id, movie_id, watched, updated_at")
-                .in("linked_user_id", sharedLinkIds)
-            : Promise.resolve({ data: [] as SharedWatchRow[] }),
-          supabaseClient
-            .from("swipes")
-            .select("user_id, movie_id, decision, created_at")
-            .eq("user_id", activeUserId),
-          partnerIds.length > 0
-            ? supabaseClient
-                .from("swipes")
-                .select("user_id, movie_id, decision, created_at")
-                .in("user_id", partnerIds)
-                .eq("decision", "accepted")
-            : Promise.resolve({ data: [] as SwipeRow[] }),
-        ]);
-
-      if (!active) {
-        return;
-      }
-
-      const partnerProfilesResult =
-        partnerProfilesSettled.status === "fulfilled"
-          ? partnerProfilesSettled.value
-          : { data: [] as ProfileRow[] };
-      const sharedWatchResult =
-        sharedWatchSettled.status === "fulfilled"
-          ? sharedWatchSettled.value
-          : { data: [] as SharedWatchRow[] };
-      const ownSwipesResult =
-        ownSwipesSettled.status === "fulfilled"
-          ? ownSwipesSettled.value
-          : { data: [] as SwipeRow[] };
-      const partnerAcceptedSwipesResult =
-        partnerAcceptedSwipesSettled.status === "fulfilled"
-          ? partnerAcceptedSwipesSettled.value
-          : { data: [] as SwipeRow[] };
-
-      const swipeRows = [
-        ...(((ownSwipesResult.data ?? []) as SwipeRow[]) ?? []),
-        ...(((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? []),
-      ];
-      const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
-      const moviesResult =
-        movieIds.length > 0
-          ? await supabaseClient
-              .from("movies")
-              .select(
-                "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
-              )
-              .in("id", movieIds)
-          : { data: [] as MovieRow[] };
-
-      if (!active) {
-        return;
-      }
+      const swipeRows = payload.swipes ?? [];
 
       setData((current) => {
         let next = current;
 
-        const ownProfile = (profileResult?.data ?? null) as ProfileRow | null;
+        const ownProfile = payload.profile ?? null;
         const allProfiles = [
           ...(ownProfile ? [ownProfile] : []),
-          ...(((partnerProfilesResult as { data: ProfileRow[] }).data ?? []) as ProfileRow[]),
+          ...(payload.partnerProfiles ?? []),
         ];
 
         for (const profile of allProfiles) {
@@ -808,12 +740,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
-        const ownSettings = (settingsResult?.data ?? null) as SettingsRow | null;
+        const ownSettings = payload.settings ?? null;
         next = mergeMoviesIntoData(
           next,
-          (((moviesResult as { data: MovieRow[] }).data ?? []) as MovieRow[]).map(
-            mapMovieRow,
-          ),
+          (payload.movies ?? []).map(mapMovieRow),
         );
         const currentSwipes = [
           ...next.swipes.filter((swipe) => !hydratedSwipeUserIds.includes(swipe.userId)),
@@ -825,13 +755,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ];
         const currentInvites = [
           ...next.invites.filter((invite) => invite.inviterId !== activeUserId),
-          ...(((invitesResult?.data ?? []) as InviteRow[]) ?? []).map(mapInviteRow),
+          ...(payload.invites ?? []).map(mapInviteRow),
         ];
         const currentSharedWatch = [
           ...next.sharedWatch.filter(
             (item) => !sharedLinkIds.includes(item.pairKey),
           ),
-          ...(((sharedWatchResult as { data: SharedWatchRow[] }).data ?? []) as SharedWatchRow[]).map(
+          ...(payload.sharedWatch ?? []).map(
             (item) => ({
               id: item.id,
               pairKey: item.linked_user_id,
@@ -858,9 +788,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         };
       });
 
-      if (settingsResult?.data) {
+      if (payload.settings) {
         const dbDarkMode = mapSettingsRow(
-          settingsResult.data as SettingsRow,
+          payload.settings,
         ).darkMode;
         const nextDarkMode =
           getStoredUserTheme(activeUserId) ?? dbDarkMode;
