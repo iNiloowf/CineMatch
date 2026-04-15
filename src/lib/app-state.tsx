@@ -468,6 +468,16 @@ function hashString(value: string) {
   return Math.abs(hash);
 }
 
+function chunkItems<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
 async function getCurrentAccessToken() {
   const storedSession = getStoredAuthSession();
 
@@ -728,10 +738,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             error: null,
           });
 
-    const swipesPromise = supabaseClient
+    const ownSwipesPromise = supabaseClient
       .from("swipes")
       .select("user_id, movie_id, decision, created_at")
-      .in("user_id", [activeUserId, ...partnerIds]);
+      .eq("user_id", activeUserId);
+
+    const partnerAcceptedSwipesPromise =
+      partnerIds.length > 0
+        ? supabaseClient
+            .from("swipes")
+            .select("user_id, movie_id, decision, created_at")
+            .in("user_id", partnerIds)
+            .eq("decision", "accepted")
+        : Promise.resolve({
+            data: [] as SwipeRow[],
+            error: null,
+          });
 
     const sharedWatchPromise =
       sharedLinkIds.length > 0
@@ -744,38 +766,51 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             error: null,
           });
 
-    const [partnerProfilesResult, swipesResult, sharedWatchResult] =
+    const [
+      partnerProfilesResult,
+      ownSwipesResult,
+      partnerAcceptedSwipesResult,
+      sharedWatchResult,
+    ] =
       await Promise.all([
         partnerProfilesPromise,
-        swipesPromise,
+        ownSwipesPromise,
+        partnerAcceptedSwipesPromise,
         sharedWatchPromise,
       ]);
 
     if (
       partnerProfilesResult.error ||
-      swipesResult.error ||
+      ownSwipesResult.error ||
+      partnerAcceptedSwipesResult.error ||
       sharedWatchResult.error
     ) {
       return null;
     }
 
-    const swipeRows = ((swipesResult.data ?? []) as SwipeRow[]) ?? [];
+    const swipeRows = [
+      ...((((ownSwipesResult.data ?? []) as SwipeRow[]) ?? [])),
+      ...((((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? [])),
+    ];
     const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
+    const movieChunks = chunkItems(movieIds, 75);
+    const movieResults = await Promise.all(
+      movieChunks.map((ids) =>
+        ids.length > 0
+          ? supabaseClient
+              .from("movies")
+              .select(
+                "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
+              )
+              .in("id", ids)
+          : Promise.resolve({
+              data: [] as MovieRow[],
+              error: null,
+            }),
+      ),
+    );
 
-    const moviesResult =
-      movieIds.length > 0
-        ? await supabaseClient
-            .from("movies")
-            .select(
-              "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
-            )
-            .in("id", movieIds)
-        : {
-            data: [] as MovieRow[],
-            error: null,
-          };
-
-    if (moviesResult.error) {
+    if (movieResults.some((result) => result.error)) {
       return null;
     }
 
@@ -789,7 +824,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       swipes: swipeRows,
       sharedWatch:
         ((sharedWatchResult.data ?? []) as SharedWatchRow[]) ?? [],
-      movies: ((moviesResult.data ?? []) as MovieRow[]) ?? [],
+      movies: movieResults.flatMap(
+        (result) => ((result.data ?? []) as MovieRow[]) ?? [],
+      ),
     };
   };
 
@@ -1156,29 +1193,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      let payload: AccountSyncPayload | null = null;
-
-      try {
-        const response = await fetch("/api/account-sync", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          cache: "no-store",
-        });
-
-        if (response.ok) {
-          payload = (await response.json()) as AccountSyncPayload;
-        }
-      } catch {
-        payload = null;
-      }
+      let payload = await fetchAccountSyncFromBrowser(
+        supabaseClient,
+        activeUserId,
+      );
 
       if (!payload) {
         payload = getStoredAccountSnapshot(activeUserId);
       }
 
       if (!payload) {
-        payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
+        try {
+          const response = await fetch("/api/account-sync", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            cache: "no-store",
+          });
+
+          if (response.ok) {
+            payload = (await response.json()) as AccountSyncPayload;
+          }
+        } catch {
+          payload = null;
+        }
       }
 
       if (!payload) {
