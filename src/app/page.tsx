@@ -75,7 +75,7 @@ export default function SignInPage() {
           </div>
 
           <SurfaceCard className="space-y-8">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign in</p>
               <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 Welcome back. Continue to your movie lounge.

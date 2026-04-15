@@ -14,6 +14,7 @@ export default function DiscoverPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
   const [focusedMovieId, setFocusedMovieId] = useState<string | null>(null);
   const [browseIndex, setBrowseIndex] = useState(0);
   const [transitionState, setTransitionState] = useState<"idle" | "out" | "in">("idle");
@@ -21,7 +22,7 @@ export default function DiscoverPage() {
   const transitionTimeoutRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
-  const isSearchOpen = normalizedSearchQuery.length >= 2;
+  const isSearchOpen = isSearchSheetOpen;
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
     [discoverQueue],
@@ -204,6 +205,7 @@ export default function DiscoverPage() {
     setSelectedGenres([]);
     setSearchQuery("");
     setSearchResults([]);
+    setIsSearchSheetOpen(false);
   };
 
   return (
@@ -227,6 +229,8 @@ export default function DiscoverPage() {
 
                   if (nextValue.trim().length < 2) {
                     setSearchResults([]);
+                  } else {
+                    setIsSearchSheetOpen(true);
                   }
                 }}
                 placeholder="Search a movie or series"
@@ -257,6 +261,7 @@ export default function DiscoverPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setSearchResults([]);
+                    setIsSearchSheetOpen(false);
                   }}
                   aria-label="Clear search"
                   className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${
@@ -369,6 +374,7 @@ export default function DiscoverPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setSearchResults([]);
+                    setIsSearchSheetOpen(false);
                   }}
                   className={`rounded-full px-3 py-2 text-xs font-semibold ${
                     isDarkMode
@@ -389,6 +395,8 @@ export default function DiscoverPage() {
 
                     if (nextValue.trim().length < 2) {
                       setSearchResults([]);
+                    } else {
+                      setIsSearchSheetOpen(true);
                     }
                   }}
                   placeholder="Search a movie or series"
@@ -419,6 +427,7 @@ export default function DiscoverPage() {
                     onClick={() => {
                       setSearchQuery("");
                       setSearchResults([]);
+                      setIsSearchSheetOpen(false);
                     }}
                     aria-label="Clear search"
                     className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${

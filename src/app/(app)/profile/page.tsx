@@ -49,14 +49,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="You"
         title="Profile"
         description="A quick snapshot of your taste, watch habits, and app shortcuts."
       />
 
-      <SurfaceCard className="space-y-8">
+      <SurfaceCard className="space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             <AvatarBadge
@@ -109,7 +109,7 @@ export default function ProfilePage() {
             )}
           </button>
         </div>
-        <div className="mt-2 rounded-[22px] bg-slate-50 px-4 py-4">
+        <div className="mt-4 rounded-[22px] bg-slate-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
             City
           </p>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
             {currentUser.bio}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3 pt-6">
+        <div className="grid grid-cols-3 gap-3 pt-4">
           <div className="rounded-[22px] bg-slate-50 px-3 py-4 text-center">
             <p className="text-2xl font-semibold text-slate-900">
               {acceptedMovies.length}

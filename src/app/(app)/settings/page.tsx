@@ -21,7 +21,7 @@ export default function SettingsPage() {
     return null;
   }
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
@@ -51,7 +51,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-6">
+      <SurfaceCard className="space-y-5">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-900">Achievements</p>
           <p className="text-sm leading-6 text-slate-500">
@@ -108,7 +108,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-6">
+      <SurfaceCard className="space-y-5">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-900">About this build</p>
           <p className="text-sm leading-6 text-slate-500">
