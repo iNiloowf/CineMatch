@@ -39,9 +39,9 @@ export function MovieSwipeCard({
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  const shouldClamp = movie.description.length > 118;
+  const shouldClamp = movie.description.length > 92;
   const previewText = shouldClamp
-    ? `${movie.description.slice(0, 118).trimEnd()}...`
+    ? `${movie.description.slice(0, 92).trimEnd()}...`
     : movie.description;
   const titleSizeClass =
     movie.title.length > 34
@@ -551,10 +551,8 @@ export function MovieSwipeCard({
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
-                  {isDescriptionExpanded ? movie.description : previewText}
-                </p>
-                {!isDescriptionExpanded ? (
-                  <div className="mt-1 flex justify-end">
+                  {isDescriptionExpanded ? movie.description : previewText}{" "}
+                  {!isDescriptionExpanded ? (
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
@@ -565,8 +563,9 @@ export function MovieSwipeCard({
                     >
                       More
                     </button>
-                  </div>
-                ) : (
+                  ) : null}
+                </p>
+                {isDescriptionExpanded ? (
                   <div className="mt-1 flex justify-end">
                     <button
                       type="button"
@@ -579,7 +578,7 @@ export function MovieSwipeCard({
                       Less
                     </button>
                   </div>
-                )}
+                ) : null}
               </>
             ) : (
               <p
