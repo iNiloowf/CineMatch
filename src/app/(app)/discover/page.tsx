@@ -15,6 +15,8 @@ type DiscoverPageContentProps = {
   swipeMovie: (movieId: string, decision: "accepted" | "rejected") => Promise<void>;
   undoSwipe: (movieId: string) => Promise<void>;
   isDarkMode: boolean;
+  toggleDarkMode: () => Promise<void>;
+  pasteInviteLinkFromClipboard: () => Promise<{ ok: boolean; message: string }>;
 };
 
 type LastSwipeRecord = {
@@ -31,6 +33,8 @@ function DiscoverPageContent({
   swipeMovie,
   undoSwipe,
   isDarkMode,
+  toggleDarkMode,
+  pasteInviteLinkFromClipboard,
 }: DiscoverPageContentProps) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,10 +48,13 @@ function DiscoverPageContent({
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
   const [swipeFeedback, setSwipeFeedback] = useState<"accepted" | "rejected" | null>(null);
   const [lastSwipe, setLastSwipe] = useState<LastSwipeRecord | null>(null);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [menuMessage, setMenuMessage] = useState<string | null>(null);
   const transitionTimeoutRef = useRef<number | null>(null);
   const swipeTimeoutRef = useRef<number | null>(null);
   const undoToastTimeoutRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
@@ -227,6 +234,28 @@ function DiscoverPageContent({
   }, []);
 
   useEffect(() => {
+    if (!isMoreMenuOpen) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const targetNode = event.target as Node | null;
+      if (!targetNode) {
+        return;
+      }
+
+      if (!menuRef.current?.contains(targetNode)) {
+        setIsMoreMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isMoreMenuOpen]);
+
+  useEffect(() => {
     if (!isSearchOpen) {
       return;
     }
@@ -368,6 +397,15 @@ function DiscoverPageContent({
     setFocusedMovieId(restoredSwipe.focusedMovieId);
   };
 
+  const handlePasteInviteLink = async () => {
+    const result = await pasteInviteLinkFromClipboard();
+    setMenuMessage(result.message);
+    setIsMoreMenuOpen(false);
+    window.setTimeout(() => {
+      setMenuMessage((current) => (current === result.message ? null : current));
+    }, 3200);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
       {!isSearchOpen ? (
@@ -379,26 +417,110 @@ function DiscoverPageContent({
           >
             CineMatch
           </h1>
-          <button
-            type="button"
-            aria-label="Open more options"
-            className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              aria-label="Open more options"
+              aria-expanded={isMoreMenuOpen}
+              onClick={() => setIsMoreMenuOpen((current) => !current)}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+                isDarkMode
+                  ? "text-slate-300 hover:bg-white/8"
+                  : "text-slate-700 hover:bg-black/5"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="5" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="12" cy="19" r="1.8" />
+              </svg>
+            </button>
+            {isMoreMenuOpen ? (
+              <div
+                className={`absolute right-0 top-12 z-[140] w-56 rounded-[20px] border p-2 shadow-[0_22px_54px_rgba(15,23,42,0.2)] ${
+                  isDarkMode
+                    ? "border-white/12 bg-slate-950/96"
+                    : "border-white/80 bg-white/96"
+                }`}
+              >
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className={`block rounded-[14px] px-3 py-2.5 text-sm font-medium ${
+                    isDarkMode
+                      ? "text-slate-100 hover:bg-white/8"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Settings
+                </Link>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                  className={`block rounded-[14px] px-3 py-2.5 text-sm font-medium ${
+                    isDarkMode
+                      ? "text-slate-100 hover:bg-white/8"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void handlePasteInviteLink()}
+                  className={`mt-1 block w-full rounded-[14px] px-3 py-2.5 text-left text-sm font-medium ${
+                    isDarkMode
+                      ? "text-slate-100 hover:bg-white/8"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Paste Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void toggleDarkMode();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className={`mt-1 flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-medium ${
+                    isDarkMode
+                      ? "text-slate-100 hover:bg-white/8"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>Dark mode</span>
+                  <span
+                    className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
+                      isDarkMode
+                        ? "bg-violet-500/24 text-violet-200"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {isDarkMode ? "On" : "Off"}
+                  </span>
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {menuMessage ? (
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-[145] flex justify-center px-4">
+          <div
+            className={`rounded-full px-4 py-2 text-xs font-semibold shadow-[0_14px_34px_rgba(15,23,42,0.2)] ${
               isDarkMode
-                ? "text-slate-300 hover:bg-white/8"
-                : "text-slate-700 hover:bg-black/5"
+                ? "bg-slate-900/96 text-slate-100"
+                : "bg-white/96 text-slate-700"
             }`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="5" r="1.8" />
-              <circle cx="12" cy="12" r="1.8" />
-              <circle cx="12" cy="19" r="1.8" />
-            </svg>
-          </button>
+            {menuMessage}
+          </div>
         </div>
       ) : null}
 
@@ -1025,7 +1147,64 @@ export default function DiscoverPage() {
     swipeMovie,
     undoSwipe,
     isDarkMode,
+    updateSettings,
+    acceptInviteToken,
   } = useAppState();
+
+  const toggleDarkMode = async () => {
+    await updateSettings({ darkMode: !isDarkMode });
+  };
+
+  const pasteInviteLinkFromClipboard = async () => {
+    if (typeof window === "undefined" || !navigator.clipboard?.readText) {
+      return {
+        ok: false,
+        message: "Clipboard access is not available on this device.",
+      };
+    }
+
+    try {
+      const clipboardText = (await navigator.clipboard.readText()).trim();
+      if (!clipboardText) {
+        return { ok: false, message: "Clipboard is empty." };
+      }
+
+      const extractToken = () => {
+        if (clipboardText.startsWith("invite-")) {
+          return clipboardText;
+        }
+
+        try {
+          const parsed = new URL(clipboardText);
+          const inviteToken = parsed.searchParams.get("invite");
+          return inviteToken?.trim() || null;
+        } catch {
+          return null;
+        }
+      };
+
+      const token = extractToken();
+      if (!token) {
+        return {
+          ok: false,
+          message: "Clipboard text is not a valid CineMatch invite link.",
+        };
+      }
+
+      const result = await acceptInviteToken(token);
+      return {
+        ok: result.ok,
+        message: result.ok
+          ? `Connected with ${result.partnerName ?? "your match"}.`
+          : result.message,
+      };
+    } catch {
+      return {
+        ok: false,
+        message: "Clipboard permission was denied.",
+      };
+    }
+  };
 
   return (
     <DiscoverPageContent
@@ -1036,6 +1215,8 @@ export default function DiscoverPage() {
       swipeMovie={swipeMovie}
       undoSwipe={undoSwipe}
       isDarkMode={isDarkMode}
+      toggleDarkMode={toggleDarkMode}
+      pasteInviteLinkFromClipboard={pasteInviteLinkFromClipboard}
     />
   );
 }
