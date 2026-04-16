@@ -775,7 +775,7 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-hidden pt-1">
         {movie ? (
-          <div>
+          <div className="flex h-full flex-col">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
@@ -787,7 +787,7 @@ function DiscoverPageContent({
                     : transitionDirection === "next"
                       ? "discover-card-in-right"
                       : "discover-card-in-left"
-              }`}
+              } h-full`}
             >
               <MovieSwipeCard
                 key={movie.id}
