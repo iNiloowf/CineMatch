@@ -31,9 +31,6 @@ export function MovieSwipeCard({
   const { isDarkMode } = useAppState();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
-  const [detailsSection, setDetailsSection] = useState<"overview" | "trailer">(
-    "overview",
-  );
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
@@ -53,7 +50,6 @@ export function MovieSwipeCard({
     setTrailerError(null);
     setIsLoadingTrailer(false);
     setIsTrailerVisible(false);
-    setDetailsSection("overview");
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
@@ -68,7 +64,6 @@ export function MovieSwipeCard({
 
       if (isTrailerVisible) {
         setIsTrailerVisible(false);
-        setDetailsSection("overview");
         return;
       }
 
@@ -81,7 +76,6 @@ export function MovieSwipeCard({
 
   const handleOpenTrailer = async () => {
     setIsTrailerVisible(true);
-    setDetailsSection("trailer");
     setTrailerError(null);
 
     if (trailerUrl) {
@@ -469,7 +463,7 @@ export function MovieSwipeCard({
                 className="relative h-[28dvh] min-h-[11rem] w-full overflow-hidden sm:h-[30dvh]"
                 style={{
                   backgroundImage:
-                    detailsSection !== "trailer" ||
+                    !isTrailerVisible ||
                     (!trailerUrl && !isLoadingTrailer && !trailerError)
                       ? movie.poster.imageUrl
                         ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
@@ -478,13 +472,13 @@ export function MovieSwipeCard({
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundColor:
-                    detailsSection === "trailer" &&
+                    isTrailerVisible &&
                     (trailerUrl || isLoadingTrailer || trailerError)
                       ? "#000"
                       : undefined,
                 }}
               >
-                {trailerUrl && detailsSection === "trailer" ? (
+                {trailerUrl && isTrailerVisible ? (
                   <iframe
                     src={trailerUrl}
                     title={`${movie.title} trailer`}
@@ -504,8 +498,7 @@ export function MovieSwipeCard({
                     </div>
 
                     <div className="flex h-full items-center justify-center">
-                      {detailsSection === "trailer" &&
-                      (isLoadingTrailer || trailerError) ? (
+                      {isTrailerVisible && (isLoadingTrailer || trailerError) ? (
                         <div className="max-w-xs rounded-[22px] bg-black/48 px-5 py-4 text-center backdrop-blur-md">
                           <p className="text-sm font-medium text-white">
                             {isLoadingTrailer
@@ -546,125 +539,53 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`mt-4 rounded-[20px] p-1 ${
-                isDarkMode ? "bg-white/8" : "bg-slate-100/80"
-              }`}
-            >
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDetailsSection("overview");
-                    setIsTrailerVisible(false);
-                  }}
-                  className={`rounded-[16px] px-4 py-2.5 text-sm font-semibold ${
-                    detailsSection === "overview"
-                      ? isDarkMode
-                        ? "bg-white text-slate-900"
-                        : "bg-white text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-                      : isDarkMode
-                        ? "text-slate-300"
-                        : "text-slate-500"
-                  }`}
-                >
-                  Overview
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (detailsSection === "trailer" && trailerUrl) {
-                      setDetailsSection("trailer");
-                      setIsTrailerVisible(true);
-                      return;
-                    }
-
-                    void handleOpenTrailer();
-                  }}
-                  disabled={!hasTrailer || isLoadingTrailer}
-                  className={`rounded-[16px] px-4 py-2.5 text-sm font-semibold ${
-                    detailsSection === "trailer"
-                      ? isDarkMode
-                        ? "bg-white text-slate-900"
-                        : "bg-white text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-                      : isDarkMode
-                        ? "text-slate-300"
-                        : "text-slate-500"
-                  } ${!hasTrailer ? "cursor-not-allowed opacity-55" : ""}`}
-                >
-                  {isLoadingTrailer ? "Loading..." : "Trailer"}
-                </button>
-              </div>
-            </div>
-
-            <div
               className={`details-panel mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] px-1 pr-2 ${
                 isDarkMode
                   ? "border border-white/8 bg-white/6"
                   : "border border-slate-100 bg-slate-50/90"
               }`}
             >
-              {detailsSection === "overview" ? (
-                <div className="flex h-full min-h-0 flex-col px-3 py-3">
-                  <div>
-                    <p
-                      className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                        isDarkMode ? "text-slate-500" : "text-slate-400"
-                      }`}
-                    >
-                      Storyline
-                    </p>
-                    <p
-                      className={`mt-2 text-sm leading-7 ${
-                        isDarkMode ? "text-slate-200" : "text-slate-600"
-                      }`}
-                    >
-                      {movie.runtime} • {movie.rating.toFixed(1)} rating
-                    </p>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {movie.genre.map((entry) => (
-                      <span
-                        key={entry}
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          isDarkMode
-                            ? "bg-white/8 text-slate-300"
-                            : "bg-white text-slate-600"
-                        }`}
-                      >
-                        {entry}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2">
-                    <p
-                      className={`text-sm leading-7 ${
-                        isDarkMode ? "text-slate-200" : "text-slate-600"
-                      }`}
-                    >
-                      {movie.description}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-full min-h-0 flex-col px-3 py-3">
+              <div className="flex h-full min-h-0 flex-col px-3 py-3">
+                <div>
                   <p
                     className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
                       isDarkMode ? "text-slate-500" : "text-slate-400"
                     }`}
                   >
-                    Trailer notes
+                    Storyline
                   </p>
                   <p
                     className={`mt-2 text-sm leading-7 ${
-                      isDarkMode ? "text-slate-300" : "text-slate-600"
+                      isDarkMode ? "text-slate-200" : "text-slate-600"
                     }`}
                   >
-                    Watch the trailer above without leaving the details flow. If
-                    TMDB doesn’t have a playable trailer, you’ll see the fallback
-                    state instead of the layout jumping around.
+                    {movie.runtime} • {movie.rating.toFixed(1)} rating
                   </p>
                 </div>
-              )}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {movie.genre.map((entry) => (
+                    <span
+                      key={entry}
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        isDarkMode
+                          ? "bg-white/8 text-slate-300"
+                          : "bg-white text-slate-600"
+                      }`}
+                    >
+                      {entry}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2">
+                  <p
+                    className={`text-sm leading-7 ${
+                      isDarkMode ? "text-slate-200" : "text-slate-600"
+                    }`}
+                  >
+                    {movie.description}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
