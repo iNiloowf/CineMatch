@@ -60,6 +60,13 @@ export function MovieSwipeCard({
     62,
     Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
   );
+  const handleToggleDescription = () => {
+    if (!shouldClamp) {
+      return;
+    }
+
+    setIsDescriptionExpanded((currentValue) => !currentValue);
+  };
 
   useEffect(() => {
     setTrailerUrl(movie.trailerUrl ?? null);
@@ -548,7 +555,8 @@ export function MovieSwipeCard({
               isDarkMode
                 ? "bg-white/8"
                 : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
-            }`}
+            } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
+            onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
           >
             {shouldClamp ? (
               <>
@@ -562,9 +570,10 @@ export function MovieSwipeCard({
                 <div className="mt-1 flex justify-end">
                   <button
                     type="button"
-                    onClick={() =>
-                      setIsDescriptionExpanded((currentValue) => !currentValue)
-                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleToggleDescription();
+                    }}
                     className={`leading-5 ${
                       isDarkMode ? "text-violet-300" : "text-violet-600"
                     }`}
@@ -573,17 +582,6 @@ export function MovieSwipeCard({
                     {isDescriptionExpanded ? "Less" : "More"}
                   </button>
                 </div>
-                {isDescriptionExpanded ? (
-                  <div className="mt-1 flex justify-end">
-                    <span
-                      className={`text-[10px] ${
-                        isDarkMode ? "text-slate-500" : "text-slate-400"
-                      }`}
-                    >
-                      Scroll for actions
-                    </span>
-                  </div>
-                ) : null}
               </>
             ) : (
               <p

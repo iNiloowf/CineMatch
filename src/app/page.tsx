@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
@@ -10,11 +10,17 @@ import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { login, isDarkMode } = useAppState();
+  const { login, isDarkMode, currentUserId, isReady } = useAppState();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isReady && currentUserId) {
+      router.replace("/discover");
+    }
+  }, [currentUserId, isReady, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
