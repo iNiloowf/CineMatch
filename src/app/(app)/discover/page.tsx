@@ -407,7 +407,7 @@ function DiscoverPageContent({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
       {!isSearchOpen ? (
         <div className="flex items-center justify-between px-1 pb-1 pt-0.5">
           <h1
@@ -432,7 +432,7 @@ function DiscoverPageContent({
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="ui-icon-lg"
+                className="ui-icon-md"
                 aria-hidden="true"
               >
                 <circle cx="12" cy="5" r="1.8" />
@@ -930,7 +930,7 @@ function DiscoverPageContent({
                     : transitionDirection === "next"
                       ? "discover-card-in-right"
                       : "discover-card-in-left"
-              } h-full overflow-hidden`}
+              } h-full overflow-visible`}
             >
               <MovieSwipeCard
                 key={movie.id}
