@@ -38,6 +38,7 @@ const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
+const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
@@ -125,6 +126,8 @@ type StoredAuthSession = {
   email?: string | null;
   accessToken: string;
   refreshToken: string;
+  savedAt: number;
+  expiresAt: number;
 };
 
 type AccountSyncPayload = {
@@ -372,19 +375,79 @@ function getStoredAuthSession() {
 
   try {
     const raw = window.localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as StoredAuthSession) : null;
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<StoredAuthSession>;
+
+    if (
+      typeof parsed.userId !== "string" ||
+      typeof parsed.accessToken !== "string" ||
+      typeof parsed.refreshToken !== "string"
+    ) {
+      clearStoredAuthSession();
+      return null;
+    }
+
+    const savedAt =
+      typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now();
+    const expiresAt =
+      typeof parsed.expiresAt === "number"
+        ? parsed.expiresAt
+        : savedAt + AUTH_SESSION_TTL_MS;
+
+    if (expiresAt <= Date.now()) {
+      clearStoredAuthSession();
+      return null;
+    }
+
+    const normalizedSession: StoredAuthSession = {
+      userId: parsed.userId,
+      email: typeof parsed.email === "string" ? parsed.email : null,
+      accessToken: parsed.accessToken,
+      refreshToken: parsed.refreshToken,
+      savedAt,
+      expiresAt,
+    };
+
+    if (
+      parsed.savedAt !== normalizedSession.savedAt ||
+      parsed.expiresAt !== normalizedSession.expiresAt
+    ) {
+      persistStoredAuthSession(normalizedSession);
+    }
+
+    return normalizedSession;
   } catch {
+    clearStoredAuthSession();
     return null;
   }
 }
 
-function persistStoredAuthSession(session: StoredAuthSession) {
+function persistStoredAuthSession(
+  session: Omit<StoredAuthSession, "savedAt" | "expiresAt"> &
+    Partial<Pick<StoredAuthSession, "savedAt" | "expiresAt">>,
+) {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    window.localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+    const savedAt =
+      typeof session.savedAt === "number" ? session.savedAt : Date.now();
+    const normalizedSession: StoredAuthSession = {
+      ...session,
+      savedAt,
+      expiresAt:
+        typeof session.expiresAt === "number"
+          ? session.expiresAt
+          : savedAt + AUTH_SESSION_TTL_MS,
+    };
+    window.localStorage.setItem(
+      AUTH_SESSION_STORAGE_KEY,
+      JSON.stringify(normalizedSession),
+    );
   } catch {
     // Ignore storage failures.
   }
@@ -1020,6 +1083,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (
+        sessionResponse.data.session?.access_token &&
+        sessionResponse.data.session?.refresh_token
+      ) {
+        persistStoredAuthSession({
+          userId: sessionUser.id,
+          email: sessionUser.email ?? null,
+          accessToken: sessionResponse.data.session.access_token,
+          refreshToken: sessionResponse.data.session.refresh_token,
+        });
+      }
+
       const fullName =
         (sessionUser.user_metadata.full_name as string | undefined) ??
         sessionUser.email?.split("@")[0] ??
@@ -1070,6 +1145,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           setAccountRefreshKey((current) => current + 1);
           setIsReady(true);
           return;
+        }
+
+        if (session.access_token && session.refresh_token) {
+          persistStoredAuthSession({
+            userId: sessionUser.id,
+            email: sessionUser.email ?? null,
+            accessToken: session.access_token,
+            refreshToken: session.refresh_token,
+          });
         }
 
         const activeSessionUser = sessionUser;

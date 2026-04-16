@@ -362,6 +362,9 @@ export function MovieSwipeCard({
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
           touchAction: isDescriptionExpanded ? "pan-y" : "auto",
+          overflowY: isDescriptionExpanded ? "auto" : "hidden",
+          overscrollBehaviorY: isDescriptionExpanded ? "contain" : "auto",
+          WebkitOverflowScrolling: "touch",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -494,28 +497,9 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-1 flex-col gap-2 ${
-            isDescriptionExpanded ? "overflow-y-scroll pr-1" : "overflow-hidden"
+          className={`flex min-h-0 flex-col gap-2 ${
+            isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
-          style={{
-            touchAction: isDescriptionExpanded ? "pan-y" : "auto",
-            WebkitOverflowScrolling: "touch",
-          }}
-          onTouchStart={(event) => {
-            if (isDescriptionExpanded) {
-              event.stopPropagation();
-            }
-          }}
-          onTouchMove={(event) => {
-            if (isDescriptionExpanded) {
-              event.stopPropagation();
-            }
-          }}
-          onTouchEnd={(event) => {
-            if (isDescriptionExpanded) {
-              event.stopPropagation();
-            }
-          }}
         >
           <div
             className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
@@ -573,32 +557,31 @@ export function MovieSwipeCard({
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
-                  {isDescriptionExpanded ? movie.description : previewText}{" "}
-                  {!isDescriptionExpanded ? (
-                    <button
-                      type="button"
-                      onClick={() => setIsDescriptionExpanded(true)}
-                      className={`leading-5 ${
-                        isDarkMode ? "text-violet-300" : "text-violet-600"
-                      }`}
-                      style={{ fontSize: "11px" }}
-                    >
-                      More
-                    </button>
-                  ) : null}
+                  {isDescriptionExpanded ? movie.description : previewText}
                 </p>
+                <div className="mt-1 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsDescriptionExpanded((currentValue) => !currentValue)
+                    }
+                    className={`leading-5 ${
+                      isDarkMode ? "text-violet-300" : "text-violet-600"
+                    }`}
+                    style={{ fontSize: "11px" }}
+                  >
+                    {isDescriptionExpanded ? "Less" : "More"}
+                  </button>
+                </div>
                 {isDescriptionExpanded ? (
                   <div className="mt-1 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setIsDescriptionExpanded(false)}
-                      className={`leading-5 ${
-                        isDarkMode ? "text-violet-300" : "text-violet-600"
+                    <span
+                      className={`text-[10px] ${
+                        isDarkMode ? "text-slate-500" : "text-slate-400"
                       }`}
-                      style={{ fontSize: "11px" }}
                     >
-                      Less
-                    </button>
+                      Scroll for actions
+                    </span>
                   </div>
                 ) : null}
               </>

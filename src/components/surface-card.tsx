@@ -27,7 +27,7 @@ export function SurfaceCard({
       {!isDarkMode ? (
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.95),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(196,181,253,0.28),transparent_38%)]" />
       ) : null}
-      <div className="relative h-full min-h-0">{children}</div>
+      <div className="relative flex h-full min-h-0 flex-col">{children}</div>
     </section>
   );
 }
