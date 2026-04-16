@@ -393,7 +393,7 @@ export function MovieSwipeCard({
             backgroundRepeat: "no-repeat",
           }}
         >
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.72)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.07),rgba(15,23,42,0.015)_28%,rgba(15,23,42,0.5)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
           <div className="relative flex min-h-[13.25rem] flex-col justify-between sm:min-h-[14.5rem]">
             <div className="flex items-center justify-between gap-3">
