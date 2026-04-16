@@ -341,11 +341,13 @@ export function MovieSwipeCard({
           >
             {movie.title}
           </h3>
-          <div
+          <button
+            type="button"
+            onClick={() => setIsDetailsOpen(true)}
             className={`rounded-[20px] px-3 py-3 ${
               isDarkMode
-                ? "bg-white/8"
-                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+                ? "bg-white/8 text-left"
+                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
             }`}
           >
             <p
@@ -355,18 +357,14 @@ export function MovieSwipeCard({
             >
               {previewText}
             </p>
-            {shouldClamp ? (
-              <button
-                type="button"
-                onClick={() => setIsDetailsOpen(true)}
-                className={`mt-1 block text-sm font-semibold ${
-                  isDarkMode ? "text-violet-300" : "text-violet-600"
-                }`}
-              >
-                More
-              </button>
-            ) : null}
-          </div>
+            <span
+              className={`mt-2 block text-sm font-semibold ${
+                isDarkMode ? "text-violet-300" : "text-violet-600"
+              }`}
+            >
+              {shouldClamp ? "Tap to open full details" : "Tap to view details"}
+            </span>
+          </button>
         </div>
         <div className="mt-auto grid grid-cols-2 gap-3 pt-1 pb-2">
           <button
@@ -400,7 +398,7 @@ export function MovieSwipeCard({
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`details-modal-shell flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:mx-auto sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:max-w-md sm:rounded-[32px] ${
+            className={`details-modal-shell flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
@@ -616,7 +614,7 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`details-panel mt-4 min-h-0 flex-1 overflow-y-auto rounded-[22px] px-1 pr-2 ${
+              className={`details-panel mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] px-1 pr-2 ${
                 isDarkMode
                   ? "border border-white/8 bg-white/6"
                   : "border border-slate-100 bg-slate-50/90"
