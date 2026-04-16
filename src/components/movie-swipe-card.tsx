@@ -46,14 +46,13 @@ export function MovieSwipeCard({
   const expandedText = shouldClamp
     ? movie.description.slice(118).trimStart()
     : "";
-  const isLongTitle = movie.title.length > 24;
   const titleSizeClass =
-    movie.title.length > 30
-      ? "text-[1.55rem]"
-      : movie.title.length > 24
-        ? "text-[1.72rem]"
-        : isLongTitle
-          ? "text-[1.88rem]"
+    movie.title.length > 34
+      ? "text-[1.2rem]"
+      : movie.title.length > 28
+        ? "text-[1.35rem]"
+        : movie.title.length > 22
+          ? "text-[1.6rem]"
           : "text-[2.15rem]";
   const hasTrailer = Boolean(trailerUrl) || movie.id.startsWith("tmdb-");
   const matchScore = Math.max(
@@ -211,7 +210,14 @@ export function MovieSwipeCard({
               : "border-white/75 bg-white/96"
           }`}
         >
-          <div className="flex items-center justify-end gap-4 border-b border-black/6 px-5 py-4">
+          <div className="flex items-center justify-between gap-4 border-b border-black/6 px-5 py-3">
+            <p
+              className={`min-w-0 truncate text-[11px] font-medium tracking-[0.01em] ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              {movie.title}
+            </p>
             <button
               type="button"
               onClick={() => setIsTrailerVisible(false)}
@@ -235,7 +241,7 @@ export function MovieSwipeCard({
               </svg>
             </button>
           </div>
-          <div className="p-4 pt-4">
+          <div className="p-4 pt-3">
             <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
               <div className="relative aspect-video w-full bg-black">
                 {trailerUrl ? (
@@ -257,6 +263,88 @@ export function MovieSwipeCard({
                 )}
               </div>
             </div>
+            <div
+              className={`mt-4 rounded-[22px] px-3 py-3 ${
+                isDarkMode
+                  ? "border border-white/8 bg-white/6"
+                  : "border border-slate-200/80 bg-slate-50/90"
+              }`}
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base leading-none text-violet-500">★</span>
+                  <div>
+                    <p
+                      className={`text-sm font-semibold ${
+                        isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
+                    >
+                      {movie.rating.toFixed(1)}
+                    </p>
+                    <p
+                      className={`text-[10px] ${
+                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                    >
+                      IMDb rating
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[1.1rem] leading-none ${
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
+                    }`}
+                  >
+                    ◷
+                  </span>
+                  <div>
+                    <p
+                      className={`text-sm font-semibold ${
+                        isDarkMode ? "text-white" : "text-slate-900"
+                      }`}
+                    >
+                      {movie.runtime}
+                    </p>
+                    <p
+                      className={`text-[10px] ${
+                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                    >
+                      Runtime
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={onReject}
+                  disabled={isInteractionLocked}
+                  className={`rounded-[20px] px-4 py-3 text-xs font-semibold transition ${
+                    isDarkMode
+                      ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
+                      : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-sm leading-none">×</span>
+                    <span>Reject</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onAccept}
+                  disabled={isInteractionLocked}
+                  className="rounded-[20px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_20px_rgba(124,58,237,0.24)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-sm leading-none">♡</span>
+                    <span>Accept</span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -265,7 +353,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-[30px] p-4 ${
+        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-[30px] p-4 ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
@@ -297,8 +385,9 @@ export function MovieSwipeCard({
             backgroundImage: movie.poster.imageUrl
               ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
               : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
-            backgroundSize: "cover",
+            backgroundSize: movie.poster.imageUrl ? "contain" : "cover",
             backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
           }}
         >
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.72)_100%)]" />
@@ -394,7 +483,7 @@ export function MovieSwipeCard({
                 {movie.genre.slice(0, 3).join(" • ")}
               </p>
               <h2
-                className={`max-w-[14rem] text-balance font-semibold leading-tight drop-shadow-[0_14px_24px_rgba(15,23,42,0.3)] ${titleSizeClass}`}
+                className={`max-w-[14rem] truncate whitespace-nowrap font-semibold leading-tight drop-shadow-[0_14px_24px_rgba(15,23,42,0.3)] ${titleSizeClass}`}
               >
                 {movie.title}
               </h2>
@@ -407,7 +496,7 @@ export function MovieSwipeCard({
             isDarkMode
               ? "border border-white/8 bg-white/6"
               : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-          } my-[20px]`}
+          } my-[14px]`}
         >
           <div className="flex min-w-0 items-center justify-center gap-2">
             <span className="text-base leading-none text-violet-500">★</span>
@@ -421,7 +510,7 @@ export function MovieSwipeCard({
             </div>
           </div>
           <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
-            <span className={`text-base leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
+            <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
             <div className="min-w-0">
               <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {movie.runtime}
@@ -444,7 +533,7 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div
             className={`w-full rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
@@ -480,7 +569,7 @@ export function MovieSwipeCard({
                   }`}
                 >
                   <div
-                    className={`max-h-[8.5rem] overflow-y-auto pr-1 text-[11px] leading-5 ${
+                    className={`pr-1 text-[11px] leading-5 ${
                       isDarkMode ? "text-slate-300" : "text-slate-500"
                     }`}
                   >
