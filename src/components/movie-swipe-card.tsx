@@ -39,6 +39,7 @@ export function MovieSwipeCard({
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const descriptionSectionRef = useRef<HTMLDivElement | null>(null);
   const shouldClamp = movie.description.length > 92;
   const previewText = shouldClamp
     ? `${movie.description.slice(0, 92).trimEnd()}...`
@@ -65,7 +66,21 @@ export function MovieSwipeCard({
       return;
     }
 
-    setIsDescriptionExpanded((currentValue) => !currentValue);
+    setIsDescriptionExpanded((currentValue) => {
+      const nextValue = !currentValue;
+
+      if (!nextValue) {
+        const surfaceSection = descriptionSectionRef.current?.closest("section");
+
+        if (surfaceSection instanceof HTMLElement) {
+          window.requestAnimationFrame(() => {
+            surfaceSection.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        }
+      }
+
+      return nextValue;
+    });
   };
 
   useEffect(() => {
@@ -552,6 +567,7 @@ export function MovieSwipeCard({
           </div>
 
           <div
+            ref={descriptionSectionRef}
             className={`w-full shrink-0 rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
                 ? "bg-white/8"

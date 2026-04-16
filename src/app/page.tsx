@@ -22,6 +22,26 @@ export default function SignInPage() {
     }
   }, [currentUserId, isReady, router]);
 
+  if (!isReady || currentUserId) {
+    return (
+      <div
+        className={`min-h-screen px-4 py-8 ${
+          isDarkMode
+            ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
+            : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.5),transparent_28%),linear-gradient(180deg,#fcfbff_0%,#f5f7ff_36%,#eef4ff_72%,#fef7ff_100%)]"
+        }`}
+      >
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
+          <SurfaceCard className="w-full text-center">
+            <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+              Opening your movie lounge...
+            </p>
+          </SurfaceCard>
+        </div>
+      </div>
+    );
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
