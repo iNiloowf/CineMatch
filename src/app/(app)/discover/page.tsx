@@ -442,42 +442,26 @@ function DiscoverPageContent({
             </button>
             {isMoreMenuOpen ? (
               <div
-                className={`absolute right-0 top-12 z-[140] w-56 rounded-[20px] border p-2 shadow-[0_22px_54px_rgba(15,23,42,0.2)] ${
-                  isDarkMode
-                    ? "border-white/12 bg-slate-950/96"
-                    : "border-white/80 bg-white/96"
-                }`}
+                className="ui-menu-panel absolute right-0 top-12 z-[140] w-56 p-2"
               >
                 <Link
                   href="/settings"
                   onClick={() => setIsMoreMenuOpen(false)}
-                  className={`block rounded-[14px] px-3 py-2.5 text-sm font-medium ${
-                    isDarkMode
-                      ? "text-slate-100 hover:bg-white/8"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                  className="ui-menu-item block px-3 py-2.5 font-medium"
                 >
                   Settings
                 </Link>
                 <Link
                   href="/profile"
                   onClick={() => setIsMoreMenuOpen(false)}
-                  className={`block rounded-[14px] px-3 py-2.5 text-sm font-medium ${
-                    isDarkMode
-                      ? "text-slate-100 hover:bg-white/8"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                  className="ui-menu-item block px-3 py-2.5 font-medium"
                 >
                   Profile
                 </Link>
                 <button
                   type="button"
                   onClick={() => void handlePasteInviteLink()}
-                  className={`mt-1 block w-full rounded-[14px] px-3 py-2.5 text-left text-sm font-medium ${
-                    isDarkMode
-                      ? "text-slate-100 hover:bg-white/8"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                  className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium"
                 >
                   Paste Link
                 </button>
@@ -487,11 +471,7 @@ function DiscoverPageContent({
                     void toggleDarkMode();
                     setIsMoreMenuOpen(false);
                   }}
-                  className={`mt-1 flex w-full items-center justify-between rounded-[14px] px-3 py-2.5 text-left text-sm font-medium ${
-                    isDarkMode
-                      ? "text-slate-100 hover:bg-white/8"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                  className="ui-menu-item mt-1 flex w-full items-center justify-between px-3 py-2.5 text-left font-medium"
                 >
                   <span>Dark mode</span>
                   <span
@@ -513,11 +493,7 @@ function DiscoverPageContent({
       {menuMessage ? (
         <div className="pointer-events-none fixed inset-x-0 top-4 z-[145] flex justify-center px-4">
           <div
-            className={`rounded-full px-4 py-2 text-xs font-semibold shadow-[0_14px_34px_rgba(15,23,42,0.2)] ${
-              isDarkMode
-                ? "bg-slate-900/96 text-slate-100"
-                : "bg-white/96 text-slate-700"
-            }`}
+            className="ui-toast-note px-4 py-2 font-semibold"
           >
             {menuMessage}
           </div>
@@ -527,11 +503,7 @@ function DiscoverPageContent({
       {!isSearchOpen ? (
       <div className="space-y-1.5">
         <div
-          className={`rounded-[24px] border px-3 py-2.5 backdrop-blur-xl ${
-            isDarkMode
-              ? "border-white/10 bg-slate-950/66"
-              : "border-white/70 bg-white/78 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
-          }`}
+          className="ui-glass-panel px-3 py-2.5"
         >
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
@@ -548,11 +520,7 @@ function DiscoverPageContent({
                   }
                 }}
                 placeholder="Search a movie or series"
-                className={`w-full rounded-[18px] border py-2 pl-10 pr-4 text-[13px] outline-none transition ${
-                  isDarkMode
-                    ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
-                    : "border-slate-200 bg-white/72 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/88"
-                }`}
+                className="ui-input-shell w-full py-2 pl-10 pr-4 text-[13px] outline-none focus:border-violet-400"
               />
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <svg
@@ -578,11 +546,7 @@ function DiscoverPageContent({
                     setIsSearchSheetOpen(false);
                   }}
                   aria-label="Clear search"
-                  className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${
-                    isDarkMode
-                      ? "bg-white/8 text-slate-300"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
+                  className="ui-soft-pill absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -605,11 +569,7 @@ function DiscoverPageContent({
               type="button"
               onClick={() => setIsFilterOpen(true)}
               aria-label="Open genre filter"
-              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] border transition ${
-                isDarkMode
-                  ? "border-white/10 bg-white/6 text-white backdrop-blur-md hover:bg-white/12"
-                  : "border-slate-200 bg-white/72 text-slate-700 backdrop-blur-md hover:bg-slate-50/90"
-              }`}
+              className="ui-icon-button relative flex h-10 w-10 shrink-0 items-center justify-center hover:bg-white/12"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -637,11 +597,7 @@ function DiscoverPageContent({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
                 <span
-                  className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                    isDarkMode
-                      ? "bg-white/8 text-slate-200"
-                      : "bg-slate-100 text-slate-700"
-                  }`}
+                  className="ui-soft-pill px-3 py-2 font-semibold"
                 >
                   {sortedSearchResults.length} found
                 </span>

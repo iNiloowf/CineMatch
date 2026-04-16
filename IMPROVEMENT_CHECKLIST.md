@@ -10,7 +10,7 @@
 
 ## UI Improvements
 
-- [ ] Define a small design token layer (spacing, radius, shadow, font scale, color aliases) and reuse it instead of repeating long utility chains.
+- [x] Define a small design token layer (spacing, radius, shadow, font scale, color aliases) and reuse it instead of repeating long utility chains.
 - [ ] Standardize button hierarchy (primary/secondary/ghost/danger) and unify hover/active/disabled states.
 - [ ] Improve dark-mode contrast in low-emphasis text (some `text-slate-400/500` shades are too dim on deep backgrounds).
 - [ ] Add skeleton placeholders for cards and search rows to make loading feel intentional.
