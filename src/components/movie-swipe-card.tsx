@@ -43,9 +43,6 @@ export function MovieSwipeCard({
   const previewText = shouldClamp
     ? `${movie.description.slice(0, 118).trimEnd()}...`
     : movie.description;
-  const expandedText = shouldClamp
-    ? movie.description.slice(118).trimStart()
-    : "";
   const titleSizeClass =
     movie.title.length > 34
       ? "text-[1.2rem]"
@@ -554,47 +551,33 @@ export function MovieSwipeCard({
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
-                  {previewText}
+                  {isDescriptionExpanded ? movie.description : previewText}
                 </p>
                 {!isDescriptionExpanded ? (
                   <div className="mt-1 flex justify-end">
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className={`text-[11px] ${
+                      className={`text-[11px] leading-5 ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                     >
                       More
                     </button>
                   </div>
-                ) : null}
-                <div
-                  className={`details-soft ${
-                    isDescriptionExpanded
-                      ? "details-soft-open mt-2"
-                      : "details-soft-closed"
-                  }`}
-                >
-                  <div
-                    className={`pr-1 text-[11px] leading-5 ${
-                      isDarkMode ? "text-slate-300" : "text-slate-500"
-                    }`}
-                  >
-                    <p>
-                      {expandedText}{" "}
-                      <button
-                        type="button"
-                        onClick={() => setIsDescriptionExpanded(false)}
-                        className={`inline text-[11px] ${
-                          isDarkMode ? "text-violet-300" : "text-violet-600"
-                        }`}
-                      >
-                        Less
-                      </button>
-                    </p>
+                ) : (
+                  <div className="mt-1 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setIsDescriptionExpanded(false)}
+                      className={`text-[11px] leading-5 ${
+                        isDarkMode ? "text-violet-300" : "text-violet-600"
+                      }`}
+                    >
+                      Less
+                    </button>
                   </div>
-                </div>
+                )}
               </>
             ) : (
               <p
