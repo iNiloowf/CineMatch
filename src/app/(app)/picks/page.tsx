@@ -68,17 +68,49 @@ export default function PicksPage() {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <SurfaceCard className="space-y-1">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Saved</p>
-            <p className="text-3xl font-semibold text-slate-900">
-              {acceptedMovies.length}
-            </p>
+          <SurfaceCard className="p-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`inline-flex h-6 w-6 items-center justify-center ${
+                  isDarkMode ? "text-violet-200" : "text-violet-600"
+                }`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-6 w-6">
+                  <path
+                    d="M7.75 4.75h8.5A2.75 2.75 0 0 1 19 7.5v11.75l-7-3.75-7 3.75V7.5A2.75 2.75 0 0 1 7.75 4.75Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <p className={`${isDarkMode ? "text-slate-50" : "text-slate-900"} text-3xl font-semibold`}>
+                {acceptedMovies.length}
+              </p>
+            </div>
           </SurfaceCard>
-          <SurfaceCard className="space-y-1">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Shared</p>
-            <p className="text-3xl font-semibold text-slate-900">
-              {sharedMovies.length}
-            </p>
+          <SurfaceCard className="p-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`inline-flex h-6 w-6 items-center justify-center ${
+                  isDarkMode ? "text-emerald-200" : "text-emerald-600"
+                }`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-6 w-6">
+                  <path
+                    d="M8.75 12.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm6.5 1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM4.75 18.25a4 4 0 0 1 8 0m2.5 0a3.5 3.5 0 0 1 4-3.464 3.49 3.49 0 0 1 2.75 3.464"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <p className={`${isDarkMode ? "text-slate-50" : "text-slate-900"} text-3xl font-semibold`}>
+                {sharedMovies.length}
+              </p>
+            </div>
           </SurfaceCard>
         </div>
 
@@ -89,10 +121,10 @@ export default function PicksPage() {
               .map((entry) => entry.partner.name);
 
             return (
-              <SurfaceCard key={movie.id} className="space-y-5 p-4">
-                <div className="flex items-start gap-3">
+              <SurfaceCard key={movie.id} className="space-y-4 p-4">
+                <div className="flex items-stretch gap-3">
                   <div
-                    className="h-24 w-[4.8rem] shrink-0 overflow-hidden rounded-[22px] shadow-[0_12px_28px_rgba(107,70,193,0.22)]"
+                    className="min-h-[11.5rem] w-[5.7rem] shrink-0 self-stretch overflow-hidden rounded-[22px] shadow-[0_12px_28px_rgba(107,70,193,0.22)]"
                     style={{
                       backgroundImage: movie.poster.imageUrl
                         ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.66)), url(${movie.poster.imageUrl})`
@@ -146,12 +178,7 @@ export default function PicksPage() {
                     ) : null}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-3 pt-4">
-                  <p className="min-w-0 text-xs leading-5 text-slate-500">
-                    {matchingPartners.length > 0
-                      ? "This one is ready for a shared watch night."
-                      : "No shared match yet."}
-                  </p>
+                <div className="flex items-center justify-end gap-2 pt-2">
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
