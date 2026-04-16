@@ -12,7 +12,15 @@ type DiscoverPageContentProps = {
   discoverQueue: Movie[];
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: "accepted" | "rejected") => Promise<void>;
+  undoSwipe: (movieId: string) => Promise<void>;
   isDarkMode: boolean;
+};
+
+type LastSwipeRecord = {
+  movie: Movie;
+  decision: "accepted" | "rejected";
+  browseIndex: number;
+  focusedMovieId: string | null;
 };
 
 function DiscoverPageContent({
@@ -20,6 +28,7 @@ function DiscoverPageContent({
   discoverQueue,
   registerMovies,
   swipeMovie,
+  undoSwipe,
   isDarkMode,
 }: DiscoverPageContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,7 +40,11 @@ function DiscoverPageContent({
   const [browseIndex, setBrowseIndex] = useState(0);
   const [transitionState, setTransitionState] = useState<"idle" | "out" | "in">("idle");
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
+  const [swipeFeedback, setSwipeFeedback] = useState<"accepted" | "rejected" | null>(null);
+  const [lastSwipe, setLastSwipe] = useState<LastSwipeRecord | null>(null);
   const transitionTimeoutRef = useRef<number | null>(null);
+  const swipeTimeoutRef = useRef<number | null>(null);
+  const undoToastTimeoutRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
@@ -146,6 +159,14 @@ function DiscoverPageContent({
       if (transitionTimeoutRef.current) {
         window.clearTimeout(transitionTimeoutRef.current);
       }
+
+      if (swipeTimeoutRef.current) {
+        window.clearTimeout(swipeTimeoutRef.current);
+      }
+
+      if (undoToastTimeoutRef.current) {
+        window.clearTimeout(undoToastTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -218,6 +239,77 @@ function DiscoverPageContent({
     setSearchQuery("");
     setSearchResults([]);
     setIsSearchSheetOpen(false);
+  };
+
+  const triggerHaptic = (decision: "accepted" | "rejected") => {
+    if (typeof window === "undefined" || !("navigator" in window)) {
+      return;
+    }
+
+    const canVibrate =
+      "vibrate" in window.navigator &&
+      typeof window.navigator.vibrate === "function";
+
+    if (!canVibrate) {
+      return;
+    }
+
+    window.navigator.vibrate(decision === "accepted" ? [14, 24, 18] : [18]);
+  };
+
+  const handleSwipe = (decision: "accepted" | "rejected") => {
+    if (!movie || transitionState !== "idle" || swipeFeedback) {
+      return;
+    }
+
+    const swipedMovie = movie;
+    const nextBrowseIndex =
+      filteredQueue.length <= 1
+        ? 0
+        : Math.min(safeBrowseIndex, filteredQueue.length - 2);
+
+    setSwipeFeedback(decision);
+    setFocusedMovieId(null);
+    triggerHaptic(decision);
+
+    if (undoToastTimeoutRef.current) {
+      window.clearTimeout(undoToastTimeoutRef.current);
+    }
+
+    swipeTimeoutRef.current = window.setTimeout(async () => {
+      setBrowseIndex(nextBrowseIndex);
+      registerMovies([swipedMovie]);
+      setSwipeFeedback(null);
+      await swipeMovie(swipedMovie.id, decision);
+      setLastSwipe({
+        movie: swipedMovie,
+        decision,
+        browseIndex: safeBrowseIndex,
+        focusedMovieId,
+      });
+      undoToastTimeoutRef.current = window.setTimeout(() => {
+        setLastSwipe((current) =>
+          current?.movie.id === swipedMovie.id ? null : current,
+        );
+      }, 5200);
+    }, 230);
+  };
+
+  const handleUndoSwipe = async () => {
+    if (!lastSwipe) {
+      return;
+    }
+
+    if (undoToastTimeoutRef.current) {
+      window.clearTimeout(undoToastTimeoutRef.current);
+    }
+
+    const restoredSwipe = lastSwipe;
+    setLastSwipe(null);
+    await undoSwipe(restoredSwipe.movie.id);
+    registerMovies([restoredSwipe.movie]);
+    setBrowseIndex(restoredSwipe.browseIndex);
+    setFocusedMovieId(restoredSwipe.focusedMovieId);
   };
 
   return (
@@ -699,26 +791,8 @@ function DiscoverPageContent({
             <MovieSwipeCard
               key={movie.id}
               movie={movie}
-              onAccept={async () => {
-                setFocusedMovieId(null);
-                setBrowseIndex((current) =>
-                  filteredQueue.length <= 1
-                    ? 0
-                    : Math.min(current, filteredQueue.length - 2),
-                );
-                registerMovies([movie]);
-                await swipeMovie(movie.id, "accepted");
-              }}
-              onReject={async () => {
-                setFocusedMovieId(null);
-                setBrowseIndex((current) =>
-                  filteredQueue.length <= 1
-                    ? 0
-                    : Math.min(current, filteredQueue.length - 2),
-                );
-                registerMovies([movie]);
-                await swipeMovie(movie.id, "rejected");
-              }}
+              onAccept={() => handleSwipe("accepted")}
+              onReject={() => handleSwipe("rejected")}
               onPrevious={() => navigateCard("previous")}
               onNext={() => navigateCard("next")}
               canGoPrevious={focusedMovieId ? filteredQueue.length > 0 : safeBrowseIndex > 0}
@@ -727,7 +801,8 @@ function DiscoverPageContent({
                   ? filteredQueue.length > 0
                   : safeBrowseIndex < filteredQueue.length - 1
               }
-              isInteractionLocked={transitionState !== "idle"}
+              isInteractionLocked={transitionState !== "idle" || Boolean(swipeFeedback)}
+              swipeFeedback={swipeFeedback}
             />
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
@@ -798,6 +873,55 @@ function DiscoverPageContent({
           </SurfaceCard>
         )}
       </div>
+
+      {lastSwipe ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[125] flex justify-center px-4 sm:bottom-6">
+          <div
+            className={`discover-undo-toast pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-[26px] border px-4 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950/92"
+                : "border-white/80 bg-white/94"
+            }`}
+          >
+            <div
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                lastSwipe.decision === "accepted"
+                  ? "bg-violet-600 text-white"
+                  : isDarkMode
+                    ? "bg-white/10 text-slate-200"
+                    : "bg-slate-100 text-slate-600"
+              }`}
+            >
+              {lastSwipe.decision === "accepted" ? "✓" : "×"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className={`truncate text-sm font-semibold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {lastSwipe.movie.title}
+              </p>
+              <p
+                className={`text-xs ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                {lastSwipe.decision === "accepted"
+                  ? "Added to your picks."
+                  : "Removed from Discover for now."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleUndoSwipe}
+              className="rounded-full bg-violet-600 px-3 py-2 text-xs font-semibold text-white shadow-[0_10px_22px_rgba(124,58,237,0.24)]"
+            >
+              Undo
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -809,6 +933,7 @@ export default function DiscoverPage() {
     discoverSessionKey,
     registerMovies,
     swipeMovie,
+    undoSwipe,
     isDarkMode,
   } = useAppState();
 
@@ -819,6 +944,7 @@ export default function DiscoverPage() {
       discoverQueue={discoverQueue}
       registerMovies={registerMovies}
       swipeMovie={swipeMovie}
+      undoSwipe={undoSwipe}
       isDarkMode={isDarkMode}
     />
   );

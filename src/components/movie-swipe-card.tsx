@@ -14,6 +14,7 @@ type MovieSwipeCardProps = {
   canGoPrevious: boolean;
   canGoNext: boolean;
   isInteractionLocked?: boolean;
+  swipeFeedback?: "accepted" | "rejected" | null;
 };
 
 export function MovieSwipeCard({
@@ -25,6 +26,7 @@ export function MovieSwipeCard({
   canGoPrevious,
   canGoNext,
   isInteractionLocked = false,
+  swipeFeedback = null,
 }: MovieSwipeCardProps) {
   const { isDarkMode } = useAppState();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -191,7 +193,7 @@ export function MovieSwipeCard({
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
-        } transition-transform`}
+        } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
         }}
@@ -199,6 +201,20 @@ export function MovieSwipeCard({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {swipeFeedback ? (
+          <div className="pointer-events-none absolute inset-x-6 top-6 z-20 flex justify-center">
+            <div
+              className={`discover-feedback-chip ${
+                swipeFeedback === "accepted"
+                  ? "discover-feedback-accept"
+                  : "discover-feedback-reject"
+              }`}
+            >
+              {swipeFeedback === "accepted" ? "Added to picks" : "Passed for now"}
+            </div>
+          </div>
+        ) : null}
+
         <div
           className="relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
           style={{
@@ -350,6 +366,7 @@ export function MovieSwipeCard({
           <button
             type="button"
             onClick={onReject}
+            disabled={isInteractionLocked}
             className={`rounded-[22px] px-4 py-3 text-sm font-semibold transition ${
               isDarkMode
                 ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
@@ -361,7 +378,8 @@ export function MovieSwipeCard({
             <button
               type="button"
               onClick={onAccept}
-              className="rounded-[22px] bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.3)] transition hover:brightness-[1.04]"
+              disabled={isInteractionLocked}
+              className="rounded-[22px] bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.3)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
             >
               Accept
             </button>

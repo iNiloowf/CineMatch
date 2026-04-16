@@ -140,6 +140,40 @@ input[type="range"] {
   animation: discoverCardInRight 260ms var(--ease-soft) both;
 }
 
+.discover-card-swipe-accepted {
+  animation: discoverCardSwipeAccept 360ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.discover-card-swipe-rejected {
+  animation: discoverCardSwipeReject 340ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.discover-feedback-chip {
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+  animation: discoverFeedbackChip 260ms var(--ease-soft) both;
+}
+
+.discover-feedback-accept {
+  background: linear-gradient(180deg, rgba(124, 58, 237, 0.94), rgba(109, 40, 217, 0.94));
+  color: white;
+}
+
+.discover-feedback-reject {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(51, 65, 85, 0.92));
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.discover-undo-toast {
+  animation: discoverUndoToastIn 320ms var(--ease-soft) both;
+}
+
 .achievement-badge-glow {
   animation: achievementBadgePulse 1.6s ease-in-out 2;
 }
@@ -283,6 +317,68 @@ input[type="range"] {
     opacity: 1;
     transform: translateX(0) scale(1);
     filter: blur(0);
+  }
+}
+
+@keyframes discoverCardSwipeAccept {
+  0% {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg) scale(1);
+    filter: saturate(1) blur(0);
+  }
+
+  38% {
+    opacity: 1;
+    transform: translateX(12px) rotate(1.8deg) scale(1.01);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(88px) rotate(8deg) scale(0.94);
+    filter: saturate(1.12) blur(4px);
+  }
+}
+
+@keyframes discoverCardSwipeReject {
+  0% {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg) scale(1);
+    filter: saturate(1) blur(0);
+  }
+
+  38% {
+    opacity: 1;
+    transform: translateX(-12px) rotate(-1.6deg) scale(1.005);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-84px) rotate(-7deg) scale(0.95);
+    filter: saturate(0.86) blur(4px);
+  }
+}
+
+@keyframes discoverFeedbackChip {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes discoverUndoToastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

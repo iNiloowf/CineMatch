@@ -157,6 +157,7 @@ type AppStateContextValue = {
   logout: () => Promise<void>;
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
+  undoSwipe: (movieId: string) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
   toggleSharedMovie: (
     partnerId: string,
@@ -2053,6 +2054,37 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const undoSwipe = async (movieId: string) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const accessToken = await getCurrentAccessToken();
+
+    if (accessToken) {
+      try {
+        await fetch("/api/swipes", {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ movieId }),
+        });
+      } catch {
+        // Keep local undo even if the network request fails.
+      }
+    }
+
+    setData((current) => ({
+      ...current,
+      swipes: current.swipes.filter(
+        (swipe) =>
+          !(swipe.userId === currentUserId && swipe.movieId === movieId),
+      ),
+    }));
+  };
+
   const linkUser = async (targetUserId: string) => {
     if (!currentUserId || currentUserId === targetUserId) {
       return;
@@ -2673,6 +2705,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         logout,
         registerMovies,
         swipeMovie,
+        undoSwipe,
         removePick,
         toggleSharedMovie,
         linkUser,
