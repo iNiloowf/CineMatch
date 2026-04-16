@@ -65,7 +65,12 @@ function TogglePill({
 }
 
 export default function SharedWatchlistPage() {
-  const { sharedMovieGroups, toggleWatched, toggleSharedMovie, updateProgress } =
+  const {
+    sharedMovieGroups,
+    toggleWatched,
+    toggleSharedMovie,
+    isDarkMode,
+  } =
     useAppState();
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
@@ -106,10 +111,10 @@ export default function SharedWatchlistPage() {
                     imageUrl={group.partner.avatarImageUrl}
                   />
                   <div>
-                    <p className="text-lg font-semibold text-slate-900">
+                    <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                       {group.partner.name}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                       {group.movies.length > 0
                         ? `${group.movies.filter((movie) => movie.shared).length} titles you both picked`
                         : "No shared picks yet"}
@@ -124,7 +129,9 @@ export default function SharedWatchlistPage() {
               {openPartnerId === group.partner.id ? (
                 <div className="expand-soft space-y-5 pt-4">
                   {group.movies.length === 0 ? (
-                    <div className="rounded-[24px] bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+                    <div className={`rounded-[24px] px-4 py-4 text-sm leading-6 ${
+                      isDarkMode ? "bg-white/8 text-slate-300" : "bg-slate-50 text-slate-500"
+                    }`}>
                       You are connected with {group.partner.name}, but you have not accepted the same movie yet.
                     </div>
                   ) : null}
@@ -132,7 +139,11 @@ export default function SharedWatchlistPage() {
                   {group.movies.map((entry) => (
                     <div
                       key={`${entry.partner.id}-${entry.movie.id}`}
-                      className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,241,255,0.88))] px-4 py-4 shadow-[0_16px_34px_rgba(148,163,184,0.08)]"
+                      className={`rounded-[28px] border px-4 py-4 ${
+                        isDarkMode
+                          ? "border-white/10 bg-white/8 shadow-[0_18px_38px_rgba(0,0,0,0.22)]"
+                          : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,241,255,0.88))] shadow-[0_16px_34px_rgba(148,163,184,0.08)]"
+                      }`}
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -156,7 +167,7 @@ export default function SharedWatchlistPage() {
                           <h3 className="truncate text-lg font-semibold text-slate-900">
                             {entry.movie.title}
                           </h3>
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                             Matched with {entry.partner.name}
                           </p>
                         </div>
@@ -165,69 +176,31 @@ export default function SharedWatchlistPage() {
                         </span>
                       </div>
 
-                      <p className="mt-2 text-sm text-slate-500">
+                      <p className={`mt-2 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                         {entry.movie.year} • {entry.movie.runtime} •{" "}
                         {entry.movie.genre.join(" • ")}
                       </p>
 
-                      <div className="shared-description-card mt-3 rounded-[20px] bg-white/75 px-4 py-3">
-                        <p className="line-clamp-3 text-sm leading-6 text-slate-600">
+                      <div className={`shared-description-card mt-3 rounded-[20px] px-4 py-3 ${
+                        isDarkMode ? "bg-black/20" : "bg-white/75"
+                      }`}>
+                        <p className={`line-clamp-3 text-sm leading-6 ${
+                          isDarkMode ? "text-slate-200" : "text-slate-600"
+                        }`}>
                           {entry.movie.description}
                         </p>
                         <button
                           type="button"
                           onClick={() => setDetailsMovie(entry)}
-                          className="mt-2 text-sm font-semibold text-violet-600"
+                          className={`mt-2 text-sm font-semibold ${
+                            isDarkMode ? "text-violet-300" : "text-violet-600"
+                          }`}
                         >
                           More
                         </button>
                       </div>
 
-                      <div className="mt-4 rounded-[20px] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_24px_rgba(148,163,184,0.06)]">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                              Shared progress
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-900">
-                              {entry.progress}% complete
-                            </p>
-                          </div>
-                          <p className="text-xs font-medium text-slate-500">
-                            {entry.watched ? "Watched together" : "Plan your next watch"}
-                          </p>
-                        </div>
-                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                          <div
-                            className="h-full rounded-full bg-[linear-gradient(90deg,#8b5cf6,#7c3aed,#60a5fa)] transition-[width] duration-300"
-                            style={{ width: `${entry.progress}%` }}
-                          />
-                        </div>
-                        <div className="mt-3 grid grid-cols-3 gap-2">
-                          {[25, 50, 100].map((value) => (
-                            <button
-                              key={value}
-                              type="button"
-                              onClick={async () =>
-                                await updateProgress(
-                                  entry.partner.id,
-                                  entry.movie.id,
-                                  value,
-                                )
-                              }
-                              className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                                entry.progress === value
-                                  ? "bg-violet-600 text-white"
-                                  : "bg-slate-100 text-slate-600"
-                              }`}
-                            >
-                              {value === 100 ? "Done" : `${value}%`}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-3">
+                      <div className="mt-4 space-y-3">
                         <TogglePill
                           label="Keep in shared list"
                           checked={entry.shared}
@@ -268,7 +241,9 @@ export default function SharedWatchlistPage() {
             onClick={() => setDetailsMovie(null)}
             className="absolute inset-0"
           />
-          <div className="shared-details-modal relative z-10 max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[30px] bg-white p-4 shadow-[0_30px_90px_rgba(15,23,42,0.28)]">
+          <div className={`shared-details-modal relative z-10 max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[30px] p-4 shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
+            isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
+          }`}>
             <button
               type="button"
               aria-label="Close details"
@@ -308,10 +283,10 @@ export default function SharedWatchlistPage() {
               </div>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-xl font-semibold text-slate-900">
+                  <h3 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {detailsMovie.movie.title}
                   </h3>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     {detailsMovie.movie.year} • {detailsMovie.movie.runtime} • with {detailsMovie.partner.name}
                   </p>
                 </div>
@@ -320,28 +295,13 @@ export default function SharedWatchlistPage() {
                 </span>
               </div>
 
-              <p className="text-sm text-slate-500">
+              <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 {detailsMovie.movie.genre.join(" • ")}
               </p>
 
-              <div className="rounded-[20px] bg-slate-50 px-4 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Shared watch progress
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {detailsMovie.progress}% complete
-                  </p>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,#8b5cf6,#7c3aed,#60a5fa)]"
-                    style={{ width: `${detailsMovie.progress}%` }}
-                  />
-                </div>
-              </div>
-
-              <p className="shared-details-description text-sm leading-7 text-slate-600">
+              <p className={`shared-details-description text-sm leading-7 ${
+                isDarkMode ? "text-slate-200" : "text-slate-600"
+              }`}>
                 {detailsMovie.movie.description}
               </p>
             </div>

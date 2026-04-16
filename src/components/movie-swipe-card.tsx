@@ -226,7 +226,7 @@ export function MovieSwipeCard({
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
-          <div className="relative flex min-h-[12rem] flex-col justify-between sm:min-h-[12.75rem]">
+          <div className="relative flex min-h-[14.25rem] flex-col justify-between sm:min-h-[15.5rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/92">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -305,62 +305,7 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="flex min-h-[2rem] items-center gap-2">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              isDarkMode
-                ? "bg-violet-500/14 text-violet-200"
-                : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,236,255,0.88))] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_20px_rgba(168,85,247,0.12)]"
-            }`}
-          >
-            {movie.rating.toFixed(1)} rating
-          </span>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              isDarkMode
-                ? "bg-white/8 text-slate-300"
-                : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(238,244,255,0.84))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_18px_rgba(148,163,184,0.12)]"
-            }`}
-          >
-            {movie.runtime}
-          </span>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col justify-between gap-2">
-        <div className="space-y-2">
-          <h3
-            className={`line-clamp-2 text-base font-semibold leading-6 ${
-              isDarkMode ? "text-white" : "text-slate-900"
-            }`}
-          >
-            {movie.title}
-          </h3>
-          <button
-            type="button"
-            onClick={() => setIsDetailsOpen(true)}
-            className={`rounded-[20px] px-3 py-3 ${
-              isDarkMode
-                ? "bg-white/8 text-left"
-                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
-            }`}
-          >
-            <p
-              className={`line-clamp-3 text-sm leading-6 ${
-                isDarkMode ? "text-slate-200" : "text-slate-600"
-              }`}
-            >
-              {previewText}
-            </p>
-            <span
-              className={`mt-2 block text-sm font-semibold ${
-                isDarkMode ? "text-violet-300" : "text-violet-600"
-              }`}
-            >
-              {shouldClamp ? "Tap to open full details" : "Tap to view details"}
-            </span>
-          </button>
-        </div>
-        <div className="mt-auto grid grid-cols-2 gap-3 pt-1 pb-2">
+        <div className="grid grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={onReject}
@@ -381,6 +326,64 @@ export function MovieSwipeCard({
             >
               Accept
             </button>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          <div className="flex min-h-[2rem] flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                isDarkMode
+                  ? "bg-violet-500/14 text-violet-200"
+                  : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,236,255,0.88))] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_20px_rgba(168,85,247,0.12)]"
+              }`}
+            >
+              {movie.rating.toFixed(1)} rating
+            </span>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                isDarkMode
+                  ? "bg-white/8 text-slate-300"
+                  : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(238,244,255,0.84))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_18px_rgba(148,163,184,0.12)]"
+              }`}
+            >
+              {movie.runtime}
+            </span>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="space-y-2">
+              <h3
+                className={`line-clamp-2 text-base font-semibold leading-6 ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {movie.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsDetailsOpen(true)}
+                className={`w-full rounded-[20px] px-3 py-3 ${
+                  isDarkMode
+                    ? "bg-white/8 text-left"
+                    : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+                }`}
+              >
+                <p
+                  className={`text-sm leading-6 ${
+                    shouldClamp ? "line-clamp-4" : ""
+                  } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
+                >
+                  {previewText}
+                </p>
+                <span
+                  className={`mt-2 block text-sm font-semibold ${
+                    isDarkMode ? "text-violet-300" : "text-violet-600"
+                  }`}
+                >
+                  {shouldClamp ? "Tap to open full details" : "Tap to view details"}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </SurfaceCard>
