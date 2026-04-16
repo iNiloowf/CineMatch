@@ -775,25 +775,7 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <p
-                className={`text-sm font-semibold ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Top match for you
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(true)}
-                className={`text-xs font-semibold ${
-                  isDarkMode ? "text-violet-300" : "text-violet-600"
-                }`}
-              >
-                Why this?
-              </button>
-            </div>
+          <div>
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"

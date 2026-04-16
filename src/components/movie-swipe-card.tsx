@@ -295,20 +295,20 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="flex items-center justify-end">
+            <div className="flex h-full items-center justify-center">
               <button
                 type="button"
                 onClick={() => void handleOpenTrailer()}
                 disabled={!hasTrailer || isLoadingTrailer}
                 aria-label="Play trailer"
-                className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/50 bg-black/18 text-white shadow-[0_18px_36px_rgba(15,23,42,0.3)] backdrop-blur-md ${
+                className={`flex h-16 w-16 items-center justify-center rounded-full border border-white/50 bg-black/20 text-white shadow-[0_18px_36px_rgba(15,23,42,0.3)] backdrop-blur-md ${
                   hasTrailer ? "hover:bg-black/28" : "cursor-not-allowed opacity-60"
                 }`}
               >
                 <svg
                   viewBox="0 0 24 24"
                   fill="currentColor"
-                  className="ml-0.5 h-5 w-5"
+                  className="ml-0.5 h-6 w-6"
                   aria-hidden="true"
                 >
                   <path d="m8 5 11 7-11 7V5Z" />
@@ -372,47 +372,9 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <button
-            type="button"
-            onClick={onReject}
-            disabled={isInteractionLocked}
-            className={`rounded-[22px] px-4 py-3 text-sm font-semibold transition ${
-              isDarkMode
-                ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
-            }`}
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="text-base leading-none">×</span>
-              <span>Reject</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-            disabled={isInteractionLocked}
-            className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.28)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
-          >
-            <span className="inline-flex items-center gap-2">
-              <span className="text-base leading-none">♡</span>
-              <span>Accept</span>
-            </span>
-          </button>
-        </div>
-
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <div className="space-y-3">
-              <div>
-                <p
-                  className={`text-sm font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}
-                >
-                  About {movie.title}
-                </p>
-              </div>
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(true)}
@@ -424,20 +386,49 @@ export function MovieSwipeCard({
               >
                 <p
                   className={`text-sm leading-6 ${
-                    shouldClamp ? "line-clamp-3" : ""
+                    shouldClamp ? "line-clamp-4" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
                   {previewText}
                 </p>
                 <span
-                  className={`mt-3 block text-sm font-semibold ${
+                  className={`mt-2 block text-xs font-semibold ${
                     isDarkMode ? "text-violet-300" : "text-violet-600"
                   }`}
                 >
-                  {shouldClamp ? "Tap to open full details" : "Tap to view details"}
+                  More
                 </span>
               </button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onReject}
+              disabled={isInteractionLocked}
+              className={`rounded-[22px] px-4 py-3 text-xs font-semibold transition ${
+                isDarkMode
+                  ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
+                  : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
+              }`}
+            >
+              <span className="inline-flex items-center gap-2">
+                <span className="text-sm leading-none">×</span>
+                <span>Reject</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={onAccept}
+              disabled={isInteractionLocked}
+              className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.28)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+            >
+              <span className="inline-flex items-center gap-2">
+                <span className="text-sm leading-none">♡</span>
+                <span>Accept</span>
+              </span>
+            </button>
           </div>
         </div>
       </SurfaceCard>
