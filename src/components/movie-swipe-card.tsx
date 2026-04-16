@@ -193,7 +193,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-[calc(100dvh-11.95rem)] min-h-[calc(100dvh-11.95rem)] max-h-[calc(100dvh-11.95rem)] flex-col gap-3 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.6rem)] sm:min-h-[calc(100dvh-12.6rem)] sm:max-h-[calc(100dvh-12.6rem)] ${
+        className={`flex h-full min-h-0 flex-col gap-3 overflow-hidden rounded-[30px] p-4 ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
@@ -231,7 +231,7 @@ export function MovieSwipeCard({
         >
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.72)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
-          <div className="relative flex min-h-[15rem] flex-col justify-between sm:min-h-[16.25rem]">
+          <div className="relative flex min-h-[13.25rem] flex-col justify-between sm:min-h-[14.5rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -295,7 +295,7 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="space-y-2.5 pt-4">
+            <div className="space-y-2 pt-4">
               <p className="text-xs font-medium text-white/80">
                 {movie.genre.slice(0, 3).join(" • ")}
               </p>
@@ -364,7 +364,7 @@ export function MovieSwipeCard({
           >
             <p
               className={`text-[13px] leading-5 ${
-                shouldClamp ? "line-clamp-3" : ""
+                shouldClamp ? "line-clamp-2 sm:line-clamp-3" : ""
               } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
             >
               {previewText}

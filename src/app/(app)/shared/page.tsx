@@ -7,26 +7,6 @@ import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import type { SharedMovieView } from "@/lib/types";
 
-function getProgressCopy(progress: number, watched: boolean) {
-  if (watched || progress >= 100) {
-    return "Finished together";
-  }
-
-  if (progress >= 75) {
-    return "Almost movie night";
-  }
-
-  if (progress >= 40) {
-    return "Halfway there";
-  }
-
-  if (progress > 0) {
-    return "Getting started";
-  }
-
-  return "Ready to plan";
-}
-
 function TogglePill({
   label,
   checked,
@@ -40,7 +20,7 @@ function TogglePill({
     <button
       type="button"
       onClick={() => void onChange(!checked)}
-      className={`flex min-w-0 flex-1 items-center justify-between gap-2.5 rounded-[18px] px-3.5 py-3 text-[12px] font-semibold transition ${
+      className={`flex w-full items-center justify-between gap-2.5 rounded-[18px] px-3.5 py-3 text-[12px] font-semibold transition ${
         checked
           ? "bg-violet-600 text-white shadow-[0_14px_28px_rgba(124,58,237,0.22)]"
           : "bg-white text-slate-700"
@@ -145,23 +125,6 @@ export default function SharedWatchlistPage() {
                           : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,241,255,0.88))] shadow-[0_16px_34px_rgba(148,163,184,0.08)]"
                       }`}
                     >
-                      <div className="mb-4 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <AvatarBadge
-                            initials={group.partner.avatar}
-                            imageUrl={group.partner.avatarImageUrl}
-                            sizeClassName="h-9 w-9"
-                            textClassName="text-xs font-semibold"
-                          />
-                          <span className="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-700">
-                            Both picked this
-                          </span>
-                        </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
-                          {getProgressCopy(entry.progress, entry.watched)}
-                        </span>
-                      </div>
-
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <h3 className="truncate text-lg font-semibold text-slate-900">
