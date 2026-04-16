@@ -315,6 +315,38 @@ function DiscoverPageContent({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
       {!isSearchOpen ? (
+        <div className="flex items-center justify-between px-1 pb-1 pt-0.5">
+          <h1
+            className={`text-[1.45rem] font-semibold tracking-[-0.03em] ${
+              isDarkMode ? "text-white" : "text-slate-900"
+            }`}
+          >
+            CineMatch
+          </h1>
+          <button
+            type="button"
+            aria-label="Open more options"
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+              isDarkMode
+                ? "text-slate-300 hover:bg-white/8"
+                : "text-slate-700 hover:bg-black/5"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="5" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="12" cy="19" r="1.8" />
+            </svg>
+          </button>
+        </div>
+      ) : null}
+
+      {!isSearchOpen ? (
       <div className="space-y-1.5">
         <div
           className={`rounded-[24px] border px-3 py-2.5 backdrop-blur-xl ${

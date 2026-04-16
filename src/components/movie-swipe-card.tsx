@@ -476,7 +476,7 @@ export function MovieSwipeCard({
             {shouldClamp ? (
               <>
                 <p
-                  className={`text-[12px] leading-5 ${
+                  className={`text-[11px] leading-5 ${
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-3" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
@@ -485,7 +485,7 @@ export function MovieSwipeCard({
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className={`inline text-xs font-semibold ${
+                      className={`inline text-[11px] font-semibold ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                     >
@@ -501,7 +501,7 @@ export function MovieSwipeCard({
                   }`}
                 >
                   <div
-                    className={`max-h-[8.5rem] overflow-y-auto pr-1 text-[12px] leading-5 ${
+                    className={`max-h-[8.5rem] overflow-y-auto pr-1 text-[11px] leading-5 ${
                       isDarkMode ? "text-slate-300" : "text-slate-500"
                     }`}
                   >
@@ -510,7 +510,7 @@ export function MovieSwipeCard({
                       <button
                         type="button"
                         onClick={() => setIsDescriptionExpanded(false)}
-                        className={`inline text-xs font-semibold ${
+                        className={`inline text-[11px] font-semibold ${
                           isDarkMode ? "text-violet-300" : "text-violet-600"
                         }`}
                       >
@@ -522,7 +522,7 @@ export function MovieSwipeCard({
               </>
             ) : (
               <p
-                className={`text-[12px] leading-5 ${
+                className={`text-[11px] leading-5 ${
                   isDarkMode ? "text-slate-200" : "text-slate-600"
                 }`}
               >
