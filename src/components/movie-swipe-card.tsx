@@ -495,8 +495,27 @@ export function MovieSwipeCard({
 
         <div
           className={`flex min-h-0 flex-1 flex-col gap-2 ${
-            isDescriptionExpanded ? "overflow-y-auto pr-1" : "overflow-hidden"
+            isDescriptionExpanded ? "overflow-y-scroll pr-1" : "overflow-hidden"
           }`}
+          style={{
+            touchAction: isDescriptionExpanded ? "pan-y" : "auto",
+            WebkitOverflowScrolling: "touch",
+          }}
+          onTouchStart={(event) => {
+            if (isDescriptionExpanded) {
+              event.stopPropagation();
+            }
+          }}
+          onTouchMove={(event) => {
+            if (isDescriptionExpanded) {
+              event.stopPropagation();
+            }
+          }}
+          onTouchEnd={(event) => {
+            if (isDescriptionExpanded) {
+              event.stopPropagation();
+            }
+          }}
         >
           <div
             className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
