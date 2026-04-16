@@ -94,6 +94,15 @@ input[type="range"] {
   transform-origin: top center;
 }
 
+.details-modal-shell {
+  animation: detailsModalIn 300ms var(--ease-soft) both;
+  transform-origin: top center;
+}
+
+.details-panel {
+  animation: detailsPanelIn 260ms var(--ease-soft) both;
+}
+
 .details-soft {
   overflow: hidden;
   transition:
@@ -231,6 +240,30 @@ input[type="range"] {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes detailsModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes detailsPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

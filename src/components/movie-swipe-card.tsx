@@ -31,6 +31,9 @@ export function MovieSwipeCard({
   const { isDarkMode } = useAppState();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
+  const [detailsSection, setDetailsSection] = useState<"overview" | "trailer">(
+    "overview",
+  );
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
@@ -50,6 +53,7 @@ export function MovieSwipeCard({
     setTrailerError(null);
     setIsLoadingTrailer(false);
     setIsTrailerVisible(false);
+    setDetailsSection("overview");
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
@@ -64,6 +68,7 @@ export function MovieSwipeCard({
 
       if (isTrailerVisible) {
         setIsTrailerVisible(false);
+        setDetailsSection("overview");
         return;
       }
 
@@ -76,6 +81,7 @@ export function MovieSwipeCard({
 
   const handleOpenTrailer = async () => {
     setIsTrailerVisible(true);
+    setDetailsSection("trailer");
     setTrailerError(null);
 
     if (trailerUrl) {
@@ -389,17 +395,25 @@ export function MovieSwipeCard({
 
       {isDetailsOpen ? (
         <div
-          className="fixed inset-0 z-[140] flex items-stretch justify-center bg-slate-950/86 backdrop-blur-2xl sm:items-center"
+          className="fixed inset-0 z-[140] flex items-stretch justify-center bg-slate-950/80 backdrop-blur-2xl sm:items-center"
           onClick={() => setIsDetailsOpen(false)}
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`expand-soft flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:mx-auto sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:max-w-md sm:rounded-[32px] ${
+            className={`details-modal-shell flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:mx-auto sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:max-w-md sm:rounded-[32px] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
             }`}
           >
+            <div className="mb-3 flex justify-center sm:hidden">
+              <span
+                className={`h-1.5 w-14 rounded-full ${
+                  isDarkMode ? "bg-white/12" : "bg-slate-200"
+                }`}
+              />
+            </div>
+
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <p
@@ -416,6 +430,13 @@ export function MovieSwipeCard({
                 >
                   {movie.title}
                 </h3>
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  {movie.mediaType === "series" ? "Series" : "Movie"} • {movie.year}
+                </p>
               </div>
               <button
                 type="button"
@@ -444,13 +465,14 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className="mt-4 overflow-hidden rounded-[24px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
+              className="mt-4 overflow-hidden rounded-[26px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
             >
               <div
                 className="relative aspect-video w-full overflow-hidden"
                 style={{
                   backgroundImage:
-                    !isTrailerVisible || (!trailerUrl && !isLoadingTrailer && !trailerError)
+                    detailsSection !== "trailer" ||
+                    (!trailerUrl && !isLoadingTrailer && !trailerError)
                       ? movie.poster.imageUrl
                         ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
                         : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`
@@ -458,12 +480,13 @@ export function MovieSwipeCard({
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   backgroundColor:
-                    isTrailerVisible && (trailerUrl || isLoadingTrailer || trailerError)
+                    detailsSection === "trailer" &&
+                    (trailerUrl || isLoadingTrailer || trailerError)
                       ? "#000"
                       : undefined,
                 }}
               >
-                {trailerUrl && isTrailerVisible ? (
+                {trailerUrl && detailsSection === "trailer" ? (
                   <iframe
                     src={trailerUrl}
                     title={`${movie.title} trailer`}
@@ -483,7 +506,8 @@ export function MovieSwipeCard({
                     </div>
 
                     <div className="flex h-full items-center justify-center">
-                      {isTrailerVisible && (isLoadingTrailer || trailerError) ? (
+                      {detailsSection === "trailer" &&
+                      (isLoadingTrailer || trailerError) ? (
                         <div className="max-w-xs rounded-[22px] bg-black/48 px-5 py-4 text-center backdrop-blur-md">
                           <p className="text-sm font-medium text-white">
                             {isLoadingTrailer
@@ -541,17 +565,144 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`mt-4 min-h-0 flex-1 overflow-y-auto rounded-[20px] px-1 pr-2 ${
-                isDarkMode ? "bg-white/8" : "bg-slate-50"
+              className={`mt-4 rounded-[20px] p-1 ${
+                isDarkMode ? "bg-white/8" : "bg-slate-100/80"
               }`}
             >
-              <p
-                className={`px-3 py-3 text-sm leading-7 ${
-                  isDarkMode ? "text-slate-200" : "text-slate-600"
-                }`}
-              >
-                {movie.description}
-              </p>
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetailsSection("overview");
+                    setIsTrailerVisible(false);
+                  }}
+                  className={`rounded-[16px] px-4 py-2.5 text-sm font-semibold ${
+                    detailsSection === "overview"
+                      ? isDarkMode
+                        ? "bg-white text-slate-900"
+                        : "bg-white text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
+                      : isDarkMode
+                        ? "text-slate-300"
+                        : "text-slate-500"
+                  }`}
+                >
+                  Overview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (detailsSection === "trailer" && trailerUrl) {
+                      setDetailsSection("trailer");
+                      setIsTrailerVisible(true);
+                      return;
+                    }
+
+                    void handleOpenTrailer();
+                  }}
+                  disabled={!hasTrailer || isLoadingTrailer}
+                  className={`rounded-[16px] px-4 py-2.5 text-sm font-semibold ${
+                    detailsSection === "trailer"
+                      ? isDarkMode
+                        ? "bg-white text-slate-900"
+                        : "bg-white text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
+                      : isDarkMode
+                        ? "text-slate-300"
+                        : "text-slate-500"
+                  } ${!hasTrailer ? "cursor-not-allowed opacity-55" : ""}`}
+                >
+                  {isLoadingTrailer ? "Loading..." : "Trailer"}
+                </button>
+              </div>
+            </div>
+
+            <div
+              className={`details-panel mt-4 min-h-0 flex-1 overflow-y-auto rounded-[22px] px-1 pr-2 ${
+                isDarkMode
+                  ? "border border-white/8 bg-white/6"
+                  : "border border-slate-100 bg-slate-50/90"
+              }`}
+            >
+              {detailsSection === "overview" ? (
+                <div className="space-y-4 px-3 py-3">
+                  <div>
+                    <p
+                      className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                        isDarkMode ? "text-slate-500" : "text-slate-400"
+                      }`}
+                    >
+                      Storyline
+                    </p>
+                    <p
+                      className={`mt-2 text-sm leading-7 ${
+                        isDarkMode ? "text-slate-200" : "text-slate-600"
+                      }`}
+                    >
+                      {movie.description}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div
+                      className={`rounded-[18px] px-3 py-3 ${
+                        isDarkMode ? "bg-white/6" : "bg-white"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                          isDarkMode ? "text-slate-500" : "text-slate-400"
+                        }`}
+                      >
+                        Runtime
+                      </p>
+                      <p
+                        className={`mt-2 text-sm font-semibold ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {movie.runtime}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-[18px] px-3 py-3 ${
+                        isDarkMode ? "bg-white/6" : "bg-white"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                          isDarkMode ? "text-slate-500" : "text-slate-400"
+                        }`}
+                      >
+                        Match vibe
+                      </p>
+                      <p
+                        className={`mt-2 text-sm font-semibold ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {movie.genre.slice(0, 2).join(" • ")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-3 py-3">
+                  <p
+                    className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                      isDarkMode ? "text-slate-500" : "text-slate-400"
+                    }`}
+                  >
+                    Trailer notes
+                  </p>
+                  <p
+                    className={`mt-2 text-sm leading-7 ${
+                      isDarkMode ? "text-slate-300" : "text-slate-600"
+                    }`}
+                  >
+                    Watch the trailer above without leaving the details flow. If
+                    TMDB doesn’t have a playable trailer, you’ll see the fallback
+                    state instead of the layout jumping around.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
