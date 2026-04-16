@@ -88,12 +88,17 @@ export default function PicksPage() {
                         </span>
                       ))}
                     </div>
+                    {matchingPartners.length > 0 ? (
+                      <div className="rounded-[18px] bg-violet-100/70 px-3 py-2 text-[12px] font-semibold text-violet-700">
+                        Matched with {matchingPartners.join(", ")}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3 pt-4">
                   <p className="min-w-0 text-xs leading-5 text-slate-500">
                     {matchingPartners.length > 0
-                      ? `Also matched with ${matchingPartners.join(", ")}`
+                      ? "This one is already ready for a shared watch night."
                       : "No shared match yet."}
                   </p>
                   <button

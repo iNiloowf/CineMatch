@@ -2571,7 +2571,54 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     movieId: string,
     progress: number,
   ) => {
-    await toggleWatched(partnerId, movieId, progress >= 100);
+    if (!currentUserId) {
+      return;
+    }
+
+    const normalizedProgress = Math.max(0, Math.min(Math.round(progress), 100));
+    const pairKey =
+      data.links.find(
+        (link) => link.users.includes(currentUserId) && link.users.includes(partnerId),
+      )?.id ?? getPairKey(currentUserId, partnerId);
+
+    setData((current) => {
+      const existing = current.sharedWatch.find(
+        (item) => item.pairKey === pairKey && item.movieId === movieId,
+      );
+
+      if (existing) {
+        return {
+          ...current,
+          sharedWatch: current.sharedWatch.map((item) =>
+            item.id === existing.id
+              ? {
+                  ...item,
+                  progress: normalizedProgress,
+                  watched: normalizedProgress >= 100,
+                  updatedAt: new Date().toISOString(),
+                }
+              : item,
+          ),
+        };
+      }
+
+      return {
+        ...current,
+        sharedWatch: [
+          ...current.sharedWatch,
+          {
+            id: `shared-${crypto.randomUUID()}`,
+            pairKey,
+            movieId,
+            watched: normalizedProgress >= 100,
+            progress: normalizedProgress,
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      };
+    });
+
+    await toggleWatched(partnerId, movieId, normalizedProgress >= 100);
   };
 
   const updateProfile = async ({
