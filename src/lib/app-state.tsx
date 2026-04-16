@@ -2921,12 +2921,42 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const completeOnboarding = async (
+    payload: Omit<OnboardingPreferences, "completedAt">,
+  ) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const completedPreferences: OnboardingPreferences = {
+      favoriteGenres: payload.favoriteGenres,
+      mediaPreference: payload.mediaPreference,
+      tasteProfile: payload.tasteProfile,
+      completedAt: new Date().toISOString(),
+    };
+
+    setOnboardingPreferences(completedPreferences);
+    persistOnboardingPreferences(currentUserId, completedPreferences);
+  };
+
+  const resetOnboarding = async () => {
+    if (!currentUserId) {
+      return;
+    }
+
+    const clearedPreferences = { ...DEFAULT_ONBOARDING_PREFERENCES };
+    setOnboardingPreferences(clearedPreferences);
+    persistOnboardingPreferences(currentUserId, clearedPreferences);
+  };
+
   return (
     <AppStateContext.Provider
       value={{
         data,
         currentUserId,
         currentUser,
+        onboardingPreferences,
+        isOnboardingComplete,
         isDarkMode,
         isReady,
         isSyncingAccountData,
@@ -2936,6 +2966,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        completeOnboarding,
+        resetOnboarding,
         registerMovies,
         swipeMovie,
         undoSwipe,
