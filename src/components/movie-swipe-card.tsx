@@ -200,7 +200,7 @@ export function MovieSwipeCard({
   const trailerModal =
     isTrailerVisible && typeof document !== "undefined" ? (
       <div
-        className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/56 px-5 backdrop-blur-xl"
+        className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/48 px-5 backdrop-blur-md"
         onClick={() => setIsTrailerVisible(false)}
       >
         <div
@@ -211,23 +211,7 @@ export function MovieSwipeCard({
               : "border-white/75 bg-white/96"
           }`}
         >
-          <div className="flex items-center justify-between gap-4 border-b border-black/6 px-5 py-4">
-            <div className="min-w-0">
-              <p
-                className={`truncate text-sm font-semibold ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {movie.title}
-              </p>
-              <p
-                className={`mt-1 text-xs ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                {movie.mediaType === "series" ? "Series" : "Movie"} • {movie.year}
-              </p>
-            </div>
+          <div className="flex items-center justify-end gap-4 border-b border-black/6 px-5 py-4">
             <button
               type="button"
               onClick={() => setIsTrailerVisible(false)}
@@ -489,26 +473,26 @@ export function MovieSwipeCard({
                 : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
             }`}
           >
-            <p
-              className={`text-[12px] leading-5 ${
-                shouldClamp && !isDescriptionExpanded ? "line-clamp-3" : ""
-              } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
-            >
-              {previewText}
-            </p>
             {shouldClamp ? (
               <>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setIsDescriptionExpanded((currentValue) => !currentValue)
-                  }
-                  className={`mt-2 text-xs font-semibold ${
-                    isDarkMode ? "text-violet-300" : "text-violet-600"
-                  }`}
+                <p
+                  className={`text-[12px] leading-5 ${
+                    shouldClamp && !isDescriptionExpanded ? "line-clamp-3" : ""
+                  } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
-                  {isDescriptionExpanded ? "Less" : "More"}
-                </button>
+                  {previewText}{" "}
+                  {!isDescriptionExpanded ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsDescriptionExpanded(true)}
+                      className={`inline text-xs font-semibold ${
+                        isDarkMode ? "text-violet-300" : "text-violet-600"
+                      }`}
+                    >
+                      More
+                    </button>
+                  ) : null}
+                </p>
                 <div
                   className={`details-soft ${
                     isDescriptionExpanded
@@ -521,11 +505,30 @@ export function MovieSwipeCard({
                       isDarkMode ? "text-slate-300" : "text-slate-500"
                     }`}
                   >
-                    <p>{expandedText}</p>
+                    <p>
+                      {expandedText}{" "}
+                      <button
+                        type="button"
+                        onClick={() => setIsDescriptionExpanded(false)}
+                        className={`inline text-xs font-semibold ${
+                          isDarkMode ? "text-violet-300" : "text-violet-600"
+                        }`}
+                      >
+                        Less
+                      </button>
+                    </p>
                   </div>
                 </div>
               </>
-            ) : null}
+            ) : (
+              <p
+                className={`text-[12px] leading-5 ${
+                  isDarkMode ? "text-slate-200" : "text-slate-600"
+                }`}
+              >
+                {previewText}
+              </p>
+            )}
           </div>
 
           <div className="mb-8 grid grid-cols-2 gap-3 pt-1">
