@@ -295,26 +295,6 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="flex h-full items-center justify-center">
-              <button
-                type="button"
-                onClick={() => void handleOpenTrailer()}
-                disabled={!hasTrailer || isLoadingTrailer}
-                aria-label="Play trailer"
-                className={`flex h-16 w-16 items-center justify-center rounded-full border border-white/50 bg-black/20 text-white shadow-[0_18px_36px_rgba(15,23,42,0.3)] backdrop-blur-md ${
-                  hasTrailer ? "hover:bg-black/28" : "cursor-not-allowed opacity-60"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="ml-0.5 h-6 w-6"
-                  aria-hidden="true"
-                >
-                  <path d="m8 5 11 7-11 7V5Z" />
-                </svg>
-              </button>
-            </div>
             <div className="space-y-3 pt-4">
               <p className="text-xs font-medium text-white/80">
                 {movie.genre.slice(0, 3).join(" • ")}
