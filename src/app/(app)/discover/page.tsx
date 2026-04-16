@@ -313,11 +313,11 @@ function DiscoverPageContent({
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-3 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
       {!isSearchOpen ? (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div
-          className={`rounded-[24px] border px-3 py-3 backdrop-blur-xl ${
+          className={`rounded-[24px] border px-3 py-2.5 backdrop-blur-xl ${
             isDarkMode
               ? "border-white/10 bg-slate-950/66"
               : "border-white/70 bg-white/78 shadow-[0_16px_34px_rgba(124,58,237,0.08)]"
@@ -338,7 +338,7 @@ function DiscoverPageContent({
                   }
                 }}
                 placeholder="Search a movie or series"
-                className={`w-full rounded-[18px] border py-2.5 pl-10 pr-4 text-sm outline-none transition ${
+                className={`w-full rounded-[18px] border py-2 pl-10 pr-4 text-[13px] outline-none transition ${
                   isDarkMode
                     ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
                     : "border-slate-200 bg-white/72 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/88"
@@ -395,7 +395,7 @@ function DiscoverPageContent({
               type="button"
               onClick={() => setIsFilterOpen(true)}
               aria-label="Open genre filter"
-              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border transition ${
+              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] border transition ${
                 isDarkMode
                   ? "border-white/10 bg-white/6 text-white backdrop-blur-md hover:bg-white/12"
                   : "border-slate-200 bg-white/72 text-slate-700 backdrop-blur-md hover:bg-slate-50/90"
@@ -773,7 +773,7 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden pt-1">
         {movie ? (
           <div>
             <div

@@ -193,7 +193,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-[calc(100dvh-11.75rem)] min-h-[calc(100dvh-11.75rem)] max-h-[calc(100dvh-11.75rem)] flex-col gap-3 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.75rem)] sm:min-h-[calc(100dvh-12.75rem)] sm:max-h-[calc(100dvh-12.75rem)] ${
+        className={`flex h-[calc(100dvh-11.95rem)] min-h-[calc(100dvh-11.95rem)] max-h-[calc(100dvh-11.95rem)] flex-col gap-2.5 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.6rem)] sm:min-h-[calc(100dvh-12.6rem)] sm:max-h-[calc(100dvh-12.6rem)] ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
@@ -231,7 +231,7 @@ export function MovieSwipeCard({
         >
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.72)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
-          <div className="relative flex min-h-[15.75rem] flex-col justify-between sm:min-h-[17rem]">
+          <div className="relative flex min-h-[15rem] flex-col justify-between sm:min-h-[16.25rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -295,7 +295,7 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="space-y-3 pt-4">
+            <div className="space-y-2.5 pt-4">
               <p className="text-xs font-medium text-white/80">
                 {movie.genre.slice(0, 3).join(" • ")}
               </p>
@@ -311,7 +311,7 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`grid grid-cols-3 gap-2 rounded-[24px] px-3 py-3 ${
+          className={`grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
             isDarkMode
               ? "border border-white/8 bg-white/6"
               : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
@@ -352,35 +352,31 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => setIsDetailsOpen(true)}
-                className={`w-full rounded-[22px] px-3 py-3 ${
-                  isDarkMode
-                    ? "bg-white/8 text-left"
-                    : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
-                }`}
-              >
-                <p
-                  className={`text-sm leading-6 ${
-                    shouldClamp ? "line-clamp-4" : ""
-                  } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
-                >
-                  {previewText}
-                </p>
-                <span
-                  className={`mt-2 block text-xs font-semibold ${
-                    isDarkMode ? "text-violet-300" : "text-violet-600"
-                  }`}
-                >
-                  More
-                </span>
-              </button>
-            </div>
-          </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsDetailsOpen(true)}
+            className={`w-full rounded-[22px] px-3 py-3 text-left ${
+              isDarkMode
+                ? "bg-white/8"
+                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+            }`}
+          >
+            <p
+              className={`text-[13px] leading-5 ${
+                shouldClamp ? "line-clamp-3" : ""
+              } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
+            >
+              {previewText}
+            </p>
+            <span
+              className={`mt-2 block text-xs font-semibold ${
+                isDarkMode ? "text-violet-300" : "text-violet-600"
+              }`}
+            >
+              More
+            </span>
+          </button>
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             <button
