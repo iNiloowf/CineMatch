@@ -123,7 +123,7 @@ export function MovieSwipeCard({
   };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked) {
+    if (isInteractionLocked || isDescriptionExpanded) {
       return;
     }
 
@@ -134,7 +134,7 @@ export function MovieSwipeCard({
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked) {
+    if (isInteractionLocked || isDescriptionExpanded) {
       return;
     }
 
@@ -154,7 +154,7 @@ export function MovieSwipeCard({
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked) {
+    if (isInteractionLocked || isDescriptionExpanded) {
       return;
     }
 
@@ -354,15 +354,14 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 rounded-[30px] p-4 ${
+        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-hidden rounded-[30px] p-4 ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
-        } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""} ${
-          isDescriptionExpanded ? "overflow-y-auto" : "overflow-hidden"
-        }`}
+        } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
+          touchAction: isDescriptionExpanded ? "pan-y" : "auto",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -495,54 +494,54 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
-            isDarkMode
-              ? "border border-white/8 bg-white/6"
-              : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-          } my-[14px]`}
-        >
-          <div className="flex min-w-0 items-center justify-center gap-2">
-            <span className="text-base leading-none text-violet-500">★</span>
-            <div className="min-w-0">
-              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {movie.rating.toFixed(1)}
-              </p>
-              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                IMDb rating
-              </p>
-            </div>
-          </div>
-          <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
-            <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
-            <div className="min-w-0">
-              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {runtimeLabel}
-              </p>
-              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Runtime
-              </p>
-            </div>
-          </div>
-          <div className="flex min-w-0 items-center justify-center gap-2">
-            <span className="text-base leading-none text-emerald-500">☺</span>
-            <div className="min-w-0">
-              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {matchScore}%
-              </p>
-              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Match
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`flex min-h-0 flex-col gap-2 ${
-            isDescriptionExpanded ? "shrink-0" : "flex-1"
+          className={`flex min-h-0 flex-1 flex-col gap-2 ${
+            isDescriptionExpanded ? "overflow-y-auto pr-1" : "overflow-hidden"
           }`}
         >
           <div
-            className={`w-full rounded-[22px] px-3 py-3 text-left ${
+            className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
+              isDarkMode
+                ? "border border-white/8 bg-white/6"
+                : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
+            } my-[14px]`}
+          >
+            <div className="flex min-w-0 items-center justify-center gap-2">
+              <span className="text-base leading-none text-violet-500">★</span>
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {movie.rating.toFixed(1)}
+                </p>
+                <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  IMDb rating
+                </p>
+              </div>
+            </div>
+            <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
+              <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {runtimeLabel}
+                </p>
+                <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Runtime
+                </p>
+              </div>
+            </div>
+            <div className="flex min-w-0 items-center justify-center gap-2">
+              <span className="text-base leading-none text-emerald-500">☺</span>
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {matchScore}%
+                </p>
+                <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Match
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`w-full shrink-0 rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
                 ? "bg-white/8"
                 : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
@@ -595,7 +594,7 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mb-8 grid grid-cols-2 gap-3 pt-1">
+          <div className="mb-8 shrink-0 grid grid-cols-2 gap-3 pt-1">
             <button
               type="button"
               onClick={onReject}
