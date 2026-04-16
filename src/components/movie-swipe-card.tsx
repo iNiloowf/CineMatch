@@ -393,15 +393,15 @@ export function MovieSwipeCard({
 
       {isDetailsOpen ? (
         <div
-          className="fixed inset-0 z-[140] flex items-stretch justify-center bg-slate-950/80 backdrop-blur-2xl sm:items-center"
+          className="fixed inset-0 z-[220] flex items-stretch justify-center bg-slate-950/94 backdrop-blur-2xl"
           onClick={() => setIsDetailsOpen(false)}
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`details-modal-shell flex h-full w-full flex-col overflow-hidden rounded-none p-5 shadow-[0_28px_80px_rgba(15,23,42,0.32)] ${
+            className={`details-modal-shell flex h-full w-full min-h-0 flex-col overflow-hidden rounded-none px-4 pb-4 pt-3 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:px-6 sm:pb-6 sm:pt-4 ${
               isDarkMode
-                ? "border border-white/10 bg-slate-950"
-                : "border border-white/70 bg-white"
+                ? "bg-slate-950"
+                : "bg-white"
             }`}
           >
             <div className="mb-3 flex justify-center sm:hidden">
@@ -466,7 +466,7 @@ export function MovieSwipeCard({
               className="mt-4 overflow-hidden rounded-[26px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
             >
               <div
-                className="relative aspect-video w-full overflow-hidden"
+                className="relative h-[28dvh] min-h-[11rem] w-full overflow-hidden sm:h-[30dvh]"
                 style={{
                   backgroundImage:
                     detailsSection !== "trailer" ||
@@ -545,23 +545,6 @@ export function MovieSwipeCard({
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-                {movie.rating.toFixed(1)} rating
-              </span>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                {movie.runtime}
-              </span>
-              {movie.genre.map((entry) => (
-                <span
-                  key={entry}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
-                >
-                  {entry}
-                </span>
-              ))}
-            </div>
-
             <div
               className={`mt-4 rounded-[20px] p-1 ${
                 isDarkMode ? "bg-white/8" : "bg-slate-100/80"
@@ -621,7 +604,7 @@ export function MovieSwipeCard({
               }`}
             >
               {detailsSection === "overview" ? (
-                <div className="space-y-4 px-3 py-3">
+                <div className="flex h-full min-h-0 flex-col px-3 py-3">
                   <div>
                     <p
                       className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
@@ -635,54 +618,35 @@ export function MovieSwipeCard({
                         isDarkMode ? "text-slate-200" : "text-slate-600"
                       }`}
                     >
+                      {movie.runtime} • {movie.rating.toFixed(1)} rating
+                    </p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {movie.genre.map((entry) => (
+                      <span
+                        key={entry}
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          isDarkMode
+                            ? "bg-white/8 text-slate-300"
+                            : "bg-white text-slate-600"
+                        }`}
+                      >
+                        {entry}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2">
+                    <p
+                      className={`text-sm leading-7 ${
+                        isDarkMode ? "text-slate-200" : "text-slate-600"
+                      }`}
+                    >
                       {movie.description}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div
-                      className={`rounded-[18px] px-3 py-3 ${
-                        isDarkMode ? "bg-white/6" : "bg-white"
-                      }`}
-                    >
-                      <p
-                        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                          isDarkMode ? "text-slate-500" : "text-slate-400"
-                        }`}
-                      >
-                        Runtime
-                      </p>
-                      <p
-                        className={`mt-2 text-sm font-semibold ${
-                          isDarkMode ? "text-white" : "text-slate-900"
-                        }`}
-                      >
-                        {movie.runtime}
-                      </p>
-                    </div>
-                    <div
-                      className={`rounded-[18px] px-3 py-3 ${
-                        isDarkMode ? "bg-white/6" : "bg-white"
-                      }`}
-                    >
-                      <p
-                        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                          isDarkMode ? "text-slate-500" : "text-slate-400"
-                        }`}
-                      >
-                        Match vibe
-                      </p>
-                      <p
-                        className={`mt-2 text-sm font-semibold ${
-                          isDarkMode ? "text-white" : "text-slate-900"
-                        }`}
-                      >
-                        {movie.genre.slice(0, 2).join(" • ")}
-                      </p>
-                    </div>
-                  </div>
                 </div>
               ) : (
-                <div className="px-3 py-3">
+                <div className="flex h-full min-h-0 flex-col px-3 py-3">
                   <p
                     className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
                       isDarkMode ? "text-slate-500" : "text-slate-400"
