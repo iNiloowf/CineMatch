@@ -513,7 +513,7 @@ export function MovieSwipeCard({
               isDarkMode
                 ? "border border-white/8 bg-white/6"
                 : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-            } my-[10px]`}
+            } my-[6px]`}
           >
             <div className="flex min-w-0 items-center justify-center gap-2">
               <span className="text-base leading-none text-violet-500">★</span>
