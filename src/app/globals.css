@@ -507,7 +507,6 @@ input[type="range"] {
 }
 
 .theme-dark [data-bottom-nav-link="true"][data-active="false"] [data-bottom-nav-icon="true"] {
-  background: rgba(255, 255, 255, 0.08) !important;
   color: #cbd5e1 !important;
 }
 

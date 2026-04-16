@@ -418,7 +418,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="relative overflow-hidden rounded-[28px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+          className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
