@@ -323,6 +323,7 @@ function mapMovieRow(movie: MovieRow): Movie {
     rating: Number(movie.rating),
     genre: movie.genres ?? [],
     description: movie.description,
+    trailerUrl: movie.trailer_url ?? undefined,
     poster: {
       eyebrow: movie.poster_eyebrow,
       imageUrl: movie.poster_image_url ?? undefined,
@@ -559,7 +560,7 @@ async function persistMovieToSupabase(movie: Movie) {
     poster_image_url: movie.poster.imageUrl ?? null,
     accent_from: movie.poster.accentFrom,
     accent_to: movie.poster.accentTo,
-    trailer_url: null,
+    trailer_url: movie.trailerUrl ?? null,
   };
 
   await supabase.from("movies").upsert(moviePayload as never, {

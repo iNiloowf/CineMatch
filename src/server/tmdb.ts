@@ -41,6 +41,19 @@ type TmdbTvDetails = {
   genres: { id: number; name: string }[];
 };
 
+type TmdbVideoResult = {
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official?: boolean;
+  published_at?: string;
+};
+
+type TmdbVideosResponse = {
+  results: TmdbVideoResult[];
+};
+
 function getTmdbHeaders() {
   const readAccessToken = process.env.TMDB_API_READ_ACCESS_TOKEN;
   const headers: Record<string, string> = {
@@ -152,6 +165,7 @@ function mapTmdbMovie(details: TmdbMovieDetails): Movie {
     description:
       details.overview ||
       "No description is available for this movie yet on TMDB.",
+    trailerUrl: undefined,
     poster: {
       eyebrow: genres[0] ?? "Featured",
       accentFrom,
@@ -182,6 +196,7 @@ function mapTmdbSeries(details: TmdbTvDetails): Movie {
     description:
       details.overview ||
       "No description is available for this series yet on TMDB.",
+    trailerUrl: undefined,
     poster: {
       eyebrow: genres[0] ?? "Series",
       accentFrom,
@@ -191,6 +206,93 @@ function mapTmdbSeries(details: TmdbTvDetails): Movie {
         : undefined,
     },
   };
+}
+
+function parseTmdbMovieId(movieId: string) {
+  const movieMatch = movieId.match(/^tmdb-(\d+)$/);
+
+  if (movieMatch) {
+    return { mediaPath: "movie", tmdbId: Number(movieMatch[1]) } as const;
+  }
+
+  const seriesMatch = movieId.match(/^tmdb-tv-(\d+)$/);
+
+  if (seriesMatch) {
+    return { mediaPath: "tv", tmdbId: Number(seriesMatch[1]) } as const;
+  }
+
+  return null;
+}
+
+function buildYoutubeEmbedUrl(videoKey: string) {
+  const searchParams = new URLSearchParams({
+    autoplay: "1",
+    rel: "0",
+    modestbranding: "1",
+    playsinline: "1",
+  });
+
+  return `https://www.youtube.com/embed/${videoKey}?${searchParams.toString()}`;
+}
+
+function scoreTmdbVideo(video: TmdbVideoResult) {
+  let score = 0;
+
+  if (video.site.toLowerCase() === "youtube") {
+    score += 100;
+  }
+
+  if (video.type === "Trailer") {
+    score += 40;
+  } else if (video.type === "Teaser") {
+    score += 20;
+  }
+
+  if (video.official) {
+    score += 15;
+  }
+
+  const normalizedName = video.name.toLowerCase();
+
+  if (normalizedName.includes("official")) {
+    score += 8;
+  }
+
+  if (normalizedName.includes("trailer")) {
+    score += 6;
+  }
+
+  const publishedAt = video.published_at
+    ? new Date(video.published_at).getTime()
+    : 0;
+
+  return score * 1_000_000_000_000 + publishedAt;
+}
+
+export async function fetchTmdbTrailerEmbedUrl(movieId: string) {
+  if (!isTmdbConfigured()) {
+    return null;
+  }
+
+  const parsedMovieId = parseTmdbMovieId(movieId);
+
+  if (!parsedMovieId) {
+    return null;
+  }
+
+  const videos = await tmdbFetch<TmdbVideosResponse>(
+    `/${parsedMovieId.mediaPath}/${parsedMovieId.tmdbId}/videos?language=en-US${getTmdbQueryParams()}`,
+  );
+
+  const selectedVideo = [...videos.results]
+    .filter((video) => video.key)
+    .sort((left, right) => scoreTmdbVideo(right) - scoreTmdbVideo(left))[0];
+
+  if (!selectedVideo || selectedVideo.site.toLowerCase() !== "youtube") {
+    return null;
+  }
+
+  return buildYoutubeEmbedUrl(selectedVideo.key);
 }
 
 // TMDB's discover endpoint is great for browsing, and the details endpoint

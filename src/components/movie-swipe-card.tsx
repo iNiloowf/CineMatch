@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppState } from "@/lib/app-state";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
@@ -28,6 +28,10 @@ export function MovieSwipeCard({
 }: MovieSwipeCardProps) {
   const { isDarkMode } = useAppState();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
+  const [trailerError, setTrailerError] = useState<string | null>(null);
+  const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
@@ -37,6 +41,73 @@ export function MovieSwipeCard({
     ? `${movie.description.slice(0, 82).trimEnd()}...`
     : movie.description;
   const isLongTitle = movie.title.length > 18;
+  const hasTrailer = Boolean(trailerUrl) || movie.id.startsWith("tmdb-");
+
+  useEffect(() => {
+    setTrailerUrl(movie.trailerUrl ?? null);
+    setTrailerError(null);
+    setIsLoadingTrailer(false);
+    setIsTrailerOpen(false);
+  }, [movie.id, movie.trailerUrl]);
+
+  useEffect(() => {
+    if (!isDetailsOpen && !isTrailerOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (isTrailerOpen) {
+        setIsTrailerOpen(false);
+        return;
+      }
+
+      setIsDetailsOpen(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDetailsOpen, isTrailerOpen]);
+
+  const handleOpenTrailer = async () => {
+    setIsTrailerOpen(true);
+    setTrailerError(null);
+
+    if (trailerUrl) {
+      return;
+    }
+
+    setIsLoadingTrailer(true);
+
+    try {
+      const response = await fetch(
+        `/api/movies/trailer?movieId=${encodeURIComponent(movie.id)}`,
+        {
+          cache: "no-store",
+        },
+      );
+      const payload = (await response.json()) as {
+        trailerUrl?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.trailerUrl) {
+        setTrailerError(
+          payload.error ?? "We couldn’t find a playable trailer for this title.",
+        );
+        return;
+      }
+
+      setTrailerUrl(payload.trailerUrl);
+    } catch {
+      setTrailerError("We couldn’t load the trailer right now.");
+    } finally {
+      setIsLoadingTrailer(false);
+    }
+  };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isInteractionLocked) {
@@ -393,6 +464,37 @@ export function MovieSwipeCard({
               ))}
             </div>
 
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleOpenTrailer}
+                disabled={!hasTrailer || isLoadingTrailer}
+                className={`flex w-full items-center justify-center gap-2 rounded-[20px] px-4 py-3 text-sm font-semibold transition ${
+                  hasTrailer
+                    ? "bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.24)] hover:brightness-[1.04]"
+                    : isDarkMode
+                      ? "cursor-not-allowed bg-white/8 text-slate-500"
+                      : "cursor-not-allowed bg-slate-100 text-slate-400"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path d="m8 5 11 7-11 7V5Z" />
+                </svg>
+                <span>
+                  {isLoadingTrailer
+                    ? "Loading trailer..."
+                    : hasTrailer
+                      ? "Watch trailer"
+                      : "Trailer unavailable"}
+                </span>
+              </button>
+            </div>
+
             <div
               className={`mt-4 min-h-0 flex-1 overflow-y-auto rounded-[20px] px-1 pr-2 ${
                 isDarkMode ? "bg-white/8" : "bg-slate-50"
@@ -405,6 +507,103 @@ export function MovieSwipeCard({
               >
                 {movie.description}
               </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isTrailerOpen ? (
+        <div
+          className="fixed inset-0 z-[150] flex items-end justify-center bg-slate-950/92 px-4 pb-4 pt-10 backdrop-blur-xl sm:items-center"
+          onClick={() => setIsTrailerOpen(false)}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className={`expand-soft flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border shadow-[0_28px_80px_rgba(15,23,42,0.42)] ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950"
+                : "border-white/70 bg-white"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-black/5 px-5 py-4">
+              <div className="space-y-1">
+                <p
+                  className={`text-xs font-semibold uppercase tracking-[0.22em] ${
+                    isDarkMode ? "text-slate-400" : "text-slate-400"
+                  }`}
+                >
+                  Trailer
+                </p>
+                <h3
+                  className={`text-lg font-semibold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  {movie.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTrailerOpen(false)}
+                aria-label="Close trailer"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                  isDarkMode
+                    ? "bg-white/10 text-white"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="bg-black">
+              <div className="aspect-video w-full">
+                {trailerUrl ? (
+                  <iframe
+                    src={trailerUrl}
+                    title={`${movie.title} trailer`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-full w-full items-center justify-center px-6 text-center ${
+                      isDarkMode ? "text-slate-200" : "text-slate-700"
+                    }`}
+                  >
+                    <div className="max-w-md space-y-3">
+                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/10">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="h-6 w-6"
+                          aria-hidden="true"
+                        >
+                          <path d="m8 5 11 7-11 7V5Z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium">
+                        {isLoadingTrailer
+                          ? "Loading the trailer player..."
+                          : trailerError ?? "Trailer unavailable for this title."}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

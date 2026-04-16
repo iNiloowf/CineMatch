@@ -7,6 +7,7 @@ export type Movie = {
   rating: number;
   genre: string[];
   description: string;
+  trailerUrl?: string;
   poster: {
     eyebrow: string;
     accentFrom: string;

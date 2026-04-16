@@ -20,6 +20,7 @@ type SwipeMoviePayload = {
   rating: number;
   genre: string[];
   description: string;
+  trailerUrl?: string;
   poster: {
     eyebrow: string;
     accentFrom: string;
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     poster_image_url: body.movie.poster.imageUrl ?? null,
     accent_from: body.movie.poster.accentFrom,
     accent_to: body.movie.poster.accentTo,
-    trailer_url: null,
+    trailer_url: body.movie.trailerUrl ?? null,
     updated_at: new Date().toISOString(),
   };
 
