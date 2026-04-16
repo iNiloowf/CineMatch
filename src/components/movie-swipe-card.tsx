@@ -44,6 +44,10 @@ export function MovieSwipeCard({
     : movie.description;
   const isLongTitle = movie.title.length > 18;
   const hasTrailer = Boolean(trailerUrl) || movie.id.startsWith("tmdb-");
+  const matchScore = Math.max(
+    62,
+    Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
+  );
 
   useEffect(() => {
     setTrailerUrl(movie.trailerUrl ?? null);
@@ -189,7 +193,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-[calc(100dvh-11.75rem)] min-h-[calc(100dvh-11.75rem)] max-h-[calc(100dvh-11.75rem)] flex-col gap-3 overflow-hidden p-4 sm:h-[calc(100dvh-12.75rem)] sm:min-h-[calc(100dvh-12.75rem)] sm:max-h-[calc(100dvh-12.75rem)] ${
+        className={`flex h-[calc(100dvh-11.75rem)] min-h-[calc(100dvh-11.75rem)] max-h-[calc(100dvh-11.75rem)] flex-col gap-3 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.75rem)] sm:min-h-[calc(100dvh-12.75rem)] sm:max-h-[calc(100dvh-12.75rem)] ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
@@ -216,7 +220,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="relative overflow-hidden rounded-[26px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+          className="relative overflow-hidden rounded-[28px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
@@ -225,18 +229,19 @@ export function MovieSwipeCard({
             backgroundPosition: "center",
           }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.3),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_30%)]" />
-          <div className="relative flex min-h-[14.25rem] flex-col justify-between sm:min-h-[15.5rem]">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.1),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.72)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
+          <div className="relative flex min-h-[15.75rem] flex-col justify-between sm:min-h-[17rem]">
             <div className="flex items-center justify-between gap-3">
-              <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/92">
+              <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
               </span>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
+                <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
                   {movie.year}
                 </span>
-                <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
-                  {movie.rating.toFixed(1)}
+                <span className="rounded-full bg-amber-300/90 px-2.5 py-1 text-[11px] font-semibold text-amber-950 shadow-[0_10px_20px_rgba(251,191,36,0.25)]">
+                  {movie.rating.toFixed(1)} ★
                 </span>
               </div>
             </div>
@@ -290,18 +295,80 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-          <div className="space-y-3 pt-4">
-            <p className="text-xs font-medium text-white/76">
-              {movie.genre.slice(0, 3).join(" • ")}
-            </p>
-            <h2
-              className={`max-w-[13rem] truncate font-semibold leading-tight ${
-                isLongTitle ? "text-[1.55rem]" : "text-[1.9rem]"
-              }`}
-            >
-              {movie.title}
-            </h2>
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => void handleOpenTrailer()}
+                disabled={!hasTrailer || isLoadingTrailer}
+                aria-label="Play trailer"
+                className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/50 bg-black/18 text-white shadow-[0_18px_36px_rgba(15,23,42,0.3)] backdrop-blur-md ${
+                  hasTrailer ? "hover:bg-black/28" : "cursor-not-allowed opacity-60"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="ml-0.5 h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <path d="m8 5 11 7-11 7V5Z" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-3 pt-4">
+              <p className="text-xs font-medium text-white/80">
+                {movie.genre.slice(0, 3).join(" • ")}
+              </p>
+              <h2
+                className={`max-w-[14rem] truncate font-semibold leading-tight drop-shadow-[0_14px_24px_rgba(15,23,42,0.3)] ${
+                  isLongTitle ? "text-[1.7rem]" : "text-[2.15rem]"
+                }`}
+              >
+                {movie.title}
+              </h2>
+            </div>
           </div>
+        </div>
+
+        <div
+          className={`grid grid-cols-3 gap-2 rounded-[24px] px-3 py-3 ${
+            isDarkMode
+              ? "border border-white/8 bg-white/6"
+              : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
+          }`}
+        >
+          <div className="flex min-w-0 items-center justify-center gap-2">
+            <span className="text-violet-500">★</span>
+            <div className="min-w-0">
+              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {movie.rating.toFixed(1)}
+              </p>
+              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                IMDb rating
+              </p>
+            </div>
+          </div>
+          <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
+            <span className={isDarkMode ? "text-slate-300" : "text-slate-500"}>◷</span>
+            <div className="min-w-0">
+              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {movie.runtime}
+              </p>
+              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Runtime
+              </p>
+            </div>
+          </div>
+          <div className="flex min-w-0 items-center justify-center gap-2">
+            <span className="text-emerald-500">☺</span>
+            <div className="min-w-0">
+              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {matchScore}%
+              </p>
+              <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Match
+              </p>
+            </div>
           </div>
         </div>
 
@@ -313,70 +380,57 @@ export function MovieSwipeCard({
             className={`rounded-[22px] px-4 py-3 text-sm font-semibold transition ${
               isDarkMode
                 ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(242,244,249,0.88))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_14px_28px_rgba(148,163,184,0.12)] hover:bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(244,236,255,0.9))]"
+                : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
             }`}
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              onClick={onAccept}
-              disabled={isInteractionLocked}
-              className="rounded-[22px] bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.3)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
-            >
-              Accept
-            </button>
+          >
+            <span className="inline-flex items-center gap-2">
+              <span className="text-base leading-none">×</span>
+              <span>Reject</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={onAccept}
+            disabled={isInteractionLocked}
+            className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.28)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+          >
+            <span className="inline-flex items-center gap-2">
+              <span className="text-base leading-none">♡</span>
+              <span>Accept</span>
+            </span>
+          </button>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          <div className="flex min-h-[2rem] flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                isDarkMode
-                  ? "bg-violet-500/14 text-violet-200"
-                  : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,236,255,0.88))] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_20px_rgba(168,85,247,0.12)]"
-              }`}
-            >
-              {movie.rating.toFixed(1)} rating
-            </span>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                isDarkMode
-                  ? "bg-white/8 text-slate-300"
-                  : "border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(238,244,255,0.84))] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_18px_rgba(148,163,184,0.12)]"
-              }`}
-            >
-              {movie.runtime}
-            </span>
-          </div>
-
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="space-y-2">
-              <h3
-                className={`line-clamp-2 text-base font-semibold leading-6 ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {movie.title}
-              </h3>
+            <div className="space-y-3">
+              <div>
+                <p
+                  className={`text-sm font-semibold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  About {movie.title}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsDetailsOpen(true)}
-                className={`w-full rounded-[20px] px-3 py-3 ${
+                className={`w-full rounded-[22px] px-3 py-3 ${
                   isDarkMode
                     ? "bg-white/8 text-left"
-                    : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,241,255,0.82))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+                    : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
                 }`}
               >
                 <p
                   className={`text-sm leading-6 ${
-                    shouldClamp ? "line-clamp-4" : ""
+                    shouldClamp ? "line-clamp-3" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
                   {previewText}
                 </p>
                 <span
-                  className={`mt-2 block text-sm font-semibold ${
+                  className={`mt-3 block text-sm font-semibold ${
                     isDarkMode ? "text-violet-300" : "text-violet-600"
                   }`}
                 >

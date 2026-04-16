@@ -775,35 +775,55 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
-          <div
-            className={`discover-card-stage ${
-              transitionState === "idle"
-                ? ""
-                : transitionState === "out"
-                  ? transitionDirection === "next"
-                    ? "discover-card-out-left"
-                    : "discover-card-out-right"
-                  : transitionDirection === "next"
-                    ? "discover-card-in-right"
-                    : "discover-card-in-left"
-            }`}
-          >
-            <MovieSwipeCard
-              key={movie.id}
-              movie={movie}
-              onAccept={() => handleSwipe("accepted")}
-              onReject={() => handleSwipe("rejected")}
-              onPrevious={() => navigateCard("previous")}
-              onNext={() => navigateCard("next")}
-              canGoPrevious={focusedMovieId ? filteredQueue.length > 0 : safeBrowseIndex > 0}
-              canGoNext={
-                focusedMovieId
-                  ? filteredQueue.length > 0
-                  : safeBrowseIndex < filteredQueue.length - 1
-              }
-              isInteractionLocked={transitionState !== "idle" || Boolean(swipeFeedback)}
-              swipeFeedback={swipeFeedback}
-            />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <p
+                className={`text-sm font-semibold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                Top match for you
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(true)}
+                className={`text-xs font-semibold ${
+                  isDarkMode ? "text-violet-300" : "text-violet-600"
+                }`}
+              >
+                Why this?
+              </button>
+            </div>
+            <div
+              className={`discover-card-stage ${
+                transitionState === "idle"
+                  ? ""
+                  : transitionState === "out"
+                    ? transitionDirection === "next"
+                      ? "discover-card-out-left"
+                      : "discover-card-out-right"
+                    : transitionDirection === "next"
+                      ? "discover-card-in-right"
+                      : "discover-card-in-left"
+              }`}
+            >
+              <MovieSwipeCard
+                key={movie.id}
+                movie={movie}
+                onAccept={() => handleSwipe("accepted")}
+                onReject={() => handleSwipe("rejected")}
+                onPrevious={() => navigateCard("previous")}
+                onNext={() => navigateCard("next")}
+                canGoPrevious={focusedMovieId ? filteredQueue.length > 0 : safeBrowseIndex > 0}
+                canGoNext={
+                  focusedMovieId
+                    ? filteredQueue.length > 0
+                    : safeBrowseIndex < filteredQueue.length - 1
+                }
+                isInteractionLocked={transitionState !== "idle" || Boolean(swipeFeedback)}
+                swipeFeedback={swipeFeedback}
+              />
+            </div>
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
           <SurfaceCard className="space-y-4 text-center">
