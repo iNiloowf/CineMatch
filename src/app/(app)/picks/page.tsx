@@ -163,10 +163,7 @@ export default function PicksPage() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
+                    className="ui-icon-md ui-icon-stroke"
                     aria-hidden="true"
                   >
                     <path d="M18 6 6 18" />
@@ -320,10 +317,7 @@ export default function PicksPage() {
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-4 w-4"
+                        className="ui-icon-md ui-icon-stroke"
                         aria-hidden="true"
                       >
                         <path d="M18 6 6 18" />
@@ -525,12 +519,12 @@ export default function PicksPage() {
                             aria-hidden="true"
                             viewBox="0 0 20 20"
                             fill="none"
-                            className="h-4 w-4"
+                            className="ui-icon-md"
                           >
                             <path
                               d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
                               stroke="currentColor"
-                              strokeWidth="1.7"
+                              strokeWidth="1.8"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />
@@ -549,12 +543,12 @@ export default function PicksPage() {
                             aria-hidden="true"
                             viewBox="0 0 20 20"
                             fill="none"
-                            className="h-4 w-4"
+                            className="ui-icon-md"
                           >
                             <path
                               d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
                               stroke="currentColor"
-                              strokeWidth="1.7"
+                              strokeWidth="1.8"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />

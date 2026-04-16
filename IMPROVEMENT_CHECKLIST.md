@@ -14,7 +14,7 @@
 - [x] Standardize button hierarchy (primary/secondary/ghost/danger) and unify hover/active/disabled states.
 - [ ] Improve dark-mode contrast in low-emphasis text (some `text-slate-400/500` shades are too dim on deep backgrounds).
 - [ ] Add skeleton placeholders for cards and search rows to make loading feel intentional.
-- [ ] Make icon sizing and stroke weights consistent across pages (discover, picks, profile, modals).
+- [x] Make icon sizing and stroke weights consistent across pages (discover, picks, profile, modals).
 
 ## UX Improvements
 

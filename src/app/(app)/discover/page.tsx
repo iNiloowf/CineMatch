@@ -432,7 +432,7 @@ function DiscoverPageContent({
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="h-5 w-5"
+                className="ui-icon-lg"
                 aria-hidden="true"
               >
                 <circle cx="12" cy="5" r="1.8" />
@@ -527,10 +527,7 @@ function DiscoverPageContent({
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
+                  className="ui-icon-md ui-icon-stroke"
                   aria-hidden="true"
                 >
                   <circle cx="11" cy="11" r="7" />
@@ -552,10 +549,7 @@ function DiscoverPageContent({
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-3.5 w-3.5"
+                    className="ui-icon-sm ui-icon-stroke"
                     aria-hidden="true"
                   >
                     <path d="M18 6 6 18" />
@@ -575,10 +569,7 @@ function DiscoverPageContent({
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
+                className="ui-icon-md ui-icon-stroke"
               aria-hidden="true"
             >
               <path d="M4 6h16" />
@@ -681,10 +672,7 @@ function DiscoverPageContent({
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
+                    className="ui-icon-md ui-icon-stroke"
                     aria-hidden="true"
                   >
                     <circle cx="11" cy="11" r="7" />
@@ -710,10 +698,7 @@ function DiscoverPageContent({
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-3.5 w-3.5"
+                      className="ui-icon-sm ui-icon-stroke"
                       aria-hidden="true"
                     >
                       <path d="M18 6 6 18" />
@@ -931,9 +916,9 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden pt-1">
+      <div className="min-h-0 flex-1 overflow-visible pt-1 pb-2">
         {movie ? (
-          <div className="flex h-full flex-col overflow-hidden rounded-[30px]">
+          <div className="flex h-full flex-col overflow-visible rounded-[30px]">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
