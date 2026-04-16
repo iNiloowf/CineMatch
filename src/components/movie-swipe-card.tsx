@@ -383,7 +383,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="relative overflow-hidden rounded-[10px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+          className="relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
@@ -495,7 +495,7 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
+          className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
             isDarkMode
               ? "border border-white/8 bg-white/6"
               : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
@@ -536,7 +536,11 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div
+          className={`flex min-h-0 flex-col gap-2 ${
+            isDescriptionExpanded ? "shrink-0" : "flex-1"
+          }`}
+        >
           <div
             className={`w-full rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
