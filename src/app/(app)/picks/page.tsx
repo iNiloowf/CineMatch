@@ -9,6 +9,7 @@ import { useAppState } from "@/lib/app-state";
 export default function PicksPage() {
   const { acceptedMovies, sharedMovies, removePick, isDarkMode } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
+  const [copiedMovieId, setCopiedMovieId] = useState<string | null>(null);
 
   const pendingRemoveMovie = useMemo(
     () =>
@@ -17,6 +18,45 @@ export default function PicksPage() {
         : null,
     [acceptedMovies, pendingRemoveMovieId],
   );
+
+  const handleShareMovie = async (movieId: string) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/discover?movieId=${encodeURIComponent(movieId)}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "CineMatch movie pick",
+          text: "Check this movie in CineMatch",
+          url: shareUrl,
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        window.prompt("Copy this movie link", shareUrl);
+      }
+
+      setCopiedMovieId(movieId);
+      window.setTimeout(() => {
+        setCopiedMovieId((currentValue) =>
+          currentValue === movieId ? null : currentValue,
+        );
+      }, 2200);
+    } catch {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopiedMovieId(movieId);
+        window.setTimeout(() => {
+          setCopiedMovieId((currentValue) =>
+            currentValue === movieId ? null : currentValue,
+          );
+        }, 2200);
+      }
+    }
+  };
 
   return (
     <>
@@ -112,27 +152,43 @@ export default function PicksPage() {
                       ? "This one is ready for a shared watch night."
                       : "No shared match yet."}
                   </p>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${movie.title} from your picks`}
-                    onClick={() => setPendingRemoveMovieId(movie.id)}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
-                  >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      className="h-4 w-4"
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label={`Share ${movie.title}`}
+                      onClick={() => void handleShareMovie(movie.id)}
+                      className={`inline-flex h-9 items-center justify-center rounded-full px-3 text-[11px] font-semibold transition ${
+                        copiedMovieId === movie.id
+                          ? "bg-violet-600 text-white"
+                          : isDarkMode
+                            ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
+                            : "border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                      }`}
                     >
-                      <path
-                        d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                      {copiedMovieId === movie.id ? "Copied" : "Share"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${movie.title} from your picks`}
+                      onClick={() => setPendingRemoveMovieId(movie.id)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </SurfaceCard>
             );

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { SurfaceCard } from "@/components/surface-card";
@@ -31,6 +32,7 @@ function DiscoverPageContent({
   undoSwipe,
   isDarkMode,
 }: DiscoverPageContentProps) {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -48,10 +50,64 @@ function DiscoverPageContent({
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
+  const sharedMovieId = searchParams.get("movieId");
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
     [discoverQueue],
   );
+
+  useEffect(() => {
+    if (!sharedMovieId) {
+      return;
+    }
+
+    const existingMovie =
+      discoverQueue.find((entry) => entry.id === sharedMovieId) ??
+      searchResults.find((entry) => entry.id === sharedMovieId);
+
+    if (existingMovie) {
+      registerMovies([existingMovie]);
+      setFocusedMovieId(existingMovie.id);
+      setIsSearchSheetOpen(false);
+      return;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/movies?movieId=${encodeURIComponent(sharedMovieId)}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok || !active) {
+          return;
+        }
+
+        const payload = (await response.json()) as { movie?: Movie | null };
+
+        if (!payload.movie || !active) {
+          return;
+        }
+
+        registerMovies([payload.movie]);
+        setFocusedMovieId(payload.movie.id);
+        setIsSearchSheetOpen(false);
+      } catch {
+        // Ignore shared-link fetch failures and keep Discover usable.
+      }
+    })();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [discoverQueue, registerMovies, searchResults, sharedMovieId]);
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {

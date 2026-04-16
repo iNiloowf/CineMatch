@@ -37,6 +37,7 @@ function passesDiscoverQualityThreshold(movie: Movie) {
 
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");
+  const movieId = request.nextUrl.searchParams.get("movieId")?.trim();
   const database = getDatabase();
   const source = request.nextUrl.searchParams.get("source");
   const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
@@ -47,6 +48,19 @@ export async function GET(request: NextRequest) {
         : await getMergedMovies()
       : database.movies;
   const filteredMovies = movies.filter(passesDiscoverQualityThreshold);
+
+  if (movieId) {
+    const mergedMovies = await getMergedMovies();
+    const exactMovie =
+      movies.find((movie) => movie.id === movieId) ??
+      mergedMovies.find((movie) => movie.id === movieId) ??
+      null;
+
+    return NextResponse.json({
+      movie: exactMovie,
+      source: isTmdbConfigured() ? "tmdb+mock" : "mock",
+    });
+  }
 
   if (!userId) {
     return NextResponse.json({
