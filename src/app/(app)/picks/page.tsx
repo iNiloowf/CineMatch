@@ -90,13 +90,18 @@ export default function PicksPage() {
                     </div>
                     {matchingPartners.length > 0 ? (
                       <div
-                        className={`rounded-[18px] px-3 py-2 text-[12px] font-semibold ${
+                        className={`rounded-[20px] px-3 py-3 ${
                           isDarkMode
-                            ? "bg-violet-500/18 text-violet-200"
-                            : "bg-violet-100/70 text-violet-700"
+                            ? "border border-violet-400/20 bg-violet-500/12 text-violet-100"
+                            : "border border-violet-200 bg-violet-50/85 text-violet-800"
                         }`}
                       >
-                        Matched with {matchingPartners.join(", ")}
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">
+                          Shared Match
+                        </p>
+                        <p className="mt-1 text-[12px] font-semibold">
+                          Both liked this with {matchingPartners.join(", ")}
+                        </p>
                       </div>
                     ) : null}
                   </div>
@@ -104,7 +109,7 @@ export default function PicksPage() {
                 <div className="flex items-center justify-between gap-3 pt-4">
                   <p className="min-w-0 text-xs leading-5 text-slate-500">
                     {matchingPartners.length > 0
-                      ? "This one is already ready for a shared watch night."
+                      ? "This one is ready for a shared watch night."
                       : "No shared match yet."}
                   </p>
                   <button

@@ -127,11 +127,27 @@ export default function SharedWatchlistPage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-lg font-semibold text-slate-900">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-700">
+                              Mutual pick
+                            </span>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                                isDarkMode
+                                  ? "bg-emerald-500/16 text-emerald-300"
+                                  : "bg-emerald-50 text-emerald-700"
+                              }`}
+                            >
+                              You + {entry.partner.name}
+                            </span>
+                          </div>
+                          <h3 className={`mt-2 truncate text-lg font-semibold ${
+                            isDarkMode ? "text-white" : "text-slate-900"
+                          }`}>
                             {entry.movie.title}
                           </h3>
                           <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                            Matched with {entry.partner.name}
+                            Both of you said yes to this one.
                           </p>
                         </div>
                         <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
