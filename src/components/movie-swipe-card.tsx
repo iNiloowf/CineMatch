@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAppState } from "@/lib/app-state";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
@@ -190,6 +191,203 @@ export function MovieSwipeCard({
     resetDrag();
   };
 
+  const detailsModal =
+    isDetailsOpen && typeof document !== "undefined" ? (
+      <div
+        className="fixed inset-0 z-[500] flex items-stretch justify-center bg-slate-950/96 backdrop-blur-2xl"
+        onClick={() => setIsDetailsOpen(false)}
+      >
+        <div
+          onClick={(event) => event.stopPropagation()}
+          className={`details-modal-shell flex h-full w-full min-h-0 flex-col overflow-hidden rounded-none px-4 pb-5 pt-4 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:px-6 sm:pb-6 sm:pt-5 ${
+            isDarkMode ? "bg-slate-950" : "bg-white"
+          }`}
+        >
+          <div className="mb-3 flex justify-center sm:hidden">
+            <span
+              className={`h-1.5 w-14 rounded-full ${
+                isDarkMode ? "bg-white/12" : "bg-slate-200"
+              }`}
+            />
+          </div>
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p
+                className={`text-xs font-semibold uppercase tracking-[0.22em] ${
+                  isDarkMode ? "text-slate-400" : "text-slate-400"
+                }`}
+              >
+                Full details
+              </p>
+              <h3
+                className={`text-xl font-semibold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {movie.title}
+              </h3>
+              <p
+                className={`text-sm ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                {movie.mediaType === "series" ? "Series" : "Movie"} • {movie.year}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsDetailsOpen(false)}
+              aria-label="Close details"
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-[26px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]">
+            <div
+              className="relative h-[30dvh] min-h-[12rem] w-full overflow-hidden sm:h-[32dvh]"
+              style={{
+                backgroundImage:
+                  !isTrailerVisible || (!trailerUrl && !isLoadingTrailer && !trailerError)
+                    ? movie.poster.imageUrl
+                      ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
+                      : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`
+                    : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundColor:
+                  isTrailerVisible && (trailerUrl || isLoadingTrailer || trailerError)
+                    ? "#000"
+                    : undefined,
+              }}
+            >
+              {trailerUrl && isTrailerVisible ? (
+                <iframe
+                  src={trailerUrl}
+                  title={`${movie.title} trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full border-0"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col justify-between p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/92">
+                      {movie.mediaType === "series" ? "Series" : "Movie"}
+                    </span>
+                    <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
+                      {movie.year}
+                    </span>
+                  </div>
+
+                  <div className="flex h-full items-center justify-center">
+                    {isTrailerVisible && (isLoadingTrailer || trailerError) ? (
+                      <div className="max-w-xs rounded-[22px] bg-black/48 px-5 py-4 text-center backdrop-blur-md">
+                        <p className="text-sm font-medium text-white">
+                          {isLoadingTrailer
+                            ? "Loading trailer..."
+                            : trailerError ?? "Trailer unavailable for this title."}
+                        </p>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleOpenTrailer}
+                        disabled={!hasTrailer || isLoadingTrailer}
+                        className={`flex items-center gap-3 rounded-full px-5 py-3 text-sm font-semibold backdrop-blur-md transition ${
+                          hasTrailer
+                            ? "bg-white/18 text-white hover:bg-white/24"
+                            : "cursor-not-allowed bg-white/10 text-white/60"
+                        }`}
+                      >
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-violet-700">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          >
+                            <path d="m8 5 11 7-11 7V5Z" />
+                          </svg>
+                        </span>
+                        <span>
+                          {hasTrailer ? "Play trailer" : "Trailer unavailable"}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+            className={`details-panel mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] px-1 pr-2 ${
+              isDarkMode
+                ? "border border-white/8 bg-white/6"
+                : "border border-slate-100 bg-slate-50/90"
+            }`}
+          >
+            <div className="flex h-full min-h-0 flex-col px-3 py-3">
+              <div>
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                    isDarkMode ? "text-slate-500" : "text-slate-400"
+                  }`}
+                >
+                  Storyline
+                </p>
+                <p
+                  className={`mt-2 text-sm leading-7 ${
+                    isDarkMode ? "text-slate-200" : "text-slate-600"
+                  }`}
+                >
+                  {movie.runtime} • {movie.rating.toFixed(1)} rating
+                </p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {movie.genre.map((entry) => (
+                  <span
+                    key={entry}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      isDarkMode ? "bg-white/8 text-slate-300" : "bg-white text-slate-600"
+                    }`}
+                  >
+                    {entry}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2">
+                <p
+                  className={`text-sm leading-7 ${
+                    isDarkMode ? "text-slate-200" : "text-slate-600"
+                  }`}
+                >
+                  {movie.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <>
       <SurfaceCard
@@ -378,7 +576,7 @@ export function MovieSwipeCard({
             </span>
           </button>
 
-          <div className="mb-2 grid grid-cols-2 gap-3 pt-1">
+          <div className="mb-4 grid grid-cols-2 gap-3 pt-1">
             <button
               type="button"
               onClick={onReject}
@@ -408,213 +606,7 @@ export function MovieSwipeCard({
           </div>
         </div>
       </SurfaceCard>
-
-      {isDetailsOpen ? (
-        <div
-          className="fixed inset-0 z-[220] flex items-stretch justify-center bg-slate-950/94 backdrop-blur-2xl"
-          onClick={() => setIsDetailsOpen(false)}
-        >
-          <div
-            onClick={(event) => event.stopPropagation()}
-            className={`details-modal-shell flex h-full w-full min-h-0 flex-col overflow-hidden rounded-none px-4 pb-4 pt-3 shadow-[0_28px_80px_rgba(15,23,42,0.32)] sm:px-6 sm:pb-6 sm:pt-4 ${
-              isDarkMode
-                ? "bg-slate-950"
-                : "bg-white"
-            }`}
-          >
-            <div className="mb-3 flex justify-center sm:hidden">
-              <span
-                className={`h-1.5 w-14 rounded-full ${
-                  isDarkMode ? "bg-white/12" : "bg-slate-200"
-                }`}
-              />
-            </div>
-
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <p
-                  className={`text-xs font-semibold uppercase tracking-[0.22em] ${
-                    isDarkMode ? "text-slate-400" : "text-slate-400"
-                  }`}
-                >
-                  Full details
-                </p>
-                <h3
-                  className={`text-xl font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}
-                >
-                  {movie.title}
-                </h3>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
-                  }`}
-                >
-                  {movie.mediaType === "series" ? "Series" : "Movie"} • {movie.year}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsDetailsOpen(false)}
-                aria-label="Close details"
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  isDarkMode
-                    ? "bg-white/10 text-white"
-                    : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div
-              className="mt-4 overflow-hidden rounded-[26px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
-            >
-              <div
-                className="relative h-[28dvh] min-h-[11rem] w-full overflow-hidden sm:h-[30dvh]"
-                style={{
-                  backgroundImage:
-                    !isTrailerVisible ||
-                    (!trailerUrl && !isLoadingTrailer && !trailerError)
-                      ? movie.poster.imageUrl
-                        ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
-                        : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`
-                      : undefined,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundColor:
-                    isTrailerVisible &&
-                    (trailerUrl || isLoadingTrailer || trailerError)
-                      ? "#000"
-                      : undefined,
-                }}
-              >
-                {trailerUrl && isTrailerVisible ? (
-                  <iframe
-                    src={trailerUrl}
-                    title={`${movie.title} trailer`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="h-full w-full border-0"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col justify-between p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/92">
-                        {movie.mediaType === "series" ? "Series" : "Movie"}
-                      </span>
-                      <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
-                        {movie.year}
-                      </span>
-                    </div>
-
-                    <div className="flex h-full items-center justify-center">
-                      {isTrailerVisible && (isLoadingTrailer || trailerError) ? (
-                        <div className="max-w-xs rounded-[22px] bg-black/48 px-5 py-4 text-center backdrop-blur-md">
-                          <p className="text-sm font-medium text-white">
-                            {isLoadingTrailer
-                              ? "Loading trailer..."
-                              : trailerError ?? "Trailer unavailable for this title."}
-                          </p>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleOpenTrailer}
-                          disabled={!hasTrailer || isLoadingTrailer}
-                          className={`flex items-center gap-3 rounded-full px-5 py-3 text-sm font-semibold backdrop-blur-md transition ${
-                            hasTrailer
-                              ? "bg-white/18 text-white hover:bg-white/24"
-                              : "cursor-not-allowed bg-white/10 text-white/60"
-                          }`}
-                        >
-                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-violet-700">
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                            >
-                              <path d="m8 5 11 7-11 7V5Z" />
-                            </svg>
-                          </span>
-                          <span>
-                            {hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div
-              className={`details-panel mt-4 min-h-0 flex-1 overflow-hidden rounded-[22px] px-1 pr-2 ${
-                isDarkMode
-                  ? "border border-white/8 bg-white/6"
-                  : "border border-slate-100 bg-slate-50/90"
-              }`}
-            >
-              <div className="flex h-full min-h-0 flex-col px-3 py-3">
-                <div>
-                  <p
-                    className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                      isDarkMode ? "text-slate-500" : "text-slate-400"
-                    }`}
-                  >
-                    Storyline
-                  </p>
-                  <p
-                    className={`mt-2 text-sm leading-7 ${
-                      isDarkMode ? "text-slate-200" : "text-slate-600"
-                    }`}
-                  >
-                    {movie.runtime} • {movie.rating.toFixed(1)} rating
-                  </p>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {movie.genre.map((entry) => (
-                    <span
-                      key={entry}
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        isDarkMode
-                          ? "bg-white/8 text-slate-300"
-                          : "bg-white text-slate-600"
-                      }`}
-                    >
-                      {entry}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-2">
-                  <p
-                    className={`text-sm leading-7 ${
-                      isDarkMode ? "text-slate-200" : "text-slate-600"
-                    }`}
-                  >
-                    {movie.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
+      {detailsModal ? createPortal(detailsModal, document.body) : null}
     </>
   );
 }
