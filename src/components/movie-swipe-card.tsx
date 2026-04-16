@@ -514,7 +514,7 @@ export function MovieSwipeCard({
 
       {isTrailerOpen ? (
         <div
-          className="fixed inset-0 z-[150] flex items-end justify-center bg-slate-950/92 px-4 pb-4 pt-10 backdrop-blur-xl sm:items-center"
+          className="fixed inset-0 z-[150] flex items-start justify-center bg-slate-950/92 px-4 pb-4 pt-6 backdrop-blur-xl sm:items-center sm:pt-4"
           onClick={() => setIsTrailerOpen(false)}
         >
           <div
