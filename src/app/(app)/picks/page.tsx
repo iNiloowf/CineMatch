@@ -89,7 +89,13 @@ export default function PicksPage() {
                       ))}
                     </div>
                     {matchingPartners.length > 0 ? (
-                      <div className="rounded-[18px] bg-violet-100/70 px-3 py-2 text-[12px] font-semibold text-violet-700">
+                      <div
+                        className={`rounded-[18px] px-3 py-2 text-[12px] font-semibold ${
+                          isDarkMode
+                            ? "bg-violet-500/18 text-violet-200"
+                            : "bg-violet-100/70 text-violet-700"
+                        }`}
+                      >
                         Matched with {matchingPartners.join(", ")}
                       </div>
                     ) : null}

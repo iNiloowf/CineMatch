@@ -193,7 +193,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-full min-h-0 flex-col gap-3 overflow-hidden rounded-[30px] p-4 ${
+        className={`flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-[30px] p-4 ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
