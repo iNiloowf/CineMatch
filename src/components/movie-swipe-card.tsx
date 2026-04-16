@@ -561,7 +561,7 @@ export function MovieSwipeCard({
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className={`text-[11px] font-semibold ${
+                      className={`text-[11px] ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                     >
@@ -586,7 +586,7 @@ export function MovieSwipeCard({
                       <button
                         type="button"
                         onClick={() => setIsDescriptionExpanded(false)}
-                        className={`inline text-[11px] font-semibold ${
+                        className={`inline text-[11px] ${
                           isDarkMode ? "text-violet-300" : "text-violet-600"
                         }`}
                       >
