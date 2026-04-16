@@ -193,7 +193,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-[calc(100dvh-11.95rem)] min-h-[calc(100dvh-11.95rem)] max-h-[calc(100dvh-11.95rem)] flex-col gap-2.5 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.6rem)] sm:min-h-[calc(100dvh-12.6rem)] sm:max-h-[calc(100dvh-12.6rem)] ${
+        className={`flex h-[calc(100dvh-11.95rem)] min-h-[calc(100dvh-11.95rem)] max-h-[calc(100dvh-11.95rem)] flex-col gap-3 overflow-hidden rounded-[30px] p-4 sm:h-[calc(100dvh-12.6rem)] sm:min-h-[calc(100dvh-12.6rem)] sm:max-h-[calc(100dvh-12.6rem)] ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
@@ -315,7 +315,7 @@ export function MovieSwipeCard({
             isDarkMode
               ? "border border-white/8 bg-white/6"
               : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-          } my-[5px]`}
+          }`}
         >
           <div className="flex min-w-0 items-center justify-center gap-2">
             <span className="text-violet-500">★</span>
@@ -352,7 +352,7 @@ export function MovieSwipeCard({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
           <button
             type="button"
             onClick={() => setIsDetailsOpen(true)}
