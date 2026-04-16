@@ -200,7 +200,7 @@ export function MovieSwipeCard({
   const trailerModal =
     isTrailerVisible && typeof document !== "undefined" ? (
       <div
-        className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/48 px-5 backdrop-blur-md"
+        className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/40 px-5 backdrop-blur-[3px]"
         onClick={() => setIsTrailerVisible(false)}
       >
         <div
@@ -239,14 +239,14 @@ export function MovieSwipeCard({
             <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
               <div className="relative aspect-video w-full bg-black">
                 {trailerUrl ? (
-                <iframe
-                  src={trailerUrl}
-                  title={`${movie.title} trailer`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="h-full w-full border-0"
-                />
-              ) : (
+                  <iframe
+                    src={trailerUrl}
+                    title={`${movie.title} trailer`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                ) : (
                   <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-white">
                     <p className="max-w-xs text-sm font-medium leading-6">
                       {isLoadingTrailer
@@ -254,29 +254,8 @@ export function MovieSwipeCard({
                         : trailerError ?? "Trailer unavailable for this title."}
                     </p>
                   </div>
-              )}
+                )}
               </div>
-            </div>
-            <div className="details-panel mt-4 rounded-[22px] px-4 pb-1">
-              <div className="flex flex-wrap gap-2">
-                {movie.genre.map((entry) => (
-                  <span
-                    key={entry}
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      isDarkMode ? "bg-white/8 text-slate-300" : "bg-white text-slate-600"
-                    }`}
-                  >
-                    {entry}
-                  </span>
-                ))}
-              </div>
-              <p
-                className={`mt-4 text-sm leading-7 ${
-                  isDarkMode ? "text-slate-200" : "text-slate-600"
-                }`}
-              >
-                {movie.description}
-              </p>
             </div>
           </div>
         </div>
@@ -388,13 +367,13 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <button
                 type="button"
                 onClick={handleOpenTrailer}
                 disabled={!hasTrailer || isLoadingTrailer}
                 aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                className={`flex h-16 w-16 items-center justify-center rounded-full border border-white/28 shadow-[0_18px_38px_rgba(15,23,42,0.34)] backdrop-blur-md transition ${
+                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/28 shadow-[0_18px_38px_rgba(15,23,42,0.34)] backdrop-blur-md transition ${
                   hasTrailer
                     ? "bg-black/24 text-white hover:bg-black/34"
                     : "cursor-not-allowed bg-black/16 text-white/55"
