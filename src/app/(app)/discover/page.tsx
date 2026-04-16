@@ -338,7 +338,7 @@ function DiscoverPageContent({
                   }
                 }}
                 placeholder="Search a movie or series"
-                className={`w-full rounded-[18px] border py-3 pl-10 pr-4 text-sm outline-none transition ${
+                className={`w-full rounded-[18px] border py-2.5 pl-10 pr-4 text-sm outline-none transition ${
                   isDarkMode
                     ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
                     : "border-slate-200 bg-white/72 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/88"
@@ -504,7 +504,7 @@ function DiscoverPageContent({
                     }
                   }}
                   placeholder="Search a movie or series"
-                  className={`w-full rounded-[18px] border py-3 pl-10 pr-11 text-sm outline-none transition ${
+                  className={`w-full rounded-[18px] border py-2.5 pl-10 pr-11 text-sm outline-none transition ${
                     isDarkMode
                       ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
                       : "border-slate-200 bg-white/80 text-slate-900 placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white"
