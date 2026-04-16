@@ -516,7 +516,7 @@ export function MovieSwipeCard({
           } my-[20px]`}
         >
           <div className="flex min-w-0 items-center justify-center gap-2">
-            <span className="text-violet-500">★</span>
+            <span className="text-base leading-none text-violet-500">★</span>
             <div className="min-w-0">
               <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {movie.rating.toFixed(1)}
@@ -527,7 +527,7 @@ export function MovieSwipeCard({
             </div>
           </div>
           <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
-            <span className={isDarkMode ? "text-slate-300" : "text-slate-500"}>◷</span>
+            <span className={`text-base leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
             <div className="min-w-0">
               <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {movie.runtime}
@@ -538,7 +538,7 @@ export function MovieSwipeCard({
             </div>
           </div>
           <div className="flex min-w-0 items-center justify-center gap-2">
-            <span className="text-emerald-500">☺</span>
+            <span className="text-base leading-none text-emerald-500">☺</span>
             <div className="min-w-0">
               <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 {matchScore}%
