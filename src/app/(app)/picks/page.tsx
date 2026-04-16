@@ -474,6 +474,37 @@ export default function PicksPage() {
                           </span>
                         </div>
                       </div>
+                    </div>
+                    <p className="line-clamp-2 text-[11px] leading-5 text-slate-500">
+                      {movie.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {movie.genre.slice(0, 3).map((genre) => (
+                        <span
+                          key={genre}
+                          className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+                        >
+                          {genre}
+                        </span>
+                      ))}
+                    </div>
+                    {matchingPartners.length > 0 ? (
+                      <div
+                        className={`rounded-[20px] px-3 py-3 ${
+                          isDarkMode
+                            ? "border border-violet-400/20 bg-violet-500/12 text-violet-100"
+                            : "border border-violet-200 bg-violet-50/85 text-violet-800"
+                        }`}
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">
+                          Shared Match
+                        </p>
+                        <p className="mt-1 text-[12px] font-semibold">
+                          Both liked this with {matchingPartners.join(", ")}
+                        </p>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-end pt-1">
                       <div className="flex shrink-0 items-center gap-2">
                         <button
                           type="button"
@@ -531,35 +562,6 @@ export default function PicksPage() {
                         </button>
                       </div>
                     </div>
-                    <p className="line-clamp-2 text-[11px] leading-5 text-slate-500">
-                      {movie.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {movie.genre.slice(0, 3).map((genre) => (
-                        <span
-                          key={genre}
-                          className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
-                        >
-                          {genre}
-                        </span>
-                      ))}
-                    </div>
-                    {matchingPartners.length > 0 ? (
-                      <div
-                        className={`rounded-[20px] px-3 py-3 ${
-                          isDarkMode
-                            ? "border border-violet-400/20 bg-violet-500/12 text-violet-100"
-                            : "border border-violet-200 bg-violet-50/85 text-violet-800"
-                        }`}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">
-                          Shared Match
-                        </p>
-                        <p className="mt-1 text-[12px] font-semibold">
-                          Both liked this with {matchingPartners.join(", ")}
-                        </p>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               </SurfaceCard>
