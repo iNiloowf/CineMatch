@@ -357,11 +357,13 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-[30px] p-4 ${
+        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 rounded-[30px] p-4 ${
           isSnapAnimating
             ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
             : "duration-150 ease-out"
-        } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
+        } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""} ${
+          isDescriptionExpanded ? "overflow-y-auto" : "overflow-hidden"
+        }`}
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
         }}
@@ -552,19 +554,21 @@ export function MovieSwipeCard({
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
-                  {previewText}{" "}
-                  {!isDescriptionExpanded ? (
+                  {previewText}
+                </p>
+                {!isDescriptionExpanded ? (
+                  <div className="mt-1 flex justify-end">
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className={`inline text-[11px] font-semibold ${
+                      className={`text-[11px] font-semibold ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                     >
                       More
                     </button>
-                  ) : null}
-                </p>
+                  </div>
+                ) : null}
                 <div
                   className={`details-soft ${
                     isDescriptionExpanded
