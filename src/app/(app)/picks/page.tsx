@@ -577,7 +577,7 @@ export default function PicksPage() {
             </p>
             <Link
               href="/discover"
-              className="inline-flex rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+              className="ui-btn ui-btn-primary"
             >
               Go to Discover
             </Link>
@@ -621,11 +621,7 @@ export default function PicksPage() {
               <button
                 type="button"
                 onClick={() => setPendingRemoveMovieId(null)}
-                className={`flex-1 rounded-[20px] px-4 py-3 text-sm font-semibold ${
-                  isDarkMode
-                    ? "bg-white/8 text-slate-200"
-                    : "bg-slate-100 text-slate-700"
-                }`}
+                className="ui-btn ui-btn-secondary flex-1"
               >
                 Cancel
               </button>
@@ -635,7 +631,7 @@ export default function PicksPage() {
                   await removePick(pendingRemoveMovie.id);
                   setPendingRemoveMovieId(null);
                 }}
-                className="flex-1 rounded-[20px] bg-rose-500 px-4 py-3 text-sm font-semibold text-white"
+                className="ui-btn ui-btn-danger flex-1"
               >
                 Remove
               </button>

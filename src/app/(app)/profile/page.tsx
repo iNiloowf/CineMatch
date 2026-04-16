@@ -231,7 +231,7 @@ export default function ProfilePage() {
             </label>
             <button
               type="submit"
-              className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+              className="ui-btn ui-btn-primary w-full"
             >
               Save profile
             </button>
