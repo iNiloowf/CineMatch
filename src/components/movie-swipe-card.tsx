@@ -404,7 +404,7 @@ export function MovieSwipeCard({
         >
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.07),rgba(15,23,42,0.015)_28%,rgba(15,23,42,0.5)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
-          <div className="relative flex min-h-[13.25rem] flex-col justify-between sm:min-h-[14.5rem]">
+          <div className="relative flex min-h-[14rem] flex-col justify-between sm:min-h-[15.25rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -504,7 +504,7 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-2 ${
+          className={`flex min-h-0 flex-col gap-1.5 ${
             isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
         >
@@ -513,7 +513,7 @@ export function MovieSwipeCard({
               isDarkMode
                 ? "border border-white/8 bg-white/6"
                 : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-            } my-[14px]`}
+            } my-[10px]`}
           >
             <div className="flex min-w-0 items-center justify-center gap-2">
               <span className="text-base leading-none text-violet-500">★</span>
