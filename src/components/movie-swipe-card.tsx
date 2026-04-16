@@ -558,9 +558,10 @@ export function MovieSwipeCard({
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(true)}
-                      className={`text-[11px] leading-5 ${
+                      className={`leading-5 ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
+                      style={{ fontSize: "11px" }}
                     >
                       More
                     </button>
@@ -570,9 +571,10 @@ export function MovieSwipeCard({
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded(false)}
-                      className={`text-[11px] leading-5 ${
+                      className={`leading-5 ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
+                      style={{ fontSize: "11px" }}
                     >
                       Less
                     </button>
