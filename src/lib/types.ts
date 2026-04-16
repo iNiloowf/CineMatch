@@ -78,6 +78,13 @@ export type ProfileSettings = {
   cellularSync: boolean;
 };
 
+export type OnboardingPreferences = {
+  favoriteGenres: string[];
+  mediaPreference: "movie" | "series" | "both";
+  tasteProfile: string[];
+  completedAt: string | null;
+};
+
 export type AppData = {
   users: AuthUser[];
   movies: Movie[];

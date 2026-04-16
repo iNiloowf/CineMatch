@@ -24,6 +24,7 @@ import {
   AppData,
   AuthUser,
   Movie,
+  OnboardingPreferences,
   ProfileSettings,
   SharedMovieGroup,
   SharedMovieView,
@@ -38,9 +39,26 @@ const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
+const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
 const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
+
+const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
+  favoriteGenres: [],
+  mediaPreference: "both",
+  tasteProfile: [],
+  completedAt: null,
+};
+
+const TASTE_PROFILE_GENRE_MAP: Record<string, string[]> = {
+  "Feel-good": ["Comedy", "Family", "Romance", "Animation"],
+  "Dark & tense": ["Thriller", "Crime", "Mystery", "Horror"],
+  "Big adventure": ["Action", "Adventure", "Fantasy", "Sci-Fi"],
+  "Mind-bending": ["Sci-Fi", "Mystery", "Thriller", "Drama"],
+  "Cozy night": ["Drama", "Romance", "Comedy"],
+  "Prestige picks": ["Drama", "History", "War", "Biography"],
+};
 
 type AuthResult =
   | { ok: true; message?: string; shouldRedirect?: boolean }
@@ -145,6 +163,8 @@ type AppStateContextValue = {
   data: AppData;
   currentUserId: string | null;
   currentUser: User | null;
+  onboardingPreferences: OnboardingPreferences;
+  isOnboardingComplete: boolean;
   isDarkMode: boolean;
   isReady: boolean;
   isSyncingAccountData: boolean;
@@ -158,6 +178,10 @@ type AppStateContextValue = {
     password: string;
   }) => Promise<AuthResult>;
   logout: () => Promise<void>;
+  completeOnboarding: (
+    payload: Omit<OnboardingPreferences, "completedAt">,
+  ) => Promise<void>;
+  resetOnboarding: () => Promise<void>;
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
   undoSwipe: (movieId: string) => Promise<void>;
@@ -366,6 +390,62 @@ function persistUserTheme(userId: string, isDark: boolean) {
     `${USER_THEME_STORAGE_PREFIX}-${userId}`,
     isDark ? "dark" : "light",
   );
+}
+
+function getOnboardingStorageKey(userId: string) {
+  return `${ONBOARDING_STORAGE_PREFIX}-${userId}`;
+}
+
+function getStoredOnboardingPreferences(userId: string): OnboardingPreferences {
+  if (typeof window === "undefined") {
+    return { ...DEFAULT_ONBOARDING_PREFERENCES };
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getOnboardingStorageKey(userId));
+
+    if (!raw) {
+      return { ...DEFAULT_ONBOARDING_PREFERENCES };
+    }
+
+    const parsed = JSON.parse(raw) as Partial<OnboardingPreferences>;
+
+    return {
+      favoriteGenres: Array.isArray(parsed.favoriteGenres)
+        ? parsed.favoriteGenres.filter((entry): entry is string => typeof entry === "string")
+        : [],
+      mediaPreference:
+        parsed.mediaPreference === "movie" ||
+        parsed.mediaPreference === "series" ||
+        parsed.mediaPreference === "both"
+          ? parsed.mediaPreference
+          : "both",
+      tasteProfile: Array.isArray(parsed.tasteProfile)
+        ? parsed.tasteProfile.filter((entry): entry is string => typeof entry === "string")
+        : [],
+      completedAt: typeof parsed.completedAt === "string" ? parsed.completedAt : null,
+    };
+  } catch {
+    return { ...DEFAULT_ONBOARDING_PREFERENCES };
+  }
+}
+
+function persistOnboardingPreferences(
+  userId: string,
+  preferences: OnboardingPreferences,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      getOnboardingStorageKey(userId),
+      JSON.stringify(preferences),
+    );
+  } catch {
+    // Ignore storage failures.
+  }
 }
 
 function getStoredAuthSession() {
@@ -703,6 +783,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
   });
+  const [onboardingPreferences, setOnboardingPreferences] =
+    useState<OnboardingPreferences>(() => {
+      if (typeof window === "undefined") {
+        return { ...DEFAULT_ONBOARDING_PREFERENCES };
+      }
+
+      const storedCurrentUserId = window.localStorage.getItem(CURRENT_USER_KEY);
+
+      return storedCurrentUserId
+        ? getStoredOnboardingPreferences(storedCurrentUserId)
+        : { ...DEFAULT_ONBOARDING_PREFERENCES };
+    });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
   const [accountRefreshKey, setAccountRefreshKey] = useState(0);
@@ -719,6 +811,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     useState<Achievement | null>(null);
   const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
+  const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
   const refreshDiscoverShuffle = (userId: string | null) => {
     const nextShuffleSeed =
       userId && typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -737,6 +830,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setDiscoverStartOffset(nextOffset);
     setDiscoverVisibilityTimestamp(Date.now());
   };
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
+      return;
+    }
+
+    setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
+  }, [currentUserId]);
 
   const applyHydratedAccountPayload = (
     activeUserId: string,
