@@ -157,15 +157,28 @@ export default function PicksPage() {
                       type="button"
                       aria-label={`Share ${movie.title}`}
                       onClick={() => void handleShareMovie(movie.id)}
-                      className={`inline-flex h-9 items-center justify-center rounded-full px-3 text-[11px] font-semibold transition ${
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
                         copiedMovieId === movie.id
-                          ? "bg-violet-600 text-white"
+                          ? "bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_12px_24px_rgba(124,58,237,0.26)]"
                           : isDarkMode
-                            ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                            : "border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                            ? "border border-white/10 bg-white/8 text-slate-200 shadow-[0_10px_18px_rgba(0,0,0,0.18)] hover:bg-white/12"
+                            : "border border-violet-200 bg-[linear-gradient(180deg,#faf5ff,#f3e8ff)] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_20px_rgba(167,139,250,0.18)] hover:bg-violet-100"
                       }`}
                     >
-                      {copiedMovieId === movie.id ? "Copied" : "Share"}
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
                     <button
                       type="button"
