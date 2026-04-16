@@ -28,7 +28,7 @@ export function MovieSwipeCard({
 }: MovieSwipeCardProps) {
   const { isDarkMode } = useAppState();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
@@ -47,11 +47,11 @@ export function MovieSwipeCard({
     setTrailerUrl(movie.trailerUrl ?? null);
     setTrailerError(null);
     setIsLoadingTrailer(false);
-    setIsTrailerOpen(false);
+    setIsTrailerVisible(false);
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
-    if (!isDetailsOpen && !isTrailerOpen) {
+    if (!isDetailsOpen) {
       return;
     }
 
@@ -60,8 +60,8 @@ export function MovieSwipeCard({
         return;
       }
 
-      if (isTrailerOpen) {
-        setIsTrailerOpen(false);
+      if (isTrailerVisible) {
+        setIsTrailerVisible(false);
         return;
       }
 
@@ -70,10 +70,10 @@ export function MovieSwipeCard({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isDetailsOpen, isTrailerOpen]);
+  }, [isDetailsOpen, isTrailerVisible]);
 
   const handleOpenTrailer = async () => {
-    setIsTrailerOpen(true);
+    setIsTrailerVisible(true);
     setTrailerError(null);
 
     if (trailerUrl) {
@@ -426,24 +426,82 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className="mt-4 overflow-hidden rounded-[24px] p-4 text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
-              style={{
-                backgroundImage: movie.poster.imageUrl
-                  ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
-                  : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
+              className="mt-4 overflow-hidden rounded-[24px] text-white shadow-[0_18px_48px_rgba(107,70,193,0.24)]"
             >
-              <div className="min-h-[10.5rem]">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/92">
-                    {movie.mediaType === "series" ? "Series" : "Movie"}
-                  </span>
-                  <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
-                    {movie.year}
-                  </span>
-                </div>
+              <div
+                className="relative aspect-video w-full overflow-hidden"
+                style={{
+                  backgroundImage:
+                    !isTrailerVisible || (!trailerUrl && !isLoadingTrailer && !trailerError)
+                      ? movie.poster.imageUrl
+                        ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
+                        : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`
+                      : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundColor:
+                    isTrailerVisible && (trailerUrl || isLoadingTrailer || trailerError)
+                      ? "#000"
+                      : undefined,
+                }}
+              >
+                {trailerUrl && isTrailerVisible ? (
+                  <iframe
+                    src={trailerUrl}
+                    title={`${movie.title} trailer`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col justify-between p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/92">
+                        {movie.mediaType === "series" ? "Series" : "Movie"}
+                      </span>
+                      <span className="rounded-full bg-black/18 px-2.5 py-1 text-[11px] font-semibold text-white/88">
+                        {movie.year}
+                      </span>
+                    </div>
+
+                    <div className="flex h-full items-center justify-center">
+                      {isTrailerVisible && (isLoadingTrailer || trailerError) ? (
+                        <div className="max-w-xs rounded-[22px] bg-black/48 px-5 py-4 text-center backdrop-blur-md">
+                          <p className="text-sm font-medium text-white">
+                            {isLoadingTrailer
+                              ? "Loading trailer..."
+                              : trailerError ?? "Trailer unavailable for this title."}
+                          </p>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenTrailer}
+                          disabled={!hasTrailer || isLoadingTrailer}
+                          className={`flex items-center gap-3 rounded-full px-5 py-3 text-sm font-semibold backdrop-blur-md transition ${
+                            hasTrailer
+                              ? "bg-white/18 text-white hover:bg-white/24"
+                              : "cursor-not-allowed bg-white/10 text-white/60"
+                          }`}
+                        >
+                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-violet-700">
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            >
+                              <path d="m8 5 11 7-11 7V5Z" />
+                            </svg>
+                          </span>
+                          <span>
+                            {hasTrailer ? "Play trailer" : "Trailer unavailable"}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -464,37 +522,6 @@ export function MovieSwipeCard({
               ))}
             </div>
 
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={handleOpenTrailer}
-                disabled={!hasTrailer || isLoadingTrailer}
-                className={`flex w-full items-center justify-center gap-2 rounded-[20px] px-4 py-3 text-sm font-semibold transition ${
-                  hasTrailer
-                    ? "bg-[linear-gradient(180deg,#8b5cf6,#7c3aed_58%,#6d28d9)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.24)] hover:brightness-[1.04]"
-                    : isDarkMode
-                      ? "cursor-not-allowed bg-white/8 text-slate-500"
-                      : "cursor-not-allowed bg-slate-100 text-slate-400"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <path d="m8 5 11 7-11 7V5Z" />
-                </svg>
-                <span>
-                  {isLoadingTrailer
-                    ? "Loading trailer..."
-                    : hasTrailer
-                      ? "Watch trailer"
-                      : "Trailer unavailable"}
-                </span>
-              </button>
-            </div>
-
             <div
               className={`mt-4 min-h-0 flex-1 overflow-y-auto rounded-[20px] px-1 pr-2 ${
                 isDarkMode ? "bg-white/8" : "bg-slate-50"
@@ -512,102 +539,6 @@ export function MovieSwipeCard({
         </div>
       ) : null}
 
-      {isTrailerOpen ? (
-        <div
-          className="fixed inset-0 z-[150] flex items-start justify-center bg-slate-950/92 px-4 pb-4 pt-6 backdrop-blur-xl sm:items-center sm:pt-4"
-          onClick={() => setIsTrailerOpen(false)}
-        >
-          <div
-            onClick={(event) => event.stopPropagation()}
-            className={`expand-soft flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border shadow-[0_28px_80px_rgba(15,23,42,0.42)] ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950"
-                : "border-white/70 bg-white"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4 border-b border-black/5 px-5 py-4">
-              <div className="space-y-1">
-                <p
-                  className={`text-xs font-semibold uppercase tracking-[0.22em] ${
-                    isDarkMode ? "text-slate-400" : "text-slate-400"
-                  }`}
-                >
-                  Trailer
-                </p>
-                <h3
-                  className={`text-lg font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}
-                >
-                  {movie.title}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsTrailerOpen(false)}
-                aria-label="Close trailer"
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  isDarkMode
-                    ? "bg-white/10 text-white"
-                    : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="bg-black">
-              <div className="aspect-video w-full">
-                {trailerUrl ? (
-                  <iframe
-                    src={trailerUrl}
-                    title={`${movie.title} trailer`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="h-full w-full border-0"
-                  />
-                ) : (
-                  <div
-                    className={`flex h-full w-full items-center justify-center px-6 text-center ${
-                      isDarkMode ? "text-slate-200" : "text-slate-700"
-                    }`}
-                  >
-                    <div className="max-w-md space-y-3">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/10">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="h-6 w-6"
-                          aria-hidden="true"
-                        >
-                          <path d="m8 5 11 7-11 7V5Z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm font-medium">
-                        {isLoadingTrailer
-                          ? "Loading the trailer player..."
-                          : trailerError ?? "Trailer unavailable for this title."}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
