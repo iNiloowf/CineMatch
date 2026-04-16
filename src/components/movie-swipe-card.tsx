@@ -372,6 +372,7 @@ export function MovieSwipeCard({
           overflowY: isDescriptionExpanded ? "auto" : "hidden",
           overscrollBehaviorY: isDescriptionExpanded ? "contain" : "auto",
           WebkitOverflowScrolling: "touch",
+          scrollbarGutter: "stable",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -594,7 +595,7 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mb-8 shrink-0 grid grid-cols-2 gap-3 pt-1">
+          <div className="mb-8 shrink-0 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={onReject}
