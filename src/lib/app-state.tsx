@@ -454,7 +454,7 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
 }
 
 function getRuntimeMinutes(runtimeLabel: string) {
-  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+  if (!runtimeLabel || runtimeLabel === "N/A") {
     return null;
   }
 

@@ -93,7 +93,7 @@ async function tmdbFetch<T>(path: string) {
 
 function minutesToRuntimeLabel(runtime: number | null) {
   if (!runtime || runtime <= 0) {
-    return "Runtime unavailable";
+    return "N/A";
   }
 
   const hours = Math.floor(runtime / 60);
@@ -107,7 +107,7 @@ function minutesToRuntimeLabel(runtime: number | null) {
 }
 
 function getRuntimeMinutes(runtimeLabel: string) {
-  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+  if (!runtimeLabel || runtimeLabel === "N/A") {
     return null;
   }
 

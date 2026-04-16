@@ -8,7 +8,7 @@ const MIN_DISCOVER_RATING = 3;
 const MIN_DISCOVER_RUNTIME_MINUTES = 20;
 
 function getRuntimeMinutes(runtimeLabel: string) {
-  if (!runtimeLabel || runtimeLabel === "Runtime unavailable") {
+  if (!runtimeLabel || runtimeLabel === "N/A") {
     return null;
   }
 
