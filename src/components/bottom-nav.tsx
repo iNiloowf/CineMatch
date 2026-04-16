@@ -92,7 +92,7 @@ export function BottomNav() {
               href={item.href}
               data-bottom-nav-link="true"
               data-active={active ? "true" : "false"}
-              className={`flex min-w-0 flex-1 items-center justify-center rounded-[18px] px-1 py-2 transition ${
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-1 py-2 transition ${
                 active
                   ? "bg-violet-100 text-violet-700"
                   : isDarkMode
@@ -101,7 +101,7 @@ export function BottomNav() {
               }`}
               aria-label={item.label}
               title={item.label}
-            >
+              >
               <span
                 data-bottom-nav-icon="true"
                 className={`flex h-6 w-6 items-center justify-center ${
@@ -113,6 +113,9 @@ export function BottomNav() {
                 }`}
               >
                 <NavIcon href={item.href} />
+              </span>
+              <span className="text-[10px] font-medium leading-none">
+                {item.label}
               </span>
             </Link>
           );
