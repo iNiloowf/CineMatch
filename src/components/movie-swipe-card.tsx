@@ -315,7 +315,7 @@ export function MovieSwipeCard({
             isDarkMode
               ? "border border-white/8 bg-white/6"
               : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
-          } my-[10px]`}
+          } my-[20px]`}
         >
           <div className="flex min-w-0 items-center justify-center gap-2">
             <span className="text-violet-500">★</span>
@@ -398,7 +398,7 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_18px_30px_rgba(124,58,237,0.28)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+              className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_20px_rgba(124,58,237,0.24)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
             >
               <span className="inline-flex items-center gap-2">
                 <span className="text-sm leading-none">♡</span>
