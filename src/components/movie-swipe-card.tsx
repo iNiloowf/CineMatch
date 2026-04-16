@@ -404,7 +404,7 @@ export function MovieSwipeCard({
         >
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.07),rgba(15,23,42,0.015)_28%,rgba(15,23,42,0.5)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
-          <div className="relative flex min-h-[14rem] flex-col justify-between sm:min-h-[15.25rem]">
+          <div className="relative flex min-h-[15.875rem] flex-col justify-between sm:min-h-[17.125rem]">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -504,7 +504,7 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-1.5 ${
+          className={`flex min-h-0 flex-col gap-[5px] ${
             isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
         >
