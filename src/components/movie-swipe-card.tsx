@@ -55,6 +55,10 @@ export function MovieSwipeCard({
           ? "text-[1.6rem]"
           : "text-[2.15rem]";
   const hasTrailer = Boolean(trailerUrl) || movie.id.startsWith("tmdb-");
+  const runtimeLabel =
+    movie.runtime.trim().toLowerCase() === "runtime unavailable"
+      ? "N/A"
+      : movie.runtime;
   const matchScore = Math.max(
     62,
     Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
@@ -304,7 +308,7 @@ export function MovieSwipeCard({
                         isDarkMode ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      {movie.runtime}
+                      {runtimeLabel}
                     </p>
                     <p
                       className={`text-[10px] ${
@@ -513,7 +517,7 @@ export function MovieSwipeCard({
             <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
             <div className="min-w-0">
               <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {movie.runtime}
+                {runtimeLabel}
               </p>
               <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 Runtime
@@ -545,7 +549,7 @@ export function MovieSwipeCard({
               <>
                 <p
                   className={`text-[11px] leading-5 ${
-                    shouldClamp && !isDescriptionExpanded ? "line-clamp-3" : ""
+                    shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
                   {previewText}{" "}
