@@ -94,7 +94,7 @@ export function BottomNav() {
               data-active={active ? "true" : "false"}
               className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-1 py-2 transition ${
                 active
-                  ? "bg-violet-100 text-violet-700"
+                  ? "bg-[linear-gradient(180deg,#c084fc,#8b5cf6_55%,#6d28d9)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_12px_24px_rgba(109,40,217,0.28)]"
                   : isDarkMode
                     ? "text-slate-400"
                     : "text-slate-400"
@@ -106,7 +106,7 @@ export function BottomNav() {
                 data-bottom-nav-icon="true"
                 className={`flex h-6 w-6 items-center justify-center ${
                   active
-                    ? "text-violet-700"
+                    ? "text-white"
                     : isDarkMode
                       ? "text-slate-300"
                       : "text-slate-500"
