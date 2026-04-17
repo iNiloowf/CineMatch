@@ -402,17 +402,24 @@ export default function AdminDesktopPage() {
               className="absolute inset-0 cursor-default bg-transparent"
             />
             <div
-              className={`ui-shell ui-shell--dialog-lg relative z-10 mx-auto max-w-2xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              className={`relative z-10 mx-auto flex max-h-[88vh] w-[min(94vw,980px)] flex-col overflow-hidden rounded-[30px] border shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
                 isDarkMode
                   ? "border-white/12 bg-slate-950 text-slate-100"
                   : "border-slate-200/90 bg-white text-slate-900"
               }`}
             >
-              <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div
+                className={`flex items-start gap-3 border-b px-6 py-5 ${
+                  isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/90 bg-slate-50/70"
+                }`}
+              >
                 <div className="min-w-0 flex-1">
-                  <p className="text-lg font-semibold text-inherit">{selectedTicket.subject}</p>
-                  <p className={`mt-1 text-xs ${softText}`}>
-                    {selectedTicket.userName} - {new Date(selectedTicket.createdAt).toLocaleString()}
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${softText}`}>
+                    Support ticket
+                  </p>
+                  <p className="mt-1 text-xl font-bold leading-tight text-inherit">{selectedTicket.subject}</p>
+                  <p className={`mt-2 text-xs ${softText}`}>
+                    {selectedTicket.userName} ({selectedTicket.userId}) • {new Date(selectedTicket.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <button
@@ -422,7 +429,7 @@ export default function AdminDesktopPage() {
                     setTicketActionFeedback("");
                   }}
                   aria-label="Close"
-                  className={`ui-shell-close ${
+                  className={`ui-shell-close shrink-0 ${
                     isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
                   }`}
                 >
@@ -432,52 +439,82 @@ export default function AdminDesktopPage() {
                   </svg>
                 </button>
               </div>
-              <div className="ui-shell-body space-y-4 !pt-4">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span
-                    className={`rounded-full px-2.5 py-1 font-semibold ${
-                      isDarkMode ? "bg-white/10 text-slate-100" : "bg-slate-100 text-slate-700"
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+                <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+                  <div
+                    className={`rounded-[16px] border px-3 py-2 ${
+                      isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
                     }`}
                   >
-                    Priority: {ticketPriorityLabel[selectedTicket.priority]}
-                  </span>
-                  <span
-                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                    <p className={softText}>Ticket ID</p>
+                    <p className="mt-1 font-semibold text-inherit">{selectedTicket.id}</p>
+                  </div>
+                  <div
+                    className={`rounded-[16px] border px-3 py-2 ${
+                      isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
+                    }`}
+                  >
+                    <p className={softText}>Priority</p>
+                    <p className="mt-1 font-semibold text-inherit">{ticketPriorityLabel[selectedTicket.priority]}</p>
+                  </div>
+                  <div
+                    className={`rounded-[16px] border px-3 py-2 ${
                       selectedTicket.status === "closed"
                         ? isDarkMode
-                          ? "bg-emerald-500/20 text-emerald-200"
-                          : "bg-emerald-100 text-emerald-700"
+                          ? "border-emerald-400/30 bg-emerald-500/10"
+                          : "border-emerald-200 bg-emerald-50"
                         : selectedTicket.status === "open"
                           ? isDarkMode
-                            ? "bg-amber-500/20 text-amber-200"
-                            : "bg-amber-100 text-amber-700"
+                            ? "border-amber-400/30 bg-amber-500/10"
+                            : "border-amber-200 bg-amber-50"
                           : isDarkMode
-                            ? "bg-violet-500/20 text-violet-200"
-                            : "bg-violet-100 text-violet-700"
+                            ? "border-violet-400/30 bg-violet-500/10"
+                            : "border-violet-200 bg-violet-50"
                     }`}
                   >
-                    Status: {ticketStatusLabel[selectedTicket.status]}
-                  </span>
+                    <p className={softText}>Status</p>
+                    <p className="mt-1 font-semibold text-inherit">{ticketStatusLabel[selectedTicket.status]}</p>
+                  </div>
                 </div>
+
                 <div
-                  className={`rounded-[18px] border p-3 text-sm leading-6 ${
+                  className={`min-h-[220px] rounded-[18px] border p-4 text-sm leading-7 ${
                     isDarkMode ? "border-white/10 bg-white/[0.03] text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"
                   }`}
                 >
                   {selectedTicket.message}
                 </div>
+
                 {ticketActionFeedback ? (
-                  <p className={`text-sm ${ticketActionFeedback.includes("could not") || ticketActionFeedback.includes("Invalid") || ticketActionFeedback.includes("not found") ? "text-rose-400" : "text-emerald-300"}`}>
+                  <p
+                    className={`rounded-[14px] border px-3 py-2 text-sm ${
+                      ticketActionFeedback.includes("could not") ||
+                      ticketActionFeedback.includes("Invalid") ||
+                      ticketActionFeedback.includes("not found")
+                        ? isDarkMode
+                          ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
+                          : "border-rose-200 bg-rose-50 text-rose-700"
+                        : isDarkMode
+                          ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    }`}
+                  >
                     {ticketActionFeedback}
                   </p>
                 ) : null}
               </div>
-              <div className="ui-shell-footer !pt-3">
+
+              <div
+                className={`grid grid-cols-1 gap-2 border-t px-6 py-4 sm:grid-cols-3 ${
+                  isDarkMode ? "border-white/10 bg-slate-950/95" : "border-slate-200 bg-white/95"
+                }`}
+              >
                 <button
                   type="button"
                   onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "under_review")}
                   disabled={isTicketActionLoading || selectedTicket.status === "under_review"}
-                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-60"
+                  className="ui-btn ui-btn-secondary w-full disabled:opacity-60"
                 >
                   Mark under review
                 </button>
@@ -485,7 +522,7 @@ export default function AdminDesktopPage() {
                   type="button"
                   onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "closed")}
                   disabled={isTicketActionLoading || selectedTicket.status === "closed"}
-                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-60"
+                  className="ui-btn ui-btn-secondary w-full disabled:opacity-60"
                 >
                   Close ticket
                 </button>
@@ -493,7 +530,7 @@ export default function AdminDesktopPage() {
                   type="button"
                   onClick={() => void handleDeleteTicket(selectedTicket.id)}
                   disabled={isTicketActionLoading}
-                  className="ui-btn ui-btn-danger min-w-0 flex-1 disabled:opacity-60"
+                  className="ui-btn ui-btn-danger w-full disabled:opacity-60"
                 >
                   Delete ticket
                 </button>
