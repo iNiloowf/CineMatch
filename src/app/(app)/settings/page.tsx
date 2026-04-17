@@ -20,6 +20,8 @@ export default function SettingsPage() {
   if (!settings) {
     return null;
   }
+  const sectionEyebrow = isDarkMode ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90" : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -28,7 +30,8 @@ export default function SettingsPage() {
         description={`Preferences and achievements for ${currentUser?.name ?? "your account"}.`}
       />
 
-      <SurfaceCard className="space-y-4">
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "0ms" }}>
+        <p className={sectionEyebrow}>Appearance & comfort</p>
         <div className="space-y-4">
           <SettingToggle
             label="Dark mode"
@@ -57,8 +60,9 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-5">
+      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "55ms" }}>
         <div className="space-y-1">
+          <p className={sectionEyebrow}>Progress</p>
           <p
             className={`text-sm font-semibold ${
               isDarkMode ? "text-white" : "text-slate-900"
@@ -85,8 +89,8 @@ export default function SettingsPage() {
             return (
               <div
                 key={achievement.id}
-                className={`rounded-[24px] px-4 py-4 ${
-                  isDarkMode ? "bg-white/6" : "bg-slate-50"
+                className={`rounded-[22px] border px-4 py-4 ${
+                  isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/80 bg-white/80"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -123,15 +127,13 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 <div
-                  className={`mt-3 h-2.5 overflow-hidden rounded-full ${
-                    isDarkMode ? "bg-white/10" : "bg-white"
+                  className={`mt-3 h-2 overflow-hidden rounded-full ${
+                    isDarkMode ? "bg-white/10" : "bg-slate-200/90"
                   }`}
                 >
                   <div
                     className={`h-full rounded-full ${
-                      completed
-                        ? "bg-[linear-gradient(90deg,#10b981,#34d399)]"
-                        : "bg-[linear-gradient(90deg,#7c3aed,#c084fc)]"
+                      completed ? "bg-emerald-500" : "bg-violet-600"
                     }`}
                     style={{ width: `${percent}%` }}
                   />
@@ -142,8 +144,9 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-5">
+      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "110ms" }}>
         <div className="space-y-1">
+          <p className={sectionEyebrow}>About</p>
           <p
             className={`text-sm font-semibold ${
               isDarkMode ? "text-white" : "text-slate-900"

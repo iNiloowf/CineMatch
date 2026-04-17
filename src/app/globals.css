@@ -239,6 +239,15 @@ input[type="range"] {
   transform-origin: top center;
 }
 
+/* Picks / modals: subtle staggered list entrance (reduce-motion handled globally for fade-up family) */
+.picks-row-enter {
+  animation: fadeUp var(--motion-duration-fade-up) var(--motion-ease-standard) both;
+}
+
+.picks-stat-enter {
+  animation: fadeUp 480ms var(--motion-ease-standard) both;
+}
+
 .details-panel {
   animation: detailsPanelIn var(--motion-duration-reveal) var(--motion-ease-standard) both;
 }
@@ -1254,6 +1263,12 @@ html[data-reduce-motion="true"] .ui-motion-surface:hover {
 
 html[data-reduce-motion="true"] .fade-up-enter {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
+
+html[data-reduce-motion="true"] .picks-row-enter,
+html[data-reduce-motion="true"] .picks-stat-enter {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  animation-delay: 0ms !important;
 }
 
 html[data-reduce-motion="true"] .auth-landing-blob,

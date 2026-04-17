@@ -95,7 +95,13 @@ export default function FriendsPage() {
         : "bg-amber-100 text-amber-900 ring-1 ring-amber-200/90";
 
   const accentBar = (status: "accepted" | "pending") =>
-    status === "accepted" ? "bg-emerald-500" : "bg-amber-400";
+    status === "accepted"
+      ? isDarkMode
+        ? "bg-emerald-500/85"
+        : "bg-emerald-500/90"
+      : isDarkMode
+        ? "bg-amber-400/80"
+        : "bg-amber-400/95";
 
   return (
     <div className="space-y-5">
@@ -108,14 +114,14 @@ export default function FriendsPage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 overflow-hidden rounded-[30px] border shadow-[0_24px_70px_rgba(15,23,42,0.18)] ${
+            className={`ui-shell ui-shell--dialog-md relative z-10 flex max-h-[min(92dvh,28rem)] flex-col overflow-hidden rounded-[30px] border shadow-[0_24px_70px_rgba(15,23,42,0.18)] ${
               isDarkMode
                 ? "border-white/14 bg-slate-950 text-slate-100"
                 : "border-white/70 bg-white"
             }`}
           >
             <div
-              className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-200"}`}
+              className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-200"}`}
             >
               <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">Remove linked person?</p>
               <button
@@ -143,7 +149,7 @@ export default function FriendsPage() {
                 Do you want to remove the link with {pendingRemove.name}?
               </p>
             </div>
-            <div className="ui-shell-footer !pt-4">
+            <div className={`ui-shell-footer !pt-4 shrink-0 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}>
               <button
                 type="button"
                 onClick={() => setPendingRemove(null)}
@@ -174,15 +180,15 @@ export default function FriendsPage() {
       {connectedPartnerName ? (
         <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">
           <div
-            className={`achievement-toast-pop rounded-[28px] border px-5 py-5 shadow-[0_24px_70px_rgba(124,58,237,0.22)] ${
+            className={`achievement-toast-pop rounded-[28px] border px-5 py-5 shadow-[0_18px_44px_rgba(15,23,42,0.12)] ${
               isDarkMode
-                ? "border-violet-400/25 bg-slate-950/94 text-slate-100"
-                : "border-violet-200 bg-white"
+                ? "border-white/12 bg-slate-950/94 text-slate-100"
+                : "border-slate-200/90 bg-white"
             }`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-500">
+                <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}>
                   Connected
                 </p>
                 <p className={`text-lg font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
@@ -263,15 +269,8 @@ export default function FriendsPage() {
         >
           {linkedUsers.length} / {MAX_LINKED_FRIENDS} friends
         </span>
-        <Link
-          href="/connect"
-          className={`discover-toolbar-enter inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold transition ${
-            isDarkMode
-              ? "bg-gradient-to-r from-violet-600 to-fuchsia-700 text-white shadow-[0_12px_28px_rgba(109,40,217,0.35)] hover:brightness-110"
-              : "bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-[0_12px_28px_rgba(109,40,217,0.22)] hover:brightness-105"
-          }`}
-        >
-          Add or invite →
+        <Link href="/connect" className="discover-toolbar-enter ui-btn ui-btn-primary inline-flex min-h-11 items-center px-5 text-sm">
+          Add or invite
         </Link>
       </div>
 
@@ -282,8 +281,8 @@ export default function FriendsPage() {
             className="overflow-hidden !p-0"
             style={{ animationDelay: `${Math.min(index, 5) * 55}ms` }}
           >
-            <div className="flex min-h-[5.5rem]">
-              <div className={`w-1 shrink-0 ${accentBar(linked.status)}`} aria-hidden />
+            <div className="flex min-h-[5.75rem]">
+              <div className={`w-0.5 shrink-0 ${accentBar(linked.status)}`} aria-hidden />
               <div className="flex min-w-0 flex-1 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <AvatarBadge
@@ -311,14 +310,14 @@ export default function FriendsPage() {
                     {linked.user.bio}
                   </p>
                   <p
-                    className={`w-full rounded-[14px] px-3 py-2 text-center text-xs font-semibold sm:w-auto sm:text-right ${
+                    className={`w-full rounded-[14px] border px-3 py-2 text-center text-xs font-semibold sm:w-auto sm:text-right ${
                       linked.sharedCount > 0
                         ? isDarkMode
-                          ? "bg-violet-500/16 text-violet-100"
-                          : "bg-violet-50 text-violet-800"
+                          ? "border-violet-400/20 bg-violet-500/10 text-violet-100"
+                          : "border-violet-200/80 bg-violet-50/90 text-violet-800"
                         : isDarkMode
-                          ? "bg-white/8 text-slate-400"
-                          : "bg-slate-100 text-slate-500"
+                          ? "border-white/10 bg-white/[0.04] text-slate-400"
+                          : "border-slate-200/80 bg-slate-50 text-slate-500"
                     }`}
                   >
                     {linked.sharedCount > 0

@@ -9,6 +9,8 @@ export type PicksMovieRowProps = {
   movie: Movie;
   matchingPartners: string[];
   isDarkMode: boolean;
+  /** Staggered list entrance delay in ms (capped internally). */
+  listIndex?: number;
   onOpenDetails: (movieId: string) => void;
   onShare: (movieId: string) => void;
   onRequestRemove: (movieId: string) => void;
@@ -18,13 +20,17 @@ export const PicksMovieRow = memo(function PicksMovieRow({
   movie,
   matchingPartners,
   isDarkMode,
+  listIndex = 0,
   onOpenDetails,
   onShare,
   onRequestRemove,
 }: PicksMovieRowProps) {
+  const enterDelay = `${Math.min(listIndex, 12) * 45}ms`;
+
   return (
     <SurfaceCard
-      className="space-y-4 p-4"
+      className="picks-row-enter space-y-3 p-3.5 sm:space-y-3.5 sm:p-4"
+      style={{ animationDelay: enterDelay }}
       role="button"
       tabIndex={0}
       onClick={() => onOpenDetails(movie.id)}
@@ -35,8 +41,8 @@ export const PicksMovieRow = memo(function PicksMovieRow({
         }
       }}
     >
-      <div className="flex items-stretch gap-3">
-        <div className="relative min-h-[11.5rem] w-[5.7rem] shrink-0 self-stretch overflow-hidden rounded-[22px] shadow-[0_8px_20px_rgba(15,23,42,0.12)]">
+      <div className="flex items-stretch gap-3 sm:gap-3.5">
+        <div className="relative min-h-[10.25rem] w-[5.15rem] shrink-0 self-stretch overflow-hidden rounded-[20px] shadow-[0_8px_20px_rgba(15,23,42,0.12)] sm:min-h-[11rem] sm:w-[5.5rem] sm:rounded-[22px]">
           <div
             className="absolute inset-0"
             style={{
@@ -62,7 +68,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             </div>
           </div>
         </div>
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
@@ -118,8 +124,8 @@ export const PicksMovieRow = memo(function PicksMovieRow({
               </p>
             </div>
           ) : null}
-          <div className="flex justify-end pt-1">
-            <div className="flex shrink-0 items-center gap-2">
+          <div className="flex justify-end pt-1.5">
+            <div className="flex shrink-0 items-center gap-2.5">
               <button
                 type="button"
                 aria-label={`Share ${movie.title}`}
@@ -127,7 +133,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   event.stopPropagation();
                   void onShare(movie.id);
                 }}
-                className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
+                className={`inline-flex min-h-12 min-w-12 items-center justify-center rounded-full transition active:scale-[0.97] ${
                   isDarkMode
                     ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
                     : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
@@ -150,7 +156,11 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   event.stopPropagation();
                   onRequestRemove(movie.id);
                 }}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                className={`inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border transition active:scale-[0.97] ${
+                  isDarkMode
+                    ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
+                    : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                }`}
               >
                 <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="ui-icon-md">
                   <path
