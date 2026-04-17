@@ -1,12 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PageHeader } from "@/components/page-header";
+import { PicksMovieRow } from "@/components/picks-movie-row";
+import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
+
+const PicksTrailerModalLazy = dynamic(
+  () => import("@/components/picks-trailer-modal").then((m) => m.PicksTrailerModal),
+  { ssr: false },
+);
 
 type ShareToast = { message: string; variant: "success" | "error" };
 
@@ -35,6 +43,16 @@ export default function PicksPage() {
         : null,
     [acceptedMovies, selectedMovieId],
   );
+
+  const partnerNamesByPickId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const entry of sharedMovies) {
+      const list = map.get(entry.movie.id) ?? [];
+      list.push(entry.partner.name);
+      map.set(entry.movie.id, list);
+    }
+    return map;
+  }, [sharedMovies]);
 
   useEffect(() => {
     if (!selectedMovie) {
@@ -89,7 +107,7 @@ export default function PicksPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectedMovieId, pendingRemoveMovieId, isTrailerVisible]);
 
-  const showShareToast = (message: string, variant: ShareToast["variant"]) => {
+  const showShareToast = useCallback((message: string, variant: ShareToast["variant"]) => {
     if (shareToastTimerRef.current) {
       window.clearTimeout(shareToastTimerRef.current);
     }
@@ -97,9 +115,9 @@ export default function PicksPage() {
     shareToastTimerRef.current = window.setTimeout(() => {
       setShareToast(null);
     }, 3200);
-  };
+  }, []);
 
-  const handleShareMovie = async (movieId: string) => {
+  const handleShareMovie = useCallback(async (movieId: string) => {
     if (typeof window === "undefined") {
       return;
     }
@@ -138,9 +156,9 @@ export default function PicksPage() {
 
       showShareToast("Couldn’t share or copy the link. Try again.", "error");
     }
-  };
+  }, [showShareToast]);
 
-  const fetchTrailerForSelected = async () => {
+  const fetchTrailerForSelected = useCallback(async () => {
     if (!selectedMovie || trailerUrl) {
       return;
     }
@@ -173,12 +191,20 @@ export default function PicksPage() {
     } finally {
       setIsLoadingTrailer(false);
     }
-  };
+  }, [selectedMovie, trailerUrl]);
 
-  const handleOpenTrailer = async () => {
+  const handleOpenTrailer = useCallback(async () => {
     setIsTrailerVisible(true);
     await fetchTrailerForSelected();
-  };
+  }, [fetchTrailerForSelected]);
+
+  const openPickDetails = useCallback((movieId: string) => {
+    setSelectedMovieId(movieId);
+  }, []);
+
+  const requestRemovePick = useCallback((movieId: string) => {
+    setPendingRemoveMovieId(movieId);
+  }, []);
 
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
@@ -241,12 +267,17 @@ export default function PicksPage() {
                   className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
                   style={{
                     backgroundImage: selectedMovie.poster.imageUrl
-                      ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.66)), url(${selectedMovie.poster.imageUrl})`
+                      ? undefined
                       : `linear-gradient(145deg, ${selectedMovie.poster.accentFrom}, ${selectedMovie.poster.accentTo})`,
-                    backgroundSize: selectedMovie.poster.imageUrl ? "cover" : "cover",
+                    backgroundSize: selectedMovie.poster.imageUrl ? undefined : "cover",
                     backgroundPosition: "center",
                   }}
                 >
+                  <PosterBackdrop
+                    imageUrl={selectedMovie.poster.imageUrl}
+                    profile="hero"
+                    objectFit="cover"
+                  />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_38%,rgba(15,23,42,0.46)_100%)]" />
                   <div className="relative flex min-h-[15.5rem] flex-col justify-between">
                     <div className="flex items-center justify-between gap-3">
@@ -349,80 +380,15 @@ export default function PicksPage() {
             </div>
 
             {isTrailerVisible ? (
-              <div
-                className="ui-overlay z-[var(--z-modal)] bg-slate-950/38 backdrop-blur-[2px]"
-                onClick={() => setIsTrailerVisible(false)}
-              >
-                <div
-                  onClick={(event) => event.stopPropagation()}
-                  className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_16px_48px_rgba(15,23,42,0.2)] ${
-                    isDarkMode
-                      ? "border-white/10 bg-slate-950/96"
-                      : "border-white/75 bg-white/96"
-                  }`}
-                >
-                  <div className="ui-shell-header !border-b-black/6 !py-3">
-                    <p
-                      className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${
-                        isDarkMode ? "text-slate-300" : "text-slate-600"
-                      }`}
-                    >
-                      {selectedMovie.title}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setIsTrailerVisible(false)}
-                      aria-label="Close trailer"
-                      className={`ui-shell-close ${
-                        isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="ui-icon-md ui-icon-stroke"
-                        aria-hidden="true"
-                      >
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="ui-shell-body !p-4 !pt-3">
-                    <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_8px_28px_rgba(0,0,0,0.35)]">
-                      <div className="relative aspect-video w-full bg-black">
-                        {trailerUrl ? (
-                          <iframe
-                            src={trailerUrl}
-                            title={`${selectedMovie.title} trailer`}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            className="h-full w-full border-0"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white">
-                            <p className="max-w-xs text-sm font-medium leading-6">
-                              {isLoadingTrailer
-                                ? "Loading trailer…"
-                                : trailerError ?? "Trailer unavailable for this title."}
-                            </p>
-                            {!isLoadingTrailer && !trailerUrl ? (
-                              <button
-                                type="button"
-                                onClick={() => void fetchTrailerForSelected()}
-                                className="ui-btn ui-btn-primary text-xs"
-                              >
-                                Try again
-                              </button>
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <PicksTrailerModalLazy
+                title={selectedMovie.title}
+                isDarkMode={isDarkMode}
+                trailerUrl={trailerUrl}
+                isLoadingTrailer={isLoadingTrailer}
+                trailerError={trailerError}
+                onClose={() => setIsTrailerVisible(false)}
+                onRetry={() => void fetchTrailerForSelected()}
+              />
             ) : null}
           </div>,
           document.body,
@@ -486,152 +452,17 @@ export default function PicksPage() {
         </div>
 
         <div className="space-y-3">
-          {acceptedMovies.map((movie) => {
-            const matchingPartners = sharedMovies
-              .filter((entry) => entry.movie.id === movie.id)
-              .map((entry) => entry.partner.name);
-
-            return (
-              <SurfaceCard
-                key={movie.id}
-                className="space-y-4 p-4"
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedMovieId(movie.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setSelectedMovieId(movie.id);
-                  }
-                }}
-              >
-                <div className="flex items-stretch gap-3">
-                  <div
-                    className="min-h-[11.5rem] w-[5.7rem] shrink-0 self-stretch overflow-hidden rounded-[22px] shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
-                    style={{
-                      backgroundImage: movie.poster.imageUrl
-                        ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.66)), url(${movie.poster.imageUrl})`
-                        : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  >
-                    <div className="flex h-full flex-col justify-between bg-[linear-gradient(180deg,rgba(15,23,42,0.06),transparent_36%,rgba(15,23,42,0.5)_100%)] p-2.5 text-white">
-                      <div className="flex justify-end">
-                        <span className="rounded-full bg-black/26 px-2 py-1 text-[10px] font-semibold text-white/88 backdrop-blur-sm">
-                          {movie.year}
-                        </span>
-                      </div>
-                      <div className="flex justify-start">
-                        <span className="rounded-full bg-black/26 px-2 py-1 text-[10px] font-semibold text-white/88 backdrop-blur-sm">
-                          {movie.runtime}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                          <h2 className="min-w-0 text-base font-semibold text-slate-900 sm:flex-1 sm:truncate">
-                            {movie.title}
-                          </h2>
-                          <span className="w-fit shrink-0 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
-                            {movie.rating.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="line-clamp-2 text-[11px] leading-5 text-slate-500">
-                      {movie.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {movie.genre.slice(0, 3).map((genre) => (
-                        <span
-                          key={genre}
-                          className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
-                        >
-                          {genre}
-                        </span>
-                      ))}
-                    </div>
-                    {matchingPartners.length > 0 ? (
-                      <div
-                        className={`rounded-[20px] px-3 py-3 ${
-                          isDarkMode
-                            ? "border border-violet-400/20 bg-violet-500/12 text-violet-100"
-                            : "border border-violet-200 bg-violet-50/85 text-violet-800"
-                        }`}
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">
-                          Shared Match
-                        </p>
-                        <p className="mt-1 text-[12px] font-semibold">
-                          Both liked this with {matchingPartners.join(", ")}
-                        </p>
-                      </div>
-                    ) : null}
-                    <div className="flex justify-end pt-1">
-                      <div className="flex shrink-0 items-center gap-2">
-                        <button
-                          type="button"
-                          aria-label={`Share ${movie.title}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleShareMovie(movie.id);
-                          }}
-                          className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
-                            isDarkMode
-                              ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
-                              : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
-                          }`}
-                        >
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            className="ui-icon-md"
-                          >
-                            <path
-                              d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`Remove ${movie.title} from your picks`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setPendingRemoveMovieId(movie.id);
-                          }}
-                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
-                        >
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            className="ui-icon-md"
-                          >
-                            <path
-                              d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </SurfaceCard>
-            );
-          })}
+          {acceptedMovies.map((movie) => (
+            <PicksMovieRow
+              key={movie.id}
+              movie={movie}
+              matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
+              isDarkMode={isDarkMode}
+              onOpenDetails={openPickDetails}
+              onShare={handleShareMovie}
+              onRequestRemove={requestRemovePick}
+            />
+          ))}
         </div>
 
         {acceptedMovies.length === 0 ? (

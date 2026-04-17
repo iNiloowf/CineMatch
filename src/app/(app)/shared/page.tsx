@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
+import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import type { SharedMovieView } from "@/lib/types";
@@ -58,7 +59,11 @@ export default function SharedWatchlistPage() {
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
 
-  useEscapeToClose(Boolean(detailsMovie), () => setDetailsMovie(null));
+  const closeDetails = useCallback(() => {
+    setDetailsMovie(null);
+  }, []);
+
+  useEscapeToClose(Boolean(detailsMovie), closeDetails);
 
   return (
     <>
@@ -225,7 +230,7 @@ export default function SharedWatchlistPage() {
           <button
             type="button"
             aria-label="Close details"
-            onClick={() => setDetailsMovie(null)}
+            onClick={closeDetails}
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
@@ -244,7 +249,7 @@ export default function SharedWatchlistPage() {
               <button
                 type="button"
                 aria-label="Close details"
-                onClick={() => setDetailsMovie(null)}
+                onClick={closeDetails}
                 className={`ui-shell-close ${
                   isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
                 }`}
@@ -264,13 +269,21 @@ export default function SharedWatchlistPage() {
 
             <div className="ui-shell-body !pt-4">
               <div
-                className="h-52 rounded-[24px] bg-cover bg-center"
+                className="relative h-52 overflow-hidden rounded-[24px]"
                 style={{
                   backgroundImage: detailsMovie.movie.poster.imageUrl
-                    ? `url(${detailsMovie.movie.poster.imageUrl})`
+                    ? undefined
                     : `linear-gradient(135deg, ${detailsMovie.movie.poster.accentFrom}, ${detailsMovie.movie.poster.accentTo})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                 }}
-              />
+              >
+                <PosterBackdrop
+                  imageUrl={detailsMovie.movie.poster.imageUrl}
+                  profile="hero"
+                  objectFit="cover"
+                />
+              </div>
 
               <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">

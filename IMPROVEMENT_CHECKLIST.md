@@ -26,7 +26,7 @@
 
 ## Engineering
 
-- [ ] Perf: memoize lists, lazy modals/trailer, poster image policy, trim unstable props/callbacks; occasional `next build` + analyzer on big changes.
+- [x] Perf: memoize lists, lazy modals/trailer, poster image policy, trim unstable props/callbacks; occasional `next build` + analyzer on big changes.
 - [ ] API: Zod on `src/app/api/*`, dedupe/cache search + trailer, shared filter utils client+server, centralized errors/logging.
 - [ ] Security: Supabase session storage review, auth+ownership on mutating routes, rate limits (invites/accept/swipe), audit logs for sensitive actions, RLS/storage for avatars.
 - [ ] Tests & CI: unit (discover utils), integration (auth/sync), e2e (login, swipe/undo, invite, shared toggles), visual smoke dark/light, CI gates (typecheck, lint, test).

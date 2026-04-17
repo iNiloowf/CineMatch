@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import { DiscoverOnboardingNudges } from "@/components/discover-onboarding-nudges";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { NetworkStatusBlock } from "@/components/network-status-block";
@@ -457,7 +458,7 @@ function DiscoverPageContent({
     return () => window.clearTimeout(timer);
   }, [isSearchOpen]);
 
-  const navigateCard = (direction: "next" | "previous") => {
+  const navigateCard = useCallback((direction: "next" | "previous") => {
     if (transitionState !== "idle") {
       return;
     }
@@ -497,9 +498,14 @@ function DiscoverPageContent({
         setTransitionState("idle");
       }, 260);
     }, 190);
-  };
+  }, [
+    filteredQueue.length,
+    focusedMovieId,
+    safeBrowseIndex,
+    transitionState,
+  ]);
 
-  const handleSelectSearchMovie = (selectedMovie: Movie) => {
+  const handleSelectSearchMovie = useCallback((selectedMovie: Movie) => {
     registerMovies([selectedMovie]);
     setFocusedMovieId(selectedMovie.id);
     const movieIndex = discoverQueue.findIndex((entry) => entry.id === selectedMovie.id);
@@ -512,7 +518,7 @@ function DiscoverPageContent({
     setSearchQuery("");
     setSearchResults([]);
     setIsSearchSheetOpen(false);
-  };
+  }, [discoverQueue, registerMovies]);
 
   const triggerHaptic = (decision: "accepted" | "rejected") => {
     if (typeof window === "undefined" || !("navigator" in window)) {
@@ -530,7 +536,7 @@ function DiscoverPageContent({
     window.navigator.vibrate(decision === "accepted" ? [14, 24, 18] : [18]);
   };
 
-  const handleSwipe = (decision: "accepted" | "rejected") => {
+  const handleSwipe = useCallback((decision: "accepted" | "rejected") => {
     if (!movie || transitionState !== "idle" || swipeFeedback) {
       return;
     }
@@ -566,7 +572,29 @@ function DiscoverPageContent({
         );
       }, 5200);
     }, 230);
-  };
+  }, [
+    movie,
+    transitionState,
+    swipeFeedback,
+    filteredQueue.length,
+    safeBrowseIndex,
+    focusedMovieId,
+    registerMovies,
+    swipeMovie,
+  ]);
+
+  const onSwipeAccept = useCallback(() => {
+    handleSwipe("accepted");
+  }, [handleSwipe]);
+  const onSwipeReject = useCallback(() => {
+    handleSwipe("rejected");
+  }, [handleSwipe]);
+  const onCardPrevious = useCallback(() => {
+    navigateCard("previous");
+  }, [navigateCard]);
+  const onCardNext = useCallback(() => {
+    navigateCard("next");
+  }, [navigateCard]);
 
   const handleUndoSwipe = async () => {
     if (!lastSwipe) {
@@ -1102,60 +1130,12 @@ function DiscoverPageContent({
               {searchFetchState === "ready" && sortedSearchResults.length > 0 ? (
                 <div className="space-y-3">
                   {sortedSearchResults.map((result) => (
-                    <button
+                    <DiscoverSearchResultRow
                       key={result.id}
-                      type="button"
-                      onClick={() => handleSelectSearchMovie(result)}
-                      className={`flex w-full items-start gap-3 rounded-[24px] border px-4 py-4 text-left ${
-                        isDarkMode
-                          ? "border-white/10 bg-white/6"
-                          : "border-white/80 bg-white/80 shadow-[0_14px_34px_rgba(148,163,184,0.08)]"
-                      }`}
-                    >
-                      <div
-                        className="flex h-16 w-14 shrink-0 items-end rounded-[16px] p-2 text-white"
-                        style={{
-                          backgroundImage: result.poster.imageUrl
-                            ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${result.poster.imageUrl})`
-                            : `linear-gradient(145deg, ${result.poster.accentFrom}, ${result.poster.accentTo})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }}
-                      >
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80">
-                          {result.mediaType === "series" ? "Series" : "Movie"}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                          <h3
-                            className={`min-w-0 text-sm font-semibold sm:flex-1 sm:truncate ${
-                              isDarkMode ? "text-white" : "text-slate-900"
-                            }`}
-                          >
-                            {result.title}
-                          </h3>
-                          <span className="ui-chip ui-chip--surface w-fit shrink-0">
-                            {result.year}
-                          </span>
-                        </div>
-                        <p
-                          className={`mt-1 line-clamp-2 text-sm leading-6 ${
-                            isDarkMode ? "text-slate-300" : "text-slate-600"
-                          }`}
-                        >
-                          {result.description}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-[var(--rhythm-stack)]">
-                          <span className="ui-chip ui-chip--accent">
-                            {result.rating.toFixed(1)}
-                          </span>
-                          <span className="ui-chip ui-chip--surface">
-                            {result.runtime}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
+                      result={result}
+                      isDarkMode={isDarkMode}
+                      onSelect={handleSelectSearchMovie}
+                    />
                   ))}
                 </div>
               ) : null}
@@ -1294,10 +1274,10 @@ function DiscoverPageContent({
               <MovieSwipeCard
                 key={movie.id}
                 movie={movie}
-                onAccept={() => handleSwipe("accepted")}
-                onReject={() => handleSwipe("rejected")}
-                onPrevious={() => navigateCard("previous")}
-                onNext={() => navigateCard("next")}
+                onAccept={onSwipeAccept}
+                onReject={onSwipeReject}
+                onPrevious={onCardPrevious}
+                onNext={onCardNext}
                 canGoPrevious={focusedMovieId ? filteredQueue.length > 0 : safeBrowseIndex > 0}
                 canGoNext={
                   focusedMovieId
