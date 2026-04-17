@@ -247,7 +247,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-visible rounded-[30px] p-4 ${
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-3 overflow-visible rounded-[24px] p-3.5 sm:p-4 ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
@@ -277,7 +277,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
+          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? undefined
@@ -401,12 +401,12 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-[5px] ${
+          className={`flex min-h-0 flex-col gap-3 ${
             isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
         >
           <div
-            className={`my-[6px] grid shrink-0 grid-cols-3 gap-1 rounded-[24px] px-2 py-2 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:px-3 sm:py-2.5 ${
+            className={`grid shrink-0 grid-cols-3 gap-1 rounded-[24px] px-2 py-2 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:px-3 sm:py-2.5 ${
               isDarkMode
                 ? "border border-white/14 bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
@@ -498,7 +498,7 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mb-8 grid shrink-0 grid-cols-2 gap-2 sm:gap-3">
+          <div className="mb-1 grid shrink-0 grid-cols-2 gap-2 sm:gap-3">
             <button
               type="button"
               onClick={onReject}

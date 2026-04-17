@@ -683,7 +683,7 @@ function DiscoverPageContent({
     onboardingFavorites.length > 0 || onboardingDisliked.length > 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-visible">
       {!isOnboardingComplete ? (
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
           <div
@@ -1493,7 +1493,7 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-visible pt-1 pb-2">
         {movie ? (
-          <div className="flex h-full min-h-[min(70dvh,32rem)] flex-col overflow-visible rounded-[30px]">
+          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(66dvh,30rem)] flex-col overflow-visible rounded-[26px]">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"

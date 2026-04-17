@@ -1,6 +1,7 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
@@ -84,19 +85,9 @@ export default function SettingsPage() {
     achievements,
     isDarkMode,
     logout,
-    updateProfile,
     updateSettings,
   } = useAppState();
   const settings = currentUserId ? data.settings[currentUserId] : null;
-  const [isEditingAccount, setIsEditingAccount] = useState(false);
-  const [accountName, setAccountName] = useState("");
-  const [accountCity, setAccountCity] = useState("");
-  const [accountBio, setAccountBio] = useState("");
-  const [accountSaveState, setAccountSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [accountSaveMessage, setAccountSaveMessage] = useState("");
-  const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [clearAvatarOnSave, setClearAvatarOnSave] = useState(false);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -110,110 +101,6 @@ export default function SettingsPage() {
     () => partitionAchievements(achievements),
     [achievements],
   );
-
-  useEffect(() => {
-    if (!currentUser) {
-      return;
-    }
-    setAccountName(currentUser.name);
-    setAccountCity(currentUser.city);
-    setAccountBio(currentUser.bio);
-  }, [currentUser]);
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(avatarPreview);
-      }
-    };
-  }, [avatarPreview]);
-
-  useEffect(() => {
-    if (accountSaveState !== "saved") {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setAccountSaveState("idle");
-      setAccountSaveMessage("");
-    }, 2400);
-    return () => window.clearTimeout(timer);
-  }, [accountSaveState]);
-
-  const resetAccountDraft = () => {
-    if (!currentUser) {
-      return;
-    }
-    if (avatarPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-    setAccountName(currentUser.name);
-    setAccountCity(currentUser.city);
-    setAccountBio(currentUser.bio);
-    setAvatarPreview(undefined);
-    setAvatarFile(null);
-    setClearAvatarOnSave(false);
-    setAccountSaveState("idle");
-    setAccountSaveMessage("");
-  };
-
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    if (avatarPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-
-    setClearAvatarOnSave(false);
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const stageAvatarRemoval = () => {
-    if (avatarPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-    setAvatarPreview(undefined);
-    setAvatarFile(null);
-    setClearAvatarOnSave(true);
-  };
-
-  const handleAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!currentUser) {
-      return;
-    }
-
-    setAccountSaveState("saving");
-    setAccountSaveMessage("");
-
-    const result = await updateProfile({
-      name: accountName.trim() || currentUser.name,
-      city: accountCity,
-      bio: accountBio,
-      avatarImageUrl: clearAvatarOnSave ? null : currentUser.avatarImageUrl ?? null,
-      avatarFile: clearAvatarOnSave ? null : avatarFile,
-      clearAvatar: clearAvatarOnSave,
-    });
-
-    if (!result.ok) {
-      setAccountSaveState("error");
-      setAccountSaveMessage(result.message ?? "Couldn’t save profile details.");
-      return;
-    }
-
-    setIsEditingAccount(false);
-    if (avatarPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-    setAvatarPreview(undefined);
-    setAvatarFile(null);
-    setClearAvatarOnSave(false);
-    setAccountSaveState("saved");
-    setAccountSaveMessage("Profile details saved.");
-  };
 
   if (!settings) {
     return null;
@@ -229,190 +116,40 @@ export default function SettingsPage() {
 
       {currentUser ? (
         <SurfaceCard className="fade-up-enter !p-0 overflow-hidden" style={{ animationDelay: "0ms" }}>
-          {(() => {
-            const activeAvatarPreview =
-              clearAvatarOnSave && !avatarPreview
-                ? undefined
-                : avatarPreview ?? currentUser.avatarImageUrl;
-            const canRemovePhoto =
-              Boolean(currentUser.avatarImageUrl || avatarPreview) && !clearAvatarOnSave;
-
-            return (
-              <form
-                onSubmit={handleAccountSubmit}
-                className={`space-y-4 px-5 py-4 sm:px-6 sm:py-5 ${
-                  isDarkMode
-                    ? "bg-gradient-to-br from-violet-950/40 to-white/[0.04]"
-                    : "bg-gradient-to-br from-violet-50/90 via-white to-sky-50/30"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0 space-y-2">
-                    <AvatarBadge
-                      initials={currentUser.avatar}
-                      imageUrl={activeAvatarPreview}
-                      sizeClassName="h-14 w-14 sm:h-16 sm:w-16"
-                      textClassName="text-lg font-bold"
-                    />
-                    {isEditingAccount ? (
-                      <div className="space-y-1.5">
-                        <label
-                          className={`inline-flex cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
-                            isDarkMode
-                              ? "bg-white/14 text-white hover:bg-white/20"
-                              : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
-                          }`}
-                        >
-                          Photo
-                          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-                        </label>
-                        {canRemovePhoto ? (
-                          <button
-                            type="button"
-                            onClick={stageAvatarRemoval}
-                            className={`block w-full rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
-                              isDarkMode
-                                ? "bg-rose-500/20 text-rose-100 hover:bg-rose-500/30"
-                                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
-                            }`}
-                          >
-                            Remove
-                          </button>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="min-w-0 flex-1 space-y-3">
-                    <p className={sectionEyebrow}>Signed in as</p>
-                    {isEditingAccount ? (
-                      <>
-                        <label className={`block space-y-1.5 text-xs font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          Name
-                          <input
-                            value={accountName}
-                            onChange={(event) => setAccountName(event.target.value)}
-                            className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none transition ${
-                              isDarkMode
-                                ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
-                                : "border-slate-200 bg-white text-slate-900 focus:border-violet-400"
-                            }`}
-                          />
-                        </label>
-                        <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-                          {currentUser.email}
-                        </p>
-                        <label className={`block space-y-1.5 text-xs font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          City
-                          <input
-                            value={accountCity}
-                            onChange={(event) => setAccountCity(event.target.value)}
-                            className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none transition ${
-                              isDarkMode
-                                ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
-                                : "border-slate-200 bg-white text-slate-900 focus:border-violet-400"
-                            }`}
-                          />
-                        </label>
-                        <label className={`block space-y-1.5 text-xs font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          Bio
-                          <textarea
-                            value={accountBio}
-                            onChange={(event) => setAccountBio(event.target.value)}
-                            rows={3}
-                            className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none transition ${
-                              isDarkMode
-                                ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
-                                : "border-slate-200 bg-white text-slate-900 focus:border-violet-400"
-                            }`}
-                          />
-                        </label>
-                      </>
-                    ) : (
-                      <>
-                        <p
-                          className={`truncate text-lg font-bold leading-tight sm:text-xl ${
-                            isDarkMode ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          {currentUser.name}
-                        </p>
-                        <p
-                          className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
-                        >
-                          {currentUser.email}
-                        </p>
-                        {currentUser.city ? (
-                          <p className={`text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                            {currentUser.city}
-                          </p>
-                        ) : null}
-                        <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          {currentUser.bio}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {accountSaveState === "saved" || accountSaveState === "error" ? (
-                  <p
-                    className={`text-xs font-semibold ${
-                      accountSaveState === "saved"
-                        ? isDarkMode
-                          ? "text-emerald-300"
-                          : "text-emerald-700"
-                        : isDarkMode
-                          ? "text-rose-300"
-                          : "text-rose-700"
-                    }`}
-                  >
-                    {accountSaveMessage}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-wrap gap-2">
-                  {isEditingAccount ? (
-                    <>
-                      <button
-                        type="submit"
-                        disabled={accountSaveState === "saving"}
-                        className="ui-btn ui-btn-primary min-w-[8.5rem]"
-                      >
-                        {accountSaveState === "saving" ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          resetAccountDraft();
-                          setIsEditingAccount(false);
-                        }}
-                        className="ui-btn ui-btn-secondary min-w-[8.5rem]"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountSaveState("idle");
-                        setAccountSaveMessage("");
-                        setIsEditingAccount(true);
-                      }}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                        isDarkMode
-                          ? "bg-white/12 text-slate-100 hover:bg-white/18"
-                          : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
-                      }`}
-                    >
-                      Edit
-                    </button>
-                  )}
-                </div>
-              </form>
-            );
-          })()}
+          <div
+            className={`flex items-start gap-4 px-5 py-4 sm:px-6 sm:py-5 ${
+              isDarkMode
+                ? "bg-gradient-to-br from-violet-950/40 to-white/[0.04]"
+                : "bg-gradient-to-br from-violet-50/90 via-white to-sky-50/30"
+            }`}
+          >
+            <AvatarBadge
+              initials={currentUser.avatar}
+              imageUrl={currentUser.avatarImageUrl}
+              sizeClassName="h-14 w-14 sm:h-16 sm:w-16"
+              textClassName="text-lg font-bold"
+            />
+            <div className="min-w-0 flex-1">
+              <p className={sectionEyebrow}>Signed in as</p>
+              <p className={`truncate text-lg font-bold leading-tight sm:text-xl ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {currentUser.name}
+              </p>
+              <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>{currentUser.email}</p>
+              {currentUser.city ? (
+                <p className={`text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  {currentUser.city}
+                </p>
+              ) : null}
+              <p className={`mt-2 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                {currentUser.bio}
+              </p>
+            </div>
+          </div>
+          <div className={`border-t px-5 py-3 sm:px-6 ${isDarkMode ? "border-white/10" : "border-slate-200/80"}`}>
+            <Link href="/profile" className="ui-btn ui-btn-secondary inline-flex">
+              Edit profile details
+            </Link>
+          </div>
         </SurfaceCard>
       ) : null}
 
