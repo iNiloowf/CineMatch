@@ -1,12 +1,39 @@
 @import "tailwindcss";
 
 /*
-  Visual system — z-index: numeric tokens only (--z-*). Full layer map: docs/visual-system.md
+  Visual system — z-index: --z-* ; motion: --motion-* (durations + easings).
+  Layer map + motion notes: docs/visual-system.md
 */
 :root {
   --background: #f6f7fb;
   --foreground: #0f172a;
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Motion — shared durations + easings (use in animation / transition) */
+  --motion-duration-instant: 100ms;
+  --motion-duration-fast: 150ms;
+  --motion-duration-ui: 180ms;
+  --motion-duration-enter: 220ms;
+  --motion-duration-reveal: 260ms;
+  --motion-duration-modal: 300ms;
+  --motion-duration-discover-out: 190ms;
+  --motion-duration-discover-in: 260ms;
+  --motion-duration-discover-swipe-accept: 360ms;
+  --motion-duration-discover-swipe-reject: 340ms;
+  --motion-duration-discover-feedback: 260ms;
+  --motion-duration-discover-undo: 320ms;
+  --motion-duration-toast-pop: 560ms;
+  --motion-duration-banner-in: 420ms;
+  --motion-duration-fade-up: 520ms;
+  --motion-duration-confetti: 2400ms;
+  --motion-duration-shimmer-loop: 7.5s;
+  --motion-duration-shimmer-skeleton: 2s;
+  --motion-duration-soft-pulse: 4.8s;
+
+  --motion-ease-standard: var(--ease-soft);
+  --motion-ease-emphasized: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --motion-ease-shimmer: ease-in-out;
+  --motion-ease-out: ease-out;
 
   /* Spacing primitives */
   --space-2: 0.5rem;
@@ -119,12 +146,12 @@ section,
 input,
 textarea {
   transition:
-    transform 220ms var(--ease-soft),
-    opacity 220ms var(--ease-soft),
-    background-color 220ms var(--ease-soft),
-    border-color 220ms var(--ease-soft),
-    box-shadow 220ms var(--ease-soft),
-    color 220ms var(--ease-soft);
+    transform var(--motion-duration-enter) var(--motion-ease-standard),
+    opacity var(--motion-duration-enter) var(--motion-ease-standard),
+    background-color var(--motion-duration-enter) var(--motion-ease-standard),
+    border-color var(--motion-duration-enter) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-enter) var(--motion-ease-standard),
+    color var(--motion-duration-enter) var(--motion-ease-standard);
 }
 
 button,
@@ -175,11 +202,11 @@ input[type="range"] {
 }
 
 .fade-up-enter {
-  animation: fadeUp 520ms var(--ease-soft) both;
+  animation: fadeUp var(--motion-duration-fade-up) var(--motion-ease-standard) both;
 }
 
 .soft-pulse {
-  animation: softPulse 4.8s ease-in-out infinite;
+  animation: softPulse var(--motion-duration-soft-pulse) var(--motion-ease-shimmer) infinite;
 }
 
 .glass-shimmer {
@@ -198,31 +225,31 @@ input[type="range"] {
     transparent 66%
   );
   transform: translateX(-120%);
-  animation: shimmerSweep 7.5s ease-in-out infinite;
+  animation: shimmerSweep var(--motion-duration-shimmer-loop) var(--motion-ease-shimmer) infinite;
   pointer-events: none;
 }
 
 .expand-soft {
-  animation: expandSoft 260ms var(--ease-soft) both;
+  animation: expandSoft var(--motion-duration-reveal) var(--motion-ease-standard) both;
   transform-origin: top center;
 }
 
 .details-modal-shell {
-  animation: detailsModalIn 300ms var(--ease-soft) both;
+  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-standard) both;
   transform-origin: top center;
 }
 
 .details-panel {
-  animation: detailsPanelIn 260ms var(--ease-soft) both;
+  animation: detailsPanelIn var(--motion-duration-reveal) var(--motion-ease-standard) both;
 }
 
 .details-soft {
   overflow: hidden;
   transition:
-    max-height 320ms var(--ease-soft),
-    opacity 240ms var(--ease-soft),
-    transform 320ms var(--ease-soft),
-    margin 320ms var(--ease-soft);
+    max-height var(--motion-duration-modal) var(--motion-ease-standard),
+    opacity var(--motion-duration-reveal) var(--motion-ease-standard),
+    transform var(--motion-duration-modal) var(--motion-ease-standard),
+    margin var(--motion-duration-modal) var(--motion-ease-standard);
 }
 
 .details-soft-open {
@@ -379,12 +406,12 @@ input[type="range"] {
   border: 1px solid transparent;
   padding: 0.5rem 1rem;
   transition:
-    transform 180ms var(--ease-soft),
-    background-color 180ms var(--ease-soft),
-    border-color 180ms var(--ease-soft),
-    color 180ms var(--ease-soft),
-    box-shadow 180ms var(--ease-soft),
-    opacity 180ms var(--ease-soft);
+    transform var(--motion-duration-ui) var(--motion-ease-standard),
+    background-color var(--motion-duration-ui) var(--motion-ease-standard),
+    border-color var(--motion-duration-ui) var(--motion-ease-standard),
+    color var(--motion-duration-ui) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-ui) var(--motion-ease-standard),
+    opacity var(--motion-duration-ui) var(--motion-ease-standard);
 }
 
 .ui-chip-btn:focus-visible {
@@ -547,12 +574,12 @@ input[type="range"] {
   font-weight: 600;
   border: 1px solid transparent;
   transition:
-    transform 180ms var(--ease-soft),
-    background-color 180ms var(--ease-soft),
-    border-color 180ms var(--ease-soft),
-    color 180ms var(--ease-soft),
-    box-shadow 180ms var(--ease-soft),
-    opacity 180ms var(--ease-soft);
+    transform var(--motion-duration-ui) var(--motion-ease-standard),
+    background-color var(--motion-duration-ui) var(--motion-ease-standard),
+    border-color var(--motion-duration-ui) var(--motion-ease-standard),
+    color var(--motion-duration-ui) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-ui) var(--motion-ease-standard),
+    opacity var(--motion-duration-ui) var(--motion-ease-standard);
 }
 
 .ui-btn:hover {
@@ -646,17 +673,20 @@ input[type="range"] {
 }
 
 .achievement-toast-pop {
-  animation: achievementPop 560ms var(--ease-soft) both;
+  animation: achievementPop var(--motion-duration-toast-pop) var(--motion-ease-standard) both;
 }
 
 .app-notify-banner {
-  animation: appNotifyIn 420ms var(--ease-soft) both;
+  animation: appNotifyIn var(--motion-duration-banner-in) var(--motion-ease-standard) both;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .app-notify-banner {
-    animation: none;
-  }
+.discover-swipe-card-motion {
+  transition: transform var(--motion-duration-reveal) var(--motion-ease-standard);
+}
+
+.discover-swipe-card-motion--snap {
+  transition-duration: var(--motion-duration-fast);
+  transition-timing-function: var(--motion-ease-out);
 }
 
 .discover-card-stage {
@@ -664,27 +694,27 @@ input[type="range"] {
 }
 
 .discover-card-out-left {
-  animation: discoverCardOutLeft 190ms var(--ease-soft) both;
+  animation: discoverCardOutLeft var(--motion-duration-discover-out) var(--motion-ease-standard) both;
 }
 
 .discover-card-out-right {
-  animation: discoverCardOutRight 190ms var(--ease-soft) both;
+  animation: discoverCardOutRight var(--motion-duration-discover-out) var(--motion-ease-standard) both;
 }
 
 .discover-card-in-left {
-  animation: discoverCardInLeft 260ms var(--ease-soft) both;
+  animation: discoverCardInLeft var(--motion-duration-discover-in) var(--motion-ease-standard) both;
 }
 
 .discover-card-in-right {
-  animation: discoverCardInRight 260ms var(--ease-soft) both;
+  animation: discoverCardInRight var(--motion-duration-discover-in) var(--motion-ease-standard) both;
 }
 
 .discover-card-swipe-accepted {
-  animation: discoverCardSwipeAccept 360ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation: discoverCardSwipeAccept var(--motion-duration-discover-swipe-accept) var(--motion-ease-emphasized) both;
 }
 
 .discover-card-swipe-rejected {
-  animation: discoverCardSwipeReject 340ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation: discoverCardSwipeReject var(--motion-duration-discover-swipe-reject) var(--motion-ease-emphasized) both;
 }
 
 .discover-feedback-chip {
@@ -696,7 +726,7 @@ input[type="range"] {
   text-transform: uppercase;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-  animation: discoverFeedbackChip 260ms var(--ease-soft) both;
+  animation: discoverFeedbackChip var(--motion-duration-discover-feedback) var(--motion-ease-standard) both;
 }
 
 .discover-feedback-accept {
@@ -743,7 +773,7 @@ input[type="range"] {
 }
 
 .discover-undo-toast {
-  animation: discoverUndoToastIn 320ms var(--ease-soft) both;
+  animation: discoverUndoToastIn var(--motion-duration-discover-undo) var(--motion-ease-standard) both;
 }
 
 .achievement-burst {
@@ -759,7 +789,7 @@ input[type="range"] {
   background: linear-gradient(180deg, #f5d0fe 0%, #8b5cf6 100%);
   opacity: 0;
   transform: translateY(-14px) rotate(0deg);
-  animation: confettiDrop 2400ms ease-out forwards;
+  animation: confettiDrop var(--motion-duration-confetti) ease-out forwards;
 }
 
 .achievement-confetti:nth-child(3n) {
@@ -1020,7 +1050,7 @@ input[type="range"] {
     rgba(255, 255, 255, 0.55) 42%,
     transparent 85%
   );
-  animation: shimmerSweep 2s ease-in-out infinite;
+  animation: shimmerSweep var(--motion-duration-shimmer-skeleton) var(--motion-ease-shimmer) infinite;
 }
 
 .theme-dark .ui-skeleton-shimmer::after {
@@ -1043,19 +1073,136 @@ input[type="range"] {
   }
 }
 
+/* Reduced motion: short opacity fades instead of global duration clamp */
+@keyframes motionOpacityIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motionOpacityOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
+  }
+
+  a,
+  button,
+  section,
+  input,
+  textarea {
+    transition-duration: 80ms !important;
+    transition-property: background-color, border-color, color, opacity, box-shadow !important;
+  }
+
+  button:active,
+  .ui-btn:active {
+    transform: none !important;
+  }
+
+  .ui-btn:hover {
+    transform: none !important;
+  }
+
+  .ui-motion-surface:hover {
+    transform: none !important;
+  }
+
+  .fade-up-enter {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .expand-soft {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .details-modal-shell {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .details-panel {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .details-soft {
+    transition:
+      max-height var(--motion-duration-instant) var(--motion-ease-standard),
+      opacity var(--motion-duration-instant) var(--motion-ease-standard),
+      margin var(--motion-duration-instant) var(--motion-ease-standard) !important;
+  }
+
+  .discover-card-out-left,
+  .discover-card-out-right {
+    animation: motionOpacityOut var(--motion-duration-instant) var(--motion-ease-standard) both;
+    filter: none !important;
+  }
+
+  .discover-card-in-left,
+  .discover-card-in-right {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+    filter: none !important;
+  }
+
+  .discover-card-swipe-accepted,
+  .discover-card-swipe-rejected {
+    animation: motionOpacityOut var(--motion-duration-reveal) var(--motion-ease-standard) both;
+    filter: none !important;
+  }
+
+  .discover-feedback-chip {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .discover-undo-toast {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .achievement-toast-pop {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .app-notify-banner {
+    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  }
+
+  .soft-pulse {
+    animation: none !important;
+  }
+
+  .glass-shimmer::after {
+    animation: none !important;
+    opacity: 0 !important;
   }
 
   .ui-skeleton-shimmer::after {
     animation: none !important;
     opacity: 0 !important;
+  }
+
+  .achievement-confetti {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .discover-card-stage {
+    will-change: opacity;
+  }
+
+  .discover-swipe-card-motion {
+    transition-duration: var(--motion-duration-instant) !important;
   }
 }
 

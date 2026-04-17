@@ -234,10 +234,8 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-visible rounded-[30px] p-4 ${
-          isSnapAnimating
-            ? "duration-260 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            : "duration-150 ease-out"
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-visible rounded-[30px] p-4 ${
+          isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
