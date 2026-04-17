@@ -1,3 +1,7 @@
+/**
+ * Bearer JWT decode + expiry check only (no signature verification).
+ * Prefer {@link verifyBearerFromRequest} in API routes when `SUPABASE_SERVICE_ROLE_KEY` is set.
+ */
 function decodeBase64Url(value: string) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
   const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));

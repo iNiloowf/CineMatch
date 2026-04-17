@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { getUserIdFromBearerToken } from "@/server/auth-token";
+import { clientIp, checkRateLimit } from "@/server/rate-limit";
+import { logSecurityAudit } from "@/server/security-audit";
+import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 type InviteRow = {
   id: string;
@@ -18,14 +20,33 @@ type LinkRow = {
   created_at: string;
 };
 
+const ACCEPT_WINDOW_MS = 60 * 60 * 1000;
+const ACCEPT_MAX_PER_USER = 60;
+
 export async function POST(request: NextRequest) {
-  const authorizationHeader = request.headers.get("authorization") ?? "";
-  const authToken = getUserIdFromBearerToken(authorizationHeader);
+  const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
     return NextResponse.json(
       { error: "You need to be logged in first." },
       { status: 401 },
+    );
+  }
+
+  const ip = clientIp(request);
+  const rate = checkRateLimit({
+    key: `invite:accept:${authToken.userId}:${ip}`,
+    max: ACCEPT_MAX_PER_USER,
+    windowMs: ACCEPT_WINDOW_MS,
+  });
+
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: "Too many invite accept attempts. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec) },
+      },
     );
   }
 
@@ -126,6 +147,17 @@ export async function POST(request: NextRequest) {
     .from("invite_links")
     .update({ used_at: new Date().toISOString() } as never)
     .eq("id", invite.id);
+
+  void logSecurityAudit({
+    action: "invite_link_accept",
+    actorUserId: currentUserId,
+    ip,
+    metadata: {
+      inviteId: invite.id,
+      inviterId: invite.inviter_id,
+      linkId: linkResult.data.id,
+    },
+  });
 
   const inviterProfileResult = await supabaseAdmin
     .from("profiles")

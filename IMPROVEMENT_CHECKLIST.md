@@ -59,7 +59,7 @@ _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com
 
 - [x] Perf: memoized list rows, lazy trailer modals, TMDB poster sizing helpers, stabler callbacks on Discover/Picks; **`npm run analyze`** (bundle analyzer) for large changes.
 - [ ] API: Zod on `src/app/api/*`, dedupe/cache search + trailer, shared filter utils client+server, centralized errors/logging. _(No Zod in repo yet.)_
-- [ ] Security: Supabase session storage review, auth+ownership on mutating routes, rate limits (invites/accept/swipe), audit logs for sensitive actions, RLS/storage for avatars.
+- [x] Security: Supabase session storage + server JWT verification (`docs/security-supabase-session.md`), bearer + ownership on mock mutating routes + Supabase-backed APIs, rate limits (invite create/accept, swipe POST/DELETE, account-sync GET), `security_audit_log` for invite/swipe actions, schema RLS + `profile-photos` storage (see schema / same doc).
 - [ ] Tests & CI: unit (discover utils), integration (auth/sync), e2e (login, swipe/undo, invite, shared toggles), visual smoke dark/light, CI gates (typecheck, lint, test). _(Scripts today: `npm run build`, `npm run lint` — no `test` script / CI workflow in tree.)_
 
 ## Native / distribution

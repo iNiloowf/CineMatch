@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { getUserIdFromBearerToken } from "@/server/auth-token";
+import { clientIp, checkRateLimit } from "@/server/rate-limit";
+import { logSecurityAudit } from "@/server/security-audit";
+import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 type SwipeDecision = "accepted" | "rejected";
 
@@ -29,9 +31,11 @@ type SwipeMoviePayload = {
   };
 };
 
+const SWIPE_WINDOW_MS = 10 * 60 * 1000;
+const SWIPE_MAX = 400;
+
 async function getAuthorizedUserId(request: NextRequest) {
-  const authorizationHeader = request.headers.get("authorization") ?? "";
-  const authToken = getUserIdFromBearerToken(authorizationHeader);
+  const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
     return { error: "You need to be logged in first.", status: 401 as const };
@@ -130,6 +134,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  void logSecurityAudit({
+    action: "swipe_upsert",
+    actorUserId: currentUserId,
+    ip: clientIp(request),
+    metadata: {
+      movieId: body.movie.id,
+      decision: body.decision,
+    },
+  });
+
   return NextResponse.json({
     swipe: swipeResult.data,
   });
@@ -146,6 +160,23 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { supabaseAdmin, currentUserId } = authResult;
+
+  const undoRate = checkRateLimit({
+    key: `swipe:delete:${currentUserId}`,
+    max: 120,
+    windowMs: SWIPE_WINDOW_MS,
+  });
+
+  if (!undoRate.ok) {
+    return NextResponse.json(
+      { error: "Too many undo requests. Try again shortly." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(undoRate.retryAfterSec) },
+      },
+    );
+  }
+
   const body = (await request.json()) as { movieId?: string };
 
   if (!body.movieId) {
@@ -167,6 +198,13 @@ export async function DELETE(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  void logSecurityAudit({
+    action: "swipe_delete",
+    actorUserId: currentUserId,
+    ip: clientIp(request),
+    metadata: { movieId: body.movieId },
+  });
 
   return NextResponse.json({ ok: true });
 }

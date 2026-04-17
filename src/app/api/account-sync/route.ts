@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { getUserIdFromBearerToken } from "@/server/auth-token";
+import { checkRateLimit } from "@/server/rate-limit";
+import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 type ProfileRow = {
   id: string;
@@ -78,14 +79,32 @@ function chunk<T>(items: T[], size: number) {
   return output;
 }
 
+const SYNC_WINDOW_MS = 60 * 1000;
+const SYNC_MAX = 45;
+
 export async function GET(request: NextRequest) {
-  const authorizationHeader = request.headers.get("authorization") ?? "";
-  const authToken = getUserIdFromBearerToken(authorizationHeader);
+  const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
     return NextResponse.json(
       { error: "You need to be logged in to sync account data." },
       { status: 401 },
+    );
+  }
+
+  const syncRate = checkRateLimit({
+    key: `account-sync:get:${authToken.userId}`,
+    max: SYNC_MAX,
+    windowMs: SYNC_WINDOW_MS,
+  });
+
+  if (!syncRate.ok) {
+    return NextResponse.json(
+      { error: "Too many sync requests. Wait a moment and try again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(syncRate.retryAfterSec) },
+      },
     );
   }
 

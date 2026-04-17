@@ -1,19 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { getUserIdFromBearerToken } from "@/server/auth-token";
+import { clientIp, checkRateLimit } from "@/server/rate-limit";
+import { logSecurityAudit } from "@/server/security-audit";
+import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 function getAppUrl(request: NextRequest) {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
 }
 
+const INVITE_CREATE_WINDOW_MS = 60 * 60 * 1000;
+const INVITE_CREATE_MAX = 40;
+
 export async function POST(request: NextRequest) {
-  const authorizationHeader = request.headers.get("authorization") ?? "";
-  const authToken = getUserIdFromBearerToken(authorizationHeader);
+  const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
     return NextResponse.json(
       { error: "You need to be logged in to create an invite link." },
       { status: 401 },
+    );
+  }
+
+  const rate = checkRateLimit({
+    key: `invite:create:${authToken.userId}`,
+    max: INVITE_CREATE_MAX,
+    windowMs: INVITE_CREATE_WINDOW_MS,
+  });
+
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: "Too many invite links created. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec) },
+      },
     );
   }
 
@@ -62,6 +82,13 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  void logSecurityAudit({
+    action: "invite_link_create",
+    actorUserId: currentUserId,
+    ip: clientIp(request),
+    metadata: { inviteId: insertResult.data.id },
+  });
 
   return NextResponse.json({
     invite: insertResult.data,

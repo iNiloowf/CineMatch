@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase, updateProfile } from "@/server/mock-db";
+import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 export async function GET(request: NextRequest) {
+  const auth = await verifyBearerFromRequest(request);
+
+  if (!auth) {
+    return NextResponse.json({ error: "You need to be logged in." }, { status: 401 });
+  }
+
   const userId = request.nextUrl.searchParams.get("userId");
+
+  if (!userId || userId !== auth.userId) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const database = getDatabase();
   const user = database.users.find((entry) => entry.id === userId);
 
@@ -16,8 +28,23 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const body = await request.json();
-  const user = updateProfile(body.userId, body);
+  const auth = await verifyBearerFromRequest(request);
+
+  if (!auth) {
+    return NextResponse.json({ error: "You need to be logged in." }, { status: 401 });
+  }
+
+  const body = (await request.json()) as {
+    userId?: string;
+    bio?: string;
+    city?: string;
+  };
+
+  if (!body.userId || body.userId !== auth.userId) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const user = updateProfile(body.userId, { bio: body.bio, city: body.city });
 
   if (!user) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });

@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+/** Isolated localStorage key for auth session (avoids clashing with default `sb-*` cookies). */
 const AUTH_STORAGE_KEY = "cinematch-supabase-auth";
 
 type SupabaseDatabase = {
@@ -75,6 +76,7 @@ export function getSupabaseBrowserClient() {
       supabasePublishableKey,
       {
       auth: {
+        /** Session persisted in `localStorage` under `cinematch-supabase-auth`. */
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
