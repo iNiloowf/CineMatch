@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "@/lib/app-state";
 
 const ADMIN_EMAIL = "iniloowf@gmail.com";
@@ -56,6 +56,8 @@ type DashboardPayload = {
   tickets: DashboardTicketRow[];
 };
 
+type AdminTab = "overview" | "tickets" | "users" | "swipes";
+
 export default function AdminDesktopPage() {
   const { isDarkMode } = useAppState();
   const [email, setEmail] = useState("");
@@ -65,6 +67,8 @@ export default function AdminDesktopPage() {
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const attemptedSessionLoadRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -119,9 +123,15 @@ export default function AdminDesktopPage() {
   );
 
   useEffect(() => {
-    if (!isAuthenticated || dashboard || isLoadingDashboard) {
+    if (
+      !isAuthenticated ||
+      dashboard ||
+      isLoadingDashboard ||
+      attemptedSessionLoadRef.current
+    ) {
       return;
     }
+    attemptedSessionLoadRef.current = true;
     void loadDashboard(
       { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
       { keepOldData: true },
@@ -146,14 +156,17 @@ export default function AdminDesktopPage() {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
     }
+    attemptedSessionLoadRef.current = true;
     setErrorMessage("");
     setIsAuthenticated(true);
+    setActiveTab("overview");
   };
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
     }
+    attemptedSessionLoadRef.current = false;
     setIsAuthenticated(false);
     setDashboard(null);
     setDashboardError("");
@@ -166,6 +179,8 @@ export default function AdminDesktopPage() {
   const userRows = dashboard?.userRows ?? [];
   const recentSwipes = dashboard?.recentSwipes ?? [];
   const recentTickets = dashboard?.tickets ?? [];
+  const previewTickets = recentTickets.slice(0, 6);
+  const previewSwipes = recentSwipes.slice(0, 6);
 
   const ticketPriorityLabel = useMemo(
     () =>
@@ -178,22 +193,20 @@ export default function AdminDesktopPage() {
   );
 
   const shell = isDarkMode
-    ? "min-h-screen bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
-    : "min-h-screen bg-[linear-gradient(180deg,#f8f7ff_0%,#eff3ff_100%)] text-slate-900";
+    ? "min-h-screen bg-[radial-gradient(circle_at_10%_15%,rgba(129,140,248,0.2),transparent_35%),radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.18),transparent_30%),linear-gradient(180deg,#080916_0%,#0b1020_42%,#05060f_100%)] text-slate-100"
+    : "min-h-screen bg-[radial-gradient(circle_at_8%_12%,rgba(99,102,241,0.2),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.15),transparent_28%),linear-gradient(180deg,#f9fbff_0%,#eef4ff_42%,#e9ecff_100%)] text-slate-900";
+  const glassPanel = isDarkMode
+    ? "border-white/15 bg-white/[0.06] backdrop-blur-xl shadow-[0_24px_60px_rgba(2,8,24,0.45)]"
+    : "border-white/70 bg-white/75 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,23,42,0.14)]";
+  const softText = isDarkMode ? "text-slate-300" : "text-slate-600";
 
   if (!isAuthenticated) {
     return (
       <main className={shell}>
         <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-10">
-          <section
-            className={`w-full rounded-[26px] border p-6 shadow-[0_20px_60px_rgba(15,23,42,0.15)] ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950/80"
-                : "border-slate-200 bg-white"
-            }`}
-          >
+          <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
             <h1 className="text-2xl font-bold">Admin Desktop</h1>
-            <p className={`mt-2 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            <p className={`mt-2 text-sm ${softText}`}>
               Sign in to view only real Supabase operational data and user support tickets.
             </p>
             <form className="mt-6 space-y-4" onSubmit={handleLogin}>
@@ -205,8 +218,8 @@ export default function AdminDesktopPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
                     isDarkMode
-                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
-                      : "border-slate-200 bg-slate-50 text-slate-900"
+                      ? "border-white/15 bg-white/[0.06] text-white placeholder:text-slate-400"
+                      : "border-white/60 bg-white/80 text-slate-900"
                   }`}
                   placeholder="admin email"
                 />
@@ -219,8 +232,8 @@ export default function AdminDesktopPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
                     isDarkMode
-                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
-                      : "border-slate-200 bg-slate-50 text-slate-900"
+                      ? "border-white/15 bg-white/[0.06] text-white placeholder:text-slate-400"
+                      : "border-white/60 bg-white/80 text-slate-900"
                   }`}
                   placeholder="admin password"
                 />
@@ -248,30 +261,63 @@ export default function AdminDesktopPage() {
   return (
     <main className={shell}>
       <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">CineMatch Admin Desktop</h1>
-            <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-              Live users, engagement, support tickets, and recent swipe activity.
-            </p>
+        <div className={`mb-6 rounded-[30px] border p-5 sm:p-6 ${glassPanel}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">CineMatch Admin Desktop</h1>
+              <p className={`mt-1 text-sm ${softText}`}>
+                Fixed loading loop and redesigned with cleaner iOS-style sections.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  void loadDashboard(
+                    { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+                    { keepOldData: true },
+                  )
+                }
+                className="ui-btn ui-btn-secondary"
+                disabled={isLoadingDashboard}
+              >
+                {isLoadingDashboard ? "Refreshing..." : "Refresh"}
+              </button>
+              <button type="button" onClick={handleLogout} className="ui-btn ui-btn-secondary">
+                Log out
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                void loadDashboard(
-                  { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-                  { keepOldData: true },
-                )
-              }
-              className="ui-btn ui-btn-secondary"
-              disabled={isLoadingDashboard}
-            >
-              {isLoadingDashboard ? "Refreshing..." : "Refresh"}
-            </button>
-            <button type="button" onClick={handleLogout} className="ui-btn ui-btn-secondary">
-              Log out
-            </button>
+
+          <div
+            className={`mt-4 inline-flex flex-wrap gap-2 rounded-full border p-1 ${
+              isDarkMode ? "border-white/15 bg-white/[0.04]" : "border-white/80 bg-white/70"
+            }`}
+          >
+            <AdminTabButton
+              label="Overview"
+              isActive={activeTab === "overview"}
+              isDarkMode={isDarkMode}
+              onClick={() => setActiveTab("overview")}
+            />
+            <AdminTabButton
+              label="Tickets"
+              isActive={activeTab === "tickets"}
+              isDarkMode={isDarkMode}
+              onClick={() => setActiveTab("tickets")}
+            />
+            <AdminTabButton
+              label="Users"
+              isActive={activeTab === "users"}
+              isDarkMode={isDarkMode}
+              onClick={() => setActiveTab("users")}
+            />
+            <AdminTabButton
+              label="Swipes"
+              isActive={activeTab === "swipes"}
+              isDarkMode={isDarkMode}
+              onClick={() => setActiveTab("swipes")}
+            />
           </div>
         </div>
 
@@ -279,7 +325,7 @@ export default function AdminDesktopPage() {
           <p
             className={`mb-4 rounded-[14px] border px-4 py-3 text-sm ${
               isDarkMode
-                ? "border-rose-500/30 bg-rose-500/15 text-rose-200"
+                ? "border-rose-500/35 bg-rose-500/15 text-rose-200"
                 : "border-rose-200 bg-rose-50 text-rose-700"
             }`}
           >
@@ -288,188 +334,250 @@ export default function AdminDesktopPage() {
         ) : null}
 
         {!dashboardStats ? (
-          <section
-            className={`mb-6 rounded-[22px] border px-4 py-6 text-center text-sm ${
-              isDarkMode ? "border-white/10 bg-slate-950/75 text-slate-300" : "border-slate-200 bg-white text-slate-600"
-            }`}
-          >
+          <section className={`mb-6 rounded-[24px] border px-4 py-6 text-center text-sm ${glassPanel}`}>
             Loading dashboard data...
           </section>
         ) : null}
 
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard label="Users" value={dashboardStats?.users ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Movies" value={dashboardStats?.movies ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Swipes" value={dashboardStats?.swipes ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Watched" value={dashboardStats?.watchedEntries ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Accepted swipes" value={dashboardStats?.acceptedSwipes ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Rejected swipes" value={dashboardStats?.rejectedSwipes ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Accepted links" value={dashboardStats?.acceptedLinks ?? 0} isDarkMode={isDarkMode} />
-          <StatCard label="Open tickets" value={dashboardStats?.openTickets ?? 0} isDarkMode={isDarkMode} />
-        </div>
+        {activeTab === "overview" ? (
+          <>
+            <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard label="Users" value={dashboardStats?.users ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Movies" value={dashboardStats?.movies ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Swipes" value={dashboardStats?.swipes ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Watched" value={dashboardStats?.watchedEntries ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Accepted swipes" value={dashboardStats?.acceptedSwipes ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Rejected swipes" value={dashboardStats?.rejectedSwipes ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Accepted links" value={dashboardStats?.acceptedLinks ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Open tickets" value={dashboardStats?.openTickets ?? 0} isDarkMode={isDarkMode} />
+            </div>
 
-        <section
-          className={`mb-6 overflow-hidden rounded-[22px] border ${
-            isDarkMode ? "border-white/10 bg-slate-950/75" : "border-slate-200 bg-white"
-          }`}
-        >
-          <div className={`border-b px-4 py-3 ${isDarkMode ? "border-white/10" : "border-slate-200"}`}>
-            <h2 className="text-lg font-semibold">Users</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50 text-slate-600"}>
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Name</th>
-                  <th className="px-4 py-2 text-left font-semibold">Email</th>
-                  <th className="px-4 py-2 text-left font-semibold">City</th>
-                  <th className="px-4 py-2 text-right font-semibold">Accepted</th>
-                  <th className="px-4 py-2 text-right font-semibold">Rejected</th>
-                  <th className="px-4 py-2 text-right font-semibold">Links</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userRows.map((row) => (
-                  <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                    <td className="px-4 py-2 font-medium">{row.name}</td>
-                    <td className="px-4 py-2">{row.email}</td>
-                    <td className="px-4 py-2">{row.city}</td>
-                    <td className="px-4 py-2 text-right">{row.accepted}</td>
-                    <td className="px-4 py-2 text-right">{row.rejected}</td>
-                    <td className="px-4 py-2 text-right">{row.links}</td>
-                  </tr>
-                ))}
-                {userRows.length === 0 ? (
-                  <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                    <td colSpan={6} className="px-4 py-4 text-center">
-                      No users found in database.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <section className={`mb-6 overflow-hidden rounded-[24px] border ${glassPanel}`}>
+              <div
+                className={`flex items-center justify-between border-b px-4 py-3 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200/60"
+                }`}
+              >
+                <h2 className="text-lg font-semibold">Recent Tickets</h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("tickets")}
+                  className="text-sm font-semibold text-violet-500 hover:opacity-80"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold">User</th>
+                      <th className="px-4 py-2 text-left font-semibold">Subject</th>
+                      <th className="px-4 py-2 text-left font-semibold">Priority</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewTickets.length === 0 ? (
+                      <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                        <td colSpan={3} className="px-4 py-4 text-center">
+                          No support tickets yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      previewTickets.map((ticket) => (
+                        <tr key={ticket.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                          <td className="px-4 py-2">{ticket.userName}</td>
+                          <td className="px-4 py-2 font-medium">{ticket.subject}</td>
+                          <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-        <section
-          className={`mb-6 overflow-hidden rounded-[22px] border ${
-            isDarkMode ? "border-white/10 bg-slate-950/75" : "border-slate-200 bg-white"
-          }`}
-        >
-          <div className={`border-b px-4 py-3 ${isDarkMode ? "border-white/10" : "border-slate-200"}`}>
-            <h2 className="text-lg font-semibold">Support Tickets</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50 text-slate-600"}>
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Time</th>
-                  <th className="px-4 py-2 text-left font-semibold">User</th>
-                  <th className="px-4 py-2 text-left font-semibold">Subject</th>
-                  <th className="px-4 py-2 text-left font-semibold">Message</th>
-                  <th className="px-4 py-2 text-left font-semibold">Priority</th>
-                  <th className="px-4 py-2 text-left font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTickets.length === 0 ? (
-                  <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                    <td colSpan={6} className="px-4 py-4 text-center">
-                      No support tickets yet.
-                    </td>
+            <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+              <div
+                className={`flex items-center justify-between border-b px-4 py-3 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200/60"
+                }`}
+              >
+                <h2 className="text-lg font-semibold">Recent Swipes</h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("swipes")}
+                  className="text-sm font-semibold text-violet-500 hover:opacity-80"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold">User</th>
+                      <th className="px-4 py-2 text-left font-semibold">Movie</th>
+                      <th className="px-4 py-2 text-left font-semibold">Decision</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewSwipes.length === 0 ? (
+                      <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                        <td colSpan={3} className="px-4 py-4 text-center">
+                          No swipe activity yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      previewSwipes.map((swipe, index) => (
+                        <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                          <td className="px-4 py-2">{swipe.userName}</td>
+                          <td className="px-4 py-2">{swipe.movieTitle}</td>
+                          <td className="px-4 py-2">{swipe.decision}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        ) : null}
+
+        {activeTab === "users" ? (
+          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+            <div
+              className={`border-b px-4 py-3 ${
+                isDarkMode ? "border-white/10" : "border-slate-200/60"
+              }`}
+            >
+              <h2 className="text-lg font-semibold">Users</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Name</th>
+                    <th className="px-4 py-2 text-left font-semibold">Email</th>
+                    <th className="px-4 py-2 text-left font-semibold">City</th>
+                    <th className="px-4 py-2 text-right font-semibold">Accepted</th>
+                    <th className="px-4 py-2 text-right font-semibold">Rejected</th>
+                    <th className="px-4 py-2 text-right font-semibold">Links</th>
                   </tr>
-                ) : (
-                  recentTickets.map((ticket) => (
-                    <tr key={ticket.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                      <td className="px-4 py-2">{new Date(ticket.createdAt).toLocaleString()}</td>
-                      <td className="px-4 py-2">{ticket.userName}</td>
-                      <td className="px-4 py-2 font-medium">{ticket.subject}</td>
-                      <td className="px-4 py-2">
-                        <span className="line-clamp-2">{ticket.message}</span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            ticket.priority === "high"
-                              ? "bg-rose-500/20 text-rose-400"
-                              : ticket.priority === "low"
-                                ? "bg-sky-500/20 text-sky-400"
-                                : "bg-amber-500/20 text-amber-400"
-                          }`}
-                        >
-                          {ticketPriorityLabel[ticket.priority]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            ticket.status === "closed"
-                              ? "bg-slate-500/25 text-slate-300"
-                              : ticket.status === "in_progress"
-                                ? "bg-violet-500/20 text-violet-300"
-                                : "bg-emerald-500/20 text-emerald-400"
-                          }`}
-                        >
-                          {ticket.status.replace("_", " ")}
-                        </span>
+                </thead>
+                <tbody>
+                  {userRows.map((row) => (
+                    <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                      <td className="px-4 py-2 font-medium">{row.name}</td>
+                      <td className="px-4 py-2">{row.email}</td>
+                      <td className="px-4 py-2">{row.city}</td>
+                      <td className="px-4 py-2 text-right">{row.accepted}</td>
+                      <td className="px-4 py-2 text-right">{row.rejected}</td>
+                      <td className="px-4 py-2 text-right">{row.links}</td>
+                    </tr>
+                  ))}
+                  {userRows.length === 0 ? (
+                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                      <td colSpan={6} className="px-4 py-4 text-center">
+                        No users found in database.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
-        <section
-          className={`overflow-hidden rounded-[22px] border ${
-            isDarkMode ? "border-white/10 bg-slate-950/75" : "border-slate-200 bg-white"
-          }`}
-        >
-          <div className={`border-b px-4 py-3 ${isDarkMode ? "border-white/10" : "border-slate-200"}`}>
-            <h2 className="text-lg font-semibold">Recent Swipes</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50 text-slate-600"}>
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Time</th>
-                  <th className="px-4 py-2 text-left font-semibold">User</th>
-                  <th className="px-4 py-2 text-left font-semibold">Movie</th>
-                  <th className="px-4 py-2 text-left font-semibold">Decision</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSwipes.length === 0 ? (
-                  <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                    <td colSpan={4} className="px-4 py-4 text-center">
-                      No swipe activity yet.
-                    </td>
+        {activeTab === "tickets" ? (
+          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+            <div
+              className={`border-b px-4 py-3 ${
+                isDarkMode ? "border-white/10" : "border-slate-200/60"
+              }`}
+            >
+              <h2 className="text-lg font-semibold">Support Tickets</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Time</th>
+                    <th className="px-4 py-2 text-left font-semibold">User</th>
+                    <th className="px-4 py-2 text-left font-semibold">Subject</th>
+                    <th className="px-4 py-2 text-left font-semibold">Message</th>
+                    <th className="px-4 py-2 text-left font-semibold">Priority</th>
+                    <th className="px-4 py-2 text-left font-semibold">Status</th>
                   </tr>
-                ) : (
-                  recentSwipes.map((swipe, index) => (
-                    <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200"}>
-                      <td className="px-4 py-2">{new Date(swipe.createdAt).toLocaleString()}</td>
-                      <td className="px-4 py-2">{swipe.userName}</td>
-                      <td className="px-4 py-2">{swipe.movieTitle}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            swipe.decision === "accepted"
-                              ? "bg-emerald-500/20 text-emerald-500"
-                              : "bg-rose-500/20 text-rose-500"
-                          }`}
-                        >
-                          {swipe.decision}
-                        </span>
+                </thead>
+                <tbody>
+                  {recentTickets.length === 0 ? (
+                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                      <td colSpan={6} className="px-4 py-4 text-center">
+                        No support tickets yet.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                  ) : (
+                    recentTickets.map((ticket) => (
+                      <tr key={ticket.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                        <td className="px-4 py-2">{new Date(ticket.createdAt).toLocaleString()}</td>
+                        <td className="px-4 py-2">{ticket.userName}</td>
+                        <td className="px-4 py-2 font-medium">{ticket.subject}</td>
+                        <td className="px-4 py-2">
+                          <span className="line-clamp-2">{ticket.message}</span>
+                        </td>
+                        <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
+                        <td className="px-4 py-2">{ticket.status.replace("_", " ")}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {activeTab === "swipes" ? (
+          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+            <div
+              className={`border-b px-4 py-3 ${
+                isDarkMode ? "border-white/10" : "border-slate-200/60"
+              }`}
+            >
+              <h2 className="text-lg font-semibold">Recent Swipes</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">Time</th>
+                    <th className="px-4 py-2 text-left font-semibold">User</th>
+                    <th className="px-4 py-2 text-left font-semibold">Movie</th>
+                    <th className="px-4 py-2 text-left font-semibold">Decision</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSwipes.length === 0 ? (
+                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                      <td colSpan={4} className="px-4 py-4 text-center">
+                        No swipe activity yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    recentSwipes.map((swipe, index) => (
+                      <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                        <td className="px-4 py-2">{new Date(swipe.createdAt).toLocaleString()}</td>
+                        <td className="px-4 py-2">{swipe.userName}</td>
+                        <td className="px-4 py-2">{swipe.movieTitle}</td>
+                        <td className="px-4 py-2">{swipe.decision}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );
@@ -486,11 +594,17 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-[18px] border px-4 py-3 ${
-        isDarkMode ? "border-white/10 bg-slate-950/75" : "border-slate-200 bg-white"
+      className={`rounded-[20px] border px-4 py-3 backdrop-blur-xl ${
+        isDarkMode
+          ? "border-white/15 bg-white/[0.06] shadow-[0_18px_40px_rgba(2,8,24,0.35)]"
+          : "border-white/80 bg-white/75 shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
       }`}
     >
-      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+      <p
+        className={`text-xs font-semibold uppercase tracking-[0.14em] ${
+          isDarkMode ? "text-slate-400" : "text-slate-500"
+        }`}
+      >
         {label}
       </p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
@@ -498,3 +612,32 @@ function StatCard({
   );
 }
 
+function AdminTabButton({
+  label,
+  isActive,
+  isDarkMode,
+  onClick,
+}: {
+  label: string;
+  isActive: boolean;
+  isDarkMode: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+        isActive
+          ? isDarkMode
+            ? "bg-violet-500/25 text-violet-100 ring-1 ring-violet-300/40"
+            : "bg-violet-500/14 text-violet-700 ring-1 ring-violet-300/55"
+          : isDarkMode
+            ? "text-slate-300 hover:bg-white/10"
+            : "text-slate-600 hover:bg-slate-200/60"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
