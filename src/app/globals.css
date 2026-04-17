@@ -239,6 +239,23 @@ input[type="range"] {
   transform-origin: top center;
 }
 
+/** Profile / friend header avatar ring — soft pop-in */
+.profile-avatar-pop {
+  animation: profileAvatarPop 0.55s var(--motion-ease-standard) both;
+}
+
+@keyframes profileAvatarPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Picks / modals: subtle staggered list entrance (reduce-motion handled globally for fade-up family) */
 .picks-row-enter {
   animation: fadeUp var(--motion-duration-fade-up) var(--motion-ease-standard) both;
@@ -1338,6 +1355,10 @@ html[data-reduce-motion="true"] .discover-undo-toast {
 html[data-reduce-motion="true"] .discover-toolbar-enter,
 html[data-reduce-motion="true"] .discover-hero-reveal,
 html[data-reduce-motion="true"] .discover-skeleton-dissolve {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
+
+html[data-reduce-motion="true"] .profile-avatar-pop {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 

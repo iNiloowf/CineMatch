@@ -4,11 +4,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { matchPercentForMovie } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
 import { PicksMovieRow } from "@/components/picks-movie-row";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
-import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
 const PicksTrailerModalLazy = dynamic(
@@ -367,7 +367,7 @@ export default function PicksPage() {
                       <span className="text-base leading-none text-emerald-500">☺</span>
                       <div className="min-w-0">
                         <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {matchingScore(selectedMovie)}%
+                          {matchPercentForMovie(selectedMovie)}%
                         </p>
                         <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                           Match
@@ -650,9 +650,3 @@ export default function PicksPage() {
   );
 }
 
-function matchingScore(movie: Movie) {
-  return Math.max(
-    62,
-    Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
-  );
-}
