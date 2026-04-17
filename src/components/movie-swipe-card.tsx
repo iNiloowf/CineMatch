@@ -53,14 +53,15 @@ export function MovieSwipeCard({
   const previewText = shouldClamp
     ? `${movie.description.slice(0, 92).trimEnd()}...`
     : movie.description;
+  /* ~½ previous display sizes; floor longest titles so they stay legible */
   const titleSizeClass =
     movie.title.length > 34
-      ? "text-[1.2rem]"
+      ? "text-[0.7rem] sm:text-[0.75rem]"
       : movie.title.length > 28
-        ? "text-[1.35rem]"
+        ? "text-[0.7rem] sm:text-[0.8rem]"
         : movie.title.length > 22
-          ? "text-[1.6rem]"
-          : "text-[2.15rem]";
+          ? "text-[0.8rem] sm:text-[0.9rem]"
+          : "text-[1.075rem] sm:text-[1.15rem]";
   const hasTrailer = Boolean(trailerUrl) || movie.id.startsWith("tmdb-");
   const runtimeLabel =
     movie.runtime.trim().toLowerCase() === "runtime unavailable"
