@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
+import { requireServerAdmin } from "@/server/admin-auth";
 import { logSecurityAudit } from "@/server/security-audit";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
-
-type DashboardAuthBody = {
-  email?: string;
-  password?: string;
-};
 
 type ProfileRow = {
   id: string;
@@ -48,17 +43,8 @@ type SupabaseErrorLike = {
   code?: string;
 } | null;
 
-const ADMIN_EMAIL = "iniloowf@gmail.com";
-const ADMIN_PASSWORD = "Mishka123!";
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MAX = 120;
-
-function hasValidCredentials(email?: string, password?: string) {
-  return (
-    (email ?? "").trim().toLowerCase() === ADMIN_EMAIL &&
-    (password ?? "") === ADMIN_PASSWORD
-  );
-}
 
 function isMissingSupportTicketsError(error: SupabaseErrorLike) {
   if (!error) {
@@ -90,23 +76,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = (await request.json()) as DashboardAuthBody;
-  const email = (body.email ?? "").trim().toLowerCase();
-
-  if (!hasValidCredentials(email, body.password)) {
-    return NextResponse.json(
-      { error: "Invalid admin credentials." },
-      { status: 401 },
-    );
+  const adminAuth = await requireServerAdmin(request);
+  if (!adminAuth.ok) {
+    return adminAuth.response;
   }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Admin dashboard is not configured on the server yet." },
-      { status: 500 },
-    );
-  }
+  const { supabaseAdmin, identity } = adminAuth;
 
   const [
     usersCountResult,
@@ -259,7 +233,7 @@ export async function POST(request: NextRequest) {
     action: "admin_dashboard_view",
     ip: clientIp(request),
     metadata: {
-      actor: email,
+      actor: identity.email ?? identity.userId,
       users: profiles.length,
       openTickets: openTicketsCount,
       ticketsUnavailable,

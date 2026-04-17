@@ -1,10 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-const ADMIN_EMAIL = "iniloowf@gmail.com";
-const ADMIN_PASSWORD = "Mishka123!";
-const ADMIN_SESSION_KEY = "cinematch-admin-desktop-session-v1";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type DashboardStats = {
   users: number;
@@ -73,19 +69,6 @@ export default function AdminDesktopPage() {
   const [selectedTicket, setSelectedTicket] = useState<DashboardTicketRow | null>(null);
   const [isTicketActionLoading, setIsTicketActionLoading] = useState(false);
   const [ticketActionFeedback, setTicketActionFeedback] = useState("");
-  const attemptedSessionLoadRef = useRef(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const hasSession = window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "ok";
-    setIsAuthenticated(hasSession);
-    if (hasSession) {
-      setEmail(ADMIN_EMAIL);
-      setPassword(ADMIN_PASSWORD);
-    }
-  }, []);
 
   const loadDashboard = useCallback(
     async (
@@ -128,22 +111,6 @@ export default function AdminDesktopPage() {
   );
 
   useEffect(() => {
-    if (
-      !isAuthenticated ||
-      dashboard ||
-      isLoadingDashboard ||
-      attemptedSessionLoadRef.current
-    ) {
-      return;
-    }
-    attemptedSessionLoadRef.current = true;
-    void loadDashboard(
-      { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-      { keepOldData: true },
-    );
-  }, [dashboard, isAuthenticated, isLoadingDashboard, loadDashboard]);
-
-  useEffect(() => {
     if (!selectedTicket || !dashboard) {
       return;
     }
@@ -182,8 +149,8 @@ export default function AdminDesktopPage() {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: ADMIN_EMAIL,
-            password: ADMIN_PASSWORD,
+            email: email.trim().toLowerCase(),
+            password,
             status,
           }),
         });
@@ -216,7 +183,7 @@ export default function AdminDesktopPage() {
         setIsTicketActionLoading(false);
       }
     },
-    [dashboard?.tickets, updateDashboardTickets],
+    [dashboard?.tickets, email, password, updateDashboardTickets],
   );
 
   const handleDeleteTicket = useCallback(
@@ -229,8 +196,8 @@ export default function AdminDesktopPage() {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: ADMIN_EMAIL,
-            password: ADMIN_PASSWORD,
+            email: email.trim().toLowerCase(),
+            password,
           }),
         });
         const payload = (await response.json()) as { error?: string };
@@ -251,17 +218,13 @@ export default function AdminDesktopPage() {
         setIsTicketActionLoading(false);
       }
     },
-    [dashboard?.tickets, updateDashboardTickets],
+    [dashboard?.tickets, email, password, updateDashboardTickets],
   );
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
-
-    if (normalizedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      setErrorMessage("Invalid admin credentials.");
-      return;
-    }
+    setErrorMessage("");
 
     const didLoad = await loadDashboard({ email: normalizedEmail, password });
     if (!didLoad) {
@@ -269,20 +232,11 @@ export default function AdminDesktopPage() {
       return;
     }
 
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
-    }
-    attemptedSessionLoadRef.current = true;
-    setErrorMessage("");
     setIsAuthenticated(true);
     setActiveTab("overview");
   };
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    }
-    attemptedSessionLoadRef.current = false;
     setIsAuthenticated(false);
     setDashboard(null);
     setDashboardError("");
@@ -566,7 +520,7 @@ export default function AdminDesktopPage() {
                 type="button"
                 onClick={() =>
                   void loadDashboard(
-                    { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+                    { email: email.trim().toLowerCase(), password },
                     { keepOldData: true },
                   )
                 }

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
+import { requireServerAdmin } from "@/server/admin-auth";
 import { logSecurityAudit } from "@/server/security-audit";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
 type AdminAuthBody = {
-  email?: string;
-  password?: string;
   status?: string;
 };
 
@@ -17,17 +16,8 @@ type TicketMutationResult = {
   error: { message?: string } | null;
 };
 
-const ADMIN_EMAIL = "iniloowf@gmail.com";
-const ADMIN_PASSWORD = "Mishka123!";
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MUTATION_MAX = 80;
-
-function hasValidCredentials(email?: string, password?: string) {
-  return (
-    (email ?? "").trim().toLowerCase() === ADMIN_EMAIL &&
-    (password ?? "") === ADMIN_PASSWORD
-  );
-}
 
 function normalizeTicketStatus(value: string | undefined): SupportTicketStatus | null {
   if (value === "open" || value === "under_review" || value === "closed") {
@@ -89,12 +79,12 @@ export async function PATCH(
   }
 
   const body = (await request.json()) as AdminAuthBody;
-  const email = (body.email ?? "").trim().toLowerCase();
   const nextStatus = normalizeTicketStatus(body.status);
-
-  if (!hasValidCredentials(email, body.password)) {
-    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 401 });
+  const adminAuth = await requireServerAdmin(request);
+  if (!adminAuth.ok) {
+    return adminAuth.response;
   }
+  const { identity } = adminAuth;
 
   if (!ticketId || !nextStatus) {
     return NextResponse.json(
@@ -131,7 +121,7 @@ export async function PATCH(
     action: "admin_ticket_status_update",
     ip: clientIp(request),
     metadata: {
-      actor: email,
+      actor: identity.email ?? identity.userId,
       ticketId,
       requestedStatus: nextStatus,
       effectiveStatus,
@@ -166,23 +156,14 @@ export async function DELETE(
     );
   }
 
-  const body = (await request.json()) as AdminAuthBody;
-  const email = (body.email ?? "").trim().toLowerCase();
-
-  if (!hasValidCredentials(email, body.password)) {
-    return NextResponse.json({ error: "Invalid admin credentials." }, { status: 401 });
+  const adminAuth = await requireServerAdmin(request);
+  if (!adminAuth.ok) {
+    return adminAuth.response;
   }
+  const { identity, supabaseAdmin } = adminAuth;
 
   if (!ticketId) {
     return NextResponse.json({ error: "Ticket id is required." }, { status: 400 });
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Admin dashboard is not configured on the server yet." },
-      { status: 500 },
-    );
   }
 
   const deleteResult = (await supabaseAdmin
@@ -210,7 +191,7 @@ export async function DELETE(
     action: "admin_ticket_delete",
     ip: clientIp(request),
     metadata: {
-      actor: email,
+      actor: identity.email ?? identity.userId,
       ticketId,
     },
   });
