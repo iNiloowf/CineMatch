@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
@@ -88,6 +88,8 @@ export default function SettingsPage() {
     isDarkMode,
     logout,
     hasProAccess,
+    linkedUsers,
+    refreshAccountData,
     adminSubscriptionPreviewModeEnabled,
     setAdminSubscriptionPreviewMode,
     updateSettings,
@@ -101,6 +103,8 @@ export default function SettingsPage() {
   const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
   const [billingFeedback, setBillingFeedback] = useState("");
+  const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState<string>("none");
+  const [isActivatingPro, setIsActivatingPro] = useState(false);
   const proCheckoutUrl = process.env.NEXT_PUBLIC_PRO_CHECKOUT_URL ?? "";
 
   const sectionEyebrow = isDarkMode
@@ -115,6 +119,33 @@ export default function SettingsPage() {
     () => partitionAchievements(achievements),
     [achievements],
   );
+  const acceptedConnectedPartners = useMemo(
+    () =>
+      linkedUsers
+        .filter((entry) => entry.status === "accepted")
+        .map((entry) => entry.user)
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    [linkedUsers],
+  );
+  const selectedGiftPartner = useMemo(
+    () =>
+      selectedGiftPartnerId === "none"
+        ? null
+        : acceptedConnectedPartners.find((entry) => entry.id === selectedGiftPartnerId) ?? null,
+    [acceptedConnectedPartners, selectedGiftPartnerId],
+  );
+
+  useEffect(() => {
+    if (selectedGiftPartnerId === "none") {
+      return;
+    }
+    const stillLinked = acceptedConnectedPartners.some(
+      (partner) => partner.id === selectedGiftPartnerId,
+    );
+    if (!stillLinked) {
+      setSelectedGiftPartnerId("none");
+    }
+  }, [acceptedConnectedPartners, selectedGiftPartnerId]);
 
   useEscapeToClose(isContactAdminModalOpen, () => setIsContactAdminModalOpen(false));
   useEscapeToClose(Boolean(legalModal), () => setLegalModal(null));
@@ -181,21 +212,69 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpgradeToPro = () => {
+  const handleUpgradeToPro = async () => {
     if (hasProAccess) {
       setBillingFeedback("You already have Pro access on this account.");
       return;
     }
 
-    if (!proCheckoutUrl) {
-      setBillingFeedback(
-        "Pro checkout is not configured yet. Ask admin to set NEXT_PUBLIC_PRO_CHECKOUT_URL.",
-      );
+    const supabase = getSupabaseBrowserClient();
+    const sessionResult = supabase
+      ? await supabase.auth.getSession()
+      : { data: { session: null } };
+    const accessToken = sessionResult.data.session?.access_token ?? null;
+
+    if (!accessToken) {
+      setBillingFeedback("Please sign in again, then try Pro checkout.");
       return;
     }
 
-    window.open(proCheckoutUrl, "_blank", "noopener,noreferrer");
-    setBillingFeedback("Checkout opened in a new tab.");
+    setIsActivatingPro(true);
+    setBillingFeedback("");
+
+    try {
+      if (proCheckoutUrl) {
+        try {
+          const checkoutUrl = new URL(proCheckoutUrl);
+          checkoutUrl.searchParams.set("buyerUserId", currentUserId ?? "");
+          if (selectedGiftPartner) {
+            checkoutUrl.searchParams.set("giftPartnerUserId", selectedGiftPartner.id);
+          }
+          window.open(checkoutUrl.toString(), "_blank", "noopener,noreferrer");
+        } catch {
+          window.open(proCheckoutUrl, "_blank", "noopener,noreferrer");
+        }
+      }
+
+      const response = await fetch("/api/subscription/activate", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          partnerUserId: selectedGiftPartner?.id,
+        }),
+      });
+      const payload = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not activate Pro right now.");
+      }
+
+      refreshAccountData();
+      setBillingFeedback(
+        selectedGiftPartner
+          ? `Pro is now active for you and ${selectedGiftPartner.name}.`
+          : "Pro is now active on your account.",
+      );
+    } catch (error) {
+      setBillingFeedback(
+        error instanceof Error ? error.message : "Could not activate Pro right now.",
+      );
+    } finally {
+      setIsActivatingPro(false);
+    }
   };
 
   return (
@@ -540,6 +619,22 @@ export default function SettingsPage() {
             Free users keep core matching features. Pro unlocks advanced shared controls, premium
             insights, and priority support.
           </p>
+          <div
+            className={`mt-3 rounded-[14px] border px-3 py-3 text-xs leading-6 ${
+              hasProAccess
+                ? isDarkMode
+                  ? "border-violet-400/25 bg-violet-500/10 text-violet-100"
+                  : "border-violet-200 bg-violet-50 text-violet-800"
+                : isDarkMode
+                  ? "border-white/10 bg-white/5 text-slate-300"
+                  : "border-slate-200 bg-white text-slate-600"
+            }`}
+          >
+            Premium badges/theme packs and exclusive profile styles are available in Profile.
+            <Link href="/profile" className="ml-1 font-semibold underline underline-offset-2">
+              Open Pro Studio
+            </Link>
+          </div>
           <div className="mt-4">
             <SettingToggle
               label="Admin mode (simulate Pro purchase)"
@@ -547,12 +642,38 @@ export default function SettingsPage() {
               checked={adminSubscriptionPreviewModeEnabled}
               onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
             />
+            {acceptedConnectedPartners.length > 0 && !hasProAccess ? (
+              <label className="mt-3 block space-y-2 text-sm font-semibold">
+                Activate Pro for a connected partner too
+                <select
+                  value={selectedGiftPartnerId}
+                  onChange={(event) => setSelectedGiftPartnerId(event.target.value)}
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                >
+                  <option value="none">Only my account</option>
+                  {acceptedConnectedPartners.map((partner) => (
+                    <option key={partner.id} value={partner.id}>
+                      {partner.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <button
               type="button"
-              onClick={handleUpgradeToPro}
-              className="ui-btn ui-btn-primary mt-3 w-full"
+              onClick={() => void handleUpgradeToPro()}
+              disabled={isActivatingPro}
+              className="ui-btn ui-btn-primary mt-3 w-full disabled:opacity-70"
             >
-              {hasProAccess ? "Pro is active" : "Buy Pro"}
+              {hasProAccess
+                ? "Pro is active"
+                : isActivatingPro
+                  ? "Activating Pro..."
+                  : "Buy Pro"}
             </button>
             {billingFeedback ? (
               <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>

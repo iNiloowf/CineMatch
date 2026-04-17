@@ -25,6 +25,9 @@ export default function ProfilePage() {
     updateProfile,
     isDarkMode,
     isReady,
+    hasProAccess,
+    proCustomization,
+    updateProCustomization,
   } = useAppState();
 
   const earnedBadges = useMemo(
@@ -227,6 +230,38 @@ export default function ProfilePage() {
   const actionGradientHover = "hover:shadow-[0_20px_48px_rgba(147,51,234,0.42)] hover:brightness-[1.04]";
   const actionRing = isDarkMode ? "ring-2 ring-fuchsia-300/30" : "ring-2 ring-violet-400/55";
 
+  const premiumBadgeOptions = [
+    { id: "diamond", label: "Diamond" },
+    { id: "crown", label: "Crown" },
+    { id: "star", label: "Star" },
+  ] as const;
+  const themePackOptions = [
+    { id: "default", label: "Default" },
+    { id: "aurora", label: "Aurora" },
+    { id: "midnight", label: "Midnight" },
+    { id: "sunset", label: "Sunset" },
+  ] as const;
+  const profileStyleOptions = [
+    { id: "classic", label: "Classic" },
+    { id: "glass", label: "Glass" },
+    { id: "neon", label: "Neon" },
+  ] as const;
+
+  const premiumBadgeLabel = premiumBadgeOptions.find(
+    (badge) => badge.id === proCustomization.premiumBadge,
+  )?.label;
+  const proHeaderCardStyle = hasProAccess
+    ? proCustomization.profileStyle === "glass"
+      ? isDarkMode
+        ? "ring-1 ring-violet-300/25 bg-gradient-to-br from-violet-950/55 via-slate-950/45 to-fuchsia-950/30 shadow-[0_18px_55px_rgba(109,40,217,0.28)] backdrop-blur-xl"
+        : "ring-1 ring-violet-300/35 bg-gradient-to-br from-violet-100/90 via-white/90 to-fuchsia-100/70 shadow-[0_20px_60px_rgba(124,58,237,0.2)] backdrop-blur-xl"
+      : proCustomization.profileStyle === "neon"
+        ? isDarkMode
+          ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-violet-950/55 to-fuchsia-950/55 shadow-[0_0_0_1px_rgba(244,114,182,0.25),0_20px_60px_rgba(168,85,247,0.35)]"
+          : "ring-1 ring-fuchsia-300/45 bg-gradient-to-br from-fuchsia-100 via-white to-violet-100 shadow-[0_0_0_1px_rgba(244,114,182,0.2),0_20px_58px_rgba(217,70,239,0.2)]"
+        : ""
+    : "";
+
   const shortcutTiles = [
     {
       href: "/linked",
@@ -402,7 +437,7 @@ export default function ProfilePage() {
       />
 
       <SurfaceCard
-        className="fade-up-enter discover-toolbar-enter space-y-6 !p-5 sm:!p-6"
+        className={`fade-up-enter discover-toolbar-enter space-y-6 !p-5 sm:!p-6 ${proHeaderCardStyle}`}
         style={{ animationDelay: "0ms" }}
       >
         <form className="space-y-5" onSubmit={handleSubmit}>
@@ -419,9 +454,22 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="min-w-0">
-                <h2 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {currentUser.name}
-                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    {currentUser.name}
+                  </h2>
+                  {hasProAccess ? (
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
+                        isDarkMode
+                          ? "border border-amber-300/35 bg-amber-400/20 text-amber-100"
+                          : "border border-amber-300 bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      PRO {premiumBadgeLabel ? `• ${premiumBadgeLabel}` : ""}
+                    </span>
+                  ) : null}
+                </div>
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
                 </p>
@@ -725,6 +773,113 @@ export default function ProfilePage() {
             </Link>
           ))}
         </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "95ms" }}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className={sectionEyebrow}>Pro studio</p>
+            <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Premium badges/theme packs and exclusive profile styles
+            </p>
+          </div>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
+              hasProAccess
+                ? isDarkMode
+                  ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/30"
+                  : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
+                : isDarkMode
+                  ? "bg-white/10 text-slate-300 ring-1 ring-white/12"
+                  : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/90"
+            }`}
+          >
+            {hasProAccess ? "Pro active" : "Pro required"}
+          </span>
+        </div>
+
+        {!hasProAccess ? (
+          <div
+            className={`rounded-[16px] border px-4 py-3 text-sm ${
+              isDarkMode
+                ? "border-amber-400/30 bg-amber-500/10 text-amber-100"
+                : "border-amber-200 bg-amber-50 text-amber-800"
+            }`}
+          >
+            Unlock this section with Pro to apply premium badges, theme packs, and profile styles.
+            <Link href="/settings" className="ml-2 font-semibold underline underline-offset-2">
+              Open subscription settings
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Premium badge
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {premiumBadgeOptions.map((badge) => (
+                  <button
+                    key={badge.id}
+                    type="button"
+                    onClick={() => updateProCustomization({ premiumBadge: badge.id })}
+                    className={`px-3 py-1.5 text-xs font-semibold transition ${
+                      proCustomization.premiumBadge === badge.id
+                        ? "ui-btn ui-btn-primary !min-h-0"
+                        : "ui-btn ui-btn-secondary !min-h-0"
+                    }`}
+                  >
+                    {badge.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Theme pack
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {themePackOptions.map((themePack) => (
+                  <button
+                    key={themePack.id}
+                    type="button"
+                    onClick={() => updateProCustomization({ themePack: themePack.id })}
+                    className={`px-3 py-1.5 text-xs font-semibold transition ${
+                      proCustomization.themePack === themePack.id
+                        ? "ui-btn ui-btn-primary !min-h-0"
+                        : "ui-btn ui-btn-secondary !min-h-0"
+                    }`}
+                  >
+                    {themePack.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Profile style
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {profileStyleOptions.map((styleOption) => (
+                  <button
+                    key={styleOption.id}
+                    type="button"
+                    onClick={() => updateProCustomization({ profileStyle: styleOption.id })}
+                    className={`px-3 py-1.5 text-xs font-semibold transition ${
+                      proCustomization.profileStyle === styleOption.id
+                        ? "ui-btn ui-btn-primary !min-h-0"
+                        : "ui-btn ui-btn-secondary !min-h-0"
+                    }`}
+                  >
+                    {styleOption.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </SurfaceCard>
 
       <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>

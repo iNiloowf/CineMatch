@@ -45,6 +45,7 @@ const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
+const PRO_CUSTOMIZATION_STORAGE_PREFIX = "cinematch-pro-customization";
 const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
 const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
@@ -175,6 +176,20 @@ type AccountSyncPayload = {
 };
 
 type SubscriptionTier = "free" | "pro";
+type ProThemePack = "default" | "aurora" | "midnight" | "sunset";
+type ProProfileStyle = "classic" | "glass" | "neon";
+type PremiumBadge = "diamond" | "crown" | "star";
+type ProCustomization = {
+  themePack: ProThemePack;
+  profileStyle: ProProfileStyle;
+  premiumBadge: PremiumBadge;
+};
+
+const DEFAULT_PRO_CUSTOMIZATION: ProCustomization = {
+  themePack: "default",
+  profileStyle: "classic",
+  premiumBadge: "diamond",
+};
 
 type AppStateContextValue = {
   data: AppData;
@@ -241,6 +256,8 @@ type AppStateContextValue = {
   hasProAccess: boolean;
   adminSubscriptionPreviewModeEnabled: boolean;
   setAdminSubscriptionPreviewMode: (enabled: boolean) => Promise<void>;
+  proCustomization: ProCustomization;
+  updateProCustomization: (payload: Partial<ProCustomization>) => void;
   acceptedMovies: Movie[];
   discoverQueue: Movie[];
   discoverSessionKey: string;
@@ -502,6 +519,56 @@ function persistOnboardingPreferences(
     window.localStorage.setItem(
       getOnboardingStorageKey(userId),
       JSON.stringify(preferences),
+    );
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function getProCustomizationStorageKey(userId: string) {
+  return `${PRO_CUSTOMIZATION_STORAGE_PREFIX}-${userId}`;
+}
+
+function getStoredProCustomization(userId: string): ProCustomization {
+  if (typeof window === "undefined") {
+    return { ...DEFAULT_PRO_CUSTOMIZATION };
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getProCustomizationStorageKey(userId));
+    if (!raw) {
+      return { ...DEFAULT_PRO_CUSTOMIZATION };
+    }
+    const parsed = JSON.parse(raw) as Partial<ProCustomization>;
+    return {
+      themePack:
+        parsed.themePack === "aurora" ||
+        parsed.themePack === "midnight" ||
+        parsed.themePack === "sunset"
+          ? parsed.themePack
+          : "default",
+      profileStyle:
+        parsed.profileStyle === "glass" || parsed.profileStyle === "neon"
+          ? parsed.profileStyle
+          : "classic",
+      premiumBadge:
+        parsed.premiumBadge === "crown" || parsed.premiumBadge === "star"
+          ? parsed.premiumBadge
+          : "diamond",
+    };
+  } catch {
+    return { ...DEFAULT_PRO_CUSTOMIZATION };
+  }
+}
+
+function persistProCustomization(userId: string, customization: ProCustomization) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      getProCustomizationStorageKey(userId),
+      JSON.stringify(customization),
     );
   } catch {
     // Ignore storage failures.
@@ -953,6 +1020,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ? getStoredOnboardingPreferences(storedCurrentUserId)
         : { ...DEFAULT_ONBOARDING_PREFERENCES };
     });
+  const [proCustomization, setProCustomization] = useState<ProCustomization>(() => {
+    if (typeof window === "undefined") {
+      return { ...DEFAULT_PRO_CUSTOMIZATION };
+    }
+    const storedCurrentUserId = window.localStorage.getItem(CURRENT_USER_KEY);
+    return storedCurrentUserId
+      ? getStoredProCustomization(storedCurrentUserId)
+      : { ...DEFAULT_PRO_CUSTOMIZATION };
+  });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
   const [accountSyncError, setAccountSyncError] = useState<string | null>(null);
@@ -1006,10 +1082,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!currentUserId) {
       setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
+      setProCustomization({ ...DEFAULT_PRO_CUSTOMIZATION });
       return;
     }
 
     setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
+    setProCustomization(getStoredProCustomization(currentUserId));
   }, [currentUserId]);
 
   const applyHydratedAccountPayload = (
@@ -3104,6 +3182,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     await updateSettings({ adminModeSimulatePro: enabled });
   };
 
+  const updateProCustomization = useCallback(
+    (payload: Partial<ProCustomization>) => {
+      if (!currentUserId || !hasProAccess) {
+        return;
+      }
+      setProCustomization((current) => {
+        const next = { ...current, ...payload };
+        persistProCustomization(currentUserId, next);
+        return next;
+      });
+    },
+    [currentUserId, hasProAccess],
+  );
+
   const completeOnboarding = async (
     payload: Omit<OnboardingPreferences, "completedAt">,
   ) => {
@@ -3144,6 +3236,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setAccountSyncError(null);
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    const themePack = hasProAccess ? proCustomization.themePack : "default";
+    document.documentElement.setAttribute("data-pro-theme-pack", themePack);
+  }, [hasProAccess, proCustomization.themePack]);
 
   return (
     <AppStateContext.Provider
@@ -3187,6 +3284,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         hasProAccess,
         adminSubscriptionPreviewModeEnabled,
         setAdminSubscriptionPreviewMode,
+        proCustomization,
+        updateProCustomization,
         acceptedMovies,
         discoverQueue,
         discoverSessionKey: discoverShuffleSeed,

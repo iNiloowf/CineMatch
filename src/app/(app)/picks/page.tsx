@@ -10,6 +10,7 @@ import { PicksMovieRow } from "@/components/picks-movie-row";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { computeMovieMatchPercent } from "@/lib/match-score";
 
 const PicksTrailerModalLazy = dynamic(
   () => import("@/components/picks-trailer-modal").then((m) => m.PicksTrailerModal),
@@ -17,11 +18,35 @@ const PicksTrailerModalLazy = dynamic(
 );
 
 type ShareToast = { message: string; variant: "success" | "error" };
+type TopSharedPick = {
+  movieId: string;
+  title: string;
+  year: number;
+  score: number;
+  reasons: string[];
+};
+
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getTasteOverlapLabel(score: number) {
+  if (score >= 85) {
+    return "Very high";
+  }
+  if (score >= 60) {
+    return "Medium";
+  }
+  return "Low";
+}
 
 export default function PicksPage() {
   const {
+    data,
+    currentUserId,
     acceptedMovies,
     sharedMovies,
+    linkedUsers,
     removePick,
     onboardingPreferences,
     isDarkMode,
@@ -76,6 +101,182 @@ export default function PicksPage() {
       ),
     [acceptedMovies],
   );
+  const acceptedMovieIdSet = useMemo(
+    () => new Set(acceptedMovies.map((movie) => movie.id)),
+    [acceptedMovies],
+  );
+  const primaryPartner = useMemo(() => {
+    const acceptedLinks = linkedUsers
+      .filter((entry) => entry.status === "accepted")
+      .map((entry) => entry.user)
+      .sort((left, right) => left.name.localeCompare(right.name));
+    return acceptedLinks[0] ?? null;
+  }, [linkedUsers]);
+  const partnerAcceptedMovieIds = useMemo(() => {
+    if (!primaryPartner) {
+      return new Set<string>();
+    }
+    return new Set(
+      data.swipes
+        .filter(
+          (swipe) =>
+            swipe.userId === primaryPartner.id && swipe.decision === "accepted",
+        )
+        .map((swipe) => swipe.movieId),
+    );
+  }, [data.swipes, primaryPartner]);
+  const partnerRejectedMovieIds = useMemo(() => {
+    if (!primaryPartner) {
+      return new Set<string>();
+    }
+    return new Set(
+      data.swipes
+        .filter(
+          (swipe) =>
+            swipe.userId === primaryPartner.id && swipe.decision === "rejected",
+        )
+        .map((swipe) => swipe.movieId),
+    );
+  }, [data.swipes, primaryPartner]);
+  const userRejectedMovieIds = useMemo(() => {
+    if (!currentUserId) {
+      return new Set<string>();
+    }
+    return new Set(
+      data.swipes
+        .filter(
+          (swipe) =>
+            swipe.userId === currentUserId && swipe.decision === "rejected",
+        )
+        .map((swipe) => swipe.movieId),
+    );
+  }, [currentUserId, data.swipes]);
+  const partnerAcceptedGenres = useMemo(() => {
+    return new Set(
+      data.movies
+        .filter((movie) => partnerAcceptedMovieIds.has(movie.id))
+        .flatMap((movie) =>
+          movie.genre
+            .map((genre) => genre.trim().toLowerCase())
+            .filter(
+              (genre) =>
+                Boolean(genre) && genre !== "movie" && genre !== "series",
+            ),
+        ),
+    );
+  }, [data.movies, partnerAcceptedMovieIds]);
+  const tasteOverlap = useMemo(() => {
+    if (!primaryPartner) {
+      return null;
+    }
+
+    const likedUnionSize = new Set([
+      ...acceptedMovieIdSet,
+      ...partnerAcceptedMovieIds,
+    ]).size;
+    const bothLikedCount = [...acceptedMovieIdSet].filter((movieId) =>
+      partnerAcceptedMovieIds.has(movieId),
+    ).length;
+    const oneLikeOneNotCount = likedUnionSize - bothLikedCount;
+    const movieOverlapPercent =
+      likedUnionSize > 0 ? (bothLikedCount / likedUnionSize) * 100 : 50;
+
+    const genreUnionSize = new Set([
+      ...acceptedGenres,
+      ...partnerAcceptedGenres,
+    ]).size;
+    const sharedGenreCount = [...acceptedGenres].filter((genre) =>
+      partnerAcceptedGenres.has(genre),
+    ).length;
+    const genreOverlapPercent =
+      genreUnionSize > 0 ? (sharedGenreCount / genreUnionSize) * 100 : 50;
+
+    const score = clampPercent(
+      movieOverlapPercent * 0.65 + genreOverlapPercent * 0.35,
+    );
+
+    return {
+      score,
+      label: getTasteOverlapLabel(score),
+      bothLikedCount,
+      oneLikeOneNotCount,
+      movieOverlapPercent: clampPercent(movieOverlapPercent),
+      genreOverlapPercent: clampPercent(genreOverlapPercent),
+    };
+  }, [
+    acceptedGenres,
+    acceptedMovieIdSet,
+    partnerAcceptedGenres,
+    partnerAcceptedMovieIds,
+    primaryPartner,
+  ]);
+  const weeklyTopSharedPicks = useMemo<TopSharedPick[]>(() => {
+    if (!primaryPartner) {
+      return [];
+    }
+
+    const candidates = data.movies
+      .filter((movie) => !acceptedMovieIdSet.has(movie.id) || !partnerAcceptedMovieIds.has(movie.id))
+      .filter((movie) => !userRejectedMovieIds.has(movie.id))
+      .filter((movie) => !partnerRejectedMovieIds.has(movie.id))
+      .map((movie) => {
+        const userScore = computeMovieMatchPercent(movie, {
+          acceptedGenres,
+          onboarding: onboardingPreferences,
+        });
+        const partnerScore = computeMovieMatchPercent(movie, {
+          acceptedGenres: partnerAcceptedGenres,
+        });
+        const avgScore = (userScore + partnerScore) / 2;
+        const likedByExactlyOne =
+          Number(acceptedMovieIdSet.has(movie.id)) +
+            Number(partnerAcceptedMovieIds.has(movie.id)) ===
+          1;
+        const sharedGenreHits = movie.genre
+          .map((entry) => entry.trim().toLowerCase())
+          .filter((entry) => acceptedGenres.has(entry) && partnerAcceptedGenres.has(entry)).length;
+
+        const finalScore = clampPercent(
+          avgScore +
+            sharedGenreHits * 3 +
+            (likedByExactlyOne ? 4 : 0),
+        );
+
+        const reasons: string[] = [];
+        if (sharedGenreHits > 0) {
+          reasons.push(`Shared genre signal (${sharedGenreHits})`);
+        }
+        if (likedByExactlyOne) {
+          reasons.push("Liked by one of you already");
+        }
+        reasons.push(`Predicted fit ${finalScore}%`);
+
+        return {
+          movieId: movie.id,
+          title: movie.title,
+          year: movie.year,
+          score: finalScore,
+          reasons,
+        };
+      })
+      .sort((left, right) => right.score - left.score);
+
+    return candidates.slice(0, 3);
+  }, [
+    acceptedGenres,
+    acceptedMovieIdSet,
+    data.movies,
+    onboardingPreferences,
+    partnerAcceptedGenres,
+    partnerAcceptedMovieIds,
+    partnerRejectedMovieIds,
+    primaryPartner,
+    userRejectedMovieIds,
+  ]);
+  const isFridayNight = useMemo(() => {
+    const now = new Date();
+    return now.getDay() === 5 && now.getHours() >= 18;
+  }, []);
 
   useEffect(() => {
     if (!selectedMovie) {
@@ -556,8 +757,8 @@ export default function PicksPage() {
               }`}
             >
               <p className={`text-sm ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                Upgrade to Pro to unlock deeper recommendations, top mood clusters, and partner
-                overlap trends.
+                Upgrade to Pro to unlock Tonight&apos;s top 3 for both of you and a live
+                taste overlap score with your partner.
               </p>
               <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 You can test Pro from Settings with the admin simulation toggle.
@@ -567,26 +768,171 @@ export default function PicksPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
-                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Shared ratio</p>
-                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {acceptedMovies.length > 0 ? Math.round((mutualPickCount / acceptedMovies.length) * 100) : 0}%
-                </p>
-              </div>
-              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
-                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Top genre signal</p>
-                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {acceptedMovies[0]?.genre?.[0] ?? "N/A"}
-                </p>
-              </div>
-              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
-                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>High-rated picks</p>
-                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {acceptedMovies.filter((movie) => movie.rating >= 7.5).length}
-                </p>
-              </div>
-            </div>
+            <>
+              {!primaryPartner ? (
+                <div
+                  className={`rounded-[18px] border px-4 py-4 ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/[0.04]"
+                      : "border-slate-200/90 bg-slate-50/90"
+                  }`}
+                >
+                  <p className={`text-sm ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                    Connect with at least one accepted partner to unlock shared top picks
+                    and taste overlap.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <div
+                      className={`rounded-[14px] border px-3 py-3 ${
+                        isDarkMode
+                          ? "border-white/12 bg-white/[0.05]"
+                          : "border-slate-200/90 bg-slate-50/90"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] uppercase tracking-wide ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Taste overlap
+                      </p>
+                      <p
+                        className={`mt-1 text-lg font-semibold ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {tasteOverlap?.score ?? 0}%
+                      </p>
+                      <p
+                        className={`mt-0.5 text-[11px] ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        {tasteOverlap?.label ?? "N/A"} with {primaryPartner.name}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-[14px] border px-3 py-3 ${
+                        isDarkMode
+                          ? "border-white/12 bg-white/[0.05]"
+                          : "border-slate-200/90 bg-slate-50/90"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] uppercase tracking-wide ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Both liked
+                      </p>
+                      <p
+                        className={`mt-1 text-lg font-semibold ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {tasteOverlap?.bothLikedCount ?? 0}
+                      </p>
+                      <p
+                        className={`mt-0.5 text-[11px] ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        One liked, one not: {tasteOverlap?.oneLikeOneNotCount ?? 0}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-[14px] border px-3 py-3 ${
+                        isDarkMode
+                          ? "border-white/12 bg-white/[0.05]"
+                          : "border-slate-200/90 bg-slate-50/90"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] uppercase tracking-wide ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Genre overlap
+                      </p>
+                      <p
+                        className={`mt-1 text-lg font-semibold ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {tasteOverlap?.genreOverlapPercent ?? 0}%
+                      </p>
+                      <p
+                        className={`mt-0.5 text-[11px] ${
+                          isDarkMode ? "text-slate-400" : "text-slate-500"
+                        }`}
+                      >
+                        Movie overlap: {tasteOverlap?.movieOverlapPercent ?? 0}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`rounded-[18px] border px-4 py-4 ${
+                      isDarkMode
+                        ? "border-white/12 bg-white/[0.04]"
+                        : "border-slate-200/90 bg-slate-50/90"
+                    }`}
+                  >
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                      {isFridayNight
+                        ? "Tonight’s top 3 for both of you"
+                        : "This week’s top 3 for both of you"}
+                    </p>
+                    <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Ranked for you and {primaryPartner.name} using both accepted titles,
+                      genre overlap, and what only one of you has liked.
+                    </p>
+
+                    <div className="mt-3 space-y-2">
+                      {weeklyTopSharedPicks.length === 0 ? (
+                        <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                          Keep swiping. We need a bit more signal to generate your shared top 3.
+                        </p>
+                      ) : (
+                        weeklyTopSharedPicks.map((pick, index) => (
+                          <div
+                            key={pick.movieId}
+                            className={`rounded-xl border px-3 py-3 ${
+                              isDarkMode
+                                ? "border-white/10 bg-slate-900/60"
+                                : "border-slate-200/90 bg-white"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                                  {index + 1}. {pick.title} ({pick.year})
+                                </p>
+                                <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                                  {pick.reasons.join(" • ")}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
+                                  isDarkMode
+                                    ? "bg-violet-500/16 text-violet-100"
+                                    : "bg-violet-100 text-violet-700"
+                                }`}
+                              >
+                                {pick.score}%
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </SurfaceCard>
 
