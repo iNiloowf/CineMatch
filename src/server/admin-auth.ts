@@ -37,6 +37,10 @@ function addEnvEmail(target: Set<string>, value: string | undefined) {
   }
 }
 
+function getEnv(primary: string, fallbackPublic: string) {
+  return process.env[primary] ?? process.env[fallbackPublic];
+}
+
 function hasAdminRole(appMetadata: Record<string, unknown> | undefined) {
   if (!appMetadata) {
     return false;
@@ -98,10 +102,10 @@ export async function requireServerAdmin(
     typeof data.user.app_metadata?.role === "string"
       ? data.user.app_metadata.role
       : null;
-  const adminIds = parseEnvList(process.env.ADMIN_USER_IDS);
-  const adminEmails = parseEnvList(process.env.ADMIN_EMAILS);
-  addEnvEmail(adminEmails, process.env.ADMIN_DASHBOARD_EMAIL);
-  addEnvEmail(adminEmails, process.env.ADMIN_EMAIL);
+  const adminIds = parseEnvList(getEnv("ADMIN_USER_IDS", "NEXT_PUBLIC_ADMIN_USER_IDS"));
+  const adminEmails = parseEnvList(getEnv("ADMIN_EMAILS", "NEXT_PUBLIC_ADMIN_EMAILS"));
+  addEnvEmail(adminEmails, getEnv("ADMIN_DASHBOARD_EMAIL", "NEXT_PUBLIC_ADMIN_DASHBOARD_EMAIL"));
+  addEnvEmail(adminEmails, getEnv("ADMIN_EMAIL", "NEXT_PUBLIC_ADMIN_EMAIL"));
   const allowlistedById = adminIds.has(data.user.id.toLowerCase());
   const allowlistedByEmail = email ? adminEmails.has(email) : false;
   const isAdmin = hasAdminRole(data.user.app_metadata) || allowlistedById || allowlistedByEmail;
@@ -110,7 +114,10 @@ export async function requireServerAdmin(
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "Your account does not have admin access." },
+        {
+          error:
+            "Your account does not have admin access. Add your email to ADMIN_DASHBOARD_EMAIL or ADMIN_EMAILS and restart the server.",
+        },
         { status: 403 },
       ),
     };
