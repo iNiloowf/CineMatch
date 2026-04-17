@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await supabaseAdmin
+  const ticketResult = (await supabaseAdmin
     .from("support_tickets")
     .insert({
       user_id: authToken.userId,
@@ -77,11 +77,14 @@ export async function POST(request: NextRequest) {
       status: "open",
     } as never)
     .select("id")
-    .single();
+    .single()) as {
+    data: { id: string } | null;
+    error: { message?: string } | null;
+  };
 
-  if (result.error || !result.data) {
+  if (ticketResult.error || !ticketResult.data) {
     return NextResponse.json(
-      { error: result.error?.message ?? "Ticket could not be created." },
+      { error: ticketResult.error?.message ?? "Ticket could not be created." },
       { status: 500 },
     );
   }
@@ -91,12 +94,12 @@ export async function POST(request: NextRequest) {
     actorUserId: authToken.userId,
     ip: clientIp(request),
     metadata: {
-      ticketId: result.data.id,
+      ticketId: ticketResult.data.id,
       priority,
       subjectLength: subject.length,
       messageLength: message.length,
     },
   });
 
-  return NextResponse.json({ ok: true, ticketId: result.data.id });
+  return NextResponse.json({ ok: true, ticketId: ticketResult.data.id });
 }
