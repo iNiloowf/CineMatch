@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type DashboardStats = {
   users: number;
@@ -58,8 +59,6 @@ type TicketManageStatus = "open" | "under_review" | "closed";
 
 export default function AdminDesktopPage() {
   const isDarkMode = true;
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
@@ -70,11 +69,20 @@ export default function AdminDesktopPage() {
   const [isTicketActionLoading, setIsTicketActionLoading] = useState(false);
   const [ticketActionFeedback, setTicketActionFeedback] = useState("");
 
+  const getAdminAccessToken = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient();
+    const sessionResult = supabase
+      ? await supabase.auth.getSession()
+      : { data: { session: null } };
+    const accessToken = sessionResult.data.session?.access_token ?? null;
+    if (!accessToken) {
+      throw new Error("Please sign in with your CineMatch account first.");
+    }
+    return accessToken;
+  }, []);
+
   const loadDashboard = useCallback(
-    async (
-      credentials: { email: string; password: string },
-      options?: { keepOldData?: boolean },
-    ) => {
+    async (options?: { keepOldData?: boolean }) => {
       if (!options?.keepOldData) {
         setDashboard(null);
       }
@@ -82,13 +90,12 @@ export default function AdminDesktopPage() {
       setDashboardError("");
 
       try {
+        const accessToken = await getAdminAccessToken();
         const response = await fetch("/api/admin/dashboard", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: credentials.email.trim().toLowerCase(),
-            password: credentials.password,
-          }),
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
         const payload = (await response.json()) as DashboardPayload & { error?: string };
 
@@ -107,7 +114,7 @@ export default function AdminDesktopPage() {
         setIsLoadingDashboard(false);
       }
     },
-    [],
+    [getAdminAccessToken],
   );
 
   useEffect(() => {
@@ -145,12 +152,14 @@ export default function AdminDesktopPage() {
       setTicketActionFeedback("");
 
       try {
+        const accessToken = await getAdminAccessToken();
         const response = await fetch(`/api/admin/tickets/${ticketId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
           body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            password,
             status,
           }),
         });
@@ -183,7 +192,7 @@ export default function AdminDesktopPage() {
         setIsTicketActionLoading(false);
       }
     },
-    [dashboard?.tickets, email, password, updateDashboardTickets],
+    [dashboard?.tickets, getAdminAccessToken, updateDashboardTickets],
   );
 
   const handleDeleteTicket = useCallback(
@@ -192,13 +201,12 @@ export default function AdminDesktopPage() {
       setTicketActionFeedback("");
 
       try {
+        const accessToken = await getAdminAccessToken();
         const response = await fetch(`/api/admin/tickets/${ticketId}`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            password,
-          }),
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
         const payload = (await response.json()) as { error?: string };
         if (!response.ok) {
@@ -218,15 +226,14 @@ export default function AdminDesktopPage() {
         setIsTicketActionLoading(false);
       }
     },
-    [dashboard?.tickets, email, password, updateDashboardTickets],
+    [dashboard?.tickets, getAdminAccessToken, updateDashboardTickets],
   );
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const normalizedEmail = email.trim().toLowerCase();
     setErrorMessage("");
 
-    const didLoad = await loadDashboard({ email: normalizedEmail, password });
+    const didLoad = await loadDashboard();
     if (!didLoad) {
       setErrorMessage("Admin dashboard could not be loaded.");
       return;
@@ -240,8 +247,6 @@ export default function AdminDesktopPage() {
     setIsAuthenticated(false);
     setDashboard(null);
     setDashboardError("");
-    setEmail("");
-    setPassword("");
     setErrorMessage("");
     setSelectedTicket(null);
     setIsTicketActionLoading(false);
@@ -291,37 +296,10 @@ export default function AdminDesktopPage() {
           <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
             <h1 className="text-2xl font-bold">Admin Desktop</h1>
             <p className={`mt-2 text-sm ${softText}`}>
-              Sign in to view only real Supabase operational data and user support tickets.
+              Use a signed-in account with admin role/allowlist access to view support and
+              operational data.
             </p>
             <form className="mt-6 space-y-4" onSubmit={handleLogin}>
-              <label className="block space-y-2 text-sm font-semibold">
-                Email
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/15 bg-white/[0.06] text-white placeholder:text-slate-400"
-                      : "border-white/60 bg-white/80 text-slate-900"
-                  }`}
-                  placeholder="admin email"
-                />
-              </label>
-              <label className="block space-y-2 text-sm font-semibold">
-                Password
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/15 bg-white/[0.06] text-white placeholder:text-slate-400"
-                      : "border-white/60 bg-white/80 text-slate-900"
-                  }`}
-                  placeholder="admin password"
-                />
-              </label>
               {errorMessage ? (
                 <p className={isDarkMode ? "text-sm text-rose-300" : "text-sm text-rose-700"}>
                   {errorMessage}
@@ -519,10 +497,7 @@ export default function AdminDesktopPage() {
               <button
                 type="button"
                 onClick={() =>
-                  void loadDashboard(
-                    { email: email.trim().toLowerCase(), password },
-                    { keepOldData: true },
-                  )
+                  void loadDashboard({ keepOldData: true })
                 }
                 className="ui-btn ui-btn-secondary"
                 disabled={isLoadingDashboard}
