@@ -16,6 +16,18 @@ function normalizePriority(value: string | undefined): TicketPriority {
   return "normal";
 }
 
+function isMissingSupportTicketsError(error: { message?: string; code?: string } | null) {
+  if (!error) {
+    return false;
+  }
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes("support_tickets") &&
+      normalized.includes("schema cache"))
+  );
+}
+
 export async function POST(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
@@ -83,6 +95,15 @@ export async function POST(request: NextRequest) {
   };
 
   if (ticketResult.error || !ticketResult.data) {
+    if (isMissingSupportTicketsError(ticketResult.error)) {
+      return NextResponse.json(
+        {
+          error:
+            "Support tickets are not initialized yet. Please run the latest database migration.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
       { error: ticketResult.error?.message ?? "Ticket could not be created." },
       { status: 500 },

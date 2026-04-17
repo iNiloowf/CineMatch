@@ -43,6 +43,11 @@ type TicketRow = {
   created_at: string;
 };
 
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+} | null;
+
 const ADMIN_EMAIL = "iniloowf@gmail.com";
 const ADMIN_PASSWORD = "Mishka123!";
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
@@ -52,6 +57,19 @@ function hasValidCredentials(email?: string, password?: string) {
   return (
     (email ?? "").trim().toLowerCase() === ADMIN_EMAIL &&
     (password ?? "") === ADMIN_PASSWORD
+  );
+}
+
+function isMissingSupportTicketsError(error: SupabaseErrorLike) {
+  if (!error) {
+    return false;
+  }
+
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes("support_tickets") &&
+      normalized.includes("schema cache"))
   );
 }
 
@@ -99,12 +117,10 @@ export async function POST(request: NextRequest) {
     acceptedLinksCountResult,
     pendingLinksCountResult,
     watchedEntriesCountResult,
-    openTicketsCountResult,
     profilesResult,
     swipesResult,
     linksResult,
     recentSwipesResult,
-    recentTicketsResult,
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("movies").select("id", { count: "exact", head: true }),
@@ -130,10 +146,6 @@ export async function POST(request: NextRequest) {
       .select("id", { count: "exact", head: true })
       .eq("watched", true),
     supabaseAdmin
-      .from("support_tickets")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "open"),
-    supabaseAdmin
       .from("profiles")
       .select("id, full_name, email, city")
       .order("created_at", { ascending: true }),
@@ -144,11 +156,6 @@ export async function POST(request: NextRequest) {
       .select("user_id, movie_id, decision, created_at")
       .order("created_at", { ascending: false })
       .limit(20),
-    supabaseAdmin
-      .from("support_tickets")
-      .select("id, user_id, subject, message, priority, status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(40),
   ]);
 
   const firstError =
@@ -160,12 +167,10 @@ export async function POST(request: NextRequest) {
     acceptedLinksCountResult.error ??
     pendingLinksCountResult.error ??
     watchedEntriesCountResult.error ??
-    openTicketsCountResult.error ??
     profilesResult.error ??
     swipesResult.error ??
     linksResult.error ??
-    recentSwipesResult.error ??
-    recentTicketsResult.error;
+    recentSwipesResult.error;
 
   if (firstError) {
     return NextResponse.json({ error: firstError.message }, { status: 500 });
@@ -175,7 +180,36 @@ export async function POST(request: NextRequest) {
   const swipes = (swipesResult.data ?? []) as Pick<SwipeRow, "user_id" | "decision">[];
   const links = (linksResult.data ?? []) as LinkRow[];
   const recentSwipes = (recentSwipesResult.data ?? []) as SwipeRow[];
-  const recentTickets = (recentTicketsResult.data ?? []) as TicketRow[];
+  let recentTickets: TicketRow[] = [];
+  let openTicketsCount = 0;
+  let ticketsUnavailable = false;
+
+  const [openTicketsCountResult, recentTicketsResult] = await Promise.all([
+    supabaseAdmin
+      .from("support_tickets")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open"),
+    supabaseAdmin
+      .from("support_tickets")
+      .select("id, user_id, subject, message, priority, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(40),
+  ]);
+
+  const ticketsError =
+    (openTicketsCountResult.error as SupabaseErrorLike) ??
+    (recentTicketsResult.error as SupabaseErrorLike);
+
+  if (ticketsError) {
+    if (isMissingSupportTicketsError(ticketsError)) {
+      ticketsUnavailable = true;
+    } else {
+      return NextResponse.json({ error: ticketsError.message }, { status: 500 });
+    }
+  } else {
+    openTicketsCount = openTicketsCountResult.count ?? 0;
+    recentTickets = (recentTicketsResult.data ?? []) as TicketRow[];
+  }
 
   const movieIds = Array.from(new Set(recentSwipes.map((swipe) => swipe.movie_id)));
   const movieTitlesResult =
@@ -227,7 +261,8 @@ export async function POST(request: NextRequest) {
     metadata: {
       actor: email,
       users: profiles.length,
-      openTickets: openTicketsCountResult.count ?? 0,
+      openTickets: openTicketsCount,
+      ticketsUnavailable,
     },
   });
 
@@ -241,8 +276,9 @@ export async function POST(request: NextRequest) {
       acceptedLinks: acceptedLinksCountResult.count ?? 0,
       pendingLinks: pendingLinksCountResult.count ?? 0,
       watchedEntries: watchedEntriesCountResult.count ?? 0,
-      openTickets: openTicketsCountResult.count ?? 0,
+      openTickets: openTicketsCount,
     },
+    ticketsUnavailable,
     userRows,
     recentSwipes: recentSwipes.map((swipe) => ({
       userId: swipe.user_id,

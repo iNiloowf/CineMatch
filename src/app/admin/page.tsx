@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAppState } from "@/lib/app-state";
 
 const ADMIN_EMAIL = "iniloowf@gmail.com";
 const ADMIN_PASSWORD = "Mishka123!";
@@ -54,12 +53,13 @@ type DashboardPayload = {
   userRows: DashboardUserRow[];
   recentSwipes: DashboardSwipeRow[];
   tickets: DashboardTicketRow[];
+  ticketsUnavailable?: boolean;
 };
 
 type AdminTab = "overview" | "tickets" | "users" | "swipes";
 
 export default function AdminDesktopPage() {
-  const { isDarkMode } = useAppState();
+  const isDarkMode = true;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -179,6 +179,7 @@ export default function AdminDesktopPage() {
   const userRows = dashboard?.userRows ?? [];
   const recentSwipes = dashboard?.recentSwipes ?? [];
   const recentTickets = dashboard?.tickets ?? [];
+  const ticketsUnavailable = dashboard?.ticketsUnavailable ?? false;
   const previewTickets = recentTickets.slice(0, 6);
   const previewSwipes = recentSwipes.slice(0, 6);
 
@@ -330,6 +331,13 @@ export default function AdminDesktopPage() {
             }`}
           >
             {dashboardError}
+          </p>
+        ) : null}
+
+        {ticketsUnavailable ? (
+          <p className="mb-4 rounded-[14px] border border-amber-400/35 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+            Ticket table is not initialized yet. Dashboard still loads, but tickets stay hidden
+            until the latest Supabase migration is applied.
           </p>
         ) : null}
 
