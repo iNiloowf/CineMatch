@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
+import {
+  getResendClient,
+  getResendFromEmail,
+  getResendTestingTarget,
+  isResendTestModeEnabled,
+} from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
@@ -8,6 +14,11 @@ type TicketPriority = "low" | "normal" | "high";
 
 const TICKET_WINDOW_MS = 10 * 60 * 1000;
 const TICKET_MAX = 10;
+
+type TicketProfileLookup = {
+  email: string | null;
+  full_name: string | null;
+};
 
 function normalizePriority(value: string | undefined): TicketPriority {
   if (value === "low" || value === "high") {
@@ -26,6 +37,26 @@ function isMissingSupportTicketsError(error: { message?: string; code?: string }
     (normalized.includes("support_tickets") &&
       normalized.includes("schema cache"))
   );
+}
+
+function buildTicketAcknowledgementHtml({
+  displayName,
+  ticketId,
+}: {
+  displayName: string;
+  ticketId: string;
+}) {
+  return `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f6f3ff;padding:32px 16px;color:#111827;">
+      <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:28px;padding:32px;border:1px solid rgba(124,58,237,0.10);box-shadow:0 18px 50px rgba(124,58,237,0.12);">
+        <p style="margin:0 0 12px;color:#7c3aed;font-size:12px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;">CineMatch Support</p>
+        <h1 style="margin:0 0 12px;font-size:28px;line-height:1.2;color:#111827;">We received your ticket</h1>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#6b7280;">Hi ${displayName}, your support request was submitted successfully.</p>
+        <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#4b5563;">Ticket ID: <strong>${ticketId}</strong></p>
+        <p style="margin:0;font-size:15px;line-height:1.7;color:#6b7280;">Our admin team will reply to this email within 24 hours.</p>
+      </div>
+    </div>
+  `;
 }
 
 export async function POST(request: NextRequest) {
@@ -122,5 +153,60 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ ok: true, ticketId: ticketResult.data.id });
+  const resend = getResendClient();
+  const fromEmail = getResendFromEmail();
+  const resendTestMode = isResendTestModeEnabled();
+  const resendTestTarget = getResendTestingTarget();
+  let acknowledgementEmailSent = false;
+
+  if (resend && fromEmail) {
+    const profileResult = (await supabaseAdmin
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", authToken.userId)
+      .maybeSingle()) as {
+      data: TicketProfileLookup | null;
+      error: { message?: string } | null;
+    };
+
+    let rawEmail = profileResult.data?.email?.trim().toLowerCase() ?? "";
+    if (!rawEmail) {
+      const authUserResult = await supabaseAdmin.auth.getUser(authToken.accessToken);
+      rawEmail = authUserResult.data.user?.email?.trim().toLowerCase() ?? "";
+    }
+    const targetEmail = resendTestMode ? resendTestTarget : rawEmail;
+    const displayName = profileResult.data?.full_name?.trim() || "there";
+
+    if (targetEmail) {
+      const { error: emailError } = await resend.emails.send({
+        from: fromEmail,
+        to: targetEmail,
+        subject: "We received your CineMatch support ticket",
+        html: buildTicketAcknowledgementHtml({
+          displayName,
+          ticketId: ticketResult.data.id,
+        }),
+      });
+
+      if (!emailError) {
+        acknowledgementEmailSent = true;
+      } else {
+        void logSecurityAudit({
+          action: "support_ticket_ack_email_failed",
+          actorUserId: authToken.userId,
+          ip: clientIp(request),
+          metadata: {
+            ticketId: ticketResult.data.id,
+            reason: emailError.message,
+          },
+        });
+      }
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    ticketId: ticketResult.data.id,
+    acknowledgementEmailSent,
+  });
 }
