@@ -7,6 +7,7 @@ import { DiscoverOnboardingNudges } from "@/components/discover-onboarding-nudge
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
+import { DiscoverCardSkeleton, SearchResultsSkeletonList } from "@/components/ui-skeleton";
 import {
   loadDiscoverSession,
   saveDiscoverSession,
@@ -608,6 +609,19 @@ function DiscoverPageContent({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
+      {sharedMovieId && sharedMovieFetch === "loading" ? (
+        <div className="space-y-3" role="status" aria-live="polite">
+          <p
+            className={`text-center text-sm font-medium ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
+            Opening shared title…
+          </p>
+          <DiscoverCardSkeleton />
+        </div>
+      ) : null}
+
       {sharedMovieId && (sharedMovieFetch === "error" || sharedMovieFetch === "missing") ? (
         <NetworkStatusBlock
           variant="error"
@@ -726,9 +740,15 @@ function DiscoverPageContent({
               className={`ui-toast-note px-4 py-2 text-center font-semibold ${
                 menuBanner.variant === "error"
                   ? isDarkMode
-                    ? "border border-rose-400/30 text-rose-100"
-                    : "border border-rose-200/80 text-rose-800"
-                  : ""
+                    ? "border border-rose-400/30 text-rose-100 shadow-[0_10px_32px_rgba(244,63,94,0.12)]"
+                    : "border border-rose-200/80 text-rose-800 shadow-[0_10px_32px_rgba(244,63,94,0.08)]"
+                  : menuBanner.variant === "success"
+                    ? isDarkMode
+                      ? "border border-emerald-400/32 text-emerald-50 shadow-[0_10px_32px_rgba(16,185,129,0.14)]"
+                      : "border border-emerald-200/90 text-emerald-900 shadow-[0_10px_32px_rgba(16,185,129,0.1)]"
+                    : isDarkMode
+                      ? "border border-white/12 text-slate-100"
+                      : "border border-slate-200/85 text-slate-800"
               }`}
             >
               {menuBanner.message}
@@ -1005,11 +1025,16 @@ function DiscoverPageContent({
 
               {normalizedSearchQuery.length >= 2 &&
               (searchFetchState === "loading" || searchFetchState === "idle") ? (
-                <NetworkStatusBlock
-                  variant="loading"
-                  isDarkMode={isDarkMode}
-                  title="Searching the catalog…"
-                />
+                <div className="space-y-3" role="status" aria-live="polite">
+                  <p
+                    className={`text-center text-sm font-medium ${
+                      isDarkMode ? "text-slate-300" : "text-slate-600"
+                    }`}
+                  >
+                    Searching the catalog…
+                  </p>
+                  <SearchResultsSkeletonList rows={5} />
+                </div>
               ) : null}
 
               {searchFetchState === "error" ? (

@@ -18,7 +18,7 @@
 ## UI & UX (condensed)
 
 - [x] Dark mode: better contrast on muted/meta text and tinted surfaces.
-- [ ] Skeletons for cards/search rows; clearer empty/error/success patterns.
+- [x] Skeletons for cards/search rows; clearer empty/error/success patterns.
 - [x] One visual system: type scale, vertical rhythm, radius/elevation by role, chip/badge grammar, input states, z-index scale doc.
 - [x] A11y: focus rings, 44px targets where needed, Escape closes modals, icon-only ARIA.
 - [ ] Motion: shared durations/easings + reduced-motion alternatives beyond global slow-down.

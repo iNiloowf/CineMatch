@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NetworkStatusBlock } from "@/components/network-status-block";
+import { DiscoverCardSkeleton } from "@/components/ui-skeleton";
 import { useAppState } from "@/lib/app-state";
 
 export function ProtectedScreen({ children }: { children: React.ReactNode }) {
@@ -26,11 +27,21 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
   if (!isReady) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
-        <NetworkStatusBlock
-          variant="loading"
-          isDarkMode={isDarkMode}
-          title="Starting CineMatch…"
-        />
+        <div
+          className="mx-auto w-full max-w-md space-y-4"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading app"
+        >
+          <DiscoverCardSkeleton />
+          <p
+            className={`text-center text-sm font-medium ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
+            Starting CineMatch…
+          </p>
+        </div>
       </div>
     );
   }
@@ -52,15 +63,23 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
   if (!currentUser && currentUserId) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
-        <NetworkStatusBlock
-          variant="loading"
-          isDarkMode={isDarkMode}
-          title={
-            isSyncingAccountData
+        <div
+          className="mx-auto w-full max-w-md space-y-4"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading your profile"
+        >
+          <DiscoverCardSkeleton />
+          <p
+            className={`text-center text-sm font-medium ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
+            {isSyncingAccountData
               ? "Syncing your picks, links, and profile…"
-              : "Loading your movie lounge…"
-          }
-        />
+              : "Loading your movie lounge…"}
+          </p>
+        </div>
       </div>
     );
   }

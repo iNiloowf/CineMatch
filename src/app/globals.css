@@ -997,6 +997,41 @@ input[type="range"] {
   }
 }
 
+/* Placeholder “bones” for search rows / discover card */
+.ui-skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.42);
+}
+
+.theme-dark .ui-skeleton-shimmer {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ui-skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 42%,
+    transparent 85%
+  );
+  animation: shimmerSweep 2s ease-in-out infinite;
+}
+
+.theme-dark .ui-skeleton-shimmer::after {
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 42%,
+    transparent 85%
+  );
+}
+
 @keyframes softPulse {
   0%,
   100% {
@@ -1016,6 +1051,11 @@ input[type="range"] {
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .ui-skeleton-shimmer::after {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }
 
