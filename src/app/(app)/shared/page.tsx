@@ -227,11 +227,11 @@ export default function SharedWatchlistPage() {
           >
             <div className="ui-shell-header !border-b-black/6">
               <p
-                className={`min-w-0 flex-1 truncate text-sm font-semibold ${
-                  isDarkMode ? "text-white" : "text-slate-900"
+                className={`min-w-0 flex-1 text-xs font-medium tracking-[0.01em] ${
+                  isDarkMode ? "text-slate-300" : "text-slate-500"
                 }`}
               >
-                {detailsMovie.movie.title}
+                Mutual match details
               </p>
               <button
                 type="button"
