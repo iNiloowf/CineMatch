@@ -165,7 +165,16 @@ export default function ProfilePage() {
       href: "/linked",
       title: "Friends",
       subtitle: "Who you match with",
-      shape: "rounded-[2rem] rounded-br-[2.85rem] sm:rounded-[2.25rem] sm:rounded-br-[3.25rem]",
+      accentBar: "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500",
+      surface: isDarkMode
+        ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
+        : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]",
+      iconWrap: isDarkMode
+        ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
+        : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm",
+      titleClass: isDarkMode ? "text-white" : "text-slate-900",
+      subClass: isDarkMode ? "text-violet-200/85" : "text-violet-700/85",
+      chevronClass: isDarkMode ? "text-violet-300/90" : "text-violet-500",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
@@ -179,7 +188,16 @@ export default function ProfilePage() {
       href: "/connect",
       title: "Connect",
       subtitle: "Invite & link flow",
-      shape: "rounded-[2.35rem] sm:rounded-[2.6rem]",
+      accentBar: "bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500",
+      surface: isDarkMode
+        ? "border-cyan-400/15 bg-gradient-to-br from-slate-900/90 to-cyan-950/40 ring-1 ring-cyan-400/12"
+        : "border-cyan-200/90 bg-gradient-to-br from-white via-sky-50/90 to-cyan-50/40 ring-1 ring-sky-100/90 shadow-[0_12px_32px_rgba(14,116,144,0.1)]",
+      iconWrap: isDarkMode
+        ? "bg-cyan-500/20 text-cyan-50 ring-2 ring-cyan-400/30"
+        : "bg-cyan-600 text-white ring-2 ring-cyan-300/55 shadow-sm",
+      titleClass: isDarkMode ? "text-white" : "text-slate-900",
+      subClass: isDarkMode ? "text-cyan-100/85" : "text-cyan-800/90",
+      chevronClass: isDarkMode ? "text-cyan-200/90" : "text-cyan-600",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" />
@@ -191,7 +209,16 @@ export default function ProfilePage() {
       href: "/settings",
       title: "Settings",
       subtitle: "Theme & preferences",
-      shape: "rounded-[2rem] rounded-tl-[2.85rem] sm:rounded-[2.25rem] sm:rounded-tl-[3.25rem]",
+      accentBar: "bg-gradient-to-r from-slate-500 via-slate-600 to-violet-600",
+      surface: isDarkMode
+        ? "border-white/12 bg-gradient-to-br from-slate-950/95 to-violet-950/35 ring-1 ring-white/8"
+        : "border-slate-200/95 bg-gradient-to-br from-white via-slate-50/95 to-violet-50/35 ring-1 ring-slate-200/80 shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
+      iconWrap: isDarkMode
+        ? "bg-white/12 text-slate-100 ring-2 ring-white/18"
+        : "bg-slate-800 text-white ring-2 ring-slate-300/70 shadow-sm",
+      titleClass: isDarkMode ? "text-white" : "text-slate-900",
+      subClass: isDarkMode ? "text-slate-300" : "text-slate-600",
+      chevronClass: isDarkMode ? "text-slate-400" : "text-slate-500",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <circle cx="12" cy="12" r="3.2" />
@@ -532,47 +559,35 @@ export default function ProfilePage() {
         </SurfaceCard>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {shortcutTiles.map((tile, index) => (
           <Link
             key={tile.href}
             href={tile.href}
-            className={`discover-toolbar-enter group relative flex min-h-[6.25rem] overflow-hidden p-[1px] text-white transition hover:-translate-y-1 hover:scale-[1.02] active:translate-y-0 active:scale-[0.99] ${actionRing} ${tile.shape}`}
+            className={`discover-toolbar-enter group relative flex min-h-[5.85rem] overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:min-h-[6.1rem] sm:rounded-[24px] ${tile.surface}`}
             style={{ animationDelay: `${index * 75}ms` }}
           >
-            <span
-              className={`pointer-events-none absolute inset-0 ${actionGradient} opacity-95 transition group-hover:opacity-100`}
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/20 blur-2xl transition group-hover:bg-white/28"
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute -bottom-8 -left-4 h-24 w-24 rounded-full bg-fuchsia-400/25 blur-xl"
-              aria-hidden
-            />
-            <div className={`relative flex w-full flex-col gap-3 p-4 sm:p-5 ${tile.shape} bg-black/10`}>
-              <div className="flex w-full items-start gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/22 text-white shadow-inner ring-2 ring-white/35">
-                  {tile.icon}
-                </span>
-                <div className="min-w-0 flex-1 pt-0.5 text-left">
-                  <p className="text-base font-extrabold leading-tight tracking-tight drop-shadow-sm">{tile.title}</p>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85">
-                    {tile.subtitle}
-                  </p>
-                </div>
+            <span className={`pointer-events-none absolute inset-x-0 top-0 h-1 ${tile.accentBar}`} aria-hidden />
+            <div className="flex w-full items-center gap-3 px-4 py-4 sm:gap-3.5 sm:px-5 sm:py-4">
+              <span
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-[1.04] sm:h-12 sm:w-12 ${tile.iconWrap}`}
+              >
+                {tile.icon}
+              </span>
+              <div className="min-w-0 flex-1 text-left">
+                <p className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${tile.titleClass}`}>
+                  {tile.title}
+                </p>
+                <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${tile.subClass}`}>
+                  {tile.subtitle}
+                </p>
               </div>
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-extrabold tracking-wide text-violet-700 shadow-md ring-1 ring-violet-200/90 transition group-hover:bg-white group-hover:shadow-lg">
-                  Open
-                  <span aria-hidden className="text-base leading-none">
-                    →
-                  </span>
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/55">Tap</span>
-              </div>
+              <span
+                className={`shrink-0 text-lg font-light transition group-hover:translate-x-0.5 sm:text-xl ${tile.chevronClass}`}
+                aria-hidden
+              >
+                →
+              </span>
             </div>
           </Link>
         ))}

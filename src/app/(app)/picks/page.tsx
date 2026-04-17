@@ -476,9 +476,6 @@ export default function PicksPage() {
                 {acceptedMovies.length}
               </p>
             </div>
-            <p className={`mt-2 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              Titles on your personal yes list.
-            </p>
           </SurfaceCard>
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
@@ -511,9 +508,6 @@ export default function PicksPage() {
                 {mutualPickCount}
               </p>
             </div>
-            <p className={`mt-2 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              Unique titles you and a linked friend both accepted.
-            </p>
           </SurfaceCard>
         </div>
 
