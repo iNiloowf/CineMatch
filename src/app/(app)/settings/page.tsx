@@ -505,6 +505,31 @@ export default function SettingsPage() {
             onChange={(checked) => updateSettings({ cellularSync: checked })}
           />
         </div>
+        <div className={`h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
+        <div className="space-y-2">
+          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            Legal
+          </p>
+          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Review the app policies and terms before using CineMatch.
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setLegalModal("privacy")}
+              className="ui-btn ui-btn-secondary w-full"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setLegalModal("terms")}
+              className="ui-btn ui-btn-secondary w-full"
+            >
+              Terms of Service
+            </button>
+          </div>
+        </div>
       </SurfaceCard>
 
       <div className={preferencesDivider}>
@@ -592,22 +617,6 @@ export default function SettingsPage() {
             {ticketFeedback}
           </p>
         ) : null}
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setLegalModal("privacy")}
-            className="ui-btn ui-btn-secondary w-full"
-          >
-            Privacy Policy
-          </button>
-          <button
-            type="button"
-            onClick={() => setLegalModal("terms")}
-            className="ui-btn ui-btn-secondary w-full"
-          >
-            Terms of Service
-          </button>
-        </div>
         <div
           className={`my-6 h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`}
           aria-hidden
