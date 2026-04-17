@@ -60,6 +60,9 @@ type TicketManageStatus = "open" | "under_review" | "closed";
 export default function AdminDesktopPage() {
   const isDarkMode = true;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
@@ -232,8 +235,35 @@ export default function AdminDesktopPage() {
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
+    setDashboardError("");
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password.trim()) {
+      setErrorMessage("Please enter admin email and password.");
+      return;
+    }
+
+    setIsLoggingIn(true);
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setIsLoggingIn(false);
+      setErrorMessage("Authentication client is not available.");
+      return;
+    }
+
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
+    if (signInResult.error) {
+      setIsLoggingIn(false);
+      setErrorMessage(signInResult.error.message || "Admin login failed.");
+      return;
+    }
 
     const didLoad = await loadDashboard();
+    setIsLoggingIn(false);
     if (!didLoad) {
       setErrorMessage("Admin dashboard could not be loaded.");
       return;
@@ -296,10 +326,43 @@ export default function AdminDesktopPage() {
           <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
             <h1 className="text-2xl font-bold">Admin Desktop</h1>
             <p className={`mt-2 text-sm ${softText}`}>
-              Use a signed-in account with admin role/allowlist access to view support and
-              operational data.
+              Sign in with your admin account to view support and operational data.
             </p>
             <form className="mt-6 space-y-4" onSubmit={handleLogin}>
+              <label className="block space-y-2">
+                <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${softText}`}>
+                  Admin email
+                </span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="username"
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-500"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                  placeholder="admin@cinematch.app"
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${softText}`}>
+                  Password
+                </span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-500"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                  placeholder="Enter your password"
+                />
+              </label>
               {errorMessage ? (
                 <p className={isDarkMode ? "text-sm text-rose-300" : "text-sm text-rose-700"}>
                   {errorMessage}
@@ -310,8 +373,12 @@ export default function AdminDesktopPage() {
                   {dashboardError}
                 </p>
               ) : null}
-              <button type="submit" className="ui-btn ui-btn-primary w-full">
-                Open admin dashboard
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="ui-btn ui-btn-primary w-full disabled:opacity-60"
+              >
+                {isLoggingIn ? "Signing in..." : "Open admin dashboard"}
               </button>
             </form>
           </section>
