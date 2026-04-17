@@ -682,6 +682,33 @@ function DiscoverPageContent({
   const hasOnboardingSelection =
     onboardingFavorites.length > 0 || onboardingDisliked.length > 0;
 
+  const persistOnboarding = async (skipSelection: boolean) => {
+    setIsSavingOnboarding(true);
+    const favoriteGenres = skipSelection
+      ? []
+      : Array.from(
+          new Set(
+            onboardingFavorites.filter(
+              (genre) => !onboardingDisliked.includes(genre),
+            ),
+          ),
+        );
+    const dislikedGenres = skipSelection
+      ? []
+      : Array.from(
+          new Set(
+            onboardingDisliked.filter((genre) => !favoriteGenres.includes(genre)),
+          ),
+        );
+    await completeOnboarding({
+      favoriteGenres,
+      dislikedGenres,
+      mediaPreference: onboardingMediaPreference,
+      tasteProfile: onboardingPreferences.tasteProfile,
+    });
+    setIsSavingOnboarding(false);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-visible">
       {!isOnboardingComplete ? (
@@ -797,30 +824,19 @@ function DiscoverPageContent({
             <div className="ui-shell-footer">
               <button
                 type="button"
+                disabled={isSavingOnboarding}
+                onClick={() => {
+                  void persistOnboarding(true);
+                }}
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
                 disabled={isSavingOnboarding || !hasOnboardingSelection}
-                onClick={async () => {
-                  setIsSavingOnboarding(true);
-                  const favoriteGenres = Array.from(
-                    new Set(
-                      onboardingFavorites.filter(
-                        (genre) => !onboardingDisliked.includes(genre),
-                      ),
-                    ),
-                  );
-                  const dislikedGenres = Array.from(
-                    new Set(
-                      onboardingDisliked.filter(
-                        (genre) => !favoriteGenres.includes(genre),
-                      ),
-                    ),
-                  );
-                  await completeOnboarding({
-                    favoriteGenres,
-                    dislikedGenres,
-                    mediaPreference: onboardingMediaPreference,
-                    tasteProfile: onboardingPreferences.tasteProfile,
-                  });
-                  setIsSavingOnboarding(false);
+                onClick={() => {
+                  void persistOnboarding(false);
                 }}
                 className="ui-btn ui-btn-primary min-w-0 flex-1"
               >
