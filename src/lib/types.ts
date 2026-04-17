@@ -76,6 +76,8 @@ export type ProfileSettings = {
   autoplayTrailers: boolean;
   hideSpoilers: boolean;
   cellularSync: boolean;
+  /** Softer UI motion (also respects the system “reduce motion” setting). */
+  reduceMotion: boolean;
 };
 
 export type OnboardingPreferences = {

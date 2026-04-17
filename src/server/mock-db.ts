@@ -1,4 +1,4 @@
-import { initialAppData } from "@/lib/mock-data";
+import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import { AppData, ProfileSettings } from "@/lib/types";
 import { fetchTmdbMediaPool, isTmdbConfigured } from "@/server/tmdb";
 
@@ -80,13 +80,7 @@ export function signupUser(payload: {
   };
 
   database.users.push(user);
-  database.settings[user.id] = {
-    darkMode: false,
-    notifications: true,
-    autoplayTrailers: false,
-    hideSpoilers: true,
-    cellularSync: true,
-  };
+  database.settings[user.id] = { ...defaultSettings };
 
   const safeUser = { ...user };
   Reflect.deleteProperty(safeUser, "password");

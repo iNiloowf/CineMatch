@@ -48,7 +48,7 @@ Prefer `gap-[var(--rhythm-section)]` (or equivalent margin) instead of one-off p
 
 - **Durations:** `--motion-duration-instant` … `--motion-duration-fade-up`, plus Discover-specific tokens (`--motion-duration-discover-out`, `--motion-duration-discover-in`, swipe, undo, etc.) — all set on `:root` in `globals.css`.
 - **Easings:** `--motion-ease-standard` (same curve as `--ease-soft`), `--motion-ease-emphasized` (Discover swipe feedback), `--motion-ease-shimmer`, `--motion-ease-out`.
-- **`prefers-reduced-motion: reduce`:** decorative loops (shimmer, soft pulse, confetti) stop; choreographed moves (Discover card in/out, modals, fade-up) use short **opacity-only** keyframes (`motionOpacityIn` / `motionOpacityOut`) instead of the old global “1ms everything” clamp. Interactive hovers that only moved pixels (`translateY` on `.ui-btn`, lift on `.ui-motion-surface`) are disabled in this mode.
+- **Less motion:** `app-state` sets `data-reduce-motion` on `<html>` when **Settings → Less motion** is on **or** the OS requests `prefers-reduced-motion: reduce`. The same CSS rules apply in both cases: decorative loops (shimmer, soft pulse, confetti) stop; choreographed moves use short **opacity-only** keyframes (`motionOpacityIn` / `motionOpacityOut`); hover lifts on `.ui-btn` and `.ui-motion-surface` are disabled. Supabase: add column `reduce_motion` on `settings` (see `supabase/migrations/20250416000000_settings_reduce_motion.sql`).
 
 ## Chips & badges
 

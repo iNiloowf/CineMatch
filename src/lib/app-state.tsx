@@ -92,6 +92,7 @@ type SettingsRow = {
   autoplay_trailers: boolean;
   hide_spoilers: boolean;
   cellular_sync: boolean;
+  reduce_motion?: boolean | null;
 };
 
 type SwipeRow = {
@@ -236,6 +237,20 @@ type AppStateContextValue = {
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
+function mergeProfileSettings(
+  partial: Partial<ProfileSettings> | undefined,
+): ProfileSettings {
+  return { ...defaultSettings, ...partial };
+}
+
+function normalizeAppDataFromStorage(parsed: AppData): AppData {
+  const settings: AppData["settings"] = {};
+  for (const [userId, row] of Object.entries(parsed.settings ?? {})) {
+    settings[userId] = mergeProfileSettings(row as Partial<ProfileSettings>);
+  }
+  return { ...parsed, settings };
+}
+
 function cloneInitialData(): AppData {
   return JSON.parse(JSON.stringify(initialAppData)) as AppData;
 }
@@ -320,6 +335,7 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
     autoplayTrailers: settings.autoplay_trailers,
     hideSpoilers: settings.hide_spoilers,
     cellularSync: settings.cellular_sync,
+    reduceMotion: settings.reduce_motion ?? false,
   };
 }
 
@@ -762,7 +778,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     const storedData = window.localStorage.getItem(STORAGE_KEY);
-    return storedData ? (JSON.parse(storedData) as AppData) : cloneInitialData();
+    if (!storedData) {
+      return cloneInitialData();
+    }
+    try {
+      return normalizeAppDataFromStorage(JSON.parse(storedData) as AppData);
+    } catch {
+      return cloneInitialData();
+    }
   });
   const [currentUserId, setCurrentUserId] = useState<string | null>(() => {
     if (typeof window === "undefined") {
@@ -972,7 +995,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       supabaseClient
         .from("settings")
         .select(
-          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
+          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion",
         )
         .eq("user_id", activeUserId)
         .maybeSingle(),
@@ -1130,6 +1153,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("theme-dark", isDarkMode);
   }, [isDarkMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReduceMotion = () => {
+      const fromUser =
+        currentUserId != null &&
+        data.settings[currentUserId]?.reduceMotion === true;
+      const shouldReduce = Boolean(fromUser || media.matches);
+      document.documentElement.toggleAttribute("data-reduce-motion", shouldReduce);
+    };
+
+    syncReduceMotion();
+    media.addEventListener("change", syncReduceMotion);
+    return () => {
+      media.removeEventListener("change", syncReduceMotion);
+    };
+  }, [currentUserId, data.settings]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -2895,6 +2939,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         autoplay_trailers: nextSettings.autoplayTrailers,
         hide_spoilers: nextSettings.hideSpoilers,
         cellular_sync: nextSettings.cellularSync,
+        reduce_motion: nextSettings.reduceMotion,
         updated_at: new Date().toISOString(),
       };
       await supabase.from("settings").upsert(

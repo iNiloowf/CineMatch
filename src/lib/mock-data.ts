@@ -6,6 +6,7 @@ export const defaultSettings = {
   autoplayTrailers: false,
   hideSpoilers: true,
   cellularSync: true,
+  reduceMotion: false,
 };
 
 export const initialAppData: AppData = {
@@ -46,7 +47,21 @@ export const initialAppData: AppData = {
   invites: [],
   settings: {
     "user-admin": { ...defaultSettings },
-    "user-alex": { darkMode: true, notifications: true, autoplayTrailers: true, hideSpoilers: false, cellularSync: true },
-    "user-jordan": { darkMode: false, notifications: false, autoplayTrailers: false, hideSpoilers: true, cellularSync: false },
+    "user-alex": {
+      darkMode: true,
+      notifications: true,
+      autoplayTrailers: true,
+      hideSpoilers: false,
+      cellularSync: true,
+      reduceMotion: false,
+    },
+    "user-jordan": {
+      darkMode: false,
+      notifications: false,
+      autoplayTrailers: false,
+      hideSpoilers: true,
+      cellularSync: false,
+      reduceMotion: true,
+    },
   },
 };

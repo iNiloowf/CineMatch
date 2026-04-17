@@ -37,6 +37,12 @@ export default function SettingsPage() {
             onChange={(checked) => updateSettings({ darkMode: checked })}
           />
           <SettingToggle
+            label="Less motion"
+            description="Use simpler fades and fewer moving effects. The system “reduce motion” setting also applies automatically."
+            checked={settings.reduceMotion}
+            onChange={(checked) => updateSettings({ reduceMotion: checked })}
+          />
+          <SettingToggle
             label="Notifications"
             description="Get nudges when new shared matches appear."
             checked={settings.notifications}

@@ -1094,116 +1094,121 @@ input[type="range"] {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+/*
+  Softer motion: set on <html> when the user enables “Less motion” in Settings
+  or when the OS requests reduced motion (synced from app-state).
+*/
+html[data-reduce-motion="true"] {
+  scroll-behavior: auto;
+}
 
-  a,
-  button,
-  section,
-  input,
-  textarea {
-    transition-duration: 80ms !important;
-    transition-property: background-color, border-color, color, opacity, box-shadow !important;
-  }
+html[data-reduce-motion="true"]
+  :where(
+    a,
+    button,
+    section,
+    input,
+    textarea
+  ) {
+  transition-duration: 80ms !important;
+  transition-property: background-color, border-color, color, opacity, box-shadow !important;
+}
 
-  button:active,
-  .ui-btn:active {
-    transform: none !important;
-  }
+html[data-reduce-motion="true"] :where(button:active),
+html[data-reduce-motion="true"] .ui-btn:active {
+  transform: none !important;
+}
 
-  .ui-btn:hover {
-    transform: none !important;
-  }
+html[data-reduce-motion="true"] .ui-btn:hover {
+  transform: none !important;
+}
 
-  .ui-motion-surface:hover {
-    transform: none !important;
-  }
+html[data-reduce-motion="true"] .ui-motion-surface:hover {
+  transform: none !important;
+}
 
-  .fade-up-enter {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .fade-up-enter {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .expand-soft {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .expand-soft {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .details-modal-shell {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .details-modal-shell {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .details-panel {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .details-panel {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .details-soft {
-    transition:
-      max-height var(--motion-duration-instant) var(--motion-ease-standard),
-      opacity var(--motion-duration-instant) var(--motion-ease-standard),
-      margin var(--motion-duration-instant) var(--motion-ease-standard) !important;
-  }
+html[data-reduce-motion="true"] .details-soft {
+  transition:
+    max-height var(--motion-duration-instant) var(--motion-ease-standard),
+    opacity var(--motion-duration-instant) var(--motion-ease-standard),
+    margin var(--motion-duration-instant) var(--motion-ease-standard) !important;
+}
 
-  .discover-card-out-left,
-  .discover-card-out-right {
-    animation: motionOpacityOut var(--motion-duration-instant) var(--motion-ease-standard) both;
-    filter: none !important;
-  }
+html[data-reduce-motion="true"] .discover-card-out-left,
+html[data-reduce-motion="true"] .discover-card-out-right {
+  animation: motionOpacityOut var(--motion-duration-instant) var(--motion-ease-standard) both;
+  filter: none !important;
+}
 
-  .discover-card-in-left,
-  .discover-card-in-right {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-    filter: none !important;
-  }
+html[data-reduce-motion="true"] .discover-card-in-left,
+html[data-reduce-motion="true"] .discover-card-in-right {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  filter: none !important;
+}
 
-  .discover-card-swipe-accepted,
-  .discover-card-swipe-rejected {
-    animation: motionOpacityOut var(--motion-duration-reveal) var(--motion-ease-standard) both;
-    filter: none !important;
-  }
+html[data-reduce-motion="true"] .discover-card-swipe-accepted,
+html[data-reduce-motion="true"] .discover-card-swipe-rejected {
+  animation: motionOpacityOut var(--motion-duration-reveal) var(--motion-ease-standard) both;
+  filter: none !important;
+}
 
-  .discover-feedback-chip {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .discover-feedback-chip {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .discover-undo-toast {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .discover-undo-toast {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .achievement-toast-pop {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .achievement-toast-pop {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .app-notify-banner {
-    animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-  }
+html[data-reduce-motion="true"] .app-notify-banner {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
 
-  .soft-pulse {
-    animation: none !important;
-  }
+html[data-reduce-motion="true"] .soft-pulse {
+  animation: none !important;
+}
 
-  .glass-shimmer::after {
-    animation: none !important;
-    opacity: 0 !important;
-  }
+html[data-reduce-motion="true"] .glass-shimmer::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
 
-  .ui-skeleton-shimmer::after {
-    animation: none !important;
-    opacity: 0 !important;
-  }
+html[data-reduce-motion="true"] .ui-skeleton-shimmer::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
 
-  .achievement-confetti {
-    animation: none !important;
-    opacity: 0 !important;
-  }
+html[data-reduce-motion="true"] .achievement-confetti {
+  animation: none !important;
+  opacity: 0 !important;
+}
 
-  .discover-card-stage {
-    will-change: opacity;
-  }
+html[data-reduce-motion="true"] .discover-card-stage {
+  will-change: opacity;
+}
 
-  .discover-swipe-card-motion {
-    transition-duration: var(--motion-duration-instant) !important;
-  }
+html[data-reduce-motion="true"] .discover-swipe-card-motion {
+  transition-duration: var(--motion-duration-instant) !important;
 }
 
 .theme-dark body {

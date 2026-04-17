@@ -19,6 +19,7 @@ type SettingsRow = {
   autoplay_trailers: boolean;
   hide_spoilers: boolean;
   cellular_sync: boolean;
+  reduce_motion?: boolean | null;
 };
 
 type LinkRow = {
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin
         .from("settings")
         .select(
-          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync",
+          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion",
         )
         .eq("user_id", currentUserId)
         .maybeSingle(),
