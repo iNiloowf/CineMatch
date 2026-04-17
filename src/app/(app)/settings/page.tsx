@@ -96,6 +96,7 @@ export default function SettingsPage() {
   const [ticketState, setTicketState] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [ticketFeedback, setTicketFeedback] = useState("");
   const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
+  const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -111,6 +112,7 @@ export default function SettingsPage() {
   );
 
   useEscapeToClose(isContactAdminModalOpen, () => setIsContactAdminModalOpen(false));
+  useEscapeToClose(Boolean(legalModal), () => setLegalModal(null));
 
   if (!settings) {
     return null;
@@ -306,6 +308,105 @@ export default function SettingsPage() {
           </div>
         </div>
       ) : null}
+      {legalModal ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setLegalModal(null)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={legalModal === "privacy" ? "Privacy Policy" : "Terms of Service"}
+          >
+            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-inherit">
+                  {legalModal === "privacy" ? "Privacy Policy" : "Terms of Service"}
+                </p>
+                <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  {legalModal === "privacy"
+                    ? "Simple summary for CineMatch users."
+                    : "Basic usage terms for CineMatch."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLegalModal(null)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body space-y-3 !pt-4 text-sm leading-6">
+              {legalModal === "privacy" ? (
+                <>
+                  <p>
+                    We collect only the data needed to run CineMatch: account info, profile details,
+                    movie interactions, and support tickets.
+                  </p>
+                  <p>
+                    Your data is used for app features (matching, shared watchlists, support) and is
+                    stored in Supabase.
+                  </p>
+                  <p>
+                    You can request account/data deletion by contacting support from this Settings
+                    page.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    By using CineMatch, you agree to use the app lawfully and avoid abuse, spam, or
+                    attempts to access other users’ private data.
+                  </p>
+                  <p>
+                    Features may change over time. We can suspend access for misuse or violations.
+                  </p>
+                  <p>
+                    The service is provided as-is, and we aim for reliability but cannot guarantee
+                    uninterrupted availability.
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="ui-shell-footer !pt-3">
+              <Link
+                href={legalModal === "privacy" ? "/privacy" : "/terms"}
+                className="ui-btn ui-btn-secondary min-w-0 flex-1 text-center"
+              >
+                Open full page
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLegalModal(null)}
+                className="ui-btn ui-btn-primary min-w-0 flex-1"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <PageHeader
         eyebrow="Preferences"
@@ -491,6 +592,22 @@ export default function SettingsPage() {
             {ticketFeedback}
           </p>
         ) : null}
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setLegalModal("privacy")}
+            className="ui-btn ui-btn-secondary w-full"
+          >
+            Privacy Policy
+          </button>
+          <button
+            type="button"
+            onClick={() => setLegalModal("terms")}
+            className="ui-btn ui-btn-secondary w-full"
+          >
+            Terms of Service
+          </button>
+        </div>
         <div
           className={`my-6 h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`}
           aria-hidden
