@@ -56,6 +56,8 @@ export const initialAppData: AppData = {
       hideSpoilers: false,
       cellularSync: true,
       reduceMotion: false,
+      subscriptionTier: "free",
+      adminModeSimulatePro: false,
     },
     "user-jordan": {
       darkMode: false,
@@ -64,6 +66,8 @@ export const initialAppData: AppData = {
       hideSpoilers: true,
       cellularSync: false,
       reduceMotion: true,
+      subscriptionTier: "free",
+      adminModeSimulatePro: false,
     },
   },
 };

@@ -277,7 +277,7 @@ export default function AdminDesktopPage() {
               typeof payload.adminModeSimulatePro === "boolean"
                 ? payload.adminModeSimulatePro
                 : row.adminModeSimulatePro;
-            const effectiveSubscriptionTier =
+            const effectiveSubscriptionTier: DashboardUserRow["effectiveSubscriptionTier"] =
               adminModeSimulatePro || subscriptionTier === "pro" ? "pro" : "free";
             return {
               ...row,
