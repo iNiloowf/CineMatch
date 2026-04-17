@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
+import { parseJsonBody } from "@/server/api-validation";
 import {
   getResendClient,
   getResendFromEmail,
@@ -7,6 +8,13 @@ import {
   isResendTestModeEnabled,
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { z } from "zod";
+
+const sendSignupEmailBodySchema = z.object({
+  name: z.string().trim().min(1, "Please fill in your name first."),
+  email: z.string().trim().email("Please enter a valid email address."),
+  password: z.string().min(1, "Please fill in your password first."),
+});
 
 function getAppUrl(request: NextRequest) {
   return (
@@ -16,22 +24,15 @@ function getAppUrl(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as {
-    name?: string;
-    email?: string;
-    password?: string;
-  };
+  const parsedBody = await parseJsonBody(request, sendSignupEmailBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   const name = body.name?.trim() ?? "";
   const email = body.email?.trim().toLowerCase() ?? "";
   const password = body.password ?? "";
-
-  if (!name || !email || !password) {
-    return NextResponse.json(
-      { error: "Please fill in your name, email, and password first." },
-      { status: 400 },
-    );
-  }
 
   const supabaseAdmin = getSupabaseAdminClient();
   const resend = getResendClient();

@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
+import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-
-type AdminAuthBody = {
-  status?: string;
-};
+import { z } from "zod";
 
 type SupportTicketStatus = "open" | "under_review" | "closed";
 type TicketStatusRow = { id: string; status: SupportTicketStatus | "in_progress" };
@@ -18,13 +16,9 @@ type TicketMutationResult = {
 
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MUTATION_MAX = 80;
-
-function normalizeTicketStatus(value: string | undefined): SupportTicketStatus | null {
-  if (value === "open" || value === "under_review" || value === "closed") {
-    return value;
-  }
-  return null;
-}
+const updateTicketBodySchema = z.object({
+  status: z.enum(["open", "under_review", "closed"]),
+});
 
 function isLegacyStatusConstraintError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -78,17 +72,21 @@ export async function PATCH(
     );
   }
 
-  const body = (await request.json()) as AdminAuthBody;
-  const nextStatus = normalizeTicketStatus(body.status);
+  const parsedBody = await parseJsonBody(request, updateTicketBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const { status: nextStatus } = parsedBody.data;
   const adminAuth = await requireServerAdmin(request);
   if (!adminAuth.ok) {
     return adminAuth.response;
   }
   const { identity } = adminAuth;
 
-  if (!ticketId || !nextStatus) {
+  if (!ticketId) {
     return NextResponse.json(
-      { error: "Ticket id and a valid status are required." },
+      { error: "Ticket id is required." },
       { status: 400 },
     );
   }

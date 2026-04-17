@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
+import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
 import {
   getResendClient,
@@ -9,23 +10,22 @@ import {
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { z } from "zod";
 
 type TicketPriority = "low" | "normal" | "high";
 
 const TICKET_WINDOW_MS = 10 * 60 * 1000;
 const TICKET_MAX = 10;
+const createTicketBodySchema = z.object({
+  subject: z.string().trim().min(1, "Subject is required.").max(200),
+  message: z.string().trim().min(1, "Message is required.").max(5000),
+  priority: z.enum(["low", "normal", "high"]).optional(),
+});
 
 type TicketProfileLookup = {
   email: string | null;
   full_name: string | null;
 };
-
-function normalizePriority(value: string | undefined): TicketPriority {
-  if (value === "low" || value === "high") {
-    return value;
-  }
-  return "normal";
-}
 
 function isMissingSupportTicketsError(error: { message?: string; code?: string } | null) {
   if (!error) {
@@ -94,21 +94,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = (await request.json()) as {
-    subject?: string;
-    message?: string;
-    priority?: string;
-  };
-  const subject = (body.subject ?? "").trim();
-  const message = (body.message ?? "").trim();
-  const priority = normalizePriority(body.priority);
-
-  if (!subject || !message) {
-    return NextResponse.json(
-      { error: "Subject and message are required." },
-      { status: 400 },
-    );
+  const parsedBody = await parseJsonBody(request, createTicketBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const subject = parsedBody.data.subject.trim();
+  const message = parsedBody.data.message.trim();
+  const priority: TicketPriority = parsedBody.data.priority ?? "normal";
 
   const ticketResult = (await supabaseAdmin
     .from("support_tickets")

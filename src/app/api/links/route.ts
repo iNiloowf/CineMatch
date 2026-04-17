@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/server/api-validation";
 import { getDatabase, linkUsers } from "@/server/mock-db";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { z } from "zod";
+
+const createLinkBodySchema = z.object({
+  userId: z.string().min(1),
+  targetUserId: z.string().min(1),
+});
 
 export async function GET(request: NextRequest) {
   const auth = await verifyBearerFromRequest(request);
@@ -30,17 +37,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "You need to be logged in." }, { status: 401 });
   }
 
-  const body = (await request.json()) as { userId?: string; targetUserId?: string };
+  const parsedBody = await parseJsonBody(request, createLinkBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   if (!body.userId || body.userId !== auth.userId) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
-  }
-
-  if (!body.targetUserId) {
-    return NextResponse.json(
-      { error: "targetUserId is required." },
-      { status: 400 },
-    );
   }
 
   const link = linkUsers(body.userId, body.targetUserId);

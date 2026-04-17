@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseJsonBody } from "@/server/api-validation";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { z } from "zod";
 
 type InviteRow = {
   id: string;
@@ -22,6 +24,9 @@ type LinkRow = {
 
 const ACCEPT_WINDOW_MS = 60 * 60 * 1000;
 const ACCEPT_MAX_PER_USER = 60;
+const acceptInviteBodySchema = z.object({
+  token: z.string().trim().min(1, "An invite token is required."),
+});
 
 export async function POST(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
@@ -61,15 +66,11 @@ export async function POST(request: NextRequest) {
 
   const currentUserId = authToken.userId;
 
-  const body = (await request.json()) as { token?: string };
-  const token = body.token?.trim();
-
-  if (!token) {
-    return NextResponse.json(
-      { error: "An invite token is required." },
-      { status: 400 },
-    );
+  const parsedBody = await parseJsonBody(request, acceptInviteBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const token = parsedBody.data.token.trim();
 
   const inviteResult = await supabaseAdmin
     .from("invite_links")

@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { parseJsonBody } from "@/server/api-validation";
 import { loginUser } from "@/server/mock-db";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { z } from "zod";
 
 const MAX_SAFE_AUTH_METADATA_FIELD_LENGTH = 4096;
+const loginBodySchema = z.object({
+  email: z.string().trim().email(),
+  password: z.string().min(1),
+});
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  const parsedBody = await parseJsonBody(request, loginBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 

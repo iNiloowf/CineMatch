@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
+import { parseJsonBody } from "@/server/api-validation";
 import {
   getResendClient,
   getResendFromEmail,
@@ -7,21 +8,22 @@ import {
   isResendTestModeEnabled,
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { z } from "zod";
+
+const sendMagicLinkBodySchema = z.object({
+  email: z.string().trim().email("Enter a valid email first so we can send the link."),
+});
 
 function getAppUrl(request: NextRequest) {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as { email?: string };
-  const email = body.email?.trim().toLowerCase() ?? "";
-
-  if (!email) {
-    return NextResponse.json(
-      { error: "Enter your email first so we know where to send the link." },
-      { status: 400 },
-    );
+  const parsedBody = await parseJsonBody(request, sendMagicLinkBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const email = parsedBody.data.email.trim().toLowerCase();
 
   const supabaseAdmin = getSupabaseAdminClient();
   const resend = getResendClient();
