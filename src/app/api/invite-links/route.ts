@@ -65,6 +65,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     invite: insertResult.data,
-    url: `${getAppUrl(request)}/linked?invite=${token}`,
+    url: `${getAppUrl(request)}/connect?invite=${token}`,
   });
 }

@@ -233,12 +233,18 @@ export default function ProfilePage() {
         </SurfaceCard>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link
           href="/linked"
           className="flex items-center justify-center rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-center text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
         >
-          Linked People
+          Friends
+        </Link>
+        <Link
+          href="/connect"
+          className="flex items-center justify-center rounded-[24px] border border-white/70 bg-white/85 px-4 py-4 text-center text-sm font-semibold text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)]"
+        >
+          Connect
         </Link>
         <Link
           href="/settings"

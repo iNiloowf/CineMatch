@@ -2606,7 +2606,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return {
       ok: true,
-      url: `${window.location.origin}/linked?invite=${token}`,
+      url: `${window.location.origin}/connect?invite=${token}`,
     };
   };
 
