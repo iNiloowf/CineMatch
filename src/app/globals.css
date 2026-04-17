@@ -72,6 +72,21 @@
   --color-chip-on-dark-text: rgba(255, 255, 255, 0.88);
 }
 
+/* Dark shell: brighter meta copy + slightly stronger glass so WCAG-ish contrast holds */
+[data-app-shell-root][data-theme="dark"] {
+  --color-text-muted: #b8c0d4;
+  --color-text-strong: #f8fafc;
+  --color-surface-glass: rgba(255, 255, 255, 0.12);
+  --color-surface-muted: rgba(255, 255, 255, 0.1);
+  --color-border-soft: rgba(255, 255, 255, 0.2);
+  --color-border-input: rgba(255, 255, 255, 0.18);
+  --color-border-input-hover: rgba(255, 255, 255, 0.28);
+  --color-chip-surface-bg: rgba(255, 255, 255, 0.12);
+  --color-chip-surface-text: #e8edf7;
+  --color-chip-on-dark-bg: rgba(255, 255, 255, 0.16);
+  --color-chip-on-dark-text: rgba(255, 255, 255, 0.95);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

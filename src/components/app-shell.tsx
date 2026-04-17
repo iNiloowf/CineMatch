@@ -17,6 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div
       data-app-shell-root="true"
+      data-theme={isDarkMode ? "dark" : "light"}
       className={`min-h-[100svh] min-h-[100dvh] px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3 sm:px-4 sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"

@@ -24,7 +24,7 @@ export function NetworkStatusBlock({
   tertiaryAction,
 }: NetworkStatusBlockProps) {
   const shell = isDarkMode
-    ? "border-white/10 bg-white/6 text-slate-100"
+    ? "border-white/16 bg-white/10 text-slate-100"
     : "border-slate-200/90 bg-slate-50/95 text-slate-900";
 
   return (
@@ -40,7 +40,7 @@ export function NetworkStatusBlock({
           <h3 className="text-base font-semibold leading-snug">{title}</h3>
           {description ? (
             <p
-              className={`text-sm leading-6 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+              className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}
             >
               {description}
             </p>

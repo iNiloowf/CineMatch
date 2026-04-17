@@ -876,7 +876,7 @@ function DiscoverPageContent({
                 </h2>
                 <p
                   className={`text-sm ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                    isDarkMode ? "text-slate-300" : "text-slate-500"
                   }`}
                 >
                   Pick one title to open in Discover.
@@ -995,7 +995,7 @@ function DiscoverPageContent({
                   </h3>
                   <p
                     className={`text-sm leading-6 ${
-                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
                     }`}
                   >
                     Enter at least two characters to search movies and series.
@@ -1159,7 +1159,7 @@ function DiscoverPageContent({
                 </p>
                 <p
                   className={`text-sm ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                    isDarkMode ? "text-slate-300" : "text-slate-500"
                   }`}
                 >
                   Pick one or more genres for this queue.
@@ -1355,7 +1355,7 @@ function DiscoverPageContent({
               </p>
               <p
                 className={`text-xs ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                  isDarkMode ? "text-slate-300" : "text-slate-500"
                 }`}
               >
                 {lastSwipe.decision === "accepted"
@@ -1374,7 +1374,7 @@ function DiscoverPageContent({
               <div className="flex w-full basis-full flex-col gap-2 border-t border-black/8 pt-2 sm:flex-row sm:items-center sm:justify-between">
                 <p
                   className={`min-w-0 text-[11px] leading-snug sm:flex-1 ${
-                    isDarkMode ? "text-slate-400" : "text-slate-600"
+                    isDarkMode ? "text-slate-300" : "text-slate-600"
                   }`}
                 >
                   You can undo a swipe for a few seconds with{" "}

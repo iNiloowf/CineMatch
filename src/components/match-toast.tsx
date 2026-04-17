@@ -70,7 +70,7 @@ export function MatchToast({ toast, isDarkMode, onClose }: MatchToastProps) {
             <p className={`mt-1 text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               {toast.movieTitle}
             </p>
-            <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+            <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
               You and {partnerLabel} both saved this one.
             </p>
           </div>

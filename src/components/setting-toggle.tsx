@@ -36,7 +36,7 @@ export function SettingToggle({
         </p>
         <p
           className={`text-xs leading-5 ${
-            isDarkMode ? "text-slate-400" : "text-slate-500"
+            isDarkMode ? "text-slate-300" : "text-slate-500"
           }`}
         >
           {description}

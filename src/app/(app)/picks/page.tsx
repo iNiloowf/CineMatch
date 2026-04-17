@@ -282,7 +282,7 @@ export default function PicksPage() {
                     </div>
 
                     <div className="space-y-2 pt-4">
-                      <p className="text-xs font-medium text-white/80">
+                      <p className="text-xs font-medium text-white/90">
                         {selectedMovie.genre.slice(0, 3).join(" • ")}
                       </p>
                       <h2 className="text-[1.8rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
@@ -295,7 +295,7 @@ export default function PicksPage() {
                 <div
                   className={`mt-4 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
                     isDarkMode
-                      ? "border border-white/8 bg-white/6"
+                      ? "border border-white/14 bg-white/10"
                       : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
                   }`}
                 >
@@ -305,7 +305,7 @@ export default function PicksPage() {
                       <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {selectedMovie.rating.toFixed(1)}
                       </p>
-                      <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                         IMDb rating
                       </p>
                     </div>
@@ -316,7 +316,7 @@ export default function PicksPage() {
                       <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {selectedMovie.runtime}
                       </p>
-                      <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                         Runtime
                       </p>
                     </div>
@@ -327,7 +327,7 @@ export default function PicksPage() {
                       <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {matchingScore(selectedMovie)}%
                       </p>
-                      <p className={`text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                         Match
                       </p>
                     </div>
@@ -337,7 +337,7 @@ export default function PicksPage() {
                 <div
                   className={`mt-4 rounded-[22px] px-4 py-4 ${
                     isDarkMode
-                      ? "bg-white/8"
+                      ? "bg-white/10"
                       : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
                   }`}
                 >

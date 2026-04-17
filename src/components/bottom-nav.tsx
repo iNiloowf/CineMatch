@@ -79,7 +79,7 @@ export function BottomNav() {
         data-bottom-nav-panel="true"
         className={`mx-auto flex max-w-md items-center justify-between rounded-[26px] px-1.5 py-2 backdrop-blur-2xl max-[380px]:px-1 sm:px-2 ${
           isDarkMode
-            ? "border border-white/10 bg-black/35 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
+            ? "border border-white/16 bg-black/42 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
             : "border border-white/70 bg-white/90 shadow-[0_22px_50px_rgba(124,91,191,0.2)]"
         }`}
       >
@@ -96,7 +96,7 @@ export function BottomNav() {
                 active
                   ? "bg-[linear-gradient(180deg,#c084fc,#8b5cf6_55%,#6d28d9)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_12px_24px_rgba(109,40,217,0.28)]"
                   : isDarkMode
-                    ? "text-slate-400"
+                    ? "text-slate-300"
                     : "text-slate-400"
               }`}
               aria-label={item.label}

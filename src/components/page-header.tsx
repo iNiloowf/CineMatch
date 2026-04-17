@@ -35,7 +35,7 @@ export function PageHeader({
           </h1>
           <p
             className={`max-w-xs text-sm leading-6 ${
-              isDarkMode ? "text-slate-400" : "text-slate-500"
+              isDarkMode ? "text-slate-300" : "text-slate-500"
             }`}
           >
             {description}

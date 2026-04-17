@@ -84,7 +84,7 @@ export default function SettingsPage() {
                     </p>
                     <p
                       className={`text-xs leading-5 ${
-                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                        isDarkMode ? "text-slate-300" : "text-slate-500"
                       }`}
                     >
                       {achievement.description}
@@ -133,7 +133,7 @@ export default function SettingsPage() {
           </p>
           <p
             className={`text-sm leading-6 ${
-              isDarkMode ? "text-slate-400" : "text-slate-500"
+              isDarkMode ? "text-slate-300" : "text-slate-500"
             }`}
           >
             The UI is fully runnable with mock data first, and the repo also ships

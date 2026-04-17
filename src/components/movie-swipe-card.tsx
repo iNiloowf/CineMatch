@@ -300,7 +300,7 @@ export function MovieSwipeCard({
             <div
               className={`mt-4 rounded-[22px] px-3 py-3 ${
                 isDarkMode
-                  ? "border border-white/8 bg-white/6"
+                  ? "border border-white/14 bg-white/10"
                   : "border border-slate-200/80 bg-slate-50/90"
               }`}
             >
@@ -317,7 +317,7 @@ export function MovieSwipeCard({
                     </p>
                     <p
                       className={`text-[10px] ${
-                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                        isDarkMode ? "text-slate-300" : "text-slate-500"
                       }`}
                     >
                       IMDb rating
@@ -342,7 +342,7 @@ export function MovieSwipeCard({
                     </p>
                     <p
                       className={`text-[10px] ${
-                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                        isDarkMode ? "text-slate-300" : "text-slate-500"
                       }`}
                     >
                       Runtime
@@ -531,7 +531,7 @@ export function MovieSwipeCard({
           <div
             className={`my-[6px] grid shrink-0 grid-cols-3 gap-1 rounded-[24px] px-2 py-2 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:px-3 sm:py-2.5 ${
               isDarkMode
-                ? "border border-white/8 bg-white/6"
+                ? "border border-white/14 bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             }`}
           >
@@ -541,7 +541,7 @@ export function MovieSwipeCard({
                 <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {movie.rating.toFixed(1)}
                 </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                   IMDb rating
                 </p>
               </div>
@@ -552,7 +552,7 @@ export function MovieSwipeCard({
                 <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {runtimeLabel}
                 </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                   Runtime
                 </p>
               </div>
@@ -563,7 +563,7 @@ export function MovieSwipeCard({
                 <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {matchScore}%
                 </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                   Match
                 </p>
               </div>
@@ -574,7 +574,7 @@ export function MovieSwipeCard({
             ref={descriptionSectionRef}
             className={`w-full shrink-0 rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
-                ? "bg-white/8"
+                ? "bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
             onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}

@@ -173,16 +173,26 @@ export default function LinkedPeoplePage() {
             onClick={() => setPendingRemove(null)}
             className="absolute inset-0 cursor-default bg-transparent"
           />
-          <div className="ui-shell ui-shell--dialog-md relative z-10 overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-            <div className="ui-shell-header !border-b-slate-200">
-              <p className="min-w-0 flex-1 text-lg font-semibold text-slate-900">
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 overflow-hidden rounded-[30px] border shadow-[0_24px_70px_rgba(15,23,42,0.18)] ${
+              isDarkMode
+                ? "border-white/14 bg-slate-950 text-slate-100"
+                : "border-white/70 bg-white"
+            }`}
+          >
+            <div
+              className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-200"}`}
+            >
+              <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">
                 Remove linked person?
               </p>
               <button
                 type="button"
                 onClick={() => setPendingRemove(null)}
                 aria-label="Close"
-                className="ui-shell-close bg-slate-100 text-slate-600"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/12 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -197,7 +207,7 @@ export default function LinkedPeoplePage() {
               </button>
             </div>
             <div className="ui-shell-body !pt-4">
-              <p className="text-sm leading-6 text-slate-500">
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 Do you want to remove the link with {pendingRemove.name}?
               </p>
             </div>
@@ -232,23 +242,31 @@ export default function LinkedPeoplePage() {
 
       {connectedPartnerName ? (
         <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">
-          <div className="achievement-toast-pop rounded-[28px] border border-violet-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(124,58,237,0.22)]">
+          <div
+            className={`achievement-toast-pop rounded-[28px] border px-5 py-5 shadow-[0_24px_70px_rgba(124,58,237,0.22)] ${
+              isDarkMode
+                ? "border-violet-400/25 bg-slate-950/94 text-slate-100"
+                : "border-violet-200 bg-white"
+            }`}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-500">
                   Connected
                 </p>
-                <p className="text-lg font-semibold text-slate-900">
+                <p className={`text-lg font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
                   You are connected now.
                 </p>
-                <p className="text-sm leading-6 text-slate-500">
+                <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                   Your shared matches will start showing up here as you both accept the same movies.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setConnectedPartnerName("")}
-                className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600"
+                className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                  isDarkMode ? "bg-white/12 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
               >
                 Close
               </button>
@@ -259,20 +277,28 @@ export default function LinkedPeoplePage() {
 
       {removedPartnerName ? (
         <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">
-          <div className="achievement-toast-pop rounded-[28px] border border-rose-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(244,63,94,0.14)]">
+          <div
+            className={`achievement-toast-pop rounded-[28px] border px-5 py-5 shadow-[0_24px_70px_rgba(244,63,94,0.14)] ${
+              isDarkMode
+                ? "border-rose-400/30 bg-slate-950/94 text-slate-100"
+                : "border-rose-200 bg-white"
+            }`}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-500">
                   Removed
                 </p>
-                <p className="text-lg font-semibold text-slate-900">
+                <p className={`text-lg font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
                   Your connection with {removedPartnerName} was removed.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setRemovedPartnerName("")}
-                className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600"
+                className={`rounded-full px-3 py-2 text-xs font-semibold ${
+                  isDarkMode ? "bg-white/12 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
               >
                 Close
               </button>
@@ -300,8 +326,8 @@ export default function LinkedPeoplePage() {
       {inviteToken ? (
         <SurfaceCard className="space-y-4">
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-slate-900">Invite link</p>
-            <p className="text-sm leading-6 text-slate-500">
+            <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>Invite link</p>
+            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               {inviteOwner
                 ? `${inviteOwner.name} invited you to connect accounts.`
                 : "This invite is ready to be used if it is still valid."}
@@ -318,7 +344,13 @@ export default function LinkedPeoplePage() {
             {inviteBusy ? "Connecting…" : "Connect with this link"}
           </button>
           {statusMessage ? (
-            <p className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <p
+              className={`rounded-[18px] px-4 py-3 text-sm ${
+                isDarkMode
+                  ? "border border-white/12 bg-white/10 text-slate-200"
+                  : "bg-slate-50 text-slate-600"
+              }`}
+            >
               {statusMessage}
             </p>
           ) : null}
@@ -335,8 +367,10 @@ export default function LinkedPeoplePage() {
                   imageUrl={linked.user.avatarImageUrl}
                 />
                 <div>
-                  <p className="font-semibold text-slate-900">{linked.user.name}</p>
-                  <p className="text-sm text-slate-500">{linked.user.city}</p>
+                  <p className={`font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>{linked.user.name}</p>
+                  <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                    {linked.user.city}
+                  </p>
                 </div>
               </div>
               <span
@@ -349,8 +383,14 @@ export default function LinkedPeoplePage() {
                 {linked.status === "accepted" ? "Linked" : "Pending"}
               </span>
             </div>
-            <p className="text-sm leading-6 text-slate-500">{linked.user.bio}</p>
-            <div className="rounded-[20px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>{linked.user.bio}</p>
+            <div
+              className={`rounded-[20px] px-4 py-3 text-sm ${
+                isDarkMode
+                  ? "border border-white/12 bg-white/10 text-slate-200"
+                  : "bg-slate-50 text-slate-600"
+              }`}
+            >
               {linked.sharedCount > 0
                 ? `${linked.sharedCount} shared accepted movie${linked.sharedCount === 1 ? "" : "s"}`
                 : "No shared picks yet. Keep swiping."}
@@ -376,10 +416,10 @@ export default function LinkedPeoplePage() {
 
         {linkedUsers.length === 0 ? (
           <SurfaceCard className="space-y-2 text-center">
-            <p className="text-lg font-semibold text-slate-900">
+            <p className={`text-lg font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
               No linked people yet
             </p>
-            <p className="text-sm leading-6 text-slate-500">
+            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Create a special link below and open it from another account to connect.
             </p>
           </SurfaceCard>
@@ -388,8 +428,8 @@ export default function LinkedPeoplePage() {
 
       <SurfaceCard className="space-y-4">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-900">Paste a link</p>
-          <p className="text-sm leading-6 text-slate-500">
+          <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>Paste a link</p>
+          <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
             Paste the full connect link here, then tap connect.
           </p>
         </div>
@@ -403,11 +443,25 @@ export default function LinkedPeoplePage() {
             }}
             rows={3}
             placeholder="Paste the invite link here"
-            className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:bg-white"
+            className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 ${
+              isDarkMode
+                ? "border-white/16 bg-white/10 text-slate-100 placeholder:text-slate-400 focus:bg-white/14"
+                : "border-slate-200 bg-slate-50 focus:bg-white"
+            }`}
           />
           {manualInviteOwner ? (
-            <p className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              This link belongs to <span className="font-semibold text-slate-900">{manualInviteOwner.name}</span>.
+            <p
+              className={`rounded-[18px] px-4 py-3 text-sm ${
+                isDarkMode
+                  ? "border border-white/12 bg-white/10 text-slate-200"
+                  : "bg-slate-50 text-slate-600"
+              }`}
+            >
+              This link belongs to{" "}
+              <span className={`font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
+                {manualInviteOwner.name}
+              </span>
+              .
             </p>
           ) : null}
           <button
@@ -436,8 +490,8 @@ export default function LinkedPeoplePage() {
 
       <SurfaceCard className="space-y-4">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-900">Share a connect link</p>
-          <p className="text-sm leading-6 text-slate-500">
+          <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>Share a connect link</p>
+          <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
             Create a special invite link and send it to another person so they can connect from their account.
           </p>
         </div>
@@ -486,15 +540,31 @@ export default function LinkedPeoplePage() {
           {createInviteBusy ? "Creating link…" : "Create special link"}
         </button>
         {inviteUrl ? (
-          <div className="rounded-[22px] bg-slate-50 px-4 py-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <div
+            className={`rounded-[22px] px-4 py-4 ${
+              isDarkMode ? "border border-white/12 bg-white/10" : "bg-slate-50"
+            }`}
+          >
+            <p
+              className={`mb-2 text-xs font-semibold uppercase tracking-[0.22em] ${
+                isDarkMode ? "text-slate-300" : "text-slate-400"
+              }`}
+            >
               Share this link
             </p>
-            <p className="break-all text-sm leading-6 text-slate-600">{inviteUrl}</p>
+            <p className={`break-all text-sm leading-6 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
+              {inviteUrl}
+            </p>
           </div>
         ) : null}
         {statusMessage ? (
-          <p className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <p
+            className={`rounded-[18px] px-4 py-3 text-sm ${
+              isDarkMode
+                ? "border border-white/12 bg-white/10 text-slate-200"
+                : "bg-slate-50 text-slate-600"
+            }`}
+          >
             {statusMessage}
           </p>
         ) : null}

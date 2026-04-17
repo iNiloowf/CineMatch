@@ -101,7 +101,7 @@ export default function SharedWatchlistPage() {
                     <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                       {group.partner.name}
                     </p>
-                    <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                       {group.movies.length > 0
                         ? `${group.movies.filter((movie) => movie.shared).length} titles you both picked`
                         : "No shared picks yet"}
@@ -153,7 +153,7 @@ export default function SharedWatchlistPage() {
                           }`}>
                             {entry.movie.title}
                           </h3>
-                          <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                          <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                             Both of you said yes to this one.
                           </p>
                         </div>
@@ -162,7 +162,7 @@ export default function SharedWatchlistPage() {
                         </span>
                       </div>
 
-                      <p className={`mt-2 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={`mt-2 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                         {entry.movie.year} • {entry.movie.runtime} •{" "}
                         {entry.movie.genre.join(" • ")}
                       </p>
@@ -289,7 +289,7 @@ export default function SharedWatchlistPage() {
                   <h3 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {detailsMovie.movie.title}
                   </h3>
-                  <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                     {detailsMovie.movie.year} • {detailsMovie.movie.runtime} • with {detailsMovie.partner.name}
                   </p>
                 </div>
@@ -298,7 +298,7 @@ export default function SharedWatchlistPage() {
                 </span>
               </div>
 
-              <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 {detailsMovie.movie.genre.join(" • ")}
               </p>
 
