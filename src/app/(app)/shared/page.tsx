@@ -76,8 +76,18 @@ export default function SharedWatchlistPage() {
 
         {sharedMovieGroups.length === 0 ? (
           <SurfaceCard className="space-y-2 text-center">
-            <p className="text-lg font-semibold text-slate-900">No linked people yet</p>
-            <p className="text-sm leading-6 text-slate-500">
+            <p
+              className={`text-lg font-semibold ${
+                isDarkMode ? "text-white" : "text-slate-900"
+              }`}
+            >
+              No linked people yet
+            </p>
+            <p
+              className={`text-sm leading-6 ${
+                isDarkMode ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
               Link with someone and their name will show up here right away.
             </p>
           </SurfaceCard>
@@ -113,7 +123,13 @@ export default function SharedWatchlistPage() {
                     </p>
                   </div>
                 </div>
-                <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    isDarkMode
+                      ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/22"
+                      : "bg-violet-100 text-violet-700"
+                  }`}
+                >
                   {openPartnerId === group.partner.id ? "Close" : "Open"}
                 </span>
               </button>
@@ -140,7 +156,13 @@ export default function SharedWatchlistPage() {
                       <div className="flex flex-col gap-3 min-[381px]:flex-row min-[381px]:items-start min-[381px]:justify-between min-[381px]:gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                            <span className="rounded-full bg-violet-100 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-violet-700 max-[380px]:leading-tight sm:px-2.5 sm:text-[10px] sm:tracking-[0.16em]">
+                            <span
+                              className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] max-[380px]:leading-tight sm:px-2.5 sm:text-[10px] sm:tracking-[0.16em] ${
+                                isDarkMode
+                                  ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/18"
+                                  : "bg-violet-100 text-violet-700"
+                              }`}
+                            >
                               Mutual pick
                             </span>
                             <span
@@ -162,7 +184,13 @@ export default function SharedWatchlistPage() {
                             Both of you said yes to this one.
                           </p>
                         </div>
-                        <span className="w-fit shrink-0 self-start rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
+                        <span
+                          className={`w-fit shrink-0 self-start rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${
+                            isDarkMode
+                              ? "bg-white/12 text-violet-100 ring-1 ring-white/12"
+                              : "bg-white text-violet-700"
+                          }`}
+                        >
                           {entry.movie.rating.toFixed(1)}
                         </span>
                       </div>
@@ -293,7 +321,13 @@ export default function SharedWatchlistPage() {
                   sizeClassName="h-9 w-9"
                   textClassName="text-xs font-semibold"
                 />
-                <span className="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-700">
+                <span
+                  className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                    isDarkMode
+                      ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/22"
+                      : "bg-violet-100 text-violet-700"
+                  }`}
+                >
                   Mutual match
                 </span>
               </div>
@@ -306,7 +340,13 @@ export default function SharedWatchlistPage() {
                     {detailsMovie.movie.year} • {detailsMovie.movie.runtime} • with {detailsMovie.partner.name}
                   </p>
                 </div>
-                <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    isDarkMode
+                      ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/22"
+                      : "bg-violet-100 text-violet-700"
+                  }`}
+                >
                   {detailsMovie.movie.rating.toFixed(1)}
                 </span>
               </div>

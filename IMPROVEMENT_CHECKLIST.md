@@ -61,7 +61,7 @@ _Use these as the next tickets; none replace the Engineering section above — t
 ### UX & visual consistency
 
 - [ ] **Dark mode sweep:** **Profile**, **Signup**, **auth callback**, and any remaining **`return null`** while `currentUser` resolves — align muted text, chips, and surfaces with Discover/linked quality.
-- [ ] **Settings achievements** (and similar chips on **Picks**/stats): ensure chip/badge colors read well in **dark** theme (avoid light-only `bg-emerald-100` / `bg-violet-100` where it clashes).
+- [x] **Settings achievements** (and similar chips on **Picks**/stats): ensure chip/badge colors read well in **dark** theme (avoid light-only `bg-emerald-100` / `bg-violet-100` where it clashes).
 - [ ] **Skip link:** “Skip to main content” for keyboard users, targeting the scroll container in **`AppShell`**.
 - [ ] **i18n (optional):** if you ship beyond English, extract strings + RTL; today the UI is English-only.
 

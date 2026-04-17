@@ -59,8 +59,18 @@ export default function SettingsPage() {
 
       <SurfaceCard className="space-y-5">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-slate-900">Achievements</p>
-          <p className="text-sm leading-6 text-slate-500">
+          <p
+            className={`text-sm font-semibold ${
+              isDarkMode ? "text-white" : "text-slate-900"
+            }`}
+          >
+            Achievements
+          </p>
+          <p
+            className={`text-sm leading-6 ${
+              isDarkMode ? "text-slate-300" : "text-slate-500"
+            }`}
+          >
             Small milestones based on what you save, swipe, link, and watch together.
           </p>
         </div>
@@ -99,8 +109,12 @@ export default function SettingsPage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
                       completed
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-violet-100 text-violet-700"
+                        ? isDarkMode
+                          ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/25"
+                          : "bg-emerald-100 text-emerald-700"
+                        : isDarkMode
+                          ? "bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/22"
+                          : "bg-violet-100 text-violet-700"
                     }`}
                   >
                     {completed
@@ -149,7 +163,11 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={logout}
-          className="mt-4 w-full rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600"
+          className={`mt-4 w-full rounded-[20px] border px-4 py-3 text-sm font-semibold ${
+            isDarkMode
+              ? "border-rose-400/35 bg-rose-500/12 text-rose-100 hover:bg-rose-500/18"
+              : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+          }`}
         >
           Log out
         </button>

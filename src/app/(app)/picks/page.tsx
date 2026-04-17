@@ -341,7 +341,11 @@ export default function PicksPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex min-w-0 items-center justify-center gap-2 border-x border-black/6">
+                  <div
+                    className={`flex min-w-0 items-center justify-center gap-2 border-x ${
+                      isDarkMode ? "border-white/12" : "border-black/6"
+                    }`}
+                  >
                     <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
                     <div className="min-w-0">
                       <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -467,8 +471,18 @@ export default function PicksPage() {
 
         {acceptedMovies.length === 0 ? (
           <SurfaceCard className="space-y-3 text-center">
-            <p className="text-lg font-semibold text-slate-900">No picks yet</p>
-            <p className="text-sm leading-6 text-slate-500">
+            <p
+              className={`text-lg font-semibold ${
+                isDarkMode ? "text-white" : "text-slate-900"
+              }`}
+            >
+              No picks yet
+            </p>
+            <p
+              className={`text-sm leading-6 ${
+                isDarkMode ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
               Start in Discover and accept the movies that feel right.
             </p>
             <Link
