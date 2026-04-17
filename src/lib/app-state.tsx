@@ -218,9 +218,11 @@ type AppStateContextValue = {
     name: string;
     bio: string;
     city: string;
-    avatarImageUrl?: string;
+    avatarImageUrl?: string | null;
     avatarFile?: File | null;
-  }) => Promise<void>;
+    /** When true, clears stored profile photo (ignored if `avatarFile` is set). */
+    clearAvatar?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   updateSettings: (payload: Partial<ProfileSettings>) => Promise<void>;
   acceptedMovies: Movie[];
   discoverQueue: Movie[];
@@ -2859,37 +2861,55 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city,
     avatarImageUrl,
     avatarFile,
+    clearAvatar,
   }: {
     name: string;
     bio: string;
     city: string;
-    avatarImageUrl?: string;
+    avatarImageUrl?: string | null;
     avatarFile?: File | null;
-  }) => {
+    clearAvatar?: boolean;
+  }): Promise<{ ok: boolean; message?: string }> => {
     if (!currentUserId) {
-      return;
+      return { ok: false, message: "You need to be signed in to update your profile." };
     }
 
     const supabase = getSupabaseBrowserClient();
-    let nextAvatarImageUrl = avatarImageUrl;
+    let nextAvatarImageUrl: string | undefined =
+      clearAvatar ? undefined : (avatarImageUrl ?? undefined);
 
     if (supabase && isSupabaseConfigured()) {
-      if (avatarFile) {
+      if (clearAvatar) {
+        nextAvatarImageUrl = undefined;
+      } else if (avatarFile) {
         const uploadedUrl = await uploadProfilePhoto(currentUserId, avatarFile);
 
-        if (uploadedUrl) {
-          nextAvatarImageUrl = uploadedUrl;
+        if (!uploadedUrl) {
+          return {
+            ok: false,
+            message:
+              "Couldn’t upload your photo. Try a smaller JPG or PNG, or check storage permissions.",
+          };
         }
+
+        nextAvatarImageUrl = uploadedUrl;
       }
 
-      await supabase.auth.updateUser({
+      const { error: authError } = await supabase.auth.updateUser({
         data: {
           full_name: name,
           avatar_image_url: null,
         },
       });
 
-      await supabase
+      if (authError) {
+        return {
+          ok: false,
+          message: authError.message || "Couldn’t update your sign-in profile.",
+        };
+      }
+
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           full_name: name,
@@ -2900,6 +2920,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           updated_at: new Date().toISOString(),
         } as never)
         .eq("id", currentUserId);
+
+      if (profileError) {
+        return {
+          ok: false,
+          message: profileError.message ?? "Couldn’t save your profile to the server.",
+        };
+      }
     }
 
     setData((current) => ({
@@ -2918,6 +2945,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
     setAccountRefreshKey((current) => current + 1);
+    return { ok: true };
   };
 
   const updateSettings = async (payload: Partial<ProfileSettings>) => {

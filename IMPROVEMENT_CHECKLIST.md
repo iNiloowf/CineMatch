@@ -76,7 +76,7 @@ _Use this as a route-by-route “UI pass” checklist (contrast, hierarchy, empt
 - [x] **`/linked` + `/connect`:** Friends hub on **`/linked`** (accent row, **Active** vs **Pending** badges w/ dark tints, shared-pick summary); empty state → **Go to Connect**; invites + paste + create link on **`/connect`** w/ animated shell; **max 3** friends; new invites use **`/connect?invite=`** (old **`/linked?invite=`** redirects).
 - [ ] **`/picks`:** stat cards: add micro-labels (“Saved” / “Also shared”) if numbers alone confuse; row density vs tap targets; modals: scroll affordance + sticky primary actions; trailer loading state on slow networks.
 - [ ] **`/shared`:** accordion header vs body contrast; toggle pills readable in dark (unchecked state); long descriptions: “More” / expand without losing context; mutual-match badges consistent with Discover/Picks chip style.
-- [ ] **`/profile`:** edit flow feedback (saving / saved / failed); avatar crop preview if applicable; destructive actions visually separated; dark parity for any light-only controls.
+- [x] **`/profile`:** save states (**Saving…** / top **Saved** or **error** toast + dismiss); **square crop preview** for chosen photo + hint; **Remove profile photo** in a rose **destructive** panel; **Cancel** on edit; **`isReady`** loading shell; dark parity on stats, snapshot, inputs, quick links, edit toggle; light motion (`discover-toolbar-enter`, `expand-soft`, hero ring).
 - [ ] **`/settings`:** group toggles by theme (Appearance / Notifications / Privacy); achievements: optional detail tap (why unlocked); About / Log out visually separated from preferences.
 
 ### Architecture & data
