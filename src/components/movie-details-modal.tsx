@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
+import { computeMovieMatchPercent } from "@/lib/match-score";
+import { useAppState } from "@/lib/app-state";
 import type { Movie } from "@/lib/types";
 
 const PicksTrailerModalLazy = dynamic(
@@ -11,11 +13,11 @@ const PicksTrailerModalLazy = dynamic(
   { ssr: false },
 );
 
-export function matchPercentForMovie(movie: Movie): number {
-  return Math.max(
-    62,
-    Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
-  );
+export function matchPercentForMovie(
+  movie: Movie,
+  context?: Parameters<typeof computeMovieMatchPercent>[1],
+): number {
+  return computeMovieMatchPercent(movie, context);
 }
 
 export type MovieDetailsFooterRender = (controls: { openTrailer: () => Promise<void> }) => ReactNode;
@@ -36,7 +38,21 @@ export function MovieDetailsModal({
   contextLabel,
   footer,
 }: MovieDetailsModalProps) {
+  const { acceptedMovies, onboardingPreferences } = useAppState();
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
+  const acceptedGenres = useMemo(() => {
+    const set = new Set<string>();
+    for (const acceptedMovie of acceptedMovies) {
+      for (const genre of acceptedMovie.genre) {
+        const normalized = genre.trim().toLowerCase();
+        if (normalized && normalized !== "movie" && normalized !== "series") {
+          set.add(normalized);
+        }
+      }
+    }
+    return set;
+  }, [acceptedMovies]);
+
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
@@ -264,7 +280,10 @@ export function MovieDetailsModal({
                 <span className="text-base leading-none text-emerald-500">☺</span>
                 <div className="min-w-0">
                   <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                    {matchPercentForMovie(movie)}%
+                    {computeMovieMatchPercent(movie, {
+                      acceptedGenres,
+                      onboarding: onboardingPreferences,
+                    })}%
                   </p>
                   <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>Match</p>
                 </div>

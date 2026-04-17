@@ -82,6 +82,7 @@ export type ProfileSettings = {
 
 export type OnboardingPreferences = {
   favoriteGenres: string[];
+  dislikedGenres: string[];
   mediaPreference: "movie" | "series" | "both";
   tasteProfile: string[];
   completedAt: string | null;

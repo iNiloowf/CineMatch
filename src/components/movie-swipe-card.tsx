@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
+import { computeMovieMatchPercent } from "@/lib/match-score";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -37,7 +38,7 @@ export function MovieSwipeCard({
   isInteractionLocked = false,
   swipeFeedback = null,
 }: MovieSwipeCardProps) {
-  const { isDarkMode } = useAppState();
+  const { isDarkMode, acceptedMovies, onboardingPreferences } = useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
@@ -67,10 +68,21 @@ export function MovieSwipeCard({
     movie.runtime.trim().toLowerCase() === "runtime unavailable"
       ? "N/A"
       : movie.runtime;
-  const matchScore = Math.max(
-    62,
-    Math.min(98, Math.round(movie.rating * 13 + movie.genre.length * 4)),
+  const acceptedGenres = useMemo(
+    () =>
+      new Set(
+        acceptedMovies.flatMap((acceptedMovie) =>
+          acceptedMovie.genre
+            .map((genre) => genre.trim().toLowerCase())
+            .filter((genre) => genre && genre !== "movie" && genre !== "series"),
+        ),
+      ),
+    [acceptedMovies],
   );
+  const matchScore = computeMovieMatchPercent(movie, {
+    acceptedGenres,
+    onboarding: onboardingPreferences,
+  });
   const handleToggleDescription = () => {
     if (!shouldClamp) {
       return;

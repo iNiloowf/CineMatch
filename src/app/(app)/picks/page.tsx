@@ -19,7 +19,7 @@ const PicksTrailerModalLazy = dynamic(
 type ShareToast = { message: string; variant: "success" | "error" };
 
 export default function PicksPage() {
-  const { acceptedMovies, sharedMovies, removePick, isDarkMode } = useAppState();
+  const { acceptedMovies, sharedMovies, removePick, onboardingPreferences, isDarkMode } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
@@ -57,6 +57,17 @@ export default function PicksPage() {
   const mutualPickCount = useMemo(
     () => new Set(sharedMovies.map((entry) => entry.movie.id)).size,
     [sharedMovies],
+  );
+  const acceptedGenres = useMemo(
+    () =>
+      new Set(
+        acceptedMovies.flatMap((acceptedMovie) =>
+          acceptedMovie.genre
+            .map((genre) => genre.trim().toLowerCase())
+            .filter((genre) => genre && genre !== "movie" && genre !== "series"),
+        ),
+      ),
+    [acceptedMovies],
   );
 
   useEffect(() => {
@@ -367,7 +378,10 @@ export default function PicksPage() {
                       <span className="text-base leading-none text-emerald-500">☺</span>
                       <div className="min-w-0">
                         <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {matchPercentForMovie(selectedMovie)}%
+                          {matchPercentForMovie(selectedMovie, {
+                            acceptedGenres,
+                            onboarding: onboardingPreferences,
+                          })}%
                         </p>
                         <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                           Match

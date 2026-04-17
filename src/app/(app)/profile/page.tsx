@@ -15,10 +15,13 @@ type SaveFeedback = "idle" | "saving" | "saved" | "error";
 export default function ProfilePage() {
   const {
     currentUser,
+    data,
+    onboardingPreferences,
     acceptedMovies,
     linkedUsers,
     sharedMovies,
     achievements,
+    completeOnboarding,
     updateProfile,
     isDarkMode,
     isReady,
@@ -35,6 +38,9 @@ export default function ProfilePage() {
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback>("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [removePhotoModalOpen, setRemovePhotoModalOpen] = useState(false);
+  const [favoriteGenresDraft, setFavoriteGenresDraft] = useState<string[]>([]);
+  const [dislikedGenresDraft, setDislikedGenresDraft] = useState<string[]>([]);
+  const [mediaPreferenceDraft, setMediaPreferenceDraft] = useState<"movie" | "series" | "both">("both");
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -60,6 +66,12 @@ export default function ProfilePage() {
     }, 2400);
     return () => window.clearTimeout(timer);
   }, [saveFeedback]);
+
+  useEffect(() => {
+    setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
+    setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
+    setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
+  }, [onboardingPreferences]);
 
   if (!isReady) {
     return (
@@ -96,6 +108,9 @@ export default function ProfilePage() {
     setAvatarPreview(undefined);
     setAvatarFile(null);
     setClearAvatarOnSave(false);
+    setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
+    setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
+    setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
   };
 
   const confirmRemovePhotoStaging = () => {
@@ -145,6 +160,28 @@ export default function ProfilePage() {
       return;
     }
 
+    const cleanedFavoriteGenres = Array.from(
+      new Set(
+        favoriteGenresDraft
+          .map((genre) => genre.trim())
+          .filter((genre) => Boolean(genre) && !dislikedGenresDraft.includes(genre)),
+      ),
+    );
+    const cleanedDislikedGenres = Array.from(
+      new Set(
+        dislikedGenresDraft
+          .map((genre) => genre.trim())
+          .filter((genre) => Boolean(genre) && !cleanedFavoriteGenres.includes(genre)),
+      ),
+    );
+
+    await completeOnboarding({
+      favoriteGenres: cleanedFavoriteGenres,
+      dislikedGenres: cleanedDislikedGenres,
+      mediaPreference: mediaPreferenceDraft,
+      tasteProfile: onboardingPreferences.tasteProfile,
+    });
+
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
     }
@@ -155,6 +192,18 @@ export default function ProfilePage() {
     setSaveFeedback("saved");
     setSaveMessage("Profile saved.");
   };
+
+  const profileGenres = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data.movies.flatMap((movie) =>
+            movie.genre.filter((genre) => genre !== "Movie" && genre !== "Series"),
+          ),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [data.movies],
+  );
 
   const statShell = isDarkMode
     ? "border border-white/12 bg-white/8"
@@ -511,6 +560,103 @@ export default function ProfilePage() {
                   Bio
                   <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
                 </label>
+
+                <div className="space-y-3">
+                  <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Discovery preferences
+                  </p>
+                  <div className="space-y-2">
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                      Favorite genres
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {profileGenres.map((genre) => {
+                        const active = favoriteGenresDraft.includes(genre);
+                        return (
+                          <button
+                            key={`fav-${genre}`}
+                            type="button"
+                            onClick={() =>
+                              setFavoriteGenresDraft((current) =>
+                                current.includes(genre)
+                                  ? current.filter((entry) => entry !== genre)
+                                  : [...current, genre],
+                              )
+                            }
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                              active
+                                ? "bg-violet-600 text-white"
+                                : isDarkMode
+                                  ? "border border-white/12 bg-white/8 text-slate-200"
+                                  : "border border-slate-200 bg-white text-slate-700"
+                            }`}
+                          >
+                            {genre}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                      Disliked genres
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {profileGenres.map((genre) => {
+                        const active = dislikedGenresDraft.includes(genre);
+                        return (
+                          <button
+                            key={`dislike-${genre}`}
+                            type="button"
+                            onClick={() =>
+                              setDislikedGenresDraft((current) =>
+                                current.includes(genre)
+                                  ? current.filter((entry) => entry !== genre)
+                                  : [...current, genre],
+                              )
+                            }
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                              active
+                                ? "bg-rose-600 text-white"
+                                : isDarkMode
+                                  ? "border border-white/12 bg-white/8 text-slate-200"
+                                  : "border border-slate-200 bg-white text-slate-700"
+                            }`}
+                          >
+                            {genre}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                      Prefer to discover
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: "both", label: "Both" },
+                        { id: "movie", label: "Movies" },
+                        { id: "series", label: "Series" },
+                      ].map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => setMediaPreferenceDraft(option.id as "movie" | "series" | "both")}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            mediaPreferenceDraft === option.id
+                              ? "bg-violet-600 text-white"
+                              : isDarkMode
+                                ? "border border-white/12 bg-white/8 text-slate-200"
+                                : "border border-slate-200 bg-white text-slate-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <>

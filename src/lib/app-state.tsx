@@ -19,6 +19,7 @@ import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
+import { computeMovieMatchPercent } from "@/lib/match-score";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
@@ -51,6 +52,7 @@ const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
 const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
   favoriteGenres: [],
+  dislikedGenres: [],
   mediaPreference: "both",
   tasteProfile: [],
   completedAt: null,
@@ -442,6 +444,9 @@ function getStoredOnboardingPreferences(userId: string): OnboardingPreferences {
     return {
       favoriteGenres: Array.isArray(parsed.favoriteGenres)
         ? parsed.favoriteGenres.filter((entry): entry is string => typeof entry === "string")
+        : [],
+      dislikedGenres: Array.isArray(parsed.dislikedGenres)
+        ? parsed.dislikedGenres.filter((entry): entry is string => typeof entry === "string")
         : [],
       mediaPreference:
         parsed.mediaPreference === "movie" ||
@@ -1559,12 +1564,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const acceptedGenreCounts = acceptedMovies.reduce<Map<string, number>>(
     (counts, movie) => {
       movie.genre.forEach((entry) => {
-        const normalized = entry.trim();
+        const normalized = entry.trim().toLowerCase();
 
         if (
           !normalized ||
-          normalized === "Movie" ||
-          normalized === "Series"
+          normalized === "movie" ||
+          normalized === "series"
         ) {
           return;
         }
@@ -1610,17 +1615,29 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const sortDiscoverQueue = (movies: Movie[]) =>
     [...movies].sort((left, right) => {
-      const leftGenreScore = left.genre.reduce(
-        (score, entry) => score + (acceptedGenreCounts.get(entry) ?? 0),
-        0,
-      );
-      const rightGenreScore = right.genre.reduce(
-        (score, entry) => score + (acceptedGenreCounts.get(entry) ?? 0),
-        0,
-      );
+      const getDiscoverPriorityScore = (movie: Movie) => {
+        const acceptedGenreAffinity = movie.genre.reduce(
+          (score, entry) => score + (acceptedGenreCounts.get(entry.trim().toLowerCase()) ?? 0),
+          0,
+        );
+        const preferenceMatchScore = computeMovieMatchPercent(movie, {
+          acceptedGenres: acceptedGenreCounts.keys(),
+          onboarding: onboardingPreferences,
+        });
+        const mediaPreferenceBonus =
+          onboardingPreferences.mediaPreference === "both" ||
+          onboardingPreferences.mediaPreference === movie.mediaType
+            ? 5
+            : -6;
 
-      if (leftGenreScore !== rightGenreScore) {
-        return rightGenreScore - leftGenreScore;
+        return preferenceMatchScore + acceptedGenreAffinity * 3 + mediaPreferenceBonus;
+      };
+
+      const leftScore = getDiscoverPriorityScore(left);
+      const rightScore = getDiscoverPriorityScore(right);
+
+      if (leftScore !== rightScore) {
+        return rightScore - leftScore;
       }
 
       return (
@@ -2969,6 +2986,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const completedPreferences: OnboardingPreferences = {
       favoriteGenres: payload.favoriteGenres,
+      dislikedGenres: payload.dislikedGenres,
       mediaPreference: payload.mediaPreference,
       tasteProfile: payload.tasteProfile,
       completedAt: new Date().toISOString(),

@@ -28,6 +28,20 @@ type DiscoverPageContentProps = {
   isDarkMode: boolean;
   toggleDarkMode: () => Promise<void>;
   pasteInviteLinkFromClipboard: () => Promise<{ ok: boolean; message: string }>;
+  onboardingPreferences: {
+    favoriteGenres: string[];
+    dislikedGenres: string[];
+    mediaPreference: "movie" | "series" | "both";
+    tasteProfile: string[];
+    completedAt: string | null;
+  };
+  isOnboardingComplete: boolean;
+  completeOnboarding: (payload: {
+    favoriteGenres: string[];
+    dislikedGenres: string[];
+    mediaPreference: "movie" | "series" | "both";
+    tasteProfile: string[];
+  }) => Promise<void>;
 };
 
 type LastSwipeRecord = {
@@ -47,6 +61,9 @@ function DiscoverPageContent({
   isDarkMode,
   toggleDarkMode,
   pasteInviteLinkFromClipboard,
+  onboardingPreferences,
+  isOnboardingComplete,
+  completeOnboarding,
 }: DiscoverPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -91,6 +108,16 @@ function DiscoverPageContent({
 
     return window.localStorage.getItem(undoTipStorageKey) === "1";
   });
+  const [isSavingOnboarding, setIsSavingOnboarding] = useState(false);
+  const [onboardingFavorites, setOnboardingFavorites] = useState<string[]>(
+    onboardingPreferences.favoriteGenres,
+  );
+  const [onboardingDisliked, setOnboardingDisliked] = useState<string[]>(
+    onboardingPreferences.dislikedGenres,
+  );
+  const [onboardingMediaPreference, setOnboardingMediaPreference] = useState<
+    "movie" | "series" | "both"
+  >(onboardingPreferences.mediaPreference);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -99,6 +126,12 @@ function DiscoverPageContent({
 
     setUndoTipDismissed(window.localStorage.getItem(undoTipStorageKey) === "1");
   }, [undoTipStorageKey]);
+
+  useEffect(() => {
+    setOnboardingFavorites(onboardingPreferences.favoriteGenres);
+    setOnboardingDisliked(onboardingPreferences.dislikedGenres);
+    setOnboardingMediaPreference(onboardingPreferences.mediaPreference);
+  }, [onboardingPreferences]);
 
   useEscapeToClose(isSearchOpen, () => {
     setSearchQuery("");
@@ -275,6 +308,17 @@ function DiscoverPageContent({
       ).sort((left, right) => left.localeCompare(right)),
     ];
   }, [discoverQueue]);
+  const onboardingGenres = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          discoverQueue.flatMap((movie) =>
+            movie.genre.filter((genre) => genre !== "Movie" && genre !== "Series"),
+          ),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [discoverQueue],
+  );
 
   const filteredQueue = useMemo(() => {
     return discoverQueue.filter((movie) => {
@@ -635,8 +679,157 @@ function DiscoverPageContent({
     void runPaste();
   };
 
+  const hasOnboardingSelection =
+    onboardingFavorites.length > 0 || onboardingDisliked.length > 0;
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
+      {!isOnboardingComplete ? (
+        <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 max-h-[min(90dvh,44rem)] overflow-hidden rounded-[28px] border ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+          >
+            <div className="ui-shell-header">
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold">Tune your recommendations</p>
+                <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  Pick favorite and disliked genres so Discover can prioritize what you are likely to enjoy.
+                </p>
+              </div>
+            </div>
+            <div className="ui-shell-body !min-h-0 !overflow-y-auto !pt-3">
+              <div className="space-y-4">
+                <div>
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                    Favorite genres
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {onboardingGenres.map((genre) => (
+                      <button
+                        key={`ob-like-${genre}`}
+                        type="button"
+                        onClick={() =>
+                          setOnboardingFavorites((current) =>
+                            current.includes(genre)
+                              ? current.filter((entry) => entry !== genre)
+                              : [...current, genre],
+                          )
+                        }
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          onboardingFavorites.includes(genre)
+                            ? "bg-violet-600 text-white"
+                            : isDarkMode
+                              ? "border border-white/12 bg-white/8 text-slate-200"
+                              : "border border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                    Disliked genres
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {onboardingGenres.map((genre) => (
+                      <button
+                        key={`ob-dislike-${genre}`}
+                        type="button"
+                        onClick={() =>
+                          setOnboardingDisliked((current) =>
+                            current.includes(genre)
+                              ? current.filter((entry) => entry !== genre)
+                              : [...current, genre],
+                          )
+                        }
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          onboardingDisliked.includes(genre)
+                            ? "bg-rose-600 text-white"
+                            : isDarkMode
+                              ? "border border-white/12 bg-white/8 text-slate-200"
+                              : "border border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                    Prefer to discover
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[
+                      { id: "both", label: "Both" },
+                      { id: "movie", label: "Movies" },
+                      { id: "series", label: "Series" },
+                    ].map((option) => (
+                      <button
+                        key={`ob-media-${option.id}`}
+                        type="button"
+                        onClick={() =>
+                          setOnboardingMediaPreference(
+                            option.id as "movie" | "series" | "both",
+                          )
+                        }
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          onboardingMediaPreference === option.id
+                            ? "bg-violet-600 text-white"
+                            : isDarkMode
+                              ? "border border-white/12 bg-white/8 text-slate-200"
+                              : "border border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="ui-shell-footer">
+              <button
+                type="button"
+                disabled={isSavingOnboarding || !hasOnboardingSelection}
+                onClick={async () => {
+                  setIsSavingOnboarding(true);
+                  const favoriteGenres = Array.from(
+                    new Set(
+                      onboardingFavorites.filter(
+                        (genre) => !onboardingDisliked.includes(genre),
+                      ),
+                    ),
+                  );
+                  const dislikedGenres = Array.from(
+                    new Set(
+                      onboardingDisliked.filter(
+                        (genre) => !favoriteGenres.includes(genre),
+                      ),
+                    ),
+                  );
+                  await completeOnboarding({
+                    favoriteGenres,
+                    dislikedGenres,
+                    mediaPreference: onboardingMediaPreference,
+                    tasteProfile: onboardingPreferences.tasteProfile,
+                  });
+                  setIsSavingOnboarding(false);
+                }}
+                className="ui-btn ui-btn-primary min-w-0 flex-1"
+              >
+                {isSavingOnboarding ? "Saving..." : "Start Discovering"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {sharedMovieId && sharedMovieFetch === "loading" ? (
         <div
           className="flex min-h-[min(70dvh,32rem)] flex-col space-y-3"
@@ -1462,6 +1655,9 @@ export default function DiscoverPage() {
     isDarkMode,
     updateSettings,
     acceptInviteToken,
+    onboardingPreferences,
+    isOnboardingComplete,
+    completeOnboarding,
   } = useAppState();
 
   const toggleDarkMode = async () => {
@@ -1531,6 +1727,9 @@ export default function DiscoverPage() {
       isDarkMode={isDarkMode}
       toggleDarkMode={toggleDarkMode}
       pasteInviteLinkFromClipboard={pasteInviteLinkFromClipboard}
+      onboardingPreferences={onboardingPreferences}
+      isOnboardingComplete={isOnboardingComplete}
+      completeOnboarding={completeOnboarding}
     />
   );
 }
