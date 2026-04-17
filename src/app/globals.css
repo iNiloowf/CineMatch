@@ -205,6 +205,117 @@ input[type="range"] {
   box-shadow: var(--shadow-menu);
 }
 
+/* Modal / bottom sheet: backdrop safe-area + centered or bottom alignment */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.ui-overlay--bottom {
+  align-items: flex-end;
+  padding-top: max(2.5rem, env(safe-area-inset-top, 0px));
+}
+
+.ui-overlay--fill {
+  align-items: stretch;
+  justify-content: center;
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* Inner panel: header / scroll body / footer */
+.ui-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ui-shell--dialog-sm {
+  max-width: 24rem;
+}
+
+.ui-shell--dialog-md {
+  max-width: 28rem;
+}
+
+.ui-shell--dialog-lg {
+  max-width: 32rem;
+}
+
+.ui-shell--fullscreen {
+  height: 100%;
+  max-height: 100%;
+  border-radius: 30px;
+}
+
+.ui-shell--bottom {
+  max-height: min(
+    85dvh,
+    calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem
+    )
+  );
+  border-radius: 32px;
+}
+
+.ui-shell-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.875rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-input) 55%, transparent);
+}
+
+.ui-shell-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1.25rem;
+}
+
+.ui-shell-body--flush {
+  padding: 0;
+}
+
+.ui-shell-footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid color-mix(in srgb, var(--color-border-input) 55%, transparent);
+}
+
+.ui-shell-close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+}
+
 .ui-btn {
   display: inline-flex;
   align-items: center;

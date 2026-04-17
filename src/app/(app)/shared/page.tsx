@@ -213,42 +213,58 @@ export default function SharedWatchlistPage() {
       </div>
 
       {detailsMovie ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
+        <div className="ui-overlay z-50 bg-slate-950/55 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close details"
             onClick={() => setDetailsMovie(null)}
-            className="absolute inset-0"
+            className="absolute inset-0 cursor-default bg-transparent"
           />
-          <div className={`shared-details-modal relative z-10 max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[30px] p-4 shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
-            isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
-          }`}>
-            <button
-              type="button"
-              aria-label="Close details"
-              onClick={() => setDetailsMovie(null)}
-              className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600"
-            >
-              <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                <path
-                  d="M5 5l10 10M15 5L5 15"
+          <div
+            className={`shared-details-modal ui-shell ui-shell--dialog-md relative z-10 max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] overflow-hidden rounded-[30px] shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
+              isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
+            }`}
+          >
+            <div className="ui-shell-header !border-b-black/6">
+              <p
+                className={`min-w-0 flex-1 truncate text-sm font-semibold ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {detailsMovie.movie.title}
+              </p>
+              <button
+                type="button"
+                aria-label="Close details"
+                onClick={() => setDetailsMovie(null)}
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
 
-            <div
-              className="h-52 rounded-[24px] bg-cover bg-center"
-              style={{
-                backgroundImage: detailsMovie.movie.poster.imageUrl
-                  ? `url(${detailsMovie.movie.poster.imageUrl})`
-                  : `linear-gradient(135deg, ${detailsMovie.movie.poster.accentFrom}, ${detailsMovie.movie.poster.accentTo})`,
-              }}
-            />
+            <div className="ui-shell-body !pt-4">
+              <div
+                className="h-52 rounded-[24px] bg-cover bg-center"
+                style={{
+                  backgroundImage: detailsMovie.movie.poster.imageUrl
+                    ? `url(${detailsMovie.movie.poster.imageUrl})`
+                    : `linear-gradient(135deg, ${detailsMovie.movie.poster.accentFrom}, ${detailsMovie.movie.poster.accentTo})`,
+                }}
+              />
 
-            <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <AvatarBadge
                   initials={detailsMovie.partner.avatar}
@@ -283,6 +299,7 @@ export default function SharedWatchlistPage() {
               }`}>
                 {detailsMovie.movie.description}
               </p>
+              </div>
             </div>
           </div>
         </div>

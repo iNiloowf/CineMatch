@@ -128,21 +128,25 @@ export default function PicksPage() {
     selectedMovie && typeof document !== "undefined"
       ? createPortal(
           <div className="fixed inset-0 z-[450] bg-slate-950/48 backdrop-blur-[3px]">
-            <div
-              className="absolute inset-0"
+            <button
+              type="button"
+              aria-label="Close movie details"
+              className="absolute inset-0 cursor-default bg-transparent"
               onClick={() => {
                 setSelectedMovieId(null);
                 setIsTrailerVisible(false);
               }}
             />
             <div
-              className={`absolute inset-0 flex flex-col ${
+              className={`ui-shell absolute inset-0 flex flex-col ${
                 isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
               }`}
             >
-              <div className="flex items-center justify-between px-5 pb-3 pt-5">
+              <div
+                className={`ui-shell-header !border-b-black/6 !py-3 !pt-[max(1rem,env(safe-area-inset-top,0px))]`}
+              >
                 <p
-                  className={`truncate text-xs font-medium tracking-[0.01em] ${
+                  className={`min-w-0 flex-1 truncate text-xs font-medium tracking-[0.01em] ${
                     isDarkMode ? "text-slate-300" : "text-slate-500"
                   }`}
                 >
@@ -155,7 +159,7 @@ export default function PicksPage() {
                     setIsTrailerVisible(false);
                   }}
                   aria-label="Close movie details"
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  className={`ui-shell-close ${
                     isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
                   }`}
                 >
@@ -172,7 +176,11 @@ export default function PicksPage() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-5 pb-8">
+              <div
+                className={`ui-shell-body !px-5 pb-[max(2rem,env(safe-area-inset-bottom,0px))] ${
+                  isDarkMode ? "bg-slate-950" : "bg-white"
+                }`}
+              >
                 <div
                   className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
                   style={{
@@ -286,20 +294,20 @@ export default function PicksPage() {
 
             {isTrailerVisible ? (
               <div
-                className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/38 px-5 backdrop-blur-[2px]"
+                className="ui-overlay z-[500] bg-slate-950/38 backdrop-blur-[2px]"
                 onClick={() => setIsTrailerVisible(false)}
               >
                 <div
                   onClick={(event) => event.stopPropagation()}
-                  className={`w-full max-w-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
+                  className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
                     isDarkMode
                       ? "border-white/10 bg-slate-950/96"
                       : "border-white/75 bg-white/96"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-4 border-b border-black/6 px-5 py-3">
+                  <div className="ui-shell-header !border-b-black/6 !py-3">
                     <p
-                      className={`min-w-0 truncate text-[11px] font-medium tracking-[0.01em] ${
+                      className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${
                         isDarkMode ? "text-slate-300" : "text-slate-600"
                       }`}
                     >
@@ -309,7 +317,7 @@ export default function PicksPage() {
                       type="button"
                       onClick={() => setIsTrailerVisible(false)}
                       aria-label="Close trailer"
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                      className={`ui-shell-close ${
                         isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
                       }`}
                     >
@@ -325,7 +333,7 @@ export default function PicksPage() {
                       </svg>
                     </button>
                   </div>
-                  <div className="p-4 pt-3">
+                  <div className="ui-shell-body !p-4 !pt-3">
                     <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
                       <div className="relative aspect-video w-full bg-black">
                         {trailerUrl ? (
@@ -580,24 +588,43 @@ export default function PicksPage() {
       </div>
 
       {pendingRemoveMovie ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-md">
+        <div className="ui-overlay z-50 bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close remove confirmation"
             onClick={() => setPendingRemoveMovieId(null)}
-            className="absolute inset-0"
+            className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`relative z-10 w-full max-w-sm rounded-[28px] border p-5 shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
+            className={`ui-shell ui-shell--dialog-sm relative z-10 overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
               isDarkMode
                 ? "border-white/10 bg-slate-950 text-white"
                 : "border-white/80 bg-white text-slate-900"
             }`}
           >
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold">
-                Remove from your picks?
-              </h3>
+            <div className="ui-shell-header !border-b-black/6">
+              <h3 className="min-w-0 flex-1 text-lg font-semibold">Remove from your picks?</h3>
+              <button
+                type="button"
+                onClick={() => setPendingRemoveMovieId(null)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body !pt-4">
               <p
                 className={`text-sm leading-6 ${
                   isDarkMode ? "text-slate-300" : "text-slate-500"
@@ -610,12 +637,11 @@ export default function PicksPage() {
                 from your list?
               </p>
             </div>
-
-            <div className="mt-5 flex gap-3">
+            <div className="ui-shell-footer !pt-4">
               <button
                 type="button"
                 onClick={() => setPendingRemoveMovieId(null)}
-                className="ui-btn ui-btn-secondary flex-1"
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
               >
                 Cancel
               </button>
@@ -625,7 +651,7 @@ export default function PicksPage() {
                   await removePick(pendingRemoveMovie.id);
                   setPendingRemoveMovieId(null);
                 }}
-                className="ui-btn ui-btn-danger flex-1"
+                className="ui-btn ui-btn-danger min-w-0 flex-1"
               >
                 Remove
               </button>

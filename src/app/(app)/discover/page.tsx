@@ -601,52 +601,70 @@ function DiscoverPageContent({
 
       {isSearchOpen ? (
         <div
-          className={`fixed inset-0 z-[120] px-4 pb-4 pt-3 backdrop-blur-2xl ${
+          className={`ui-overlay ui-overlay--fill z-[120] backdrop-blur-2xl ${
             isDarkMode ? "bg-slate-950/88" : "bg-slate-950/48"
           }`}
         >
           <div
-            className={`mx-auto flex h-full w-full max-w-md flex-col overflow-hidden rounded-[30px] border ${
+            className={`ui-shell ui-shell--fullscreen ui-shell--dialog-md mx-auto flex flex-col overflow-hidden border ${
               isDarkMode
                 ? "border-white/10 bg-slate-950"
                 : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(246,242,255,0.92))]"
             }`}
           >
-            <div className="sticky top-0 z-10 border-b border-black/5 px-4 py-4 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2
-                    className={`text-lg font-semibold ${
-                      isDarkMode ? "text-white" : "text-slate-900"
-                    }`}
-                  >
-                    Search results
-                  </h2>
-                  <p
-                    className={`text-sm ${
-                      isDarkMode ? "text-slate-400" : "text-slate-500"
-                    }`}
-                  >
-                    Pick one title to open in Discover.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSearchResults([]);
-                    setIsSearchSheetOpen(false);
-                  }}
-                  className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                    isDarkMode
-                      ? "bg-white/8 text-slate-200"
-                      : "bg-slate-100 text-slate-600"
+            <div
+              className={`ui-shell-header !border-b-black/5 backdrop-blur-xl !pt-[max(1rem,env(safe-area-inset-top,0px))] ${
+                isDarkMode ? "bg-slate-950/90" : "bg-white/75"
+              }`}
+            >
+              <div className="min-w-0 flex-1">
+                <h2
+                  className={`text-lg font-semibold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
                   }`}
                 >
-                  Close
-                </button>
+                  Search results
+                </h2>
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  Pick one title to open in Discover.
+                </p>
               </div>
-              <div className="relative mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setIsSearchSheetOpen(false);
+                }}
+                aria-label="Close search"
+                className={`ui-shell-close ${
+                  isDarkMode
+                    ? "bg-white/10 text-slate-200"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div
+              className={`border-b border-black/5 px-5 py-4 backdrop-blur-xl ${
+                isDarkMode ? "bg-slate-950/80" : "bg-white/60"
+              }`}
+            >
+              <div className="relative">
                 <input
                   ref={overlaySearchInputRef}
                   value={searchQuery}
@@ -722,7 +740,7 @@ function DiscoverPageContent({
               ) : null}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+            <div className="ui-shell-body pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
               {sortedSearchResults.length > 0 ? (
                 <div className="space-y-3">
                   {sortedSearchResults.map((result) => (
@@ -818,16 +836,16 @@ function DiscoverPageContent({
       ) : null}
 
       {isFilterOpen ? (
-        <div className="fixed inset-0 z-40 flex items-end bg-slate-950/35 px-4 pb-4 pt-12 backdrop-blur-sm">
+        <div className="ui-overlay ui-overlay--bottom z-40 bg-slate-950/35 backdrop-blur-sm">
           <div
-            className={`expand-soft mx-auto w-full max-w-md rounded-[32px] p-5 shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
+            className={`ui-shell ui-shell--bottom expand-soft w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
             }`}
           >
-            <div className="flex items-center justify-between gap-4">
-              <div>
+            <div className="ui-shell-header">
+              <div className="min-w-0 flex-1">
                 <p
                   className={`text-lg font-semibold ${
                     isDarkMode ? "text-white" : "text-slate-900"
@@ -846,13 +864,25 @@ function DiscoverPageContent({
               <button
                 type="button"
                 onClick={() => setIsFilterOpen(false)}
-                className="ui-btn ui-btn-secondary rounded-full px-3 py-2 text-xs"
+                aria-label="Close filter"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                }`}
               >
-                Close
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
             </div>
 
-            <div className="mt-4 flex max-h-[55vh] flex-wrap gap-2 overflow-y-auto">
+            <div className="ui-shell-body flex flex-wrap content-start gap-2 !pt-3">
               {genres.map((genre) => {
                 const active =
                   genre === "All"
@@ -892,7 +922,7 @@ function DiscoverPageContent({
                 );
               })}
             </div>
-            <div className="mt-5 flex gap-3">
+            <div className="ui-shell-footer !pt-4">
               <button
                 type="button"
                 onClick={() => {
@@ -900,14 +930,14 @@ function DiscoverPageContent({
                   setFocusedMovieId(null);
                   setSelectedGenres([]);
                 }}
-                className="ui-btn ui-btn-secondary flex-1"
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
               >
                 Clear
               </button>
               <button
                 type="button"
                 onClick={() => setIsFilterOpen(false)}
-                className="ui-btn ui-btn-primary flex-1"
+                className="ui-btn ui-btn-primary min-w-0 flex-1"
               >
                 Done
               </button>

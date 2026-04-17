@@ -15,6 +15,31 @@
 - [ ] Improve dark-mode contrast in low-emphasis text (some `text-slate-400/500` shades are too dim on deep backgrounds).
 - [ ] Add skeleton placeholders for cards and search rows to make loading feel intentional.
 - [x] Make icon sizing and stroke weights consistent across pages (discover, picks, profile, modals).
+- [ ] Define a type scale map for headings/body/captions and remove ad-hoc text sizes page by page.
+- [ ] Create consistent spacing rules (vertical rhythm) for page headers, card groups, and CTA sections.
+- [ ] Normalize corner radius usage by component role (container/card/chip/button/modal) and remove one-off radii.
+- [ ] Standardize elevation levels (surface/card/floating/modal) and ensure shadow depth communicates hierarchy.
+- [ ] Add reusable card variants (`default`, `interactive`, `selected`, `danger`) with consistent borders/backgrounds.
+- [x] Unify modal sheet layout (header/content/footer), close affordance placement, and safe-area behavior.
+- [ ] Unify chip/badge styles (genre/year/rating/status) so they share the same visual grammar.
+- [ ] Add a clear focus ring style system for keyboard users and apply it to links, buttons, inputs, and chips.
+- [ ] Define and enforce minimum touch target size (`44x44`) for all interactive controls.
+- [ ] Add sticky bottom CTA pattern for mobile-heavy flows where primary action should remain visible.
+- [ ] Improve empty-state visuals with consistent iconography, tone, and action priority.
+- [ ] Add error-state visual language (icon + message + recovery action) consistent across screens.
+- [ ] Add success/confirmation feedback patterns (toasts/banners/inline) with consistent timing and placement.
+- [ ] Audit visual noise: reduce competing gradients/glows where content readability is impacted.
+- [ ] Standardize input field states (`default`, `hover`, `focus`, `error`, `disabled`) and helper/error text style.
+- [ ] Add section divider/title pattern for long pages to improve scanability.
+- [ ] Ensure poster/media thumbnails keep a consistent aspect ratio and fallback appearance.
+- [ ] Add reusable list item row pattern for mixed icon/text/action rows (settings, menus, sheets).
+- [ ] Define animation durations/easings by intent (micro, state change, modal) and apply consistently.
+- [ ] Add reduced-motion visual alternatives beyond global duration reduction (avoid sudden jumps).
+- [ ] Add responsive breakpoint pass for small Android widths to prevent clipping/truncation in chips/buttons.
+- [ ] Audit z-index layers (toast, sheet, modal, nav, overlay) and document a fixed stacking scale.
+- [ ] Improve typography contrast pairing in dark mode for subtitles/meta text over tinted surfaces.
+- [ ] Add reusable “glass” and “solid” surface presets and apply intentionally (avoid mixed random usage).
+- [ ] Create a UI consistency checklist for PRs (typography, spacing, icons, states, accessibility, motion).
 
 ## UX Improvements
 

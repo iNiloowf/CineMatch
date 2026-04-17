@@ -222,20 +222,20 @@ export function MovieSwipeCard({
   const trailerModal =
     isTrailerVisible && typeof document !== "undefined" ? (
       <div
-        className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/40 px-5 backdrop-blur-[3px]"
+        className="ui-overlay z-[500] bg-slate-950/40 backdrop-blur-[3px]"
         onClick={() => setIsTrailerVisible(false)}
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className={`details-modal-shell w-full max-w-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
+          className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
             isDarkMode
               ? "border-white/10 bg-slate-950/96"
               : "border-white/75 bg-white/96"
           }`}
         >
-          <div className="flex items-center justify-between gap-4 border-b border-black/6 px-5 py-3">
+          <div className="ui-shell-header !border-b-black/6 !py-3">
             <p
-              className={`min-w-0 truncate text-[11px] font-medium tracking-[0.01em] ${
+              className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${
                 isDarkMode ? "text-slate-300" : "text-slate-600"
               }`}
             >
@@ -245,7 +245,7 @@ export function MovieSwipeCard({
               type="button"
               onClick={() => setIsTrailerVisible(false)}
               aria-label="Close trailer"
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+              className={`ui-shell-close ${
                 isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
               }`}
             >
@@ -261,7 +261,7 @@ export function MovieSwipeCard({
               </svg>
             </button>
           </div>
-          <div className="p-4 pt-3">
+          <div className="ui-shell-body !p-4 !pt-3">
             <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
               <div className="relative aspect-video w-full bg-black">
                 {trailerUrl ? (

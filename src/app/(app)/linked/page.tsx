@@ -136,21 +136,46 @@ export default function LinkedPeoplePage() {
   return (
     <div className="space-y-4">
       {pendingRemove ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/32 px-4 backdrop-blur-md">
-          <div className="w-full max-w-md rounded-[30px] border border-white/70 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-slate-900">
+        <div className="ui-overlay z-50 bg-slate-950/32 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setPendingRemove(null)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div className="ui-shell ui-shell--dialog-md relative z-10 overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+            <div className="ui-shell-header !border-b-slate-200">
+              <p className="min-w-0 flex-1 text-lg font-semibold text-slate-900">
                 Remove linked person?
               </p>
+              <button
+                type="button"
+                onClick={() => setPendingRemove(null)}
+                aria-label="Close"
+                className="ui-shell-close bg-slate-100 text-slate-600"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body !pt-4">
               <p className="text-sm leading-6 text-slate-500">
                 Do you want to remove the link with {pendingRemove.name}?
               </p>
             </div>
-            <div className="mt-5 flex gap-3">
+            <div className="ui-shell-footer !pt-4">
               <button
                 type="button"
                 onClick={() => setPendingRemove(null)}
-                className="flex-1 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600"
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
               >
                 Cancel
               </button>
@@ -166,7 +191,7 @@ export default function LinkedPeoplePage() {
                   }
                   setPendingRemove(null);
                 }}
-                className="flex-1 rounded-[18px] bg-rose-500 px-4 py-3 text-sm font-semibold text-white"
+                className="ui-btn ui-btn-danger min-w-0 flex-1"
               >
                 Remove
               </button>
