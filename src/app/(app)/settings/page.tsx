@@ -1,10 +1,119 @@
 "use client";
 
+import { useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
 import { SurfaceCard } from "@/components/surface-card";
+import type { Achievement } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
+
+function AchievementRow({
+  achievement,
+  isDarkMode,
+}: {
+  achievement: Achievement;
+  isDarkMode: boolean;
+}) {
+  const [showDetail, setShowDetail] = useState(false);
+  const completed =
+    !achievement.isLocked && achievement.progress >= achievement.target;
+  const percent = achievement.isLocked
+    ? 0
+    : Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
+
+  return (
+    <div
+      className={`rounded-[22px] border px-4 py-4 ${
+        isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/80 bg-white/80"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p
+            className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+          >
+            {achievement.title}
+            {achievement.isLocked ? (
+              <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-amber-500">
+                Locked
+              </span>
+            ) : null}
+          </p>
+          <p
+            className={`text-xs leading-5 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}
+          >
+            {achievement.description}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+            achievement.isLocked
+              ? isDarkMode
+                ? "bg-white/8 text-slate-400"
+                : "bg-slate-100 text-slate-500"
+              : completed
+                ? isDarkMode
+                  ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/25"
+                  : "bg-emerald-100 text-emerald-700"
+                : isDarkMode
+                  ? "bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/22"
+                  : "bg-violet-100 text-violet-700"
+          }`}
+        >
+          {achievement.isLocked
+            ? "—"
+            : completed
+              ? "Unlocked"
+              : `${achievement.progress}/${achievement.target}`}
+        </span>
+      </div>
+      {!achievement.isLocked ? (
+        <div
+          className={`mt-3 h-2 overflow-hidden rounded-full ${
+            isDarkMode ? "bg-white/10" : "bg-slate-200/90"
+          }`}
+        >
+          <div
+            className={`h-full rounded-full ${completed ? "bg-emerald-500" : "bg-violet-600"}`}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      ) : null}
+      {achievement.detailExplanation ? (
+        <div
+          className={`mt-3 border-t border-dashed pt-3 ${
+            isDarkMode ? "border-white/12" : "border-slate-200/90"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setShowDetail((open) => !open)}
+            className={`text-left text-xs font-semibold underline-offset-2 hover:underline ${
+              isDarkMode ? "text-violet-300" : "text-violet-700"
+            }`}
+            aria-expanded={showDetail}
+          >
+            {showDetail
+              ? "Hide detail"
+              : completed
+                ? "Why you unlocked this"
+                : achievement.isLocked
+                  ? "Why this is locked"
+                  : "How this tracks"}
+          </button>
+          {showDetail ? (
+            <p
+              className={`mt-2 text-xs leading-5 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+            >
+              {achievement.detailExplanation}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const {
@@ -21,7 +130,13 @@ export default function SettingsPage() {
   if (!settings) {
     return null;
   }
-  const sectionEyebrow = isDarkMode ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90" : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
+  const sectionEyebrow = isDarkMode
+    ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
+    : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
+
+  const preferencesDivider = isDarkMode
+    ? "border-t border-white/10 pt-8 mt-2"
+    : "border-t border-slate-200/90 pt-8 mt-2";
 
   return (
     <div className="space-y-5">
@@ -77,8 +192,8 @@ export default function SettingsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "45ms" }}>
-        <p className={sectionEyebrow}>Appearance & comfort</p>
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "40ms" }}>
+        <p className={sectionEyebrow}>Appearance</p>
         <div className="space-y-4">
           <SettingToggle
             label="Dark mode"
@@ -93,135 +208,108 @@ export default function SettingsPage() {
             onChange={(checked) => updateSettings({ reduceMotion: checked })}
           />
           <SettingToggle
+            label="Autoplay trailers"
+            description="When a trailer opens, start playback automatically when the network allows."
+            checked={settings.autoplayTrailers}
+            onChange={(checked) => updateSettings({ autoplayTrailers: checked })}
+          />
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "75ms" }}>
+        <p className={sectionEyebrow}>Notifications</p>
+        <div className="space-y-4">
+          <SettingToggle
             label="Notifications"
             description="Get nudges when new shared matches appear."
             checked={settings.notifications}
             onChange={(checked) => updateSettings({ notifications: checked })}
           />
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "110ms" }}>
+        <p className={sectionEyebrow}>Privacy</p>
+        <div className="space-y-4">
           <SettingToggle
             label="Hide spoilers"
             description="Keep descriptions gentle and spoiler-light."
             checked={settings.hideSpoilers}
             onChange={(checked) => updateSettings({ hideSpoilers: checked })}
           />
+          <SettingToggle
+            label="Cellular sync"
+            description="Allow background account sync on mobile data (when available)."
+            checked={settings.cellularSync}
+            onChange={(checked) => updateSettings({ cellularSync: checked })}
+          />
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "100ms" }}>
-        <div className="space-y-1">
-          <p className={sectionEyebrow}>Progress</p>
-          <p
-            className={`text-sm font-semibold ${
-              isDarkMode ? "text-white" : "text-slate-900"
-            }`}
-          >
-            Achievements
-          </p>
-          <p
-            className={`text-sm leading-6 ${
-              isDarkMode ? "text-slate-300" : "text-slate-500"
-            }`}
-          >
-            Small milestones based on what you save, swipe, link, and watch together.
-          </p>
-        </div>
-        <div className="space-y-3">
-          {achievements.map((achievement) => {
-            const completed = achievement.progress >= achievement.target;
-            const percent = Math.min(
-              100,
-              Math.round((achievement.progress / achievement.target) * 100),
-            );
+      <div className={preferencesDivider}>
+        <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "140ms" }}>
+          <div className="space-y-1">
+            <p className={sectionEyebrow}>Progress</p>
+            <p
+              className={`text-sm font-semibold ${
+                isDarkMode ? "text-white" : "text-slate-900"
+              }`}
+            >
+              Achievements
+            </p>
+            <p
+              className={`text-sm leading-6 ${
+                isDarkMode ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
+              Starter goals plus extra milestones that appear after you finish earlier ones.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {achievements.map((achievement) => (
+              <AchievementRow key={achievement.id} achievement={achievement} isDarkMode={isDarkMode} />
+            ))}
+          </div>
+        </SurfaceCard>
+      </div>
 
-            return (
-              <div
-                key={achievement.id}
-                className={`rounded-[22px] border px-4 py-4 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/80 bg-white/80"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p
-                      className={`text-sm font-semibold ${
-                        isDarkMode ? "text-white" : "text-slate-900"
-                      }`}
-                    >
-                      {achievement.title}
-                    </p>
-                    <p
-                      className={`text-xs leading-5 ${
-                        isDarkMode ? "text-slate-300" : "text-slate-500"
-                      }`}
-                    >
-                      {achievement.description}
-                    </p>
-                  </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      completed
-                        ? isDarkMode
-                          ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/25"
-                          : "bg-emerald-100 text-emerald-700"
-                        : isDarkMode
-                          ? "bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/22"
-                          : "bg-violet-100 text-violet-700"
-                    }`}
-                  >
-                    {completed
-                      ? "Unlocked"
-                      : `${achievement.progress}/${achievement.target}`}
-                  </span>
-                </div>
-                <div
-                  className={`mt-3 h-2 overflow-hidden rounded-full ${
-                    isDarkMode ? "bg-white/10" : "bg-slate-200/90"
-                  }`}
-                >
-                  <div
-                    className={`h-full rounded-full ${
-                      completed ? "bg-emerald-500" : "bg-violet-600"
-                    }`}
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </SurfaceCard>
-
-      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "155ms" }}>
-        <div className="space-y-1">
-          <p className={sectionEyebrow}>About</p>
-          <p
-            className={`text-sm font-semibold ${
-              isDarkMode ? "text-white" : "text-slate-900"
-            }`}
-          >
-            About this build
-          </p>
-          <p
-            className={`text-sm leading-6 ${
-              isDarkMode ? "text-slate-300" : "text-slate-500"
-            }`}
-          >
-            The UI is fully runnable with mock data first, and the repo also ships
-            with API routes plus a SQL schema for the next backend step.
-          </p>
-        </div>
+      <div
+        className={`rounded-[26px] border px-5 py-6 sm:px-6 ${
+          isDarkMode
+            ? "border-white/10 bg-slate-950/55 shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+            : "border-slate-200/90 bg-slate-50/80 shadow-sm"
+        }`}
+      >
+        <p className={sectionEyebrow}>Account actions</p>
+        <p
+          className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+        >
+          About this build
+        </p>
+        <p
+          className={`mt-2 text-sm leading-6 ${
+            isDarkMode ? "text-slate-300" : "text-slate-600"
+          }`}
+        >
+          The UI runs with mock data first, and the repo also ships API routes plus a SQL schema for
+          Supabase. Preferences above stay on this device until you sync a real account.
+        </p>
+        <div
+          className={`my-6 h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`}
+          aria-hidden
+        />
         <button
           type="button"
           onClick={logout}
-          className={`mt-4 w-full rounded-[20px] border px-4 py-3 text-sm font-semibold ${
+          className={`w-full rounded-[20px] border px-4 py-3.5 text-sm font-semibold ${
             isDarkMode
-              ? "border-rose-400/35 bg-rose-500/12 text-rose-100 hover:bg-rose-500/18"
-              : "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+              ? "border-rose-400/40 bg-rose-500/14 text-rose-50 hover:bg-rose-500/22"
+              : "border-rose-200 bg-white text-rose-600 shadow-sm hover:bg-rose-50"
           }`}
         >
           Log out
         </button>
-      </SurfaceCard>
+      </div>
     </div>
   );
 }

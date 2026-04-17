@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { computeAchievements } from "@/lib/achievements";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
@@ -1771,51 +1772,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
 
   const ongoingMovies: SharedMovieView[] = [];
-  const totalSwipes = currentUserId
-    ? data.swipes.filter((swipe) => swipe.userId === currentUserId).length
-    : 0;
-  const watchedTogether = sharedMovies.filter((movie) => movie.watched).length;
-  const activeLinks = linkedUsers.filter((user) => user.status === "accepted").length;
-  const achievements: Achievement[] = useMemo(
-    () => [
-      {
-        id: "first-pick",
-        title: "First Pick",
-        description: "Accept your first movie.",
-        progress: Math.min(acceptedMovies.length, 1),
-        target: 1,
-      },
-      {
-        id: "movie-collector",
-        title: "Movie Collector",
-        description: "Save 10 movies to your picks.",
-        progress: Math.min(acceptedMovies.length, 10),
-        target: 10,
-      },
-      {
-        id: "watch-party",
-        title: "Watch Party",
-        description: "Watch 5 shared movies together.",
-        progress: Math.min(watchedTogether, 5),
-        target: 5,
-      },
-      {
-        id: "connected",
-        title: "Connected Circle",
-        description: "Link with 3 people.",
-        progress: Math.min(activeLinks, 3),
-        target: 3,
-      },
-      {
-        id: "explorer",
-        title: "Movie Explorer",
-        description: "Swipe through 20 movies.",
-        progress: Math.min(totalSwipes, 20),
-        target: 20,
-      },
-    ],
-    [acceptedMovies.length, watchedTogether, activeLinks, totalSwipes],
-  );
+  const achievements: Achievement[] = useMemo(() => {
+    if (!currentUserId) {
+      return [];
+    }
+
+    return computeAchievements(data, currentUserId);
+  }, [data, currentUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !currentUserId) {
@@ -1828,6 +1791,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     );
     const newlyUnlocked = achievements.find(
       (achievement) =>
+        !achievement.isLocked &&
         achievement.progress >= achievement.target &&
         !seenAchievementIds.has(achievement.id),
     );

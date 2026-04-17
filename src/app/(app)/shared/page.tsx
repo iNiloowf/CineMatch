@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
@@ -115,24 +116,32 @@ export default function SharedWatchlistPage() {
             const isOpen = openPartnerId === group.partner.id;
             return (
               <SurfaceCard key={group.partner.id} className="!p-0 overflow-hidden">
-                <button
-                  type="button"
-                  aria-expanded={isOpen}
-                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${group.partner.name}`}
-                  onClick={() =>
-                    setOpenPartnerId((current) => (current === group.partner.id ? null : group.partner.id))
-                  }
-                  className={`flex w-full min-h-[3.25rem] items-center justify-between gap-4 px-4 py-4 text-left transition sm:min-h-14 sm:px-5 sm:py-4 ${
+                <div
+                  className={`flex w-full min-h-[3.25rem] items-stretch gap-2 px-2 py-2 sm:min-h-14 sm:px-3 sm:py-3 ${
                     isDarkMode
                       ? "border-b border-white/12 bg-gradient-to-r from-white/[0.09] to-white/[0.03]"
                       : "border-b border-slate-200/95 bg-gradient-to-r from-slate-50 to-white"
                   }`}
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Link
+                    href={`/friends/${group.partner.id}`}
+                    className="flex shrink-0 items-center self-center rounded-full p-1 outline-none ring-offset-2 transition hover:opacity-95 focus-visible:ring-2 focus-visible:ring-violet-400/80"
+                    aria-label={`${group.partner.name} — profile and saved picks`}
+                  >
                     <AvatarBadge
                       initials={group.partner.avatar}
                       imageUrl={group.partner.avatarImageUrl}
                     />
+                  </Link>
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    aria-label={`${isOpen ? "Collapse" : "Expand"} ${group.partner.name}`}
+                    onClick={() =>
+                      setOpenPartnerId((current) => (current === group.partner.id ? null : group.partner.id))
+                    }
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-[18px] px-2 py-2 text-left transition sm:px-3"
+                  >
                     <div className="min-w-0">
                       <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {group.partner.name}
@@ -143,13 +152,13 @@ export default function SharedWatchlistPage() {
                           : "No shared picks yet"}
                       </p>
                     </div>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${mutualChipClass(isDarkMode)}`}
-                  >
-                    {isOpen ? "Hide" : "Show"}
-                  </span>
-                </button>
+                    <span
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${mutualChipClass(isDarkMode)}`}
+                    >
+                      {isOpen ? "Hide" : "Show"}
+                    </span>
+                  </button>
+                </div>
 
                 {isOpen ? (
                   <div
@@ -379,12 +388,18 @@ export default function SharedWatchlistPage() {
 
               <div className="mt-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <AvatarBadge
-                    initials={detailsMovie.partner.avatar}
-                    imageUrl={detailsMovie.partner.avatarImageUrl}
-                    sizeClassName="h-9 w-9"
-                    textClassName="text-xs font-semibold"
-                  />
+                  <Link
+                    href={`/friends/${detailsMovie.partner.id}`}
+                    className="shrink-0 rounded-full outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-violet-400/80"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <AvatarBadge
+                      initials={detailsMovie.partner.avatar}
+                      imageUrl={detailsMovie.partner.avatarImageUrl}
+                      sizeClassName="h-9 w-9"
+                      textClassName="text-xs font-semibold"
+                    />
+                  </Link>
                   <span
                     className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${mutualChipClass(isDarkMode)}`}
                   >

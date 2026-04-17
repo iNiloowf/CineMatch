@@ -97,7 +97,7 @@ _Use this as a route-by-route “UI pass” checklist (contrast, hierarchy, empt
 - [x] **`/picks`:** stat cards: add micro-labels (“Saved” / “Also shared”) if numbers alone confuse; row density vs tap targets; modals: scroll affordance + sticky primary actions; trailer loading state on slow networks.
 - [x] **`/shared`:** accordion header vs body contrast; toggle pills readable in dark (unchecked state); long descriptions: “More” / expand without losing context; mutual-match badges consistent with Discover/Picks chip style.
 - [x] **`/profile`:** save states (**Saving…** / top **Saved** or **error** toast + dismiss); **square crop preview** for chosen photo + hint; **Remove profile photo** in a rose **destructive** panel; **Cancel** on edit; **`isReady`** loading shell; dark parity on stats, snapshot, inputs, quick links, edit toggle; light motion (`discover-toolbar-enter`, `expand-soft`, hero ring).
-- [ ] **`/settings`:** group toggles by theme (Appearance / Notifications / Privacy); achievements: optional detail tap (why unlocked); About / Log out visually separated from preferences. _(Account card + eyebrows + calmer achievements already in.)_
+- [x] **`/settings`:** group toggles by theme (Appearance / Notifications / Privacy); achievements: optional detail tap (why unlocked / locked / progress); About + Log out in a separated **Account actions** panel. Friend profile **`/friends/[userId]`** (avatar on **`/linked`** + Shared) shows their achievements and saved picks with **Add to mine**.
 
 ### Architecture & data
 

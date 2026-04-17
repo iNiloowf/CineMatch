@@ -119,6 +119,10 @@ export type Achievement = {
   description: string;
   progress: number;
   target: number;
+  /** When prerequisites are incomplete, progress stays at 0 until they finish. */
+  isLocked?: boolean;
+  /** Shown when the user asks “why” (locked copy, progress hint, or unlock reason). */
+  detailExplanation?: string;
 };
 
 /** In-app toast when you and a linked partner both accepted the same title */
