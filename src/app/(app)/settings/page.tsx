@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
@@ -9,6 +9,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import type { Achievement } from "@/lib/types";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function AchievementRow({
   achievement,
@@ -88,6 +89,11 @@ export default function SettingsPage() {
     updateSettings,
   } = useAppState();
   const settings = currentUserId ? data.settings[currentUserId] : null;
+  const [ticketSubject, setTicketSubject] = useState("");
+  const [ticketMessage, setTicketMessage] = useState("");
+  const [ticketPriority, setTicketPriority] = useState<"low" | "normal" | "high">("normal");
+  const [ticketState, setTicketState] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [ticketFeedback, setTicketFeedback] = useState("");
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -105,6 +111,64 @@ export default function SettingsPage() {
   if (!settings) {
     return null;
   }
+
+  const handleSubmitTicket = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const subject = ticketSubject.trim();
+    const message = ticketMessage.trim();
+
+    if (!subject || !message) {
+      setTicketState("error");
+      setTicketFeedback("Please fill out both subject and message.");
+      return;
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    const sessionResult = supabase
+      ? await supabase.auth.getSession()
+      : { data: { session: null } };
+    const accessToken = sessionResult.data.session?.access_token ?? null;
+
+    if (!accessToken) {
+      setTicketState("error");
+      setTicketFeedback("Please sign in again, then submit your ticket.");
+      return;
+    }
+
+    setTicketState("saving");
+    setTicketFeedback("");
+
+    try {
+      const response = await fetch("/api/tickets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          subject,
+          message,
+          priority: ticketPriority,
+        }),
+      });
+
+      const payload = (await response.json()) as { error?: string; ticketId?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Ticket could not be submitted.");
+      }
+
+      setTicketSubject("");
+      setTicketMessage("");
+      setTicketPriority("normal");
+      setTicketState("success");
+      setTicketFeedback("Ticket sent to admin successfully.");
+    } catch (error) {
+      setTicketState("error");
+      setTicketFeedback(
+        error instanceof Error ? error.message : "Ticket could not be submitted.",
+      );
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -254,19 +318,88 @@ export default function SettingsPage() {
         }`}
       >
         <p className={sectionEyebrow}>Account actions</p>
-        <p
-          className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-        >
-          About this build
+        <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          Contact admin
         </p>
         <p
           className={`mt-2 text-sm leading-6 ${
             isDarkMode ? "text-slate-300" : "text-slate-600"
           }`}
         >
-          The UI runs with mock data first, and the repo also ships API routes plus a SQL schema for
-          Supabase. Preferences above stay on this device until you sync a real account.
+          If you find a bug or need help, send a support ticket from here. It will appear in the
+          Admin Desktop page.
         </p>
+        <form className="mt-4 space-y-3" onSubmit={handleSubmitTicket}>
+          <label className="block space-y-2 text-sm font-semibold">
+            Subject
+            <input
+              value={ticketSubject}
+              onChange={(event) => setTicketSubject(event.target.value)}
+              maxLength={120}
+              placeholder="Example: Discover page is not loading"
+              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                isDarkMode
+                  ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                  : "border-slate-200 bg-white text-slate-900"
+              }`}
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-semibold">
+            Message
+            <textarea
+              value={ticketMessage}
+              onChange={(event) => setTicketMessage(event.target.value)}
+              rows={4}
+              maxLength={1200}
+              placeholder="Describe the issue and steps to reproduce."
+              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                isDarkMode
+                  ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                  : "border-slate-200 bg-white text-slate-900"
+              }`}
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-semibold">
+            Priority
+            <select
+              value={ticketPriority}
+              onChange={(event) =>
+                setTicketPriority(event.target.value as "low" | "normal" | "high")
+              }
+              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                isDarkMode
+                  ? "border-white/12 bg-white/8 text-white"
+                  : "border-slate-200 bg-white text-slate-900"
+              }`}
+            >
+              <option value="low">Low</option>
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={ticketState === "saving"}
+            className="ui-btn ui-btn-primary w-full disabled:opacity-70"
+          >
+            {ticketState === "saving" ? "Sending ticket..." : "Send ticket to admin"}
+          </button>
+          {ticketFeedback ? (
+            <p
+              className={`text-sm ${
+                ticketState === "success"
+                  ? isDarkMode
+                    ? "text-emerald-300"
+                    : "text-emerald-700"
+                  : isDarkMode
+                    ? "text-rose-300"
+                    : "text-rose-700"
+              }`}
+            >
+              {ticketFeedback}
+            </p>
+          ) : null}
+        </form>
         <div
           className={`my-6 h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`}
           aria-hidden
