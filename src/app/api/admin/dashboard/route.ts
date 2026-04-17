@@ -39,7 +39,7 @@ type TicketRow = {
   subject: string;
   message: string;
   priority: "low" | "normal" | "high";
-  status: "open" | "in_progress" | "closed";
+  status: "open" | "in_progress" | "under_review" | "closed";
   created_at: string;
 };
 

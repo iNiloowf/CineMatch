@@ -44,7 +44,7 @@ type DashboardTicketRow = {
   subject: string;
   message: string;
   priority: "low" | "normal" | "high";
-  status: "open" | "in_progress" | "closed";
+  status: "open" | "in_progress" | "under_review" | "closed";
   createdAt: string;
 };
 
@@ -57,6 +57,7 @@ type DashboardPayload = {
 };
 
 type AdminTab = "overview" | "tickets" | "users" | "swipes";
+type TicketManageStatus = "open" | "under_review" | "closed";
 
 export default function AdminDesktopPage() {
   const isDarkMode = true;
@@ -68,6 +69,9 @@ export default function AdminDesktopPage() {
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [selectedTicket, setSelectedTicket] = useState<DashboardTicketRow | null>(null);
+  const [isTicketActionLoading, setIsTicketActionLoading] = useState(false);
+  const [ticketActionFeedback, setTicketActionFeedback] = useState("");
   const attemptedSessionLoadRef = useRef(false);
 
   useEffect(() => {
@@ -138,6 +142,117 @@ export default function AdminDesktopPage() {
     );
   }, [dashboard, isAuthenticated, isLoadingDashboard, loadDashboard]);
 
+  useEffect(() => {
+    if (!selectedTicket || !dashboard) {
+      return;
+    }
+    const freshSelection =
+      dashboard.tickets.find((ticket) => ticket.id === selectedTicket.id) ?? null;
+    setSelectedTicket(freshSelection);
+  }, [dashboard, selectedTicket]);
+
+  const updateDashboardTickets = useCallback(
+    (nextTickets: DashboardTicketRow[]) => {
+      setDashboard((current) => {
+        if (!current) {
+          return current;
+        }
+        const openTickets = nextTickets.filter((ticket) => ticket.status === "open").length;
+        return {
+          ...current,
+          tickets: nextTickets,
+          stats: {
+            ...current.stats,
+            openTickets,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const handleUpdateTicketStatus = useCallback(
+    async (ticketId: string, status: TicketManageStatus) => {
+      setIsTicketActionLoading(true);
+      setTicketActionFeedback("");
+
+      try {
+        const response = await fetch(`/api/admin/tickets/${ticketId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: ADMIN_EMAIL,
+            password: ADMIN_PASSWORD,
+            status,
+          }),
+        });
+        const payload = (await response.json()) as {
+          error?: string;
+          status?: DashboardTicketRow["status"];
+        };
+
+        if (!response.ok || !payload.status) {
+          throw new Error(payload.error ?? "Ticket status could not be updated.");
+        }
+
+        updateDashboardTickets(
+          (dashboard?.tickets ?? []).map((ticket) =>
+            ticket.id === ticketId ? { ...ticket, status: payload.status ?? status } : ticket,
+          ),
+        );
+        setTicketActionFeedback(
+          payload.status === "under_review"
+            ? "Ticket moved to under review."
+            : payload.status === "closed"
+              ? "Ticket closed."
+              : "Ticket reopened.",
+        );
+      } catch (error) {
+        setTicketActionFeedback(
+          error instanceof Error ? error.message : "Ticket status could not be updated.",
+        );
+      } finally {
+        setIsTicketActionLoading(false);
+      }
+    },
+    [dashboard?.tickets, updateDashboardTickets],
+  );
+
+  const handleDeleteTicket = useCallback(
+    async (ticketId: string) => {
+      setIsTicketActionLoading(true);
+      setTicketActionFeedback("");
+
+      try {
+        const response = await fetch(`/api/admin/tickets/${ticketId}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: ADMIN_EMAIL,
+            password: ADMIN_PASSWORD,
+          }),
+        });
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Ticket could not be deleted.");
+        }
+
+        updateDashboardTickets(
+          (dashboard?.tickets ?? []).filter((ticket) => ticket.id !== ticketId),
+        );
+        setSelectedTicket((current) => (current?.id === ticketId ? null : current));
+        setTicketActionFeedback("Ticket deleted.");
+      } catch (error) {
+        setTicketActionFeedback(
+          error instanceof Error ? error.message : "Ticket could not be deleted.",
+        );
+      } finally {
+        setIsTicketActionLoading(false);
+      }
+    },
+    [dashboard?.tickets, updateDashboardTickets],
+  );
+
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
@@ -173,6 +288,9 @@ export default function AdminDesktopPage() {
     setEmail("");
     setPassword("");
     setErrorMessage("");
+    setSelectedTicket(null);
+    setIsTicketActionLoading(false);
+    setTicketActionFeedback("");
   };
 
   const dashboardStats = dashboard?.stats;
@@ -189,6 +307,16 @@ export default function AdminDesktopPage() {
         low: "Low",
         normal: "Normal",
         high: "High",
+      }) as const,
+    [],
+  );
+  const ticketStatusLabel = useMemo(
+    () =>
+      ({
+        open: "Open",
+        in_progress: "In progress",
+        under_review: "Under review",
+        closed: "Closed",
       }) as const,
     [],
   );
@@ -262,6 +390,118 @@ export default function AdminDesktopPage() {
   return (
     <main className={shell}>
       <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8">
+        {selectedTicket ? (
+          <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => {
+                setSelectedTicket(null);
+                setTicketActionFeedback("");
+              }}
+              className="absolute inset-0 cursor-default bg-transparent"
+            />
+            <div
+              className={`ui-shell ui-shell--dialog-lg relative z-10 mx-auto max-w-2xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+                isDarkMode
+                  ? "border-white/12 bg-slate-950 text-slate-100"
+                  : "border-slate-200/90 bg-white text-slate-900"
+              }`}
+            >
+              <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg font-semibold text-inherit">{selectedTicket.subject}</p>
+                  <p className={`mt-1 text-xs ${softText}`}>
+                    {selectedTicket.userName} - {new Date(selectedTicket.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTicket(null);
+                    setTicketActionFeedback("");
+                  }}
+                  aria-label="Close"
+                  className={`ui-shell-close ${
+                    isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="ui-shell-body space-y-4 !pt-4">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      isDarkMode ? "bg-white/10 text-slate-100" : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    Priority: {ticketPriorityLabel[selectedTicket.priority]}
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      selectedTicket.status === "closed"
+                        ? isDarkMode
+                          ? "bg-emerald-500/20 text-emerald-200"
+                          : "bg-emerald-100 text-emerald-700"
+                        : selectedTicket.status === "open"
+                          ? isDarkMode
+                            ? "bg-amber-500/20 text-amber-200"
+                            : "bg-amber-100 text-amber-700"
+                          : isDarkMode
+                            ? "bg-violet-500/20 text-violet-200"
+                            : "bg-violet-100 text-violet-700"
+                    }`}
+                  >
+                    Status: {ticketStatusLabel[selectedTicket.status]}
+                  </span>
+                </div>
+                <div
+                  className={`rounded-[18px] border p-3 text-sm leading-6 ${
+                    isDarkMode ? "border-white/10 bg-white/[0.03] text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  {selectedTicket.message}
+                </div>
+                {ticketActionFeedback ? (
+                  <p className={`text-sm ${ticketActionFeedback.includes("could not") || ticketActionFeedback.includes("Invalid") || ticketActionFeedback.includes("not found") ? "text-rose-400" : "text-emerald-300"}`}>
+                    {ticketActionFeedback}
+                  </p>
+                ) : null}
+              </div>
+              <div className="ui-shell-footer !pt-3">
+                <button
+                  type="button"
+                  onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "under_review")}
+                  disabled={isTicketActionLoading || selectedTicket.status === "under_review"}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-60"
+                >
+                  Mark under review
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "closed")}
+                  disabled={isTicketActionLoading || selectedTicket.status === "closed"}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-60"
+                >
+                  Close ticket
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteTicket(selectedTicket.id)}
+                  disabled={isTicketActionLoading}
+                  className="ui-btn ui-btn-danger min-w-0 flex-1 disabled:opacity-60"
+                >
+                  Delete ticket
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className={`mb-6 rounded-[30px] border p-5 sm:p-6 ${glassPanel}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -382,12 +622,13 @@ export default function AdminDesktopPage() {
                       <th className="px-4 py-2 text-left font-semibold">User</th>
                       <th className="px-4 py-2 text-left font-semibold">Subject</th>
                       <th className="px-4 py-2 text-left font-semibold">Priority</th>
+                      <th className="px-4 py-2 text-left font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewTickets.length === 0 ? (
                       <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td colSpan={3} className="px-4 py-4 text-center">
+                        <td colSpan={4} className="px-4 py-4 text-center">
                           No support tickets yet.
                         </td>
                       </tr>
@@ -397,6 +638,18 @@ export default function AdminDesktopPage() {
                           <td className="px-4 py-2">{ticket.userName}</td>
                           <td className="px-4 py-2 font-medium">{ticket.subject}</td>
                           <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
+                          <td className="px-4 py-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTicket(ticket);
+                                setTicketActionFeedback("");
+                              }}
+                              className="text-sm font-semibold text-violet-400 hover:opacity-80"
+                            >
+                              Open
+                            </button>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -516,12 +769,13 @@ export default function AdminDesktopPage() {
                     <th className="px-4 py-2 text-left font-semibold">Message</th>
                     <th className="px-4 py-2 text-left font-semibold">Priority</th>
                     <th className="px-4 py-2 text-left font-semibold">Status</th>
+                    <th className="px-4 py-2 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentTickets.length === 0 ? (
                     <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={6} className="px-4 py-4 text-center">
+                      <td colSpan={7} className="px-4 py-4 text-center">
                         No support tickets yet.
                       </td>
                     </tr>
@@ -535,7 +789,19 @@ export default function AdminDesktopPage() {
                           <span className="line-clamp-2">{ticket.message}</span>
                         </td>
                         <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
-                        <td className="px-4 py-2">{ticket.status.replace("_", " ")}</td>
+                        <td className="px-4 py-2">{ticketStatusLabel[ticket.status]}</td>
+                        <td className="px-4 py-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTicket(ticket);
+                              setTicketActionFeedback("");
+                            }}
+                            className="text-sm font-semibold text-violet-400 hover:opacity-80"
+                          >
+                            Open
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
