@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
+type ShareToast = { message: string; variant: "success" | "error" };
+
 export default function PicksPage() {
   const { acceptedMovies, sharedMovies, removePick, isDarkMode } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
-  const [copiedMovieId, setCopiedMovieId] = useState<string | null>(null);
+  const [shareToast, setShareToast] = useState<ShareToast | null>(null);
+  const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
@@ -48,6 +51,24 @@ export default function PicksPage() {
     setIsTrailerVisible(false);
   }, [selectedMovie]);
 
+  useEffect(() => {
+    return () => {
+      if (shareToastTimerRef.current) {
+        window.clearTimeout(shareToastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showShareToast = (message: string, variant: ShareToast["variant"]) => {
+    if (shareToastTimerRef.current) {
+      window.clearTimeout(shareToastTimerRef.current);
+    }
+    setShareToast({ message, variant });
+    shareToastTimerRef.current = window.setTimeout(() => {
+      setShareToast(null);
+    }, 3200);
+  };
+
   const handleShareMovie = async (movieId: string) => {
     if (typeof window === "undefined") {
       return;
@@ -62,28 +83,30 @@ export default function PicksPage() {
           text: "Check this movie in CineMatch",
           url: shareUrl,
         });
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-      } else {
-        window.prompt("Copy this movie link", shareUrl);
+        showShareToast("Shared — your pick link is ready to send.", "success");
+        return;
       }
 
-      setCopiedMovieId(movieId);
-      window.setTimeout(() => {
-        setCopiedMovieId((currentValue) =>
-          currentValue === movieId ? null : currentValue,
-        );
-      }, 2200);
-    } catch {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
-        setCopiedMovieId(movieId);
-        window.setTimeout(() => {
-          setCopiedMovieId((currentValue) =>
-            currentValue === movieId ? null : currentValue,
-          );
-        }, 2200);
+        showShareToast("Link copied — paste it anywhere to share.", "success");
+        return;
       }
+
+      window.prompt("Copy this movie link", shareUrl);
+      showShareToast("Copy the link from the dialog to share it.", "success");
+    } catch {
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          showShareToast("Link copied — paste it anywhere to share.", "success");
+        } catch {
+          showShareToast("Couldn’t share or copy the link. Try again.", "error");
+        }
+        return;
+      }
+
+      showShareToast("Couldn’t share or copy the link. Try again.", "error");
     }
   };
 
@@ -528,11 +551,9 @@ export default function PicksPage() {
                             void handleShareMovie(movie.id);
                           }}
                           className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
-                            copiedMovieId === movie.id
-                              ? "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.22)]"
-                              : isDarkMode
-                                ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
-                                : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
+                            isDarkMode
+                              ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
+                              : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
                           }`}
                         >
                           <svg
@@ -672,6 +693,27 @@ export default function PicksPage() {
         </div>
       ) : null}
       {detailsModal}
+      {shareToast && typeof document !== "undefined"
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[var(--z-toast-anchor)] flex justify-center px-4">
+              <div
+                role="status"
+                className={`pointer-events-auto max-w-md rounded-[22px] border px-4 py-3 text-center text-sm font-semibold shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl ${
+                  shareToast.variant === "error"
+                    ? isDarkMode
+                      ? "border-rose-400/25 bg-slate-950/92 text-rose-100"
+                      : "border-rose-200/90 bg-white/95 text-rose-800"
+                    : isDarkMode
+                      ? "border-white/10 bg-slate-950/92 text-white"
+                      : "border-white/80 bg-white/95 text-slate-900"
+                }`}
+              >
+                {shareToast.message}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

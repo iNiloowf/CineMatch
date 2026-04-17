@@ -3,15 +3,22 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DiscoverOnboardingNudges } from "@/components/discover-onboarding-nudges";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
+import {
+  loadDiscoverSession,
+  saveDiscoverSession,
+  type DiscoverSessionSnapshotV1,
+} from "@/lib/discover-session";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
 type DiscoverPageContentProps = {
   currentUserId: string | null;
   discoverQueue: Movie[];
+  discoverSessionKey: string;
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: "accepted" | "rejected") => Promise<void>;
   undoSwipe: (movieId: string) => Promise<void>;
@@ -30,6 +37,7 @@ type LastSwipeRecord = {
 function DiscoverPageContent({
   currentUserId,
   discoverQueue,
+  discoverSessionKey,
   registerMovies,
   swipeMovie,
   undoSwipe,
@@ -66,11 +74,29 @@ function DiscoverPageContent({
   const transitionTimeoutRef = useRef<number | null>(null);
   const swipeTimeoutRef = useRef<number | null>(null);
   const undoToastTimeoutRef = useRef<number | null>(null);
+  const discoverSessionSaveTimerRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
+  const undoTipStorageKey = `cinematch-discover-nudge-undo-${currentUserId ?? "guest"}`;
+  const [undoTipDismissed, setUndoTipDismissed] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.localStorage.getItem(undoTipStorageKey) === "1";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    setUndoTipDismissed(window.localStorage.getItem(undoTipStorageKey) === "1");
+  }, [undoTipStorageKey]);
+
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
     [discoverQueue],
@@ -290,6 +316,84 @@ function DiscoverPageContent({
         searchResults.find((entry) => entry.id === focusedMovieId)
       : null) ?? null;
   const movie = focusedMovie ?? filteredQueue[safeBrowseIndex];
+
+  useEffect(() => {
+    setBrowseIndex(0);
+    setFocusedMovieId(null);
+  }, [discoverSessionKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || sharedMovieId) {
+      return;
+    }
+
+    const snapshot = loadDiscoverSession(currentUserId);
+    if (!snapshot) {
+      return;
+    }
+
+    setSearchQuery(snapshot.searchQuery);
+    setSelectedGenres(snapshot.selectedGenres);
+    setBrowseIndex(snapshot.browseIndex);
+    setFocusedMovieId(snapshot.focusedMovieId);
+    setIsSearchSheetOpen(snapshot.isSearchSheetOpen);
+  }, [currentUserId, sharedMovieId]);
+
+  useEffect(() => {
+    if (!focusedMovieId || discoverQueue.length === 0) {
+      return;
+    }
+
+    if (!discoverQueue.some((entry) => entry.id === focusedMovieId)) {
+      setFocusedMovieId(null);
+    }
+  }, [discoverQueue, focusedMovieId]);
+
+  useEffect(() => {
+    if (filteredQueue.length === 0) {
+      return;
+    }
+
+    setBrowseIndex((current) => {
+      const maxIndex = filteredQueue.length - 1;
+      return current > maxIndex ? maxIndex : current;
+    });
+  }, [filteredQueue.length]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (discoverSessionSaveTimerRef.current) {
+      window.clearTimeout(discoverSessionSaveTimerRef.current);
+    }
+
+    discoverSessionSaveTimerRef.current = window.setTimeout(() => {
+      const payload: DiscoverSessionSnapshotV1 = {
+        v: 1,
+        searchQuery,
+        selectedGenres,
+        browseIndex,
+        focusedMovieId,
+        isSearchSheetOpen,
+      };
+      saveDiscoverSession(currentUserId, payload);
+    }, 450);
+
+    return () => {
+      if (discoverSessionSaveTimerRef.current) {
+        window.clearTimeout(discoverSessionSaveTimerRef.current);
+      }
+    };
+  }, [
+    browseIndex,
+    currentUserId,
+    focusedMovieId,
+    isSearchSheetOpen,
+    searchQuery,
+    selectedGenres,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -727,6 +831,11 @@ function DiscoverPageContent({
             </div>
           ) : null}
         </div>
+        <DiscoverOnboardingNudges
+          userId={currentUserId}
+          isDarkMode={isDarkMode}
+          hasActiveBrowse={Boolean(movie)}
+        />
       </div>
       ) : null}
 
@@ -915,6 +1024,41 @@ function DiscoverPageContent({
                     onClick: () => {
                       setSearchQuery("");
                       setSearchResults([]);
+                      setIsSearchSheetOpen(false);
+                    },
+                  }}
+                  tertiaryAction={{
+                    label: selectedGenres.length > 0 ? "Clear genre filters" : "Open genre filters",
+                    onClick: () => {
+                      if (selectedGenres.length > 0) {
+                        setSelectedGenres([]);
+                      }
+                      setIsFilterOpen(true);
+                    },
+                  }}
+                />
+              ) : null}
+
+              {searchFetchState === "ready" &&
+              normalizedSearchQuery.length >= 2 &&
+              searchResults.length > 0 &&
+              sortedSearchResults.length === 0 ? (
+                <NetworkStatusBlock
+                  variant="empty"
+                  isDarkMode={isDarkMode}
+                  title="Already in your Discover queue"
+                  description="Every result for this search is already on your stack. Clear the search or pick something from your queue."
+                  secondaryAction={{
+                    label: "Clear search",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      setIsSearchSheetOpen(false);
+                    },
+                  }}
+                  tertiaryAction={{
+                    label: "Close search",
+                    onClick: () => {
                       setIsSearchSheetOpen(false);
                     },
                   }}
@@ -1132,71 +1276,43 @@ function DiscoverPageContent({
             </div>
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
-          <SurfaceCard className="space-y-4 text-center">
-          <div className="space-y-2">
-            <h2
-              className={`text-xl font-semibold ${
-                isDarkMode ? "text-white" : "text-slate-900"
-              }`}
-            >
-              No titles match this search
-            </h2>
-            <p
-              className={`text-sm leading-6 ${
-                isDarkMode ? "text-slate-400" : "text-slate-500"
-              }`}
-            >
-              Try another title or switch the genre filter back to all genres.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedGenres([]);
+          <NetworkStatusBlock
+            variant="empty"
+            isDarkMode={isDarkMode}
+            title="No titles match these filters"
+            description="Broaden or clear your genre picks, or open the filter sheet to choose different genres."
+            secondaryAction={{
+              label: "Clear genres",
+              onClick: () => {
+                setBrowseIndex(0);
+                setFocusedMovieId(null);
+                setSelectedGenres([]);
+              },
             }}
-            className="ui-btn ui-btn-primary w-full"
-          >
-            Clear filters
-          </button>
-          </SurfaceCard>
+            tertiaryAction={{
+              label: "Adjust filters",
+              onClick: () => setIsFilterOpen(true),
+            }}
+          />
         ) : (
-          <SurfaceCard className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-lg font-semibold text-violet-700">
-            8
-          </div>
-          <div className="space-y-2">
-            <h2
-              className={`text-xl font-semibold ${
-                isDarkMode ? "text-white" : "text-slate-900"
-              }`}
-            >
-              You’ve gone through every title for now.
-            </h2>
-            <p
-              className={`text-sm leading-6 ${
-                isDarkMode ? "text-slate-400" : "text-slate-500"
-              }`}
-            >
-              Jump into your saved picks or head to shared lists to see what
-              overlaps with people you’re linked with.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Link
-              href="/picks"
-              className="ui-btn ui-btn-primary"
-            >
-              View picks
-            </Link>
-            <Link
-              href="/shared"
-              className="ui-btn ui-btn-secondary"
-            >
-              Shared list
-            </Link>
-          </div>
-          </SurfaceCard>
+          <NetworkStatusBlock
+            variant="empty"
+            isDarkMode={isDarkMode}
+            title="You’ve gone through every title for now"
+            description="Jump into your saved picks or shared lists to see what overlaps with people you’re linked with."
+            secondaryAction={{
+              label: "View picks",
+              onClick: () => {
+                router.push("/picks");
+              },
+            }}
+            tertiaryAction={{
+              label: "Shared list",
+              onClick: () => {
+                router.push("/shared");
+              },
+            }}
+          />
         )}
       </div>
 
@@ -1245,6 +1361,32 @@ function DiscoverPageContent({
             >
               Undo
             </button>
+            {!undoTipDismissed ? (
+              <div className="flex w-full basis-full flex-col gap-2 border-t border-black/8 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                <p
+                  className={`min-w-0 text-[11px] leading-snug sm:flex-1 ${
+                    isDarkMode ? "text-slate-400" : "text-slate-600"
+                  }`}
+                >
+                  You can undo a swipe for a few seconds with{" "}
+                  <span className="font-semibold text-inherit">Undo</span> here.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.localStorage.setItem(undoTipStorageKey, "1");
+                    }
+                    setUndoTipDismissed(true);
+                  }}
+                  className={`ui-btn ui-btn-ghost shrink-0 self-end text-xs sm:self-auto ${
+                    isDarkMode ? "text-violet-200" : "text-violet-700"
+                  }`}
+                >
+                  Got it
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -1322,9 +1464,10 @@ export default function DiscoverPage() {
 
   return (
     <DiscoverPageContent
-      key={`${currentUserId ?? "guest"}-${discoverSessionKey}`}
+      key={currentUserId ?? "guest"}
       currentUserId={currentUserId}
       discoverQueue={discoverQueue}
+      discoverSessionKey={discoverSessionKey}
       registerMovies={registerMovies}
       swipeMovie={swipeMovie}
       undoSwipe={undoSwipe}

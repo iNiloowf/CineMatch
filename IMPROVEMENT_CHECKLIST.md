@@ -22,7 +22,7 @@
 - [x] One visual system: type scale, vertical rhythm, radius/elevation by role, chip/badge grammar, input states, z-index scale doc.
 - [ ] A11y: focus rings, 44px targets where needed, Escape closes modals, icon-only ARIA.
 - [ ] Motion: shared durations/easings + reduced-motion alternatives beyond global slow-down.
-- [ ] Onboarding nudges (Discover gestures, filters, undo); preserve discover context on return; Picks share feedback (toast); “no results” hints + actions.
+- [x] Onboarding nudges (Discover gestures, filters, undo); preserve discover context on return; Picks share feedback (toast); “no results” hints + actions.
 
 ## Engineering
 

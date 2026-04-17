@@ -10,6 +10,7 @@ type NetworkStatusBlockProps = {
   retryLabel?: string;
   onRetry?: () => void;
   secondaryAction?: { label: string; onClick: () => void };
+  tertiaryAction?: { label: string; onClick: () => void };
 };
 
 export function NetworkStatusBlock({
@@ -20,6 +21,7 @@ export function NetworkStatusBlock({
   retryLabel = "Try again",
   onRetry,
   secondaryAction,
+  tertiaryAction,
 }: NetworkStatusBlockProps) {
   const shell = isDarkMode
     ? "border-white/10 bg-white/6 text-slate-100"
@@ -45,8 +47,8 @@ export function NetworkStatusBlock({
           ) : null}
         </>
       )}
-      {(onRetry && variant !== "loading") || secondaryAction ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+      {(onRetry && variant !== "loading") || secondaryAction || tertiaryAction ? (
+        <div className="flex flex-col flex-wrap gap-2 sm:flex-row sm:justify-center">
           {onRetry && variant !== "loading" ? (
             <button type="button" onClick={onRetry} className="ui-btn ui-btn-primary">
               {retryLabel}
@@ -59,6 +61,15 @@ export function NetworkStatusBlock({
               className="ui-btn ui-btn-secondary"
             >
               {secondaryAction.label}
+            </button>
+          ) : null}
+          {tertiaryAction ? (
+            <button
+              type="button"
+              onClick={tertiaryAction.onClick}
+              className="ui-btn ui-btn-ghost"
+            >
+              {tertiaryAction.label}
             </button>
           ) : null}
         </div>
