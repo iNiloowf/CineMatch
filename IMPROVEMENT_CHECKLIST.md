@@ -1,6 +1,14 @@
 # CineMatch — Improvement Checklist
 
-_Last reviewed: app shell, `(app)` layout, `ProtectedScreen`, settings, motion tokens, API surface (no Zod yet), scripts._
+_Last reviewed: auth shell, `(app)` routes, public pages, `app-state` surface, API routes (no Zod), no `error.tsx`, profile `null` guard._
+
+## How to improve the app (quick guide)
+
+1. **Stability first:** finish route-guard polish, add `error.tsx`, validate API inputs (Zod), then tighten Supabase RLS and auth checks — fewer surprise failures in production.
+2. **Feel second:** dark-mode parity on every route, offline banner, less empty `return null` while data resolves — users should always see *something* intentional.
+3. **Speed to ship:** split the giant `app-state.tsx`, add a minimal test + CI gate so refactors don’t regress login/swipe/invite flows.
+
+---
 
 ## Done
 
@@ -37,3 +45,39 @@ _Last reviewed: app shell, `(app)` layout, `ProtectedScreen`, settings, motion t
 ## Native / distribution
 
 - [x] Capacitor Android scripts (`cap:sync`, `cap:open:android`, `cap:run:android`) in `package.json`.
+
+---
+
+## Backlog — from latest app review (add/improve in the app)
+
+_Use these as the next tickets; none replace the Engineering section above — they extend it with UI/product polish._
+
+### Stability & shell
+
+- [ ] **`ProtectedScreen`:** when `!currentUserId` after `isReady`, show a tiny “Signing you out…” / spinner instead of **`return null`** so the shell never flashes empty before `router.replace("/")`.
+- [ ] **Next.js errors:** add **`error.tsx`** (and optionally **`global-error.tsx`**) under `app/` and/or `(app)/` with reset + “Reload” so runtime errors don’t white-screen.
+- [ ] **Offline:** listen to `online` / `offline`, show a dismissible banner; optionally queue or retry failed swipes / sync when back online.
+
+### UX & visual consistency
+
+- [ ] **Dark mode sweep:** **Profile**, **Signup**, **auth callback**, and any remaining **`return null`** while `currentUser` resolves — align muted text, chips, and surfaces with Discover/linked quality.
+- [ ] **Settings achievements** (and similar chips on **Picks**/stats): ensure chip/badge colors read well in **dark** theme (avoid light-only `bg-emerald-100` / `bg-violet-100` where it clashes).
+- [ ] **Skip link:** “Skip to main content” for keyboard users, targeting the scroll container in **`AppShell`**.
+- [ ] **i18n (optional):** if you ship beyond English, extract strings + RTL; today the UI is English-only.
+
+### Architecture & data
+
+- [ ] **Decompose `app-state.tsx`:** extract auth/session, discover queue rotation, and account sync into dedicated modules or contexts to shrink the provider and simplify testing.
+- [ ] **Client forms:** Zod (or similar) on **login / signup** before submit — pairs with the API Zod engineering item.
+- [ ] **Long lists:** virtualize **Picks** / **Shared** / **Discover search** rows if lists regularly exceed ~50 items (e.g. `@tanstack/react-virtual`).
+
+### QA & product
+
+- [ ] **Deep links & cold start:** exercise `discover?movieId=…`, invite accept, OAuth **callback** on slow 3G / airplane toggle.
+- [ ] **Nested modals:** **Picks** (details + trailer) — focus trap / Escape order audit so focus never escapes the topmost layer.
+- [ ] **Observability (optional):** client error reporting (e.g. Sentry) + correlation ids on API errors for production debugging.
+
+### Compliance & growth (optional)
+
+- [ ] **Legal:** privacy / terms links if you store PII or use analytics; cookie consent if you add non-essential cookies.
+- [ ] **PWA (optional):** installability, offline shell, cache strategy for static assets — only if web install matters for your users.
