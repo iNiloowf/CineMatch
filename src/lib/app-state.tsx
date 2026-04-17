@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  createClient,
   type AuthChangeEvent,
   type Session,
 } from "@supabase/supabase-js";
@@ -144,8 +143,14 @@ type MovieRow = {
   trailer_url?: string | null;
 };
 
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+} | null;
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+let settingsSupportsReduceMotion: boolean | null = null;
 
 type StoredAuthSession = {
   userId: string;
@@ -678,23 +683,83 @@ function chunkItems<T>(items: T[], size: number) {
   return chunks;
 }
 
-function createTokenBoundSupabaseClient(accessToken: string) {
-  if (!supabaseUrl || !supabasePublishableKey) {
-    return null;
+function isMissingReduceMotionColumnError(error: SupabaseErrorLike) {
+  if (!error) {
+    return false;
   }
 
-  return createClient(supabaseUrl, supabasePublishableKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  });
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes("reduce_motion") &&
+      (normalized.includes("column") || normalized.includes("schema cache")))
+  );
+}
+
+async function fetchSettingsRowForSync(
+  supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
+  activeUserId: string,
+): Promise<{ data: SettingsRow | null; error: SupabaseErrorLike }> {
+  const selectWithReduceMotion =
+    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion";
+  const selectWithoutReduceMotion =
+    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync";
+
+  const primarySelect =
+    settingsSupportsReduceMotion === false
+      ? selectWithoutReduceMotion
+      : selectWithReduceMotion;
+
+  const primaryResult = await supabaseClient
+    .from("settings")
+    .select(primarySelect)
+    .eq("user_id", activeUserId)
+    .maybeSingle();
+
+  if (!primaryResult.error) {
+    if (primarySelect === selectWithReduceMotion) {
+      settingsSupportsReduceMotion = true;
+      return {
+        data: (primaryResult.data ?? null) as SettingsRow | null,
+        error: null,
+      };
+    }
+
+    return {
+      data: primaryResult.data
+        ? ({
+            ...(primaryResult.data as Record<string, unknown>),
+            reduce_motion: null,
+          } as SettingsRow)
+        : null,
+      error: null,
+    };
+  }
+
+  if (!isMissingReduceMotionColumnError(primaryResult.error as SupabaseErrorLike)) {
+    return { data: null, error: primaryResult.error as SupabaseErrorLike };
+  }
+
+  settingsSupportsReduceMotion = false;
+  const fallbackResult = await supabaseClient
+    .from("settings")
+    .select(selectWithoutReduceMotion)
+    .eq("user_id", activeUserId)
+    .maybeSingle();
+
+  if (fallbackResult.error) {
+    return { data: null, error: fallbackResult.error as SupabaseErrorLike };
+  }
+
+  return {
+    data: fallbackResult.data
+      ? ({
+          ...(fallbackResult.data as Record<string, unknown>),
+          reduce_motion: null,
+        } as SettingsRow)
+      : null,
+    error: null,
+  };
 }
 
 async function getCurrentAccessToken() {
@@ -1000,13 +1065,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     const [settingsResult, linksResult, invitesResult] = await Promise.all([
-      supabaseClient
-        .from("settings")
-        .select(
-          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion",
-        )
-        .eq("user_id", activeUserId)
-        .maybeSingle(),
+      fetchSettingsRowForSync(supabaseClient, activeUserId),
       supabaseClient
         .from("linked_users")
         .select("id, requester_id, target_id, status, created_at")
@@ -1121,7 +1180,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return {
       profile: (profileResult.data ?? null) as ProfileRow | null,
-      settings: (settingsResult.data ?? null) as SettingsRow | null,
+      settings: settingsResult.data ?? null,
       links: linkRows,
       invites: ((invitesResult.data ?? []) as InviteRow[]) ?? [],
       partnerProfiles:
@@ -1134,19 +1193,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ),
     };
   }, []);
-
-  const fetchAccountSyncFromToken = useCallback(async (
-    accessToken: string,
-    activeUserId: string,
-  ): Promise<AccountSyncPayload | null> => {
-    const tokenClient = createTokenBoundSupabaseClient(accessToken);
-
-    if (!tokenClient) {
-      return null;
-    }
-
-    return fetchAccountSyncFromBrowser(tokenClient, activeUserId);
-  }, [fetchAccountSyncFromBrowser]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1477,11 +1523,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      let payload = await fetchAccountSyncFromToken(accessToken, activeUserId);
-
-      if (!payload) {
-        payload = getStoredAccountSnapshot(activeUserId);
-      }
+      let payload = getStoredAccountSnapshot(activeUserId);
 
       if (!payload) {
         payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
@@ -1543,7 +1585,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     accountRefreshKey,
     currentUserId,
     fetchAccountSyncFromBrowser,
-    fetchAccountSyncFromToken,
   ]);
 
   const currentUser =
