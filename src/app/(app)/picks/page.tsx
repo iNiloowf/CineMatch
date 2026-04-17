@@ -562,6 +562,9 @@ export default function PicksPage() {
               <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 You can test Pro from Settings with the admin simulation toggle.
               </p>
+              <Link href="/settings" className="ui-btn ui-btn-primary mt-3">
+                Buy Pro
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">

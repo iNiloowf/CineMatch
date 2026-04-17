@@ -100,6 +100,8 @@ export default function SettingsPage() {
   const [ticketFeedback, setTicketFeedback] = useState("");
   const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
+  const [billingFeedback, setBillingFeedback] = useState("");
+  const proCheckoutUrl = process.env.NEXT_PUBLIC_PRO_CHECKOUT_URL ?? "";
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -177,6 +179,23 @@ export default function SettingsPage() {
         error instanceof Error ? error.message : "Ticket could not be submitted.",
       );
     }
+  };
+
+  const handleUpgradeToPro = () => {
+    if (hasProAccess) {
+      setBillingFeedback("You already have Pro access on this account.");
+      return;
+    }
+
+    if (!proCheckoutUrl) {
+      setBillingFeedback(
+        "Pro checkout is not configured yet. Ask admin to set NEXT_PUBLIC_PRO_CHECKOUT_URL.",
+      );
+      return;
+    }
+
+    window.open(proCheckoutUrl, "_blank", "noopener,noreferrer");
+    setBillingFeedback("Checkout opened in a new tab.");
   };
 
   return (
@@ -528,6 +547,18 @@ export default function SettingsPage() {
               checked={adminSubscriptionPreviewModeEnabled}
               onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
             />
+            <button
+              type="button"
+              onClick={handleUpgradeToPro}
+              className="ui-btn ui-btn-primary mt-3 w-full"
+            >
+              {hasProAccess ? "Pro is active" : "Buy Pro"}
+            </button>
+            {billingFeedback ? (
+              <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                {billingFeedback}
+              </p>
+            ) : null}
           </div>
         </div>
       </SurfaceCard>
@@ -547,31 +578,6 @@ export default function SettingsPage() {
             checked={settings.cellularSync}
             onChange={(checked) => updateSettings({ cellularSync: checked })}
           />
-        </div>
-        <div className={`h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
-        <div className="space-y-2">
-          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Legal
-          </p>
-          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Review the app policies and terms before using CineMatch.
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setLegalModal("privacy")}
-              className="ui-btn ui-btn-secondary w-full"
-            >
-              Privacy Policy
-            </button>
-            <button
-              type="button"
-              onClick={() => setLegalModal("terms")}
-              className="ui-btn ui-btn-secondary w-full"
-            >
-              Terms of Service
-            </button>
-          </div>
         </div>
       </SurfaceCard>
 
@@ -611,6 +617,29 @@ export default function SettingsPage() {
               ))}
             </div>
           )}
+        </SurfaceCard>
+
+        <SurfaceCard className="fade-up-enter mt-4 space-y-4" style={{ animationDelay: "150ms" }}>
+          <p className={sectionEyebrow}>Legal</p>
+          <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Review app policies and terms before using CineMatch.
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setLegalModal("privacy")}
+              className="ui-btn ui-btn-secondary w-full"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setLegalModal("terms")}
+              className="ui-btn ui-btn-secondary w-full"
+            >
+              Terms of Service
+            </button>
+          </div>
         </SurfaceCard>
       </div>
 

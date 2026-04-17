@@ -37,11 +37,13 @@ function ratingChipClass(isDarkMode: boolean) {
 function TogglePill({
   label,
   checked,
+  locked,
   isDarkMode,
   onChange,
 }: {
   label: string;
   checked: boolean;
+  locked?: boolean;
   isDarkMode: boolean;
   onChange: (checked: boolean) => void | Promise<void>;
 }) {
@@ -59,7 +61,21 @@ function TogglePill({
             : "border-slate-200/95 bg-white text-slate-800 shadow-sm"
       }`}
     >
-      <span className="min-w-0 flex-1 pr-1.5 leading-snug">{label}</span>
+      <span className="min-w-0 flex flex-1 items-center gap-2 pr-1.5 leading-snug">
+        <span>{label}</span>
+        {locked ? (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            className="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M7.5 10V8a4.5 4.5 0 1 1 9 0v2" strokeWidth="1.8" strokeLinecap="round" />
+            <rect x="5.5" y="10" width="13" height="10" rx="2.5" strokeWidth="1.8" />
+          </svg>
+        ) : null}
+      </span>
       <span
         className={`inline-flex h-6 w-10 shrink-0 items-center rounded-full p-1 transition ${
           checked ? "bg-white/25" : isDarkMode ? "bg-slate-600 ring-1 ring-white/12" : "bg-slate-200"
@@ -298,8 +314,9 @@ export default function SharedWatchlistPage() {
 
                             <div className="space-y-2.5 pt-0.5">
                               <TogglePill
-                                label="Keep in shared list"
+                                label="Keep in shared list (Pro)"
                                 checked={entry.shared}
+                                locked={!hasProAccess}
                                 isDarkMode={isDarkMode}
                                 onChange={async (checked) => {
                                   if (!hasProAccess) {
@@ -313,23 +330,25 @@ export default function SharedWatchlistPage() {
                                 checked={entry.watched}
                                 isDarkMode={isDarkMode}
                                 onChange={async (checked) => {
-                                  if (!hasProAccess) {
-                                    return;
-                                  }
                                   await toggleWatched(entry.partner.id, entry.movie.id, checked);
                                 }}
                               />
                               {!hasProAccess ? (
-                                <p
+                                <div
                                   className={`rounded-[14px] border px-3 py-2 text-xs ${
                                     isDarkMode
                                       ? "border-violet-400/25 bg-violet-500/10 text-violet-100"
                                       : "border-violet-200/90 bg-violet-50 text-violet-700"
                                   }`}
                                 >
-                                  Shared controls are a Pro feature. Enable Pro test mode from Settings
-                                  to preview this flow.
-                                </p>
+                                  <p>
+                                    Only “Keep in shared list” is Pro. “Watched together” is free for
+                                    everyone.
+                                  </p>
+                                  <Link href="/settings" className="ui-btn ui-btn-primary mt-2 !px-3 !py-1.5 !text-xs">
+                                    Buy Pro
+                                  </Link>
+                                </div>
                               ) : null}
                             </div>
                           </div>
