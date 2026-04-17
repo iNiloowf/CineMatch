@@ -87,19 +87,17 @@ export default function PicksPage() {
     }
   };
 
-  const handleOpenTrailer = async (movie: Movie) => {
-    setIsTrailerVisible(true);
-    setTrailerError(null);
-
-    if (trailerUrl) {
+  const fetchTrailerForSelected = async () => {
+    if (!selectedMovie || trailerUrl) {
       return;
     }
 
+    setTrailerError(null);
     setIsLoadingTrailer(true);
 
     try {
       const response = await fetch(
-        `/api/movies/trailer?movieId=${encodeURIComponent(movie.id)}`,
+        `/api/movies/trailer?movieId=${encodeURIComponent(selectedMovie.id)}`,
         {
           cache: "no-store",
         },
@@ -122,6 +120,11 @@ export default function PicksPage() {
     } finally {
       setIsLoadingTrailer(false);
     }
+  };
+
+  const handleOpenTrailer = async () => {
+    setIsTrailerVisible(true);
+    await fetchTrailerForSelected();
   };
 
   const detailsModal =
@@ -210,7 +213,7 @@ export default function PicksPage() {
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <button
                         type="button"
-                        onClick={() => void handleOpenTrailer(selectedMovie)}
+                        onClick={() => void handleOpenTrailer()}
                         aria-label="Play trailer"
                         className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-black/24 text-white shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/34"
                       >
@@ -345,12 +348,21 @@ export default function PicksPage() {
                             className="h-full w-full border-0"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-white">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white">
                             <p className="max-w-xs text-sm font-medium leading-6">
                               {isLoadingTrailer
-                                ? "Loading trailer..."
+                                ? "Loading trailer…"
                                 : trailerError ?? "Trailer unavailable for this title."}
                             </p>
+                            {!isLoadingTrailer && !trailerUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => void fetchTrailerForSelected()}
+                                className="ui-btn ui-btn-primary text-xs"
+                              >
+                                Try again
+                              </button>
+                            ) : null}
                           </div>
                         )}
                       </div>

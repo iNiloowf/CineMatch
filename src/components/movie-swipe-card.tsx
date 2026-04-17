@@ -107,14 +107,12 @@ export function MovieSwipeCard({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isTrailerVisible]);
 
-  const handleOpenTrailer = async () => {
-    setIsTrailerVisible(true);
-    setTrailerError(null);
-
+  const fetchTrailerIfNeeded = async () => {
     if (trailerUrl) {
       return;
     }
 
+    setTrailerError(null);
     setIsLoadingTrailer(true);
 
     try {
@@ -142,6 +140,11 @@ export function MovieSwipeCard({
     } finally {
       setIsLoadingTrailer(false);
     }
+  };
+
+  const handleOpenTrailer = async () => {
+    setIsTrailerVisible(true);
+    await fetchTrailerIfNeeded();
   };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -273,12 +276,21 @@ export function MovieSwipeCard({
                     className="h-full w-full border-0"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-white">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white">
                     <p className="max-w-xs text-sm font-medium leading-6">
                       {isLoadingTrailer
-                        ? "Loading trailer..."
+                        ? "Loading trailer…"
                         : trailerError ?? "Trailer unavailable for this title."}
                     </p>
+                    {!isLoadingTrailer && !trailerUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => void fetchTrailerIfNeeded()}
+                        className="ui-btn ui-btn-primary text-xs"
+                      >
+                        Try again
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </div>

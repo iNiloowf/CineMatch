@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { NetworkStatusBlock } from "@/components/network-status-block";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
@@ -15,6 +16,12 @@ export default function LinkedPeoplePage() {
   const [manualInviteValue, setManualInviteValue] = useState("");
   const [manualInviteToken, setManualInviteToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [createInviteBusy, setCreateInviteBusy] = useState(false);
+  const [actionError, setActionError] = useState<{
+    message: string;
+    retry?: () => void;
+  } | null>(null);
   const [connectedPartnerName, setConnectedPartnerName] = useState("");
   const [removedPartnerName, setRemovedPartnerName] = useState("");
   const [pendingRemove, setPendingRemove] = useState<{
@@ -30,6 +37,7 @@ export default function LinkedPeoplePage() {
     acceptInviteToken,
     linkedUsers,
     unlinkUser,
+    isDarkMode,
   } = useAppState();
 
   useEffect(() => {
@@ -103,14 +111,33 @@ export default function LinkedPeoplePage() {
   }, [data.invites, data.users, manualInviteToken]);
 
   const connectFromToken = async (token: string, fallbackName = "") => {
-    const result = await acceptInviteToken(token);
-    setStatusMessage(result.message);
+    setInviteBusy(true);
+    setActionError(null);
+    try {
+      const result = await acceptInviteToken(token);
+      setStatusMessage(result.message);
 
-    if (result.ok) {
-      setManualInviteValue("");
-      setManualInviteToken("");
-      setConnectedPartnerName(result.partnerName ?? fallbackName);
-      router.replace("/linked");
+      if (result.ok) {
+        setManualInviteValue("");
+        setManualInviteToken("");
+        setConnectedPartnerName(result.partnerName ?? fallbackName);
+        router.replace("/linked");
+        return;
+      }
+
+      setActionError({
+        message: result.message,
+        retry: () => void connectFromToken(token, fallbackName),
+      });
+    } catch {
+      const message = "We couldn’t reach the server. Check your connection.";
+      setStatusMessage(message);
+      setActionError({
+        message,
+        retry: () => void connectFromToken(token, fallbackName),
+      });
+    } finally {
+      setInviteBusy(false);
     }
   };
 
@@ -257,6 +284,16 @@ export default function LinkedPeoplePage() {
         description="Connect accounts so CineMatch can surface the movies both of you accepted."
       />
 
+      {actionError ? (
+        <NetworkStatusBlock
+          variant="error"
+          isDarkMode={isDarkMode}
+          title="Something went wrong"
+          description={actionError.message}
+          onRetry={actionError.retry}
+        />
+      ) : null}
+
       {inviteToken ? (
         <SurfaceCard className="space-y-4">
           <div className="space-y-1">
@@ -269,12 +306,13 @@ export default function LinkedPeoplePage() {
           </div>
           <button
             type="button"
+            disabled={inviteBusy}
             onClick={async () =>
               await connectFromToken(inviteToken, inviteOwner?.name ?? "")
             }
-            className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+            className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Connect with this link
+            {inviteBusy ? "Connecting…" : "Connect with this link"}
           </button>
           {statusMessage ? (
             <p className="rounded-[18px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -371,6 +409,7 @@ export default function LinkedPeoplePage() {
           ) : null}
           <button
             type="button"
+            disabled={inviteBusy}
             onClick={async () => {
               const token = parseInviteToken(manualInviteValue);
 
@@ -381,9 +420,13 @@ export default function LinkedPeoplePage() {
 
               await connectFromToken(token, manualInviteOwner?.name ?? "");
             }}
-            className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+            className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {manualInviteOwner ? `Connect with ${manualInviteOwner.name}` : "Connect"}
+            {inviteBusy
+              ? "Connecting…"
+              : manualInviteOwner
+                ? `Connect with ${manualInviteOwner.name}`
+                : "Connect"}
           </button>
         </div>
       </SurfaceCard>
@@ -397,25 +440,47 @@ export default function LinkedPeoplePage() {
         </div>
         <button
           type="button"
+          disabled={createInviteBusy}
           onClick={async () => {
-            const result = await createInviteLink();
+            const runCreate = async () => {
+              setCreateInviteBusy(true);
+              setActionError(null);
+              try {
+                const result = await createInviteLink();
 
-            if (!result.ok) {
-              setStatusMessage(result.message);
-              return;
-            }
+                if (!result.ok) {
+                  setStatusMessage(result.message);
+                  setActionError({
+                    message: result.message,
+                    retry: () => void runCreate(),
+                  });
+                  return;
+                }
 
-            setInviteUrl(result.url);
-            setStatusMessage("Invite link created.");
+                setInviteUrl(result.url);
+                setStatusMessage("Invite link created.");
 
-            if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(result.url);
-              setStatusMessage("Invite link copied. Send it to the other person.");
-            }
+                if (navigator.clipboard?.writeText) {
+                  await navigator.clipboard.writeText(result.url);
+                  setStatusMessage("Invite link copied. Send it to the other person.");
+                }
+              } catch {
+                const message = "Couldn’t create the invite link. Check your connection.";
+                setStatusMessage(message);
+                setActionError({
+                  message,
+                  retry: () => void runCreate(),
+                });
+              } finally {
+                setCreateInviteBusy(false);
+              }
+            };
+
+            await runCreate();
           }}
-          className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white"
+          className="w-full rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Create special link
+          {createInviteBusy ? "Creating link…" : "Create special link"}
         </button>
         {inviteUrl ? (
           <div className="rounded-[22px] bg-slate-50 px-4 py-4">

@@ -168,6 +168,8 @@ type AppStateContextValue = {
   isDarkMode: boolean;
   isReady: boolean;
   isSyncingAccountData: boolean;
+  accountSyncError: string | null;
+  retryAccountSync: () => void;
   achievements: Achievement[];
   unlockedAchievement: Achievement | null;
   dismissUnlockedAchievement: () => void;
@@ -797,6 +799,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   const [isReady, setIsReady] = useState(() => !isSupabaseConfigured());
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
+  const [accountSyncError, setAccountSyncError] = useState<string | null>(null);
   const [accountRefreshKey, setAccountRefreshKey] = useState(0);
   const [discoverShuffleSeed, setDiscoverShuffleSeed] = useState(() =>
     Date.now().toString(),
@@ -933,6 +936,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setPreferredDarkMode(nextDarkMode);
       persistUserTheme(activeUserId, nextDarkMode);
     }
+
+    setAccountSyncError(null);
   };
 
   const fetchAccountSyncFromBrowser = useCallback(async (
@@ -1478,7 +1483,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           window.setTimeout(() => {
             setAccountRefreshKey((current) => current + 1);
           }, 900 + syncRetryCountRef.current * 250);
+          return;
         }
+
+        setAccountSyncError(
+          "We couldn’t refresh your account from the cloud after several tries.",
+        );
         return;
       }
 
@@ -1516,7 +1526,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           window.setTimeout(() => {
             setAccountRefreshKey((current) => current + 1);
           }, 1200 + syncRetryCountRef.current * 300);
+          return;
         }
+
+        setAccountSyncError(
+          "We couldn’t load your profile, picks, or links from the server.",
+        );
         return;
       }
 
@@ -1532,6 +1547,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     void loadSupabaseAppData().catch(() => {
       if (active) {
         setIsSyncingAccountData(false);
+        setAccountSyncError("Account sync was interrupted. Try again.");
       }
     });
 
@@ -2949,6 +2965,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     persistOnboardingPreferences(currentUserId, clearedPreferences);
   };
 
+  const retryAccountSync = useCallback(() => {
+    syncRetryCountRef.current = 0;
+    setAccountSyncError(null);
+    setAccountRefreshKey((current) => current + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setAccountSyncError(null);
+    }
+  }, [currentUserId]);
+
   return (
     <AppStateContext.Provider
       value={{
@@ -2960,6 +2988,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         isDarkMode,
         isReady,
         isSyncingAccountData,
+        accountSyncError,
+        retryAccountSync,
         achievements,
         unlockedAchievement,
         dismissUnlockedAchievement: () => setUnlockedAchievement(null),

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
+import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
@@ -36,6 +37,7 @@ function DiscoverPageContent({
   toggleDarkMode,
   pasteInviteLinkFromClipboard,
 }: DiscoverPageContentProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -49,7 +51,18 @@ function DiscoverPageContent({
   const [swipeFeedback, setSwipeFeedback] = useState<"accepted" | "rejected" | null>(null);
   const [lastSwipe, setLastSwipe] = useState<LastSwipeRecord | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [menuMessage, setMenuMessage] = useState<string | null>(null);
+  const [menuBanner, setMenuBanner] = useState<{
+    message: string;
+    variant: "success" | "error";
+    onRetry?: () => void;
+  } | null>(null);
+  type SearchFetchState = "idle" | "loading" | "ready" | "empty" | "error";
+  const [searchFetchState, setSearchFetchState] = useState<SearchFetchState>("idle");
+  const [searchFetchError, setSearchFetchError] = useState<string | null>(null);
+  const [searchRetryKey, setSearchRetryKey] = useState(0);
+  type SharedMovieFetch = "idle" | "loading" | "error" | "missing";
+  const [sharedMovieFetch, setSharedMovieFetch] = useState<SharedMovieFetch>("idle");
+  const [sharedMovieRetryKey, setSharedMovieRetryKey] = useState(0);
   const transitionTimeoutRef = useRef<number | null>(null);
   const swipeTimeoutRef = useRef<number | null>(null);
   const undoToastTimeoutRef = useRef<number | null>(null);
@@ -65,6 +78,7 @@ function DiscoverPageContent({
 
   useEffect(() => {
     if (!sharedMovieId) {
+      setSharedMovieFetch("idle");
       return;
     }
 
@@ -76,11 +90,13 @@ function DiscoverPageContent({
       registerMovies([existingMovie]);
       setFocusedMovieId(existingMovie.id);
       setIsSearchSheetOpen(false);
+      setSharedMovieFetch("idle");
       return;
     }
 
     let active = true;
     const controller = new AbortController();
+    setSharedMovieFetch("loading");
 
     void (async () => {
       try {
@@ -92,21 +108,35 @@ function DiscoverPageContent({
           },
         );
 
-        if (!response.ok || !active) {
+        if (!active) {
+          return;
+        }
+
+        if (!response.ok) {
+          setSharedMovieFetch("error");
           return;
         }
 
         const payload = (await response.json()) as { movie?: Movie | null };
 
-        if (!payload.movie || !active) {
+        if (!active) {
+          return;
+        }
+
+        if (!payload.movie) {
+          setSharedMovieFetch("missing");
           return;
         }
 
         registerMovies([payload.movie]);
         setFocusedMovieId(payload.movie.id);
         setIsSearchSheetOpen(false);
+        setSharedMovieFetch("idle");
       } catch {
-        // Ignore shared-link fetch failures and keep Discover usable.
+        if (!active) {
+          return;
+        }
+        setSharedMovieFetch("error");
       }
     })();
 
@@ -114,16 +144,27 @@ function DiscoverPageContent({
       active = false;
       controller.abort();
     };
-  }, [discoverQueue, registerMovies, searchResults, sharedMovieId]);
+  }, [
+    discoverQueue,
+    registerMovies,
+    searchResults,
+    sharedMovieId,
+    sharedMovieRetryKey,
+  ]);
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {
+      setSearchFetchState("idle");
+      setSearchFetchError(null);
       return;
     }
 
-    let active = true;
+    let cancelled = false;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
+      setSearchFetchState("loading");
+      setSearchFetchError(null);
+
       try {
         const response = await fetch(
           `/api/movies?source=tmdb&query=${encodeURIComponent(
@@ -135,26 +176,59 @@ function DiscoverPageContent({
           },
         );
 
-        if (!response.ok || !active) {
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.ok) {
+          const errPayload = (await response.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          setSearchFetchState("error");
+          setSearchFetchError(
+            errPayload.error ?? "Search couldn’t be completed. Try again.",
+          );
+          setSearchResults([]);
           return;
         }
 
         const payload = (await response.json()) as { movies?: Movie[] };
-        registerMovies(payload.movies ?? []);
-        setSearchResults(payload.movies ?? []);
-      } catch {
-        if (active) {
-          setSearchResults([]);
+        const movies = payload.movies ?? [];
+        registerMovies(movies);
+        setSearchResults(movies);
+
+        if (movies.length === 0) {
+          setSearchFetchState("empty");
+        } else {
+          setSearchFetchState("ready");
         }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setSearchFetchState("error");
+        setSearchFetchError("We couldn’t reach the search service. Check your connection.");
+        setSearchResults([]);
       }
     }, 280);
 
     return () => {
-      active = false;
+      cancelled = true;
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [currentUserId, normalizedSearchQuery, registerMovies, searchQuery]);
+  }, [
+    currentUserId,
+    normalizedSearchQuery,
+    registerMovies,
+    searchQuery,
+    searchRetryKey,
+  ]);
 
   const genres = useMemo(() => {
     return [
@@ -398,16 +472,54 @@ function DiscoverPageContent({
   };
 
   const handlePasteInviteLink = async () => {
-    const result = await pasteInviteLinkFromClipboard();
-    setMenuMessage(result.message);
     setIsMoreMenuOpen(false);
-    window.setTimeout(() => {
-      setMenuMessage((current) => (current === result.message ? null : current));
-    }, 3200);
+
+    const runPaste = async () => {
+      const result = await pasteInviteLinkFromClipboard();
+      const showRetry = !result.ok;
+      setMenuBanner({
+        message: result.message,
+        variant: result.ok ? "success" : "error",
+        onRetry: showRetry ? () => void runPaste() : undefined,
+      });
+      const dismissMs = showRetry ? 9000 : 3600;
+      window.setTimeout(() => {
+        setMenuBanner((current) =>
+          current?.message === result.message ? null : current,
+        );
+      }, dismissMs);
+    };
+
+    void runPaste();
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
+      {sharedMovieId && (sharedMovieFetch === "error" || sharedMovieFetch === "missing") ? (
+        <NetworkStatusBlock
+          variant="error"
+          isDarkMode={isDarkMode}
+          title={
+            sharedMovieFetch === "missing"
+              ? "That shared movie isn’t available"
+              : "Couldn’t open the shared movie"
+          }
+          description={
+            sharedMovieFetch === "missing"
+              ? "The link may be wrong or the title was removed from search."
+              : "Check your connection, then try loading the link again."
+          }
+          onRetry={() => setSharedMovieRetryKey((count) => count + 1)}
+          secondaryAction={{
+            label: "Dismiss",
+            onClick: () => {
+              setSharedMovieFetch("idle");
+              router.replace("/discover");
+            },
+          }}
+        />
+      ) : null}
+
       {!isSearchOpen ? (
         <div className="flex items-center justify-between px-1 pb-1 pt-0.5">
           <h1
@@ -490,12 +602,29 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      {menuMessage ? (
-        <div className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4">
-          <div
-            className="ui-toast-note px-4 py-2 font-semibold"
-          >
-            {menuMessage}
+      {menuBanner ? (
+        <div
+          className={`fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 ${
+            menuBanner.onRetry ? "pointer-events-auto" : "pointer-events-none"
+          }`}
+        >
+          <div className="flex max-w-md flex-col items-center gap-2">
+            <div
+              className={`ui-toast-note px-4 py-2 text-center font-semibold ${
+                menuBanner.variant === "error"
+                  ? isDarkMode
+                    ? "border border-rose-400/30 text-rose-100"
+                    : "border border-rose-200/80 text-rose-800"
+                  : ""
+              }`}
+            >
+              {menuBanner.message}
+            </div>
+            {menuBanner.onRetry ? (
+              <button type="button" onClick={menuBanner.onRetry} className="ui-btn ui-btn-primary text-xs">
+                Try again
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -727,7 +856,7 @@ function DiscoverPageContent({
                   </button>
                 ) : null}
               </div>
-              {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
+              {searchFetchState === "ready" && sortedSearchResults.length > 0 ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="ui-chip ui-chip--surface ui-chip--surface-lg font-semibold">
                     {sortedSearchResults.length} found
@@ -737,7 +866,62 @@ function DiscoverPageContent({
             </div>
 
             <div className="ui-shell-body pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-              {sortedSearchResults.length > 0 ? (
+              {normalizedSearchQuery.length < 2 ? (
+                <SurfaceCard className="space-y-3 text-center">
+                  <h3
+                    className={`text-lg font-semibold ${
+                      isDarkMode ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    Keep typing
+                  </h3>
+                  <p
+                    className={`text-sm leading-6 ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Enter at least two characters to search movies and series.
+                  </p>
+                </SurfaceCard>
+              ) : null}
+
+              {normalizedSearchQuery.length >= 2 &&
+              (searchFetchState === "loading" || searchFetchState === "idle") ? (
+                <NetworkStatusBlock
+                  variant="loading"
+                  isDarkMode={isDarkMode}
+                  title="Searching the catalog…"
+                />
+              ) : null}
+
+              {searchFetchState === "error" ? (
+                <NetworkStatusBlock
+                  variant="error"
+                  isDarkMode={isDarkMode}
+                  title="Search couldn’t finish"
+                  description={searchFetchError ?? "Try again in a moment."}
+                  onRetry={() => setSearchRetryKey((count) => count + 1)}
+                />
+              ) : null}
+
+              {searchFetchState === "empty" ? (
+                <NetworkStatusBlock
+                  variant="empty"
+                  isDarkMode={isDarkMode}
+                  title="No matches for that search"
+                  description="Try another spelling, a shorter title, or a different keyword."
+                  secondaryAction={{
+                    label: "Clear search",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                      setIsSearchSheetOpen(false);
+                    },
+                  }}
+                />
+              ) : null}
+
+              {searchFetchState === "ready" && sortedSearchResults.length > 0 ? (
                 <div className="space-y-3">
                   {sortedSearchResults.map((result) => (
                     <button
@@ -796,24 +980,7 @@ function DiscoverPageContent({
                     </button>
                   ))}
                 </div>
-              ) : (
-                <SurfaceCard className="space-y-3 text-center">
-                  <h3
-                    className={`text-lg font-semibold ${
-                      isDarkMode ? "text-white" : "text-slate-900"
-                    }`}
-                  >
-                    No results yet
-                  </h3>
-                  <p
-                    className={`text-sm leading-6 ${
-                      isDarkMode ? "text-slate-400" : "text-slate-500"
-                    }`}
-                  >
-                    Try another title and I’ll bring matching movies or series here.
-                  </p>
-                </SurfaceCard>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
