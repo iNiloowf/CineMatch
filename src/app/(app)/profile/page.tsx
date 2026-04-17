@@ -6,6 +6,7 @@ import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
 
@@ -25,6 +26,9 @@ export default function ProfilePage() {
   const [clearAvatarOnSave, setClearAvatarOnSave] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback>("idle");
   const [saveMessage, setSaveMessage] = useState("");
+  const [removePhotoModalOpen, setRemovePhotoModalOpen] = useState(false);
+
+  useEscapeToClose(removePhotoModalOpen, () => setRemovePhotoModalOpen(false));
 
   useEffect(() => {
     return () => {
@@ -70,6 +74,9 @@ export default function ProfilePage() {
       ? undefined
       : avatarPreview ?? currentUser.avatarImageUrl;
 
+  const canRemovePhoto =
+    Boolean(currentUser.avatarImageUrl || avatarPreview) && !clearAvatarOnSave;
+
   const resetAvatarDraft = () => {
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
@@ -79,13 +86,14 @@ export default function ProfilePage() {
     setClearAvatarOnSave(false);
   };
 
-  const handleRemovePhotoClick = () => {
+  const confirmRemovePhotoStaging = () => {
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
     }
     setAvatarPreview(undefined);
     setAvatarFile(null);
     setClearAvatarOnSave(true);
+    setRemovePhotoModalOpen(false);
   };
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -140,18 +148,122 @@ export default function ProfilePage() {
     ? "border border-white/12 bg-white/8"
     : "border border-slate-200/80 bg-slate-50/95 shadow-sm";
 
-  const quickLinkShell = isDarkMode
-    ? "border border-white/14 bg-white/8 text-slate-100 shadow-[0_14px_36px_rgba(0,0,0,0.25)] hover:bg-white/12"
-    : "border border-white/70 bg-white/85 text-slate-800 shadow-[0_18px_50px_rgba(116,82,186,0.12)] hover:bg-white";
-
   const inputClass = isDarkMode
     ? "w-full rounded-[20px] border border-white/12 bg-white/8 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
     : "w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white";
 
   const labelClass = isDarkMode ? "text-sm font-medium text-slate-200" : "text-sm font-medium text-slate-700";
 
+  const shortcutTiles = [
+    {
+      href: "/linked",
+      title: "Friends",
+      subtitle: "Who you match with",
+      gradient: isDarkMode
+        ? "from-violet-600/95 via-violet-700/90 to-indigo-950/95"
+        : "from-violet-500 via-violet-600 to-fuchsia-700",
+      ring: isDarkMode ? "ring-white/15" : "ring-violet-300/40",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
+          <path d="M17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
+          <path d="M3.5 19a5.5 5.5 0 0 1 11 0" strokeLinecap="round" />
+          <path d="M13 19a4.5 4.5 0 0 1 7.5-3.3" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      href: "/connect",
+      title: "Connect",
+      subtitle: "Invite & link flow",
+      gradient: isDarkMode
+        ? "from-emerald-700/90 via-teal-800/92 to-slate-950/95"
+        : "from-emerald-500 via-teal-600 to-cyan-700",
+      ring: isDarkMode ? "ring-emerald-400/20" : "ring-emerald-300/45",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      href: "/settings",
+      title: "Settings",
+      subtitle: "Theme & preferences",
+      gradient: isDarkMode
+        ? "from-slate-700/95 via-slate-800/95 to-slate-950"
+        : "from-slate-600 via-slate-700 to-slate-800",
+      ring: isDarkMode ? "ring-white/12" : "ring-slate-300/50",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+          <circle cx="12" cy="12" r="3.2" />
+          <path d="M12 3v2" />
+          <path d="M12 19v2" />
+          <path d="M3 12h2" />
+          <path d="M19 12h2" />
+          <path d="m5.6 5.6 1.4 1.4" />
+          <path d="M17 17l1.4 1.4" />
+          <path d="m17 5.6-1.4 1.4" />
+          <path d="M6.4 17 5 18.4" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-5">
+      {removePhotoModalOpen ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setRemovePhotoModalOpen(false)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-md overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+          >
+            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">Remove profile photo?</p>
+              <button
+                type="button"
+                onClick={() => setRemovePhotoModalOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body !pt-4">
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                Removing your photo cannot be undone from here without uploading a new image. It will be removed
+                when you save your profile.
+              </p>
+            </div>
+            <div className="ui-shell-footer !pt-4">
+              <button
+                type="button"
+                onClick={() => setRemovePhotoModalOpen(false)}
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+              >
+                Keep photo
+              </button>
+              <button type="button" onClick={confirmRemovePhotoStaging} className="ui-btn ui-btn-danger min-w-0 flex-1">
+                Remove photo
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {saveFeedback === "saved" || saveFeedback === "error" ? (
         <div
           className={`fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[var(--z-banner)] mx-auto max-w-md ${
@@ -230,6 +342,7 @@ export default function ProfilePage() {
                   resetAvatarDraft();
                   setSaveFeedback("idle");
                   setSaveMessage("");
+                  setRemovePhotoModalOpen(false);
                 }
 
                 return next;
@@ -243,24 +356,12 @@ export default function ProfilePage() {
             }`}
           >
             {isEditing ? (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                className="ui-icon-md ui-icon-stroke"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
               </svg>
             ) : (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                className="ui-icon-md ui-icon-stroke"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
@@ -272,11 +373,7 @@ export default function ProfilePage() {
             isDarkMode ? "border border-white/10 bg-white/6" : "bg-slate-50"
           }`}
         >
-          <p
-            className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-              isDarkMode ? "text-slate-400" : "text-slate-400"
-            }`}
-          >
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
             City
           </p>
           <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -321,9 +418,7 @@ export default function ProfilePage() {
       {isEditing ? (
         <SurfaceCard className="expand-soft space-y-5 !p-5 sm:!p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Edit profile
-            </p>
+            <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Edit profile</p>
             <button
               type="button"
               onClick={() => {
@@ -331,11 +426,10 @@ export default function ProfilePage() {
                 setIsEditing(false);
                 setSaveFeedback("idle");
                 setSaveMessage("");
+                setRemovePhotoModalOpen(false);
               }}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                isDarkMode
-                  ? "text-slate-300 hover:bg-white/10"
-                  : "text-slate-600 hover:bg-slate-100"
+                isDarkMode ? "text-slate-300 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               Cancel
@@ -349,13 +443,35 @@ export default function ProfilePage() {
               }`}
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex shrink-0 flex-col items-center gap-2">
-                  <AvatarBadge
-                    initials={currentUser.avatar}
-                    imageUrl={activeAvatarPreview}
-                    sizeClassName="h-20 w-20"
-                    textClassName="text-xl font-semibold"
-                  />
+                <div className="flex shrink-0 flex-col items-center gap-3">
+                  <div className="relative">
+                    <AvatarBadge
+                      initials={currentUser.avatar}
+                      imageUrl={activeAvatarPreview}
+                      sizeClassName="h-20 w-20"
+                      textClassName="text-xl font-semibold"
+                    />
+                    {canRemovePhoto ? (
+                      <button
+                        type="button"
+                        onClick={() => setRemovePhotoModalOpen(true)}
+                        aria-label="Remove profile photo"
+                        title="Remove profile photo"
+                        className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
+                          isDarkMode
+                            ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
+                            : "border-white bg-rose-500 text-white hover:bg-rose-600"
+                        }`}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                          <path d="M3 6h18" strokeLinecap="round" />
+                          <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M10 11v6M14 11v6" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    ) : null}
+                  </div>
                   <label
                     className={`inline-flex cursor-pointer rounded-full px-4 py-2 text-xs font-semibold transition active:scale-[0.98] ${
                       isDarkMode
@@ -364,13 +480,13 @@ export default function ProfilePage() {
                     }`}
                   >
                     Choose photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      className="hidden"
-                    />
+                    <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                   </label>
+                  {clearAvatarOnSave ? (
+                    <p className={`max-w-[12rem] text-center text-[11px] font-medium ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}>
+                      Photo will be removed when you save.
+                    </p>
+                  ) : null}
                 </div>
                 {avatarPreview ? (
                   <div className="min-w-0 flex-1 space-y-2">
@@ -383,11 +499,7 @@ export default function ProfilePage() {
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob preview */}
-                      <img
-                        src={avatarPreview}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
                     </div>
                     <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                       Shown as a circle in the app; center the subject when you pick a photo.
@@ -407,42 +519,8 @@ export default function ProfilePage() {
             </label>
             <label className={`block space-y-2 ${labelClass}`}>
               Bio
-              <textarea
-                name="bio"
-                defaultValue={currentUser.bio}
-                rows={4}
-                className={inputClass}
-              />
+              <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
             </label>
-
-            <div
-              className={`space-y-3 rounded-[22px] border px-4 py-4 ${
-                isDarkMode
-                  ? "border-rose-400/25 bg-rose-500/8"
-                  : "border-rose-200/90 bg-rose-50/80"
-              }`}
-            >
-              <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
-                Photo & data
-              </p>
-              <p className={`text-xs leading-relaxed ${isDarkMode ? "text-rose-100/85" : "text-rose-900/85"}`}>
-                Removing your photo cannot be undone from here without uploading a new image.
-              </p>
-              <button
-                type="button"
-                disabled={
-                  clearAvatarOnSave || (!currentUser.avatarImageUrl && !avatarPreview)
-                }
-                onClick={handleRemovePhotoClick}
-                className={`w-full rounded-[18px] border px-3 py-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                  isDarkMode
-                    ? "border-rose-400/40 bg-rose-950/40 text-rose-100 hover:bg-rose-950/60"
-                    : "border-rose-300 bg-white text-rose-800 hover:bg-rose-50"
-                }`}
-              >
-                Remove profile photo
-              </button>
-            </div>
 
             <button
               type="submit"
@@ -465,30 +543,36 @@ export default function ProfilePage() {
                 "Save profile"
               )}
             </button>
-
           </form>
         </SurfaceCard>
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Link
-          href="/linked"
-          className={`discover-toolbar-enter flex min-h-[3.25rem] items-center justify-center rounded-[24px] px-4 py-4 text-center text-sm font-semibold transition ${quickLinkShell}`}
-        >
-          Friends
-        </Link>
-        <Link
-          href="/connect"
-          className={`discover-toolbar-enter flex min-h-[3.25rem] items-center justify-center rounded-[24px] px-4 py-4 text-center text-sm font-semibold transition [animation-delay:70ms] ${quickLinkShell}`}
-        >
-          Connect
-        </Link>
-        <Link
-          href="/settings"
-          className={`discover-toolbar-enter flex min-h-[3.25rem] items-center justify-center rounded-[24px] px-4 py-4 text-center text-sm font-semibold transition [animation-delay:140ms] ${quickLinkShell}`}
-        >
-          Settings
-        </Link>
+        {shortcutTiles.map((tile, index) => (
+          <Link
+            key={tile.href}
+            href={tile.href}
+            className={`discover-toolbar-enter group relative flex min-h-[5.5rem] overflow-hidden rounded-[26px] p-4 text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)] ring-2 transition hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(15,23,42,0.26)] active:translate-y-0 ${tile.ring}`}
+            style={{ animationDelay: `${index * 75}ms` }}
+          >
+            <div
+              className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-[0.97] transition group-hover:opacity-100 ${tile.gradient}`}
+              aria-hidden
+            />
+            <div className="relative flex w-full items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black/18 text-white backdrop-blur-sm ring-1 ring-white/25">
+                {tile.icon}
+              </span>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-base font-bold leading-tight tracking-tight">{tile.title}</p>
+                <p className="mt-0.5 text-xs font-medium text-white/82">{tile.subtitle}</p>
+              </div>
+              <span className="shrink-0 text-lg font-light text-white/70 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden>
+                →
+              </span>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
