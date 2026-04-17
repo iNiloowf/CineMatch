@@ -1,89 +1,32 @@
-# CineMatch Improvement Checklist
+# CineMatch — Improvement Checklist
 
-## Priority 0 (Do First)
+## Done
 
-- [x] Wire the top-right menu button in `src/app/(app)/discover/page.tsx` to a real action (open settings / quick actions), or remove it to avoid dead UI.
-- [ ] Add loading/error/empty states for every network-dependent action (search, trailer fetch, account sync, invite accept) with consistent copy and retry CTA.
-- [ ] Split `src/lib/app-state.tsx` into domain stores/hooks (`auth`, `discover`, `links`, `profile`, `settings`) to reduce complexity and rerenders.
-- [ ] Replace the 7s polling loop in `src/lib/app-state.tsx` with event-driven sync (visibility/focus + realtime subscriptions + manual refresh).
-- [ ] Add route-level guards for authenticated app pages (redirect unauthenticated users to login) to avoid blank/null states.
+- [x] Discover: top-right menu wired (settings / profile / paste link / dark mode).
+- [x] Design tokens (spacing, radius, shadow, font scale, colors) + button hierarchy (primary/secondary/ghost).
+- [x] Icon sizing/stroke consistent (discover, picks, profile, modals).
+- [x] Modal/sheet layout unified (header/body/footer, close, safe area).
+- [x] Visual noise: fewer competing gradients/glows where readability suffered.
+- [x] Narrow-width pass (~≤380px): chips/buttons avoid clipping on small Android.
 
-## UI Improvements
+## Priority — product & stability
 
-- [x] Define a small design token layer (spacing, radius, shadow, font scale, color aliases) and reuse it instead of repeating long utility chains.
-- [x] Standardize button hierarchy (primary/secondary/ghost/danger) and unify hover/active/disabled states.
-- [ ] Improve dark-mode contrast in low-emphasis text (some `text-slate-400/500` shades are too dim on deep backgrounds).
-- [ ] Add skeleton placeholders for cards and search rows to make loading feel intentional.
-- [x] Make icon sizing and stroke weights consistent across pages (discover, picks, profile, modals).
-- [ ] Define a type scale map for headings/body/captions and remove ad-hoc text sizes page by page.
-- [ ] Create consistent spacing rules (vertical rhythm) for page headers, card groups, and CTA sections.
-- [ ] Normalize corner radius usage by component role (container/card/chip/button/modal) and remove one-off radii.
-- [ ] Standardize elevation levels (surface/card/floating/modal) and ensure shadow depth communicates hierarchy.
-- [ ] Add reusable card variants (`default`, `interactive`, `selected`, `danger`) with consistent borders/backgrounds.
-- [x] Unify modal sheet layout (header/content/footer), close affordance placement, and safe-area behavior.
-- [ ] Unify chip/badge styles (genre/year/rating/status) so they share the same visual grammar.
-- [ ] Add a clear focus ring style system for keyboard users and apply it to links, buttons, inputs, and chips.
-- [ ] Define and enforce minimum touch target size (`44x44`) for all interactive controls.
-- [ ] Add sticky bottom CTA pattern for mobile-heavy flows where primary action should remain visible.
-- [ ] Improve empty-state visuals with consistent iconography, tone, and action priority.
-- [ ] Add error-state visual language (icon + message + recovery action) consistent across screens.
-- [ ] Add success/confirmation feedback patterns (toasts/banners/inline) with consistent timing and placement.
-- [x] Audit visual noise: reduce competing gradients/glows where content readability is impacted.
-- [ ] Standardize input field states (`default`, `hover`, `focus`, `error`, `disabled`) and helper/error text style.
-- [ ] Add section divider/title pattern for long pages to improve scanability.
-- [ ] Ensure poster/media thumbnails keep a consistent aspect ratio and fallback appearance.
-- [ ] Add reusable list item row pattern for mixed icon/text/action rows (settings, menus, sheets).
-- [ ] Define animation durations/easings by intent (micro, state change, modal) and apply consistently.
-- [ ] Add reduced-motion visual alternatives beyond global duration reduction (avoid sudden jumps).
-- [x] Add responsive breakpoint pass for small Android widths to prevent clipping/truncation in chips/buttons.
-- [ ] Audit z-index layers (toast, sheet, modal, nav, overlay) and document a fixed stacking scale.
-- [ ] Improve typography contrast pairing in dark mode for subtitles/meta text over tinted surfaces.
-- [ ] Add reusable “glass” and “solid” surface presets and apply intentionally (avoid mixed random usage).
-- [ ] Create a UI consistency checklist for PRs (typography, spacing, icons, states, accessibility, motion).
+- [ ] Loading / error / empty for all network actions (search, trailer, sync, invite) + retry CTA.
+- [ ] Route guards on authenticated app routes (no blank states for logged-out users).
+- [ ] Split `app-state` into domain hooks; replace 7s polling with focus/visibility + events + manual refresh.
 
-## UX Improvements
+## UI & UX (condensed)
 
-- [ ] Add first-run onboarding tooltips for Discover gestures, filter usage, and undo behavior.
-- [ ] Preserve discover context better (selected filters/search + last browsed item) when user navigates away and returns.
-- [ ] Improve share flow feedback in Picks (show explicit success/error toast, not only transient icon state).
-- [ ] Add “why no results” guidance with fast actions (clear filter, expand query, browse trending).
-- [ ] Add accessibility polish: visible focus states, escape-to-close modal behavior everywhere, better ARIA labels for icon-only buttons.
+- [ ] Dark mode: better contrast on muted/meta text and tinted surfaces.
+- [ ] Skeletons for cards/search rows; clearer empty/error/success patterns.
+- [x] One visual system: type scale, vertical rhythm, radius/elevation by role, chip/badge grammar, input states, z-index scale doc.
+- [ ] A11y: focus rings, 44px targets where needed, Escape closes modals, icon-only ARIA.
+- [ ] Motion: shared durations/easings + reduced-motion alternatives beyond global slow-down.
+- [ ] Onboarding nudges (Discover gestures, filters, undo); preserve discover context on return; Picks share feedback (toast); “no results” hints + actions.
 
-## Technical Improvements
+## Engineering
 
-- [ ] Move heavy derived computations from render path into memoized selectors or dedicated hooks.
-- [ ] Add request deduping/caching for movie search and trailer fetch (debounce exists, but caching by query/id is missing).
-- [ ] Consolidate repeated runtime/quality filter logic shared by client and API into one reusable utility module.
-- [ ] Add schema validation (e.g. Zod) for API request/response payloads in `src/app/api/*` routes.
-- [ ] Add centralized error logger and user-safe error mapper for consistent API/UI messaging.
-
-## Performance
-
-- [ ] Lazy-load large modals and trailer iframe components to reduce initial bundle cost.
-- [ ] Memoize list items in Picks/Shared views when item count grows.
-- [ ] Audit unnecessary re-renders caused by passing unstable inline callbacks/objects.
-- [ ] Add image optimization strategy for posters (dimensions, placeholders, fallback, loading policy).
-- [ ] Measure bundle/runtime with `next build` + analyzer before/after each major refactor.
-
-## Security and Data
-
-- [ ] Revisit local storage of auth/session data and ensure token handling follows Supabase recommended secure flow.
-- [ ] Ensure all mutating API routes enforce auth + ownership checks consistently.
-- [ ] Add server-side rate limiting to sensitive actions beyond email auth flow (invites, link accept, swipe burst abuse).
-- [ ] Add audit-safe logs for critical user actions (link/unlink, invite creation, profile update).
-- [ ] Verify storage bucket and RLS policies for profile photo upload paths.
-
-## Testing and Quality
-
-- [ ] Add unit tests for discover ranking/filtering utilities.
-- [ ] Add integration tests for auth + account-sync flows.
-- [ ] Add e2e tests for critical journeys: signup/login, swipe/undo, invite accept, shared watchlist toggles.
-- [ ] Add visual regression checks for dark/light mode in key screens.
-- [ ] Add CI quality gates (typecheck, lint, tests) and fail on regressions.
-
-## Suggested Execution Plan (2-3 Weeks)
-
-- [ ] Week 1: Fix Priority 0 + key UX bugs, then stabilize loading/error states.
-- [ ] Week 2: Refactor app-state into modules + reduce polling + add route guards.
-- [ ] Week 3: Add tests/CI, performance pass, and accessibility polish.
-
+- [ ] Perf: memoize lists, lazy modals/trailer, poster image policy, trim unstable props/callbacks; occasional `next build` + analyzer on big changes.
+- [ ] API: Zod on `src/app/api/*`, dedupe/cache search + trailer, shared filter utils client+server, centralized errors/logging.
+- [ ] Security: Supabase session storage review, auth+ownership on mutating routes, rate limits (invites/accept/swipe), audit logs for sensitive actions, RLS/storage for avatars.
+- [ ] Tests & CI: unit (discover utils), integration (auth/sync), e2e (login, swipe/undo, invite, shared toggles), visual smoke dark/light, CI gates (typecheck, lint, test).

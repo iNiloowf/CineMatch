@@ -23,7 +23,7 @@ export function AchievementToast({
   }));
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4">
       <div className="achievement-burst absolute inset-x-0 top-0 mx-auto h-40 max-w-md overflow-hidden">
         {particles.map((particle) => (
           <span

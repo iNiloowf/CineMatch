@@ -1,27 +1,75 @@
 @import "tailwindcss";
 
+/*
+  Visual system — z-index: numeric tokens only (--z-*). Full layer map: docs/visual-system.md
+*/
 :root {
   --background: #f6f7fb;
   --foreground: #0f172a;
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Spacing primitives */
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+
+  /* Vertical rhythm (use with gap-[var(--rhythm-*)] / margin) */
+  --rhythm-tight: 0.375rem;
+  --rhythm-stack: 0.5rem;
+  --rhythm-section: 1rem;
+  --rhythm-page: 1.25rem;
+
+  /* Radius by role */
+  --radius-control: 1rem; /* icon buttons, compact controls */
   --radius-md: 1rem;
-  --radius-lg: 1.125rem;
-  --radius-xl: 1.5rem;
-  --radius-pill: 999px;
-  --shadow-soft: 0 16px 34px rgba(124, 58, 237, 0.08);
-  --shadow-menu: 0 22px 54px rgba(15, 23, 42, 0.2);
+  --radius-lg: 1.125rem; /* inputs */
+  --radius-xl: 1.5rem; /* glass panels, cards */
+  --radius-card: 1.5rem;
+  --radius-panel: 1.25rem; /* menus */
+  --radius-shell: 1.875rem; /* modal / fullscreen sheet outer */
+  --radius-pill: 999px; /* chips, primary CTAs */
+
+  /* Elevation by role */
+  --elev-surface: 0 10px 28px rgba(15, 23, 42, 0.06);
+  --elev-card: 0 16px 34px rgba(124, 58, 237, 0.08);
+  --elev-menu: 0 22px 54px rgba(15, 23, 42, 0.2);
+  --elev-modal: 0 30px 80px rgba(15, 23, 42, 0.28);
+  --shadow-soft: var(--elev-card);
+  --shadow-menu: var(--elev-menu);
+
+  /* Type scale */
+  --font-scale-meta: 0.6875rem;
   --font-scale-caption: 0.75rem;
   --font-scale-body: 0.875rem;
+  --font-scale-subtitle: 1rem;
   --font-scale-title: 1.125rem;
+  --font-scale-display: 1.5rem;
+
+  /* Z-index scale — use z-[var(--z-…)] in TSX */
+  --z-base: 0;
+  --z-local: 10;
+  --z-nav: 20;
+  --z-sheet: 40;
+  --z-overlay: 120;
+  --z-toast-anchor: 125;
+  --z-popover: 140;
+  --z-banner: 145;
+  --z-modal-backdrop: 450;
+  --z-modal: 500;
+
   --color-surface-glass: rgba(255, 255, 255, 0.78);
   --color-surface-muted: #f1f5f9;
   --color-border-soft: rgba(255, 255, 255, 0.7);
   --color-border-input: #e2e8f0;
+  --color-border-input-hover: #cbd5e1;
+  --color-border-focus: #a78bfa;
+  --color-border-error: #f87171;
   --color-text-muted: #64748b;
   --color-text-strong: #0f172a;
+  --color-chip-surface-bg: #f1f5f9;
+  --color-chip-surface-text: #475569;
+  --color-chip-on-dark-bg: rgba(0, 0, 0, 0.28);
+  --color-chip-on-dark-text: rgba(255, 255, 255, 0.88);
 }
 
 @theme inline {
@@ -147,7 +195,7 @@ input[type="range"] {
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-xl);
   background: var(--color-surface-glass);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--elev-card);
   backdrop-filter: blur(16px);
 }
 
@@ -160,16 +208,55 @@ input[type="range"] {
   backdrop-filter: blur(12px);
 }
 
+.ui-input-shell:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: var(--color-border-input-hover);
+}
+
+.ui-input-shell:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-color: color-mix(in srgb, var(--color-border-focus) 70%, var(--color-border-input));
+}
+
+.ui-input-shell:disabled,
+.ui-input-shell[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ui-input-shell[aria-invalid="true"] {
+  border-color: var(--color-border-error);
+}
+
+.ui-input-shell[aria-invalid="true"]:focus-visible {
+  outline-color: var(--color-border-error);
+}
+
 .ui-input-shell::placeholder {
   color: color-mix(in srgb, var(--color-text-muted) 78%, transparent);
 }
 
 .ui-icon-button {
   border: 1px solid var(--color-border-input);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control);
   background: var(--color-surface-glass);
   color: var(--color-text-muted);
   backdrop-filter: blur(12px);
+}
+
+.ui-icon-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: var(--color-border-input-hover);
+}
+
+.ui-icon-button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.ui-icon-button:disabled,
+.ui-icon-button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .ui-soft-pill {
@@ -179,11 +266,90 @@ input[type="range"] {
   font-size: var(--font-scale-caption);
 }
 
+/* Chip / badge grammar — pair with tone modifiers */
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  line-height: 1.2;
+}
+
+.ui-chip--surface {
+  background: var(--color-chip-surface-bg);
+  color: var(--color-chip-surface-text);
+  font-size: var(--font-scale-meta);
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+}
+
+.ui-chip--surface-lg {
+  font-size: var(--font-scale-caption);
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+}
+
+.ui-chip--accent {
+  background: #7c3aed;
+  color: #fff;
+  font-size: var(--font-scale-meta);
+  font-weight: 600;
+  padding: 0.125rem 0.625rem;
+}
+
+.ui-chip--media-meta {
+  background: var(--color-chip-on-dark-bg);
+  color: var(--color-chip-on-dark-text);
+  font-size: var(--font-scale-meta);
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.ui-chip--score-warm {
+  background: color-mix(in srgb, #fde68a 95%, #fff);
+  color: #422006;
+  font-size: var(--font-scale-meta);
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+}
+
+.ui-chip--brand-media {
+  background: color-mix(in srgb, #7c3aed 92%, transparent);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+}
+
+.ui-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-scale-body);
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  transition:
+    transform 180ms var(--ease-soft),
+    background-color 180ms var(--ease-soft),
+    border-color 180ms var(--ease-soft),
+    color 180ms var(--ease-soft),
+    box-shadow 180ms var(--ease-soft),
+    opacity 180ms var(--ease-soft);
+}
+
 .ui-menu-panel {
   border: 1px solid var(--color-border-soft);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-panel);
   background: color-mix(in srgb, var(--color-surface-glass) 96%, transparent);
-  box-shadow: var(--shadow-menu);
+  box-shadow: var(--elev-menu);
   backdrop-filter: blur(14px);
 }
 
@@ -256,7 +422,7 @@ input[type="range"] {
 .ui-shell--fullscreen {
   height: 100%;
   max-height: 100%;
-  border-radius: 30px;
+  border-radius: var(--radius-shell);
 }
 
 .ui-shell--bottom {
@@ -266,7 +432,7 @@ input[type="range"] {
       100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem
     )
   );
-  border-radius: 32px;
+  border-radius: var(--radius-shell);
 }
 
 .ui-shell-header {
@@ -488,6 +654,18 @@ input[type="range"] {
   .ui-shell-footer {
     padding-left: 0.875rem;
     padding-right: 0.875rem;
+  }
+
+  .ui-chip--brand-media {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
+  }
+
+  .ui-chip--media-meta,
+  .ui-chip--score-warm {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
   }
 }
 
@@ -766,9 +944,15 @@ input[type="range"] {
   --color-surface-muted: rgba(255, 255, 255, 0.08);
   --color-border-soft: rgba(255, 255, 255, 0.12);
   --color-border-input: rgba(255, 255, 255, 0.12);
+  --color-border-input-hover: rgba(255, 255, 255, 0.2);
+  --color-border-focus: #c4b5fd;
+  --color-border-error: #fb7185;
   --color-text-muted: #cbd5e1;
   --color-text-strong: #f8fafc;
-  --shadow-soft: 0 16px 34px rgba(15, 23, 42, 0.32);
+  --color-chip-surface-bg: rgba(255, 255, 255, 0.08);
+  --color-chip-surface-text: #e2e8f0;
+  --elev-card: 0 16px 34px rgba(15, 23, 42, 0.32);
+  --shadow-soft: var(--elev-card);
 }
 
 .theme-dark html {

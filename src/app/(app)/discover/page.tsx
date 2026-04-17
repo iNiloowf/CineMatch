@@ -442,7 +442,7 @@ function DiscoverPageContent({
             </button>
             {isMoreMenuOpen ? (
               <div
-                className="ui-menu-panel absolute right-0 top-12 z-[140] w-56 p-2"
+                className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 p-2"
               >
                 <Link
                   href="/settings"
@@ -491,7 +491,7 @@ function DiscoverPageContent({
       ) : null}
 
       {menuMessage ? (
-        <div className="pointer-events-none fixed inset-x-0 top-4 z-[145] flex justify-center px-4">
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4">
           <div
             className="ui-toast-note px-4 py-2 font-semibold"
           >
@@ -591,9 +591,7 @@ function DiscoverPageContent({
           {normalizedSearchQuery.length > 0 || selectedGenres.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
-                <span
-                  className="ui-soft-pill px-3 py-2 font-semibold"
-                >
+                <span className="ui-chip ui-chip--surface ui-chip--surface-lg font-semibold">
                   {sortedSearchResults.length} found
                 </span>
               ) : null}
@@ -605,7 +603,7 @@ function DiscoverPageContent({
 
       {isSearchOpen ? (
         <div
-          className={`ui-overlay ui-overlay--fill z-[120] backdrop-blur-2xl ${
+          className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] backdrop-blur-2xl ${
             isDarkMode ? "bg-slate-950/88" : "bg-slate-950/48"
           }`}
         >
@@ -731,13 +729,7 @@ function DiscoverPageContent({
               </div>
               {normalizedSearchQuery.length > 0 && sortedSearchResults.length > 0 ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                      isDarkMode
-                        ? "bg-white/8 text-slate-200"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
+                  <span className="ui-chip ui-chip--surface ui-chip--surface-lg font-semibold">
                     {sortedSearchResults.length} found
                   </span>
                 </div>
@@ -781,13 +773,7 @@ function DiscoverPageContent({
                           >
                             {result.title}
                           </h3>
-                          <span
-                            className={`w-fit shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
-                              isDarkMode
-                                ? "bg-white/8 text-slate-300"
-                                : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
+                          <span className="ui-chip ui-chip--surface w-fit shrink-0">
                             {result.year}
                           </span>
                         </div>
@@ -798,17 +784,11 @@ function DiscoverPageContent({
                         >
                           {result.description}
                         </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-violet-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                        <div className="mt-2 flex flex-wrap items-center gap-[var(--rhythm-stack)]">
+                          <span className="ui-chip ui-chip--accent">
                             {result.rating.toFixed(1)}
                           </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                              isDarkMode
-                                ? "bg-white/8 text-slate-300"
-                                : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
+                          <span className="ui-chip ui-chip--surface">
                             {result.runtime}
                           </span>
                         </div>
@@ -840,7 +820,7 @@ function DiscoverPageContent({
       ) : null}
 
       {isFilterOpen ? (
-        <div className="ui-overlay ui-overlay--bottom z-40 bg-slate-950/35 backdrop-blur-sm">
+        <div className="ui-overlay ui-overlay--bottom z-[var(--z-sheet)] bg-slate-950/35 backdrop-blur-sm">
           <div
             className={`ui-shell ui-shell--bottom expand-soft w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
               isDarkMode
@@ -913,7 +893,7 @@ function DiscoverPageContent({
                           : [...current, genre],
                       );
                     }}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold max-[380px]:px-3 max-[380px]:py-1.5 max-[380px]:text-xs ${
+                    className={`ui-chip-btn max-[380px]:px-3 max-[380px]:py-1.5 max-[380px]:text-xs ${
                       active
                         ? "bg-violet-600 text-white"
                         : isDarkMode
@@ -1054,7 +1034,7 @@ function DiscoverPageContent({
       </div>
 
       {lastSwipe ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[125] flex justify-center px-4 sm:bottom-6">
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[var(--z-toast-anchor)] flex justify-center px-4 sm:bottom-6">
           <div
             className={`discover-undo-toast pointer-events-auto flex w-full max-w-md flex-wrap items-center gap-2 rounded-[26px] border px-3 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl max-[380px]:max-w-[calc(100vw-0.75rem)] max-[380px]:gap-2 sm:gap-3 sm:px-4 ${
               isDarkMode

@@ -222,7 +222,7 @@ export function MovieSwipeCard({
   const trailerModal =
     isTrailerVisible && typeof document !== "undefined" ? (
       <div
-        className="ui-overlay z-[500] bg-slate-950/40 backdrop-blur-[3px]"
+        className="ui-overlay z-[var(--z-modal)] bg-slate-950/40 backdrop-blur-[3px]"
         onClick={() => setIsTrailerVisible(false)}
       >
         <div
@@ -391,7 +391,7 @@ export function MovieSwipeCard({
         onTouchEnd={handleTouchEnd}
       >
         {swipeFeedback ? (
-          <div className="pointer-events-none absolute inset-x-6 top-6 z-20 flex justify-center">
+          <div className="pointer-events-none absolute inset-x-6 top-6 z-[var(--z-local)] flex justify-center">
             <div
               className={`discover-feedback-chip ${
                 swipeFeedback === "accepted"
@@ -418,14 +418,14 @@ export function MovieSwipeCard({
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_40%,rgba(15,23,42,0.44)_100%)]" />
           <div className="relative flex min-h-[11.125rem] flex-col justify-between gap-2 sm:min-h-[12rem]">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-              <span className="shrink-0 rounded-full bg-violet-600/92 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white max-[380px]:px-2 max-[380px]:text-[9px] max-[380px]:tracking-[0.1em] sm:px-3 sm:tracking-[0.24em]">
+              <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
               </span>
               <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                <span className="shrink-0 rounded-full bg-black/28 px-2 py-1 text-[10px] font-semibold text-white/88 backdrop-blur-md max-[380px]:px-1.5 sm:px-2.5 sm:text-[11px]">
+                <span className="ui-chip ui-chip--media-meta shrink-0 sm:px-2.5 sm:text-[11px]">
                   {movie.year}
                 </span>
-                <span className="shrink-0 rounded-full bg-amber-200/95 px-2 py-1 text-[10px] font-semibold text-amber-950 max-[380px]:px-1.5 sm:px-2.5 sm:text-[11px]">
+                <span className="ui-chip ui-chip--score-warm shrink-0 sm:px-2.5 sm:text-[11px]">
                   {movie.rating.toFixed(1)} ★
                 </span>
               </div>

@@ -127,7 +127,7 @@ export default function PicksPage() {
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
       ? createPortal(
-          <div className="fixed inset-0 z-[450] bg-slate-950/48 backdrop-blur-[3px]">
+          <div className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]">
             <button
               type="button"
               aria-label="Close movie details"
@@ -294,7 +294,7 @@ export default function PicksPage() {
 
             {isTrailerVisible ? (
               <div
-                className="ui-overlay z-[500] bg-slate-950/38 backdrop-blur-[2px]"
+                className="ui-overlay z-[var(--z-modal)] bg-slate-950/38 backdrop-blur-[2px]"
                 onClick={() => setIsTrailerVisible(false)}
               >
                 <div
@@ -588,7 +588,7 @@ export default function PicksPage() {
       </div>
 
       {pendingRemoveMovie ? (
-        <div className="ui-overlay z-50 bg-slate-950/50 backdrop-blur-md">
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close remove confirmation"

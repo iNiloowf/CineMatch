@@ -73,7 +73,7 @@ export function BottomNav() {
   return (
     <nav
       data-bottom-nav="true"
-      className="z-20 mt-auto shrink-0 pb-[env(safe-area-inset-bottom,0px)]"
+      className="z-[var(--z-nav)] mt-auto shrink-0 pb-[env(safe-area-inset-bottom,0px)]"
     >
       <div
         data-bottom-nav-panel="true"

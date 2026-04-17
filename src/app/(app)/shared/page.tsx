@@ -213,7 +213,7 @@ export default function SharedWatchlistPage() {
       </div>
 
       {detailsMovie ? (
-        <div className="ui-overlay z-50 bg-slate-950/55 backdrop-blur-md">
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/55 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close details"

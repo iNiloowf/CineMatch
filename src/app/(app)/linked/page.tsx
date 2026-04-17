@@ -136,7 +136,7 @@ export default function LinkedPeoplePage() {
   return (
     <div className="space-y-4">
       {pendingRemove ? (
-        <div className="ui-overlay z-50 bg-slate-950/32 backdrop-blur-md">
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/32 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close"
@@ -201,7 +201,7 @@ export default function LinkedPeoplePage() {
       ) : null}
 
       {connectedPartnerName ? (
-        <div className="fixed inset-x-4 top-6 z-50 mx-auto max-w-md">
+        <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">
           <div className="achievement-toast-pop rounded-[28px] border border-violet-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(124,58,237,0.22)]">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
@@ -228,7 +228,7 @@ export default function LinkedPeoplePage() {
       ) : null}
 
       {removedPartnerName ? (
-        <div className="fixed inset-x-4 top-6 z-50 mx-auto max-w-md">
+        <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">
           <div className="achievement-toast-pop rounded-[28px] border border-rose-200 bg-white px-5 py-5 shadow-[0_24px_70px_rgba(244,63,94,0.14)]">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
