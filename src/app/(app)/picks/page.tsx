@@ -182,19 +182,19 @@ export default function PicksPage() {
                 }`}
               >
                 <div
-                  className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+                  className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
                   style={{
                     backgroundImage: selectedMovie.poster.imageUrl
-                      ? `linear-gradient(145deg, rgba(30, 20, 50, 0.28), rgba(20, 16, 30, 0.72)), url(${selectedMovie.poster.imageUrl})`
+                      ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.66)), url(${selectedMovie.poster.imageUrl})`
                       : `linear-gradient(145deg, ${selectedMovie.poster.accentFrom}, ${selectedMovie.poster.accentTo})`,
                     backgroundSize: selectedMovie.poster.imageUrl ? "cover" : "cover",
                     backgroundPosition: "center",
                   }}
                 >
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.06),rgba(15,23,42,0.02)_26%,rgba(15,23,42,0.58)_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_38%,rgba(15,23,42,0.46)_100%)]" />
                   <div className="relative flex min-h-[15.5rem] flex-col justify-between">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
+                      <span className="rounded-full bg-violet-600/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white">
                         {selectedMovie.mediaType === "series" ? "Series" : "Movie"}
                       </span>
                       <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function PicksPage() {
                         type="button"
                         onClick={() => void handleOpenTrailer(selectedMovie)}
                         aria-label="Play trailer"
-                        className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/28 bg-black/24 text-white shadow-[0_18px_38px_rgba(15,23,42,0.34)] backdrop-blur-md transition hover:bg-black/34"
+                        className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-black/24 text-white shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:bg-black/34"
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -229,7 +229,7 @@ export default function PicksPage() {
                       <p className="text-xs font-medium text-white/80">
                         {selectedMovie.genre.slice(0, 3).join(" • ")}
                       </p>
-                      <h2 className="text-[1.8rem] font-semibold leading-tight drop-shadow-[0_14px_24px_rgba(15,23,42,0.3)]">
+                      <h2 className="text-[1.8rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
                         {selectedMovie.title}
                       </h2>
                     </div>
@@ -240,7 +240,7 @@ export default function PicksPage() {
                   className={`mt-4 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
                     isDarkMode
                       ? "border border-white/8 bg-white/6"
-                      : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
+                      : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
                   }`}
                 >
                   <div className="flex min-w-0 items-center justify-center gap-2">
@@ -282,7 +282,7 @@ export default function PicksPage() {
                   className={`mt-4 rounded-[22px] px-4 py-4 ${
                     isDarkMode
                       ? "bg-white/8"
-                      : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+                      : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
                   }`}
                 >
                   <p className={`text-[11px] leading-5 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
@@ -299,7 +299,7 @@ export default function PicksPage() {
               >
                 <div
                   onClick={(event) => event.stopPropagation()}
-                  className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
+                  className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_16px_48px_rgba(15,23,42,0.2)] ${
                     isDarkMode
                       ? "border-white/10 bg-slate-950/96"
                       : "border-white/75 bg-white/96"
@@ -334,7 +334,7 @@ export default function PicksPage() {
                     </button>
                   </div>
                   <div className="ui-shell-body !p-4 !pt-3">
-                    <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
+                    <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_8px_28px_rgba(0,0,0,0.35)]">
                       <div className="relative aspect-video w-full bg-black">
                         {trailerUrl ? (
                           <iframe
@@ -442,7 +442,7 @@ export default function PicksPage() {
               >
                 <div className="flex items-stretch gap-3">
                   <div
-                    className="min-h-[11.5rem] w-[5.7rem] shrink-0 self-stretch overflow-hidden rounded-[22px] shadow-[0_12px_28px_rgba(107,70,193,0.22)]"
+                    className="min-h-[11.5rem] w-[5.7rem] shrink-0 self-stretch overflow-hidden rounded-[22px] shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
                     style={{
                       backgroundImage: movie.poster.imageUrl
                         ? `linear-gradient(145deg, rgba(30, 20, 50, 0.24), rgba(20, 16, 30, 0.66)), url(${movie.poster.imageUrl})`
@@ -451,7 +451,7 @@ export default function PicksPage() {
                       backgroundPosition: "center",
                     }}
                   >
-                    <div className="flex h-full flex-col justify-between bg-[linear-gradient(180deg,rgba(15,23,42,0.08),rgba(15,23,42,0.02)_28%,rgba(15,23,42,0.62)_100%)] p-2.5 text-white">
+                    <div className="flex h-full flex-col justify-between bg-[linear-gradient(180deg,rgba(15,23,42,0.06),transparent_36%,rgba(15,23,42,0.5)_100%)] p-2.5 text-white">
                       <div className="flex justify-end">
                         <span className="rounded-full bg-black/26 px-2 py-1 text-[10px] font-semibold text-white/88 backdrop-blur-sm">
                           {movie.year}
@@ -517,10 +517,10 @@ export default function PicksPage() {
                           }}
                           className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
                             copiedMovieId === movie.id
-                              ? "bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_12px_24px_rgba(124,58,237,0.26)]"
+                              ? "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.22)]"
                               : isDarkMode
-                                ? "border border-white/10 bg-white/8 text-slate-200 shadow-[0_10px_18px_rgba(0,0,0,0.18)] hover:bg-white/12"
-                                : "border border-violet-200 bg-[linear-gradient(180deg,#faf5ff,#f3e8ff)] text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_10px_20px_rgba(167,139,250,0.18)] hover:bg-violet-100"
+                                ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
+                                : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
                           }`}
                         >
                           <svg

@@ -28,7 +28,7 @@
 - [ ] Improve empty-state visuals with consistent iconography, tone, and action priority.
 - [ ] Add error-state visual language (icon + message + recovery action) consistent across screens.
 - [ ] Add success/confirmation feedback patterns (toasts/banners/inline) with consistent timing and placement.
-- [ ] Audit visual noise: reduce competing gradients/glows where content readability is impacted.
+- [x] Audit visual noise: reduce competing gradients/glows where content readability is impacted.
 - [ ] Standardize input field states (`default`, `hover`, `focus`, `error`, `disabled`) and helper/error text style.
 - [ ] Add section divider/title pattern for long pages to improve scanability.
 - [ ] Ensure poster/media thumbnails keep a consistent aspect ratio and fallback appearance.

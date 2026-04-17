@@ -22,7 +22,7 @@ function TogglePill({
       onClick={() => void onChange(!checked)}
       className={`flex w-full items-center justify-between gap-2.5 rounded-[18px] px-3.5 py-3 text-[12px] font-semibold transition ${
         checked
-          ? "bg-violet-600 text-white shadow-[0_14px_28px_rgba(124,58,237,0.22)]"
+          ? "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.22)]"
           : "bg-white text-slate-700"
       }`}
     >
@@ -121,8 +121,8 @@ export default function SharedWatchlistPage() {
                       key={`${entry.partner.id}-${entry.movie.id}`}
                       className={`rounded-[28px] border px-4 py-4 ${
                         isDarkMode
-                          ? "border-white/10 bg-white/8 shadow-[0_18px_38px_rgba(0,0,0,0.22)]"
-                          : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,241,255,0.88))] shadow-[0_16px_34px_rgba(148,163,184,0.08)]"
+                          ? "border-white/10 bg-white/8 shadow-sm"
+                          : "border-slate-200/90 bg-white shadow-sm"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -221,7 +221,7 @@ export default function SharedWatchlistPage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`shared-details-modal ui-shell ui-shell--dialog-md relative z-10 max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] overflow-hidden rounded-[30px] shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
+            className={`shared-details-modal ui-shell ui-shell--dialog-md relative z-10 max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] overflow-hidden rounded-[30px] shadow-[0_16px_48px_rgba(15,23,42,0.16)] ${
               isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
             }`}
           >

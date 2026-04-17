@@ -15,7 +15,7 @@ export function AchievementToast({
     return null;
   }
 
-  const particles = Array.from({ length: 16 }, (_, index) => ({
+  const particles = Array.from({ length: 10 }, (_, index) => ({
     id: index,
     left: `${6 + ((index * 91) % 88)}%`,
     delay: `${(index % 6) * 110}ms`,
@@ -38,28 +38,13 @@ export function AchievementToast({
         ))}
       </div>
 
-      <div className="achievement-toast-pop pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-[32px] border border-white/70 bg-white/92 p-4 shadow-[0_25px_80px_rgba(124,58,237,0.24)] backdrop-blur-xl">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(216,180,254,0.85),rgba(216,180,254,0))]" />
-        <div className="pointer-events-none absolute left-3 top-3 flex gap-1.5">
-          <span className="achievement-twinkle text-[10px] text-violet-300">
-            ✦
-          </span>
-          <span
-            className="achievement-twinkle text-xs text-amber-300"
-            style={{ animationDelay: "160ms" }}
-          >
-            ✦
-          </span>
-          <span
-            className="achievement-twinkle text-[11px] text-pink-300"
-            style={{ animationDelay: "320ms" }}
-          >
-            ✦
-          </span>
+      <div className="achievement-toast-pop pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-[32px] border border-white/70 bg-white/95 p-4 shadow-[0_12px_40px_rgba(15,23,42,0.1)] backdrop-blur-md">
+        <div className="pointer-events-none absolute left-3 top-3 text-[10px] text-violet-400/70">
+          ✦
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="achievement-badge-glow flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#7c3aed,#d8b4fe)] text-xl text-white shadow-[0_12px_28px_rgba(124,58,237,0.28)]">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xl text-white shadow-[0_4px_14px_rgba(109,40,217,0.25)]">
             ★
           </div>
           <div className="min-w-0 flex-1">

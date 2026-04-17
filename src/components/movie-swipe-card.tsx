@@ -227,7 +227,7 @@ export function MovieSwipeCard({
       >
         <div
           onClick={(event) => event.stopPropagation()}
-          className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.42)] ${
+          className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_16px_48px_rgba(15,23,42,0.2)] ${
             isDarkMode
               ? "border-white/10 bg-slate-950/96"
               : "border-white/75 bg-white/96"
@@ -262,7 +262,7 @@ export function MovieSwipeCard({
             </button>
           </div>
           <div className="ui-shell-body !p-4 !pt-3">
-            <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_22px_54px_rgba(76,29,149,0.26)]">
+            <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_8px_28px_rgba(0,0,0,0.35)]">
               <div className="relative aspect-video w-full bg-black">
                 {trailerUrl ? (
                   <iframe
@@ -344,7 +344,7 @@ export function MovieSwipeCard({
                   className={`rounded-[20px] px-4 py-3 text-xs font-semibold transition ${
                     isDarkMode
                       ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                      : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
+                      : "border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
@@ -356,7 +356,7 @@ export function MovieSwipeCard({
                   type="button"
                   onClick={onAccept}
                   disabled={isInteractionLocked}
-                  className="rounded-[20px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_20px_rgba(124,58,237,0.24)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+                  className="rounded-[20px] bg-violet-600 px-4 py-3 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(109,40,217,0.2)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80"
                 >
                   <span className="inline-flex items-center gap-2">
                     <span className="text-sm leading-none">♡</span>
@@ -405,28 +405,27 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_22px_60px_rgba(107,70,193,0.28)]"
+          className="relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
           style={{
             backgroundImage: movie.poster.imageUrl
-              ? `linear-gradient(145deg, rgba(30, 20, 50, 0.3), rgba(20, 16, 30, 0.76)), url(${movie.poster.imageUrl})`
+              ? `linear-gradient(145deg, rgba(30, 20, 50, 0.26), rgba(20, 16, 30, 0.68)), url(${movie.poster.imageUrl})`
               : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
             backgroundSize: movie.poster.imageUrl ? "contain" : "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
           }}
         >
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.07),rgba(15,23,42,0.015)_28%,rgba(15,23,42,0.5)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_26%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_40%,rgba(15,23,42,0.44)_100%)]" />
           <div className="relative flex min-h-[11.125rem] flex-col justify-between sm:min-h-[12rem]">
             <div className="flex items-center justify-between gap-3">
-              <span className="rounded-full bg-violet-500/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white shadow-[0_10px_24px_rgba(124,58,237,0.3)]">
+              <span className="rounded-full bg-violet-600/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
               </span>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
                   {movie.year}
                 </span>
-                <span className="rounded-full bg-amber-300/90 px-2.5 py-1 text-[11px] font-semibold text-amber-950 shadow-[0_10px_20px_rgba(251,191,36,0.25)]">
+                <span className="rounded-full bg-amber-200/95 px-2.5 py-1 text-[11px] font-semibold text-amber-950">
                   {movie.rating.toFixed(1)} ★
                 </span>
               </div>
@@ -481,7 +480,7 @@ export function MovieSwipeCard({
                 onClick={handleOpenTrailer}
                 disabled={!hasTrailer || isLoadingTrailer}
                 aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/28 shadow-[0_18px_38px_rgba(15,23,42,0.34)] backdrop-blur-md transition ${
+                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
                   hasTrailer
                     ? "bg-black/24 text-white hover:bg-black/34"
                     : "cursor-not-allowed bg-black/16 text-white/55"
@@ -502,7 +501,7 @@ export function MovieSwipeCard({
                 {movie.genre.slice(0, 3).join(" • ")}
               </p>
               <h2
-                className={`max-w-[14rem] truncate whitespace-nowrap font-semibold leading-tight drop-shadow-[0_14px_24px_rgba(15,23,42,0.3)] ${titleSizeClass}`}
+                className={`max-w-[14rem] truncate whitespace-nowrap font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] ${titleSizeClass}`}
               >
                 {movie.title}
               </h2>
@@ -519,7 +518,7 @@ export function MovieSwipeCard({
             className={`shrink-0 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-2.5 ${
               isDarkMode
                 ? "border border-white/8 bg-white/6"
-                : "border border-white/85 bg-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_12px_24px_rgba(148,163,184,0.08)]"
+                : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             } my-[6px]`}
           >
             <div className="flex min-w-0 items-center justify-center gap-2">
@@ -562,7 +561,7 @@ export function MovieSwipeCard({
             className={`w-full shrink-0 rounded-[22px] px-3 py-3 text-left ${
               isDarkMode
                 ? "bg-white/8"
-                : "border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,244,255,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_14px_30px_rgba(148,163,184,0.08)] backdrop-blur-xl"
+                : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
             onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
           >
@@ -610,7 +609,7 @@ export function MovieSwipeCard({
               className={`rounded-[22px] px-4 py-3 text-xs font-semibold transition ${
                 isDarkMode
                   ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                  : "border border-slate-200 bg-white text-slate-500 shadow-[0_12px_24px_rgba(148,163,184,0.1)] hover:bg-slate-50"
+                  : "border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
               }`}
             >
               <span className="inline-flex items-center gap-2">
@@ -622,7 +621,7 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="rounded-[22px] bg-[linear-gradient(180deg,#a855f7,#8b5cf6_45%,#7c3aed)] px-4 py-3 text-xs font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_10px_20px_rgba(124,58,237,0.24)] transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-80"
+              className="rounded-[22px] bg-violet-600 px-4 py-3 text-xs font-semibold text-white shadow-[0_4px_16px_rgba(109,40,217,0.22)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80"
             >
               <span className="inline-flex items-center gap-2">
                 <span className="text-sm leading-none">♡</span>

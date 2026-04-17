@@ -609,7 +609,7 @@ function DiscoverPageContent({
             className={`ui-shell ui-shell--fullscreen ui-shell--dialog-md mx-auto flex flex-col overflow-hidden border ${
               isDarkMode
                 ? "border-white/10 bg-slate-950"
-                : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(246,242,255,0.92))]"
+                : "border-slate-200/80 bg-white"
             }`}
           >
             <div

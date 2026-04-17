@@ -104,16 +104,16 @@ export default function SignUpPage() {
     <div
       className={`min-h-screen px-4 py-8 ${
         isDarkMode
-          ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
-          : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.5),transparent_28%),linear-gradient(180deg,#fcfbff_0%,#f5f7ff_36%,#eef4ff_72%,#fef7ff_100%)]"
+          ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#161022_42%,#0c0a12_100%)]"
+          : "bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_55%,#eef2ff_100%)]"
       }`}
     >
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center gap-6">
         <div
-          className={`space-y-3 rounded-[34px] p-6 backdrop-blur-xl ${
+          className={`space-y-3 rounded-[34px] p-6 ${
             isDarkMode
-              ? "border border-white/10 bg-white/8 shadow-[0_30px_80px_rgba(0,0,0,0.3)]"
-              : "border border-white/80 bg-white/80 shadow-[0_30px_80px_rgba(123,97,188,0.14)]"
+              ? "border border-white/10 bg-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-md"
+              : "border border-slate-200/90 bg-white shadow-md backdrop-blur-sm"
           }`}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-violet-500">
