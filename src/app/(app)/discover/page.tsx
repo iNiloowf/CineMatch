@@ -638,7 +638,11 @@ function DiscoverPageContent({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-visible">
       {sharedMovieId && sharedMovieFetch === "loading" ? (
-        <div className="space-y-3" role="status" aria-live="polite">
+        <div
+          className="flex min-h-[min(70dvh,32rem)] flex-col space-y-3"
+          role="status"
+          aria-live="polite"
+        >
           <p
             className={`text-center text-sm font-medium ${
               isDarkMode ? "text-slate-300" : "text-slate-600"
@@ -646,7 +650,9 @@ function DiscoverPageContent({
           >
             Opening shared title…
           </p>
-          <DiscoverCardSkeleton />
+          <div className="min-h-0 flex-1">
+            <DiscoverCardSkeleton />
+          </div>
         </div>
       ) : null}
 
@@ -797,11 +803,31 @@ function DiscoverPageContent({
           isDarkMode={isDarkMode}
           hasActiveBrowse={Boolean(movie)}
         />
-        <div
-          className="ui-glass-panel px-3 py-2.5 max-[380px]:px-2.5"
-        >
+        <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 max-[380px]:px-2.5">
+          <div className="mb-2 flex items-end justify-between gap-2">
+            <div>
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                Find titles
+              </p>
+              <p
+                className={`mt-0.5 text-[11px] leading-snug ${
+                  isDarkMode ? "text-slate-400" : "text-slate-600"
+                }`}
+              >
+                Search opens after two characters. Filter refines your stack.
+              </p>
+            </div>
+          </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
+              <p id="discover-search-hint" className="sr-only">
+                Type at least two characters to open live search. Results open in a sheet so you
+                can pick a title without losing your place.
+              </p>
               <input
                 value={searchQuery}
                 onChange={(event) => {
@@ -815,6 +841,7 @@ function DiscoverPageContent({
                   }
                 }}
                 placeholder="Search a movie or series"
+                aria-describedby="discover-search-hint"
                 className={`ui-input-shell w-full min-w-0 py-2 pl-9 text-[13px] outline-none focus:border-violet-400 max-[380px]:text-[12px] sm:pl-10 ${
                   searchQuery.length > 0
                     ? "pr-10 max-[380px]:pr-9 sm:pr-11"
@@ -862,21 +889,33 @@ function DiscoverPageContent({
               type="button"
               onClick={() => setIsFilterOpen(true)}
               aria-label="Open genre filter"
-              className="ui-icon-button relative flex min-h-11 min-w-11 shrink-0 items-center justify-center hover:bg-white/12"
+              title="Filter Discover by genre"
+              className="ui-icon-button relative flex min-h-11 shrink-0 items-center justify-center gap-1.5 px-2 hover:bg-white/12 min-[400px]:min-w-0 min-[400px]:px-3"
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                className="ui-icon-md ui-icon-stroke"
-              aria-hidden="true"
-            >
-              <path d="M4 6h16" />
-              <path d="M7 12h10" />
-              <path d="M10 18h4" />
-            </svg>
+                className="ui-icon-md ui-icon-stroke shrink-0"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16" />
+                <path d="M7 12h10" />
+                <path d="M10 18h4" />
+              </svg>
+              <span
+                className={`hidden min-[400px]:inline text-xs font-semibold ${
+                  isDarkMode ? "text-slate-200" : "text-slate-700"
+                }`}
+              >
+                Filter
+              </span>
               {selectedGenres.length > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white">
+                <span
+                  className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white ring-2 ${
+                    isDarkMode ? "ring-slate-950/90" : "ring-white/90"
+                  }`}
+                >
                   {selectedGenres.length}
                 </span>
               ) : null}
@@ -962,6 +1001,9 @@ function DiscoverPageContent({
               }`}
             >
               <div className="relative">
+                <p id="discover-overlay-search-hint" className="sr-only">
+                  Type at least two characters. Choose a result to open it on your Discover stack.
+                </p>
                 <input
                   ref={overlaySearchInputRef}
                   value={searchQuery}
@@ -976,6 +1018,7 @@ function DiscoverPageContent({
                     }
                   }}
                   placeholder="Search a movie or series"
+                  aria-describedby="discover-overlay-search-hint"
                   className={`w-full rounded-[18px] border py-2.5 pl-10 pr-11 text-sm outline-none transition ${
                     isDarkMode
                       ? "border-white/10 bg-white/6 text-white placeholder:text-slate-400 backdrop-blur-md focus:border-violet-400 focus:bg-white/10"
@@ -1257,7 +1300,7 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-visible pt-1 pb-2">
         {movie ? (
-          <div className="flex h-full flex-col overflow-visible rounded-[30px]">
+          <div className="flex h-full min-h-[min(70dvh,32rem)] flex-col overflow-visible rounded-[30px]">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
@@ -1331,7 +1374,7 @@ function DiscoverPageContent({
       </div>
 
       {lastSwipe ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[var(--z-toast-anchor)] flex justify-center px-4 sm:bottom-6">
+        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] flex justify-center px-4 bottom-[max(5.75rem,env(safe-area-inset-bottom,0px)+4.25rem)] min-[640px]:bottom-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
           <div
             className={`discover-undo-toast pointer-events-auto flex w-full max-w-md flex-wrap items-center gap-2 rounded-[26px] border px-3 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl max-[380px]:max-w-[calc(100vw-0.75rem)] max-[380px]:gap-2 sm:gap-3 sm:px-4 ${
               isDarkMode

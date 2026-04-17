@@ -264,7 +264,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
+          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[10px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? undefined
@@ -279,15 +279,21 @@ export function MovieSwipeCard({
             profile="hero"
             objectFit={movie.poster.imageUrl ? "contain" : "cover"}
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_40%,rgba(15,23,42,0.44)_100%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),transparent_32%,rgba(15,23,42,0.42)_58%,rgba(3,7,18,0.82)_100%)]" />
           <div className="relative flex min-h-[11.125rem] flex-col justify-between gap-2 sm:min-h-[12rem]">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
               <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
               </span>
-              <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                <span className="ui-chip ui-chip--media-meta shrink-0 sm:px-2.5 sm:text-[11px]">
+              <div className="flex min-w-0 max-w-[min(100%,14rem)] flex-wrap items-center justify-end gap-1.5 sm:max-w-none sm:gap-2">
+                <span className="ui-chip ui-chip--media-meta max-w-[4.5rem] shrink-0 truncate sm:max-w-none sm:px-2.5 sm:text-[11px]">
                   {movie.year}
+                </span>
+                <span
+                  className="ui-chip ui-chip--media-meta max-w-[5.25rem] shrink-0 truncate sm:max-w-none sm:px-2.5 sm:text-[11px]"
+                  title={runtimeLabel}
+                >
+                  {runtimeLabel}
                 </span>
                 <span className="ui-chip ui-chip--score-warm shrink-0 sm:px-2.5 sm:text-[11px]">
                   {movie.rating.toFixed(1)} ★
@@ -360,12 +366,20 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="space-y-2 pt-4">
-              <p className="text-xs font-medium text-white/80">
-                {movie.genre.slice(0, 3).join(" • ")}
-              </p>
+            <div className="space-y-2.5 pt-4">
+              <div className="flex flex-wrap gap-1.5">
+                {movie.genre.slice(0, 3).map((genre) => (
+                  <span
+                    key={genre}
+                    className="ui-chip ui-chip--media-meta max-w-[46%] truncate text-[10px] font-semibold sm:max-w-[9.5rem] sm:px-2.5 sm:text-[11px]"
+                    title={genre}
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
               <h2
-                className={`min-w-0 max-w-full font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] line-clamp-2 max-[380px]:break-words sm:max-w-[14rem] sm:line-clamp-1 sm:truncate sm:whitespace-nowrap ${titleSizeClass}`}
+                className={`min-w-0 max-w-full font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] line-clamp-2 max-[380px]:break-words sm:max-w-[14rem] sm:line-clamp-1 sm:truncate sm:whitespace-nowrap ${titleSizeClass}`}
               >
                 {movie.title}
               </h2>
@@ -396,7 +410,11 @@ export function MovieSwipeCard({
                 </p>
               </div>
             </div>
-            <div className="flex min-w-0 items-center justify-center gap-1 border-x border-black/6 px-0.5 sm:gap-2 sm:px-0">
+            <div
+              className={`flex min-w-0 items-center justify-center gap-1 border-x px-0.5 sm:gap-2 sm:px-0 ${
+                isDarkMode ? "border-white/12" : "border-black/6"
+              }`}
+            >
               <span className={`shrink-0 text-[0.95rem] leading-none sm:text-[1.1rem] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
               <div className="min-w-0 text-center sm:text-left">
                 <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>

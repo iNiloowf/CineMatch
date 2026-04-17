@@ -52,7 +52,9 @@ export const DiscoverSearchResultRow = memo(function DiscoverSearchResultRow({
           >
             {result.title}
           </h3>
-          <span className="ui-chip ui-chip--surface w-fit shrink-0">{result.year}</span>
+          <span className="ui-chip ui-chip--surface w-fit shrink-0 tabular-nums">
+            {result.year}
+          </span>
         </div>
         <p
           className={`mt-1 line-clamp-2 text-sm leading-6 ${
@@ -61,9 +63,13 @@ export const DiscoverSearchResultRow = memo(function DiscoverSearchResultRow({
         >
           {result.description}
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-[var(--rhythm-stack)]">
-          <span className="ui-chip ui-chip--accent">{result.rating.toFixed(1)}</span>
-          <span className="ui-chip ui-chip--surface">{result.runtime}</span>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="ui-chip ui-chip--surface ui-chip--surface-lg font-medium">
+            {result.runtime}
+          </span>
+          <span className="ui-chip ui-chip--accent ui-chip--surface-lg tabular-nums">
+            {result.rating.toFixed(1)} ★
+          </span>
         </div>
       </div>
     </button>
