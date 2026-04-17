@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
 import { SurfaceCard } from "@/components/surface-card";
@@ -27,10 +28,56 @@ export default function SettingsPage() {
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
-        description={`Preferences and achievements for ${currentUser?.name ?? "your account"}.`}
+        description="Account, appearance, and progress — all in one place."
       />
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "0ms" }}>
+      {currentUser ? (
+        <SurfaceCard className="fade-up-enter !p-0 overflow-hidden" style={{ animationDelay: "0ms" }}>
+          <div
+            className={`flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 ${
+              isDarkMode
+                ? "border-b border-white/10 bg-gradient-to-br from-violet-950/40 to-white/[0.04]"
+                : "border-b border-violet-100/90 bg-gradient-to-br from-violet-50/90 via-white to-sky-50/30"
+            }`}
+          >
+            <AvatarBadge
+              initials={currentUser.avatar}
+              imageUrl={currentUser.avatarImageUrl}
+              sizeClassName="h-14 w-14 sm:h-16 sm:w-16"
+              textClassName="text-lg font-bold"
+            />
+            <div className="min-w-0 flex-1">
+              <p className={sectionEyebrow}>Signed in as</p>
+              <p
+                className={`mt-1 truncate text-lg font-bold leading-tight sm:text-xl ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {currentUser.name}
+              </p>
+              <p
+                className={`mt-0.5 truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
+              >
+                {currentUser.email}
+              </p>
+              {currentUser.city ? (
+                <p className={`mt-1 text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  {currentUser.city}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <p
+            className={`px-5 py-3 text-xs leading-5 sm:px-6 ${
+              isDarkMode ? "text-slate-400" : "text-slate-500"
+            }`}
+          >
+            Profile photo and bio are edited from the Profile tab.
+          </p>
+        </SurfaceCard>
+      ) : null}
+
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "45ms" }}>
         <p className={sectionEyebrow}>Appearance & comfort</p>
         <div className="space-y-4">
           <SettingToggle
@@ -60,7 +107,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "55ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "100ms" }}>
         <div className="space-y-1">
           <p className={sectionEyebrow}>Progress</p>
           <p
@@ -144,7 +191,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "110ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "155ms" }}>
         <div className="space-y-1">
           <p className={sectionEyebrow}>About</p>
           <p

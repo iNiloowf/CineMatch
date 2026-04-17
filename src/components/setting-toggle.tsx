@@ -44,7 +44,7 @@ export function SettingToggle({
       </div>
       <span
         className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
-          checked ? "bg-violet-600" : "bg-slate-300"
+          checked ? "bg-violet-600" : isDarkMode ? "bg-slate-500 ring-1 ring-white/10" : "bg-slate-300"
         }`}
       >
         <span
