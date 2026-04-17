@@ -201,7 +201,7 @@ export default function AdminDesktopPage() {
           ),
         );
         setTicketActionFeedback(
-          payload.status === "under_review"
+          payload.status === "under_review" || payload.status === "in_progress"
             ? "Ticket moved to under review."
             : payload.status === "closed"
               ? "Ticket closed."
@@ -622,13 +622,14 @@ export default function AdminDesktopPage() {
                       <th className="px-4 py-2 text-left font-semibold">User</th>
                       <th className="px-4 py-2 text-left font-semibold">Subject</th>
                       <th className="px-4 py-2 text-left font-semibold">Priority</th>
+                      <th className="px-4 py-2 text-left font-semibold">Status</th>
                       <th className="px-4 py-2 text-left font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewTickets.length === 0 ? (
                       <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td colSpan={4} className="px-4 py-4 text-center">
+                        <td colSpan={5} className="px-4 py-4 text-center">
                           No support tickets yet.
                         </td>
                       </tr>
@@ -638,6 +639,7 @@ export default function AdminDesktopPage() {
                           <td className="px-4 py-2">{ticket.userName}</td>
                           <td className="px-4 py-2 font-medium">{ticket.subject}</td>
                           <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
+                          <td className="px-4 py-2">{ticketStatusLabel[ticket.status]}</td>
                           <td className="px-4 py-2">
                             <button
                               type="button"

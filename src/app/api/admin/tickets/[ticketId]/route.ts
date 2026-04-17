@@ -12,6 +12,10 @@ type AdminAuthBody = {
 type SupportTicketStatus = "open" | "under_review" | "closed";
 type TicketStatusRow = { id: string; status: SupportTicketStatus | "in_progress" };
 type TicketIdRow = { id: string };
+type TicketMutationResult = {
+  data: TicketStatusRow | null;
+  error: { message?: string } | null;
+};
 
 const ADMIN_EMAIL = "iniloowf@gmail.com";
 const ADMIN_PASSWORD = "Mishka123!";
@@ -30,6 +34,37 @@ function normalizeTicketStatus(value: string | undefined): SupportTicketStatus |
     return value;
   }
   return null;
+}
+
+function isLegacyStatusConstraintError(message: string | undefined) {
+  const normalized = (message ?? "").toLowerCase();
+  return (
+    normalized.includes("support_tickets_status_check") &&
+    normalized.includes("violates check constraint")
+  );
+}
+
+async function updateTicketStatus(
+  ticketId: string,
+  status: SupportTicketStatus | "in_progress",
+): Promise<TicketMutationResult> {
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) {
+    return {
+      data: null,
+      error: { message: "Admin dashboard is not configured on the server yet." },
+    };
+  }
+
+  return (await supabaseAdmin
+    .from("support_tickets")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", ticketId)
+    .select("id, status")
+    .maybeSingle()) as TicketMutationResult;
 }
 
 export async function PATCH(
@@ -68,26 +103,18 @@ export async function PATCH(
     );
   }
 
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Admin dashboard is not configured on the server yet." },
-      { status: 500 },
-    );
-  }
+  let effectiveStatus: SupportTicketStatus | "in_progress" = nextStatus;
+  let updateResult = await updateTicketStatus(ticketId, effectiveStatus);
 
-  const updateResult = (await supabaseAdmin
-    .from("support_tickets")
-    .update({
-      status: nextStatus,
-      updated_at: new Date().toISOString(),
-    } as never)
-    .eq("id", ticketId)
-    .select("id, status")
-    .maybeSingle()) as {
-    data: TicketStatusRow | null;
-    error: { message?: string } | null;
-  };
+  if (
+    nextStatus === "under_review" &&
+    updateResult.error &&
+    isLegacyStatusConstraintError(updateResult.error.message)
+  ) {
+    // Backward compatibility for databases that still allow "in_progress" only.
+    effectiveStatus = "in_progress";
+    updateResult = await updateTicketStatus(ticketId, effectiveStatus);
+  }
 
   if (updateResult.error) {
     return NextResponse.json(
@@ -106,7 +133,8 @@ export async function PATCH(
     metadata: {
       actor: email,
       ticketId,
-      nextStatus,
+      requestedStatus: nextStatus,
+      effectiveStatus,
     },
   });
 
