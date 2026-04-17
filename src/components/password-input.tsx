@@ -39,7 +39,7 @@ export function PasswordInput({
         onTouchStart={(event) => event.preventDefault()}
         onClick={() => setVisible((current) => !current)}
         aria-label={visible ? "Hide password" : "Show password"}
-        className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-500"
+        className="absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full text-slate-500"
       >
         {visible ? (
           <svg

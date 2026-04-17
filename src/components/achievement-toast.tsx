@@ -1,6 +1,7 @@
 "use client";
 
 import { Achievement } from "@/lib/types";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type AchievementToastProps = {
   achievement: Achievement | null;
@@ -11,6 +12,8 @@ export function AchievementToast({
   achievement,
   onClose,
 }: AchievementToastProps) {
+  useEscapeToClose(Boolean(achievement), onClose);
+
   if (!achievement) {
     return null;
   }

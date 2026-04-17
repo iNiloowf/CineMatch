@@ -7,6 +7,7 @@ import { NetworkStatusBlock } from "@/components/network-status-block";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export default function LinkedPeoplePage() {
   const router = useRouter();
@@ -140,6 +141,8 @@ export default function LinkedPeoplePage() {
       setInviteBusy(false);
     }
   };
+
+  useEscapeToClose(Boolean(pendingRemove), () => setPendingRemove(null));
 
   const parseInviteToken = (value: string) => {
     const trimmed = value.trim();

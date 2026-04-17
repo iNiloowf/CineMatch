@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAppState } from "@/lib/app-state";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { SurfaceCard } from "@/components/surface-card";
 import { Movie } from "@/lib/types";
 
@@ -37,6 +38,7 @@ export function MovieSwipeCard({
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
+  useEscapeToClose(isTrailerVisible, () => setIsTrailerVisible(false));
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const descriptionSectionRef = useRef<HTMLDivElement | null>(null);
@@ -448,7 +450,7 @@ export function MovieSwipeCard({
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
                 aria-label="Show previous title"
-                className={`-ml-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-ml-1 flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoPrevious
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -469,7 +471,7 @@ export function MovieSwipeCard({
                 onClick={onNext}
                 disabled={!canGoNext}
                 aria-label="Show next title"
-                className={`-mr-1 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-mr-1 flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoNext
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -589,11 +591,13 @@ export function MovieSwipeCard({
                 <div className="mt-1 flex justify-end">
                   <button
                     type="button"
+                    aria-label={isDescriptionExpanded ? "Show less description" : "Show full description"}
+                    aria-expanded={isDescriptionExpanded}
                     onClick={(event) => {
                       event.stopPropagation();
                       handleToggleDescription();
                     }}
-                    className={`leading-5 ${
+                    className={`min-h-11 rounded-lg px-1 leading-5 ${
                       isDarkMode ? "text-violet-300" : "text-violet-600"
                     }`}
                     style={{ fontSize: "11px" }}
@@ -618,7 +622,7 @@ export function MovieSwipeCard({
               type="button"
               onClick={onReject}
               disabled={isInteractionLocked}
-              className={`min-w-0 rounded-[22px] px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs ${
+              className={`min-h-11 min-w-0 rounded-[22px] px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs ${
                 isDarkMode
                   ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
                   : "border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
@@ -633,7 +637,7 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="min-w-0 rounded-[22px] bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_4px_16px_rgba(109,40,217,0.22)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs"
+              className="min-h-11 min-w-0 rounded-[22px] bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_4px_16px_rgba(109,40,217,0.22)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs"
             >
               <span className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
                 <span className="shrink-0 text-sm leading-none">♡</span>

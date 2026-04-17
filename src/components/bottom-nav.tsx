@@ -92,7 +92,7 @@ export function BottomNav() {
               href={item.href}
               data-bottom-nav-link="true"
               data-active={active ? "true" : "false"}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[18px] px-0.5 py-2 transition max-[380px]:px-0 sm:gap-1 sm:px-1 ${
+              className={`flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[18px] px-0.5 py-2 transition max-[380px]:px-0 sm:gap-1 sm:px-1 ${
                 active
                   ? "bg-[linear-gradient(180deg,#c084fc,#8b5cf6_55%,#6d28d9)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_12px_24px_rgba(109,40,217,0.28)]"
                   : isDarkMode
@@ -104,6 +104,7 @@ export function BottomNav() {
               >
               <span
                 data-bottom-nav-icon="true"
+                aria-hidden="true"
                 className={`flex h-6 w-6 items-center justify-center ${
                   active
                     ? "text-white"
@@ -114,7 +115,10 @@ export function BottomNav() {
               >
                 <NavIcon href={item.href} />
               </span>
-              <span className="max-w-full truncate text-center text-[10px] font-medium leading-none max-[380px]:text-[9px]">
+              <span
+                aria-hidden="true"
+                className="max-w-full truncate text-center text-[10px] font-medium leading-none max-[380px]:text-[9px]"
+              >
                 {item.label}
               </span>
             </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
@@ -19,6 +20,8 @@ function TogglePill({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => void onChange(!checked)}
       className={`flex w-full items-center justify-between gap-2.5 rounded-[18px] px-3.5 py-3 text-[12px] font-semibold transition ${
         checked
@@ -55,6 +58,8 @@ export default function SharedWatchlistPage() {
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
 
+  useEscapeToClose(Boolean(detailsMovie), () => setDetailsMovie(null));
+
   return (
     <>
       <div className="space-y-4">
@@ -78,12 +83,14 @@ export default function SharedWatchlistPage() {
             <SurfaceCard key={group.partner.id} className="space-y-5">
               <button
                 type="button"
+                aria-expanded={openPartnerId === group.partner.id}
+                aria-label={`${openPartnerId === group.partner.id ? "Collapse" : "Expand"} ${group.partner.name}`}
                 onClick={() =>
                   setOpenPartnerId((current) =>
                     current === group.partner.id ? null : group.partner.id,
                   )
                 }
-                className="flex w-full items-center justify-between gap-4 text-left"
+                className="flex w-full min-h-11 items-center justify-between gap-4 text-left"
               >
                 <div className="flex items-center gap-3">
                   <AvatarBadge
@@ -170,8 +177,9 @@ export default function SharedWatchlistPage() {
                         </p>
                         <button
                           type="button"
+                          aria-label={`Full details for ${entry.movie.title}`}
                           onClick={() => setDetailsMovie(entry)}
-                          className={`mt-2 text-sm font-semibold ${
+                          className={`mt-2 min-h-11 text-sm font-semibold ${
                             isDarkMode ? "text-violet-300" : "text-violet-600"
                           }`}
                         >

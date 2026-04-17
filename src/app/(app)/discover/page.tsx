@@ -12,6 +12,7 @@ import {
   saveDiscoverSession,
   type DiscoverSessionSnapshotV1,
 } from "@/lib/discover-session";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
@@ -96,6 +97,14 @@ function DiscoverPageContent({
 
     setUndoTipDismissed(window.localStorage.getItem(undoTipStorageKey) === "1");
   }, [undoTipStorageKey]);
+
+  useEscapeToClose(isSearchOpen, () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setIsSearchSheetOpen(false);
+  });
+  useEscapeToClose(isFilterOpen, () => setIsFilterOpen(false));
+  useEscapeToClose(isMoreMenuOpen, () => setIsMoreMenuOpen(false));
 
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -639,7 +648,7 @@ function DiscoverPageContent({
               aria-label="Open more options"
               aria-expanded={isMoreMenuOpen}
               onClick={() => setIsMoreMenuOpen((current) => !current)}
-              className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+              className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
                 isDarkMode
                   ? "text-slate-300 hover:bg-white/8"
                   : "text-slate-700 hover:bg-black/5"
@@ -780,7 +789,7 @@ function DiscoverPageContent({
                     setIsSearchSheetOpen(false);
                   }}
                   aria-label="Clear search"
-                  className="ui-soft-pill absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center"
+                  className="ui-soft-pill absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -800,7 +809,7 @@ function DiscoverPageContent({
               type="button"
               onClick={() => setIsFilterOpen(true)}
               aria-label="Open genre filter"
-              className="ui-icon-button relative flex h-10 w-10 shrink-0 items-center justify-center hover:bg-white/12"
+              className="ui-icon-button relative flex min-h-11 min-w-11 shrink-0 items-center justify-center hover:bg-white/12"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -946,7 +955,7 @@ function DiscoverPageContent({
                       setIsSearchSheetOpen(false);
                     }}
                     aria-label="Clear search"
-                    className={`absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full ${
+                    className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full ${
                       isDarkMode
                         ? "bg-white/8 text-slate-300"
                         : "bg-slate-100 text-slate-500"

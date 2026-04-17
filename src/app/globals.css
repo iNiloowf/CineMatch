@@ -122,6 +122,38 @@ button:active {
   transform: scale(0.98);
 }
 
+/* Keyboard focus — :focus-visible avoids mouse-click halos */
+:where(
+  button:not([disabled]):not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  summary
+):focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+:where(input, textarea, select):focus-visible:not(.ui-input-shell) {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    button:not([disabled]):not([aria-disabled="true"]),
+    [role="button"]:not([aria-disabled="true"]),
+    summary
+  ):focus-visible,
+  a:focus-visible,
+  :where(input, textarea, select):focus-visible:not(.ui-input-shell) {
+    outline-offset: 1px;
+  }
+}
+
 input[type="range"] {
   height: 6px;
   border-radius: 999px;
@@ -248,11 +280,6 @@ input[type="range"] {
   border-color: var(--color-border-input-hover);
 }
 
-.ui-icon-button:focus-visible {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
-}
-
 .ui-icon-button:disabled,
 .ui-icon-button[aria-disabled="true"] {
   opacity: 0.5;
@@ -343,6 +370,11 @@ input[type="range"] {
     color 180ms var(--ease-soft),
     box-shadow 180ms var(--ease-soft),
     opacity 180ms var(--ease-soft);
+}
+
+.ui-chip-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
 }
 
 .ui-menu-panel {
@@ -474,12 +506,19 @@ input[type="range"] {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   background: transparent;
+}
+
+.ui-shell-close:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
 }
 
 .ui-btn {
@@ -515,6 +554,15 @@ input[type="range"] {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.ui-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.ui-btn-primary:focus-visible {
+  outline-color: #ddd6fe;
 }
 
 .ui-btn-primary {

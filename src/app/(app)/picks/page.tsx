@@ -59,6 +59,36 @@ export default function PicksPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const anyOpen = Boolean(
+      selectedMovieId || pendingRemoveMovieId || isTrailerVisible,
+    );
+    if (!anyOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      event.preventDefault();
+      if (isTrailerVisible) {
+        setIsTrailerVisible(false);
+        return;
+      }
+      if (pendingRemoveMovieId) {
+        setPendingRemoveMovieId(null);
+        return;
+      }
+      if (selectedMovieId) {
+        setSelectedMovieId(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedMovieId, pendingRemoveMovieId, isTrailerVisible]);
+
   const showShareToast = (message: string, variant: ShareToast["variant"]) => {
     if (shareToastTimerRef.current) {
       window.clearTimeout(shareToastTimerRef.current);
@@ -550,7 +580,7 @@ export default function PicksPage() {
                             event.stopPropagation();
                             void handleShareMovie(movie.id);
                           }}
-                          className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
+                          className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
                             isDarkMode
                               ? "border border-white/10 bg-white/8 text-slate-200 shadow-sm hover:bg-white/12"
                               : "border border-violet-200 bg-violet-50 text-violet-700 shadow-sm hover:bg-violet-100"
@@ -578,7 +608,7 @@ export default function PicksPage() {
                             event.stopPropagation();
                             setPendingRemoveMovieId(movie.id);
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
                         >
                           <svg
                             aria-hidden="true"
