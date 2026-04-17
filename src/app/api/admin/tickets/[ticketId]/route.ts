@@ -10,6 +10,8 @@ type AdminAuthBody = {
 };
 
 type SupportTicketStatus = "open" | "under_review" | "closed";
+type TicketStatusRow = { id: string; status: SupportTicketStatus | "in_progress" };
+type TicketIdRow = { id: string };
 
 const ADMIN_EMAIL = "iniloowf@gmail.com";
 const ADMIN_PASSWORD = "Mishka123!";
@@ -74,7 +76,7 @@ export async function PATCH(
     );
   }
 
-  const updateResult = await supabaseAdmin
+  const updateResult = (await supabaseAdmin
     .from("support_tickets")
     .update({
       status: nextStatus,
@@ -82,7 +84,10 @@ export async function PATCH(
     } as never)
     .eq("id", ticketId)
     .select("id, status")
-    .maybeSingle();
+    .maybeSingle()) as {
+    data: TicketStatusRow | null;
+    error: { message?: string } | null;
+  };
 
   if (updateResult.error) {
     return NextResponse.json(
@@ -152,12 +157,15 @@ export async function DELETE(
     );
   }
 
-  const deleteResult = await supabaseAdmin
+  const deleteResult = (await supabaseAdmin
     .from("support_tickets")
     .delete()
     .eq("id", ticketId)
     .select("id")
-    .maybeSingle();
+    .maybeSingle()) as {
+    data: TicketIdRow | null;
+    error: { message?: string } | null;
+  };
 
   if (deleteResult.error) {
     return NextResponse.json(
