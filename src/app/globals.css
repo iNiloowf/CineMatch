@@ -470,6 +470,27 @@ input[type="range"] {
   color: rgba(255, 255, 255, 0.95);
 }
 
+/* Narrow phones (~360dp Android): avoid chip/sheet clipping */
+@media (max-width: 380px) {
+  .discover-feedback-chip {
+    max-width: min(100%, calc(100vw - 1.75rem));
+    padding: 0.45rem 0.65rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .ui-shell-header,
+  .ui-shell-body,
+  .ui-shell-footer {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+}
+
 .discover-undo-toast {
   animation: discoverUndoToastIn 320ms var(--ease-soft) both;
 }

@@ -125,14 +125,14 @@ export default function SharedWatchlistPage() {
                           : "border-slate-200/90 bg-white shadow-sm"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-3 min-[381px]:flex-row min-[381px]:items-start min-[381px]:justify-between min-[381px]:gap-4">
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-700">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="rounded-full bg-violet-100 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-violet-700 max-[380px]:leading-tight sm:px-2.5 sm:text-[10px] sm:tracking-[0.16em]">
                               Mutual pick
                             </span>
                             <span
-                              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              className={`max-w-full rounded-full px-2 py-1 text-[9px] font-semibold leading-tight max-[380px]:truncate sm:px-2.5 sm:text-[10px] ${
                                 isDarkMode
                                   ? "bg-emerald-500/16 text-emerald-300"
                                   : "bg-emerald-50 text-emerald-700"
@@ -141,7 +141,7 @@ export default function SharedWatchlistPage() {
                               You + {entry.partner.name}
                             </span>
                           </div>
-                          <h3 className={`mt-2 truncate text-lg font-semibold ${
+                          <h3 className={`mt-2 text-lg font-semibold leading-snug max-[380px]:line-clamp-2 max-[380px]:break-words sm:truncate ${
                             isDarkMode ? "text-white" : "text-slate-900"
                           }`}>
                             {entry.movie.title}
@@ -150,7 +150,7 @@ export default function SharedWatchlistPage() {
                             Both of you said yes to this one.
                           </p>
                         </div>
-                        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
+                        <span className="w-fit shrink-0 self-start rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm">
                           {entry.movie.rating.toFixed(1)}
                         </span>
                       </div>

@@ -35,7 +35,7 @@
 - [ ] Add reusable list item row pattern for mixed icon/text/action rows (settings, menus, sheets).
 - [ ] Define animation durations/easings by intent (micro, state change, modal) and apply consistently.
 - [ ] Add reduced-motion visual alternatives beyond global duration reduction (avoid sudden jumps).
-- [ ] Add responsive breakpoint pass for small Android widths to prevent clipping/truncation in chips/buttons.
+- [x] Add responsive breakpoint pass for small Android widths to prevent clipping/truncation in chips/buttons.
 - [ ] Audit z-index layers (toast, sheet, modal, nav, overlay) and document a fixed stacking scale.
 - [ ] Improve typography contrast pairing in dark mode for subtitles/meta text over tinted surfaces.
 - [ ] Add reusable “glass” and “solid” surface presets and apply intentionally (avoid mixed random usage).

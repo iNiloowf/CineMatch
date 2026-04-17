@@ -467,11 +467,11 @@ export default function PicksPage() {
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="truncate text-base font-semibold text-slate-900">
+                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                          <h2 className="min-w-0 text-base font-semibold text-slate-900 sm:flex-1 sm:truncate">
                             {movie.title}
                           </h2>
-                          <span className="shrink-0 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                          <span className="w-fit shrink-0 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
                             {movie.rating.toFixed(1)}
                           </span>
                         </div>

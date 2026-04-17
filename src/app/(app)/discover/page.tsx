@@ -503,10 +503,10 @@ function DiscoverPageContent({
       {!isSearchOpen ? (
       <div className="space-y-1.5">
         <div
-          className="ui-glass-panel px-3 py-2.5"
+          className="ui-glass-panel px-3 py-2.5 max-[380px]:px-2.5"
         >
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="relative min-w-0 flex-1">
               <input
                 value={searchQuery}
                 onChange={(event) => {
@@ -520,7 +520,11 @@ function DiscoverPageContent({
                   }
                 }}
                 placeholder="Search a movie or series"
-                className="ui-input-shell w-full py-2 pl-10 pr-4 text-[13px] outline-none focus:border-violet-400"
+                className={`ui-input-shell w-full min-w-0 py-2 pl-9 text-[13px] outline-none focus:border-violet-400 max-[380px]:text-[12px] sm:pl-10 ${
+                  searchQuery.length > 0
+                    ? "pr-10 max-[380px]:pr-9 sm:pr-11"
+                    : "pr-3 max-[380px]:pr-2.5 sm:pr-4"
+                }`}
               />
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <svg
@@ -769,16 +773,16 @@ function DiscoverPageContent({
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
                           <h3
-                            className={`truncate text-sm font-semibold ${
+                            className={`min-w-0 text-sm font-semibold sm:flex-1 sm:truncate ${
                               isDarkMode ? "text-white" : "text-slate-900"
                             }`}
                           >
                             {result.title}
                           </h3>
                           <span
-                            className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                            className={`w-fit shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
                               isDarkMode
                                 ? "bg-white/8 text-slate-300"
                                 : "bg-slate-100 text-slate-600"
@@ -909,7 +913,7 @@ function DiscoverPageContent({
                           : [...current, genre],
                       );
                     }}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                    className={`rounded-full px-4 py-2 text-sm font-semibold max-[380px]:px-3 max-[380px]:py-1.5 max-[380px]:text-xs ${
                       active
                         ? "bg-violet-600 text-white"
                         : isDarkMode
@@ -1052,7 +1056,7 @@ function DiscoverPageContent({
       {lastSwipe ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[125] flex justify-center px-4 sm:bottom-6">
           <div
-            className={`discover-undo-toast pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-[26px] border px-4 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl ${
+            className={`discover-undo-toast pointer-events-auto flex w-full max-w-md flex-wrap items-center gap-2 rounded-[26px] border px-3 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl max-[380px]:max-w-[calc(100vw-0.75rem)] max-[380px]:gap-2 sm:gap-3 sm:px-4 ${
               isDarkMode
                 ? "border-white/10 bg-slate-950/92"
                 : "border-white/80 bg-white/94"
@@ -1090,7 +1094,7 @@ function DiscoverPageContent({
             <button
               type="button"
               onClick={handleUndoSwipe}
-              className="ui-btn ui-btn-primary rounded-full px-3 py-2 text-xs"
+              className="ui-btn ui-btn-primary shrink-0 rounded-full px-3 py-2 text-xs max-[380px]:mt-0.5 max-[380px]:w-full max-[380px]:basis-full max-[380px]:justify-center sm:mt-0 sm:w-auto sm:basis-auto"
             >
               Undo
             </button>
