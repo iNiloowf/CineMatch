@@ -41,6 +41,7 @@ type DashboardTicketRow = {
   id: string;
   userId: string;
   userName: string;
+  userEmail: string;
   subject: string;
   message: string;
   priority: "low" | "normal" | "high";
@@ -421,6 +422,19 @@ export default function AdminDesktopPage() {
                   <p className={`mt-2 text-xs ${softText}`}>
                     {selectedTicket.userName} ({selectedTicket.userId}) • {new Date(selectedTicket.createdAt).toLocaleString()}
                   </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`text-xs ${softText}`}>User email:</span>
+                    {selectedTicket.userEmail ? (
+                      <a
+                        href={`mailto:${selectedTicket.userEmail}`}
+                        className="text-xs font-semibold text-violet-400 hover:opacity-80"
+                      >
+                        {selectedTicket.userEmail}
+                      </a>
+                    ) : (
+                      <span className={`text-xs ${softText}`}>Not available</span>
+                    )}
+                  </div>
                 </div>
                 <button
                   type="button"

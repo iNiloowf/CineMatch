@@ -292,6 +292,7 @@ export async function POST(request: NextRequest) {
       id: ticket.id,
       userId: ticket.user_id,
       userName: profileById.get(ticket.user_id)?.full_name ?? ticket.user_id,
+      userEmail: profileById.get(ticket.user_id)?.email ?? "",
       subject: ticket.subject,
       message: ticket.message,
       priority: ticket.priority,
