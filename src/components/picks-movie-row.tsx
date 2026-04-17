@@ -57,7 +57,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_42%,rgba(15,23,42,0.72)_100%)]" />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-3.5">
           <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 backdrop-blur-sm ring-1 ring-white/15">
-            {movie.mediaType === "series" ? "Series" : "Film"}
+            {movie.mediaType === "series" ? "Series" : "Movie"}
           </span>
           <div className="flex shrink-0 gap-1.5">
             <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">

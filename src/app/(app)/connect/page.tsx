@@ -30,6 +30,41 @@ function ConnectBackdrop({ isDarkMode }: { isDarkMode: boolean }) {
   );
 }
 
+function StepMini({
+  step,
+  title,
+  body,
+  isDarkMode,
+  delayMs,
+}: {
+  step: number;
+  title: string;
+  body: string;
+  isDarkMode: boolean;
+  delayMs: number;
+}) {
+  return (
+    <div
+      className={`discover-toolbar-enter flex gap-3 rounded-[18px] border px-3 py-3 sm:flex-col sm:items-start sm:px-3.5 sm:py-3.5 ${
+        isDarkMode ? "border-white/12 bg-white/[0.06]" : "border-slate-200/90 bg-white/90 shadow-sm"
+      }`}
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          isDarkMode ? "bg-violet-500/25 text-violet-100 ring-1 ring-violet-400/30" : "bg-violet-100 text-violet-800"
+        }`}
+      >
+        {step}
+      </span>
+      <div className="min-w-0">
+        <p className={`text-xs font-bold leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>{title}</p>
+        <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>{body}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ConnectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,13 +79,7 @@ export default function ConnectPage() {
     retry?: () => void;
   } | null>(null);
   const [inviteUrl, setInviteUrl] = useState("");
-  const {
-    data,
-    createInviteLink,
-    acceptInviteToken,
-    linkedUsers,
-    isDarkMode,
-  } = useAppState();
+  const { data, createInviteLink, acceptInviteToken, linkedUsers, isDarkMode } = useAppState();
 
   const shellBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#161022_42%,#0c0a12_100%)]"
@@ -58,6 +87,10 @@ export default function ConnectPage() {
 
   const linkCount = linkedUsers.length;
   const atFriendLimit = linkCount >= MAX_LINKED_FRIENDS;
+
+  const eyebrow = isDarkMode
+    ? "text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300/90"
+    : "text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600/90";
 
   const inviteOwner = useMemo(() => {
     if (!inviteToken) {
@@ -117,92 +150,131 @@ export default function ConnectPage() {
     }
   };
 
+  const copyInviteUrl = async () => {
+    if (!inviteUrl || !navigator.clipboard?.writeText) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setStatusMessage("Link copied again — ready to paste in any app.");
+    } catch {
+      setStatusMessage("Select the link above and copy manually.");
+    }
+  };
+
   return (
     <div className={`auth-landing-stage relative min-h-full ${shellBg}`}>
       <ConnectBackdrop isDarkMode={isDarkMode} />
-      <div className="relative z-[1] space-y-5 pb-4">
-        <PageHeader
-          eyebrow="Connect"
-          title="Add a friend"
-          description={`Paste an invite link or create one to share. You can link up to ${MAX_LINKED_FRIENDS} friends.`}
-        />
+      <div className="relative z-[1] space-y-5 pb-8">
+        <div className="fade-up-enter">
+          <PageHeader
+            eyebrow="Connect"
+            title="Add a friend"
+            description={`Share an invite or paste one you received. You can link up to ${MAX_LINKED_FRIENDS} friends — then matches show up on Shared.`}
+          />
+        </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="fade-up-enter flex flex-wrap items-center gap-2" style={{ animationDelay: "45ms" }}>
           <Link
             href="/linked"
-            className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+            className={`inline-flex min-h-10 items-center rounded-full px-4 py-2 text-xs font-semibold transition active:scale-[0.98] ${
               isDarkMode
-                ? "bg-white/10 text-slate-200 ring-1 ring-white/12 hover:bg-white/14"
-                : "bg-white/80 text-slate-700 shadow-sm ring-1 ring-slate-200/80 hover:bg-white"
+                ? "bg-white/10 text-slate-100 ring-1 ring-white/14 hover:bg-white/16"
+                : "bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/90 hover:bg-slate-50"
             }`}
           >
-            ← Friends list
+            View friends list
           </Link>
           {atFriendLimit ? (
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`inline-flex min-h-10 items-center rounded-full px-3 py-2 text-xs font-semibold ${
                 isDarkMode
                   ? "bg-amber-500/18 text-amber-100 ring-1 ring-amber-400/25"
-                  : "bg-amber-100 text-amber-900"
+                  : "bg-amber-100 text-amber-900 ring-1 ring-amber-200/80"
               }`}
             >
-              {MAX_LINKED_FRIENDS} / {MAX_LINKED_FRIENDS} friends linked
+              {MAX_LINKED_FRIENDS} / {MAX_LINKED_FRIENDS} slots used
             </span>
           ) : (
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`inline-flex min-h-10 items-center rounded-full px-3 py-2 text-xs font-semibold ${
                 isDarkMode
                   ? "bg-emerald-500/16 text-emerald-100 ring-1 ring-emerald-400/22"
-                  : "bg-emerald-50 text-emerald-800"
+                  : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80"
               }`}
             >
-              {linkCount} / {MAX_LINKED_FRIENDS} friends
+              {linkCount} / {MAX_LINKED_FRIENDS} friends linked
             </span>
           )}
         </div>
 
-        {actionError ? (
-          <NetworkStatusBlock
-            variant="error"
+        <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
+          <StepMini
+            step={1}
+            title="Create or receive"
+            body="You create a link here, or someone sends you theirs."
             isDarkMode={isDarkMode}
-            title="Something went wrong"
-            description={actionError.message}
-            onRetry={actionError.retry}
+            delayMs={70}
           />
+          <StepMini
+            step={2}
+            title="Open on Connect"
+            body="The invite opens this page so both accounts can link."
+            isDarkMode={isDarkMode}
+            delayMs={115}
+          />
+          <StepMini
+            step={3}
+            title="Match together"
+            body="After linking, shared picks appear on Shared & Friends."
+            isDarkMode={isDarkMode}
+            delayMs={160}
+          />
+        </div>
+
+        {actionError ? (
+          <div className="fade-up-enter" style={{ animationDelay: "90ms" }}>
+            <NetworkStatusBlock
+              variant="error"
+              isDarkMode={isDarkMode}
+              title="Something went wrong"
+              description={actionError.message}
+              onRetry={actionError.retry}
+            />
+          </div>
         ) : null}
 
         {inviteToken ? (
-          <SurfaceCard className="discover-toolbar-enter space-y-4 !p-6">
+          <SurfaceCard className="fade-up-enter space-y-4 !p-6 sm:!p-7" style={{ animationDelay: "100ms" }}>
             <div className="space-y-1">
-              <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
-                Invite link
+              <p className={eyebrow}>Invite opened</p>
+              <p className={`text-base font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
+                You have an active invite
               </p>
-              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 {inviteOwner
-                  ? `${inviteOwner.name} invited you to connect accounts.`
-                  : "This invite is ready to be used if it is still valid."}
+                  ? `${inviteOwner.name} invited you to connect your CineMatch accounts.`
+                  : "This invite is ready to use if it is still valid."}
               </p>
             </div>
             <button
               type="button"
               disabled={inviteBusy || atFriendLimit}
               onClick={async () => await connectFromToken(inviteToken, inviteOwner?.name ?? "")}
-              className={`w-full rounded-[22px] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(109,40,217,0.28)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65 ${
-                isDarkMode
-                  ? "bg-gradient-to-br from-violet-500 to-fuchsia-700"
-                  : "bg-gradient-to-br from-violet-600 to-violet-700"
-              }`}
+              className="auth-primary-glow ui-btn ui-btn-primary w-full min-h-12 px-4 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {inviteBusy
                 ? "Connecting…"
                 : atFriendLimit
                   ? "Friend limit reached"
-                  : "Connect with this link"}
+                  : inviteOwner
+                    ? `Connect with ${inviteOwner.name}`
+                    : "Accept & connect"}
             </button>
             {atFriendLimit ? (
-              <p className={`text-xs ${isDarkMode ? "text-amber-200/90" : "text-amber-800"}`}>
-                You already have {MAX_LINKED_FRIENDS} friends linked. Remove one from Friends before
-                accepting another invite.
+              <p className={`text-xs leading-relaxed ${isDarkMode ? "text-amber-200/90" : "text-amber-800"}`}>
+                You already have {MAX_LINKED_FRIENDS} friends linked. Remove one from Friends before accepting
+                another invite.
               </p>
             ) : null}
             {statusMessage ? (
@@ -210,7 +282,7 @@ export default function ConnectPage() {
                 className={`rounded-[18px] px-4 py-3 text-sm ${
                   isDarkMode
                     ? "border border-white/12 bg-white/10 text-slate-200"
-                    : "bg-slate-50 text-slate-600"
+                    : "border border-slate-200/80 bg-slate-50 text-slate-600"
                 }`}
               >
                 {statusMessage}
@@ -219,14 +291,16 @@ export default function ConnectPage() {
           </SurfaceCard>
         ) : null}
 
-        <SurfaceCard className="discover-toolbar-enter space-y-4 !p-6 sm:!p-7">
+        <SurfaceCard className="fade-up-enter space-y-4 !p-6 sm:!p-7" style={{ animationDelay: inviteToken ? "140ms" : "100ms" }}>
           <div className="space-y-1">
-            <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
-              Paste a link
-            </p>
-            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-              Paste the full connect link, then confirm. Links use the{" "}
-              <span className="font-mono text-[0.8rem]">/connect?invite=</span> format.
+            <p className={eyebrow}>Have a link?</p>
+            <p className={`text-base font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>Paste an invite</p>
+            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+              Drop the full URL here. Valid links include{" "}
+              <code className={`rounded px-1 py-0.5 text-[11px] font-mono ${isDarkMode ? "bg-white/10" : "bg-slate-100"}`}>
+                /connect?invite=
+              </code>{" "}
+              followed by a token.
             </p>
           </div>
           <div className="space-y-3">
@@ -237,28 +311,28 @@ export default function ConnectPage() {
                 setManualInviteValue(nextValue);
                 setManualInviteToken(parseInviteTokenFromPaste(nextValue));
               }}
-              rows={3}
-              placeholder="Paste the invite link here"
-              className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 ${
+              rows={4}
+              placeholder="https://…/connect?invite=…"
+              className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
                 isDarkMode
-                  ? "border-white/16 bg-white/10 text-slate-100 placeholder:text-slate-400 focus:bg-white/14"
-                  : "border-slate-200 bg-slate-50 focus:bg-white"
+                  ? "border-white/16 bg-white/10 text-slate-100 placeholder:text-slate-500 focus:bg-white/14"
+                  : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:bg-white"
               }`}
             />
             {manualInviteOwner ? (
-              <p
-                className={`rounded-[18px] px-4 py-3 text-sm ${
-                  isDarkMode
-                    ? "border border-white/12 bg-white/10 text-slate-200"
-                    : "bg-slate-50 text-slate-600"
+              <div
+                className={`discover-toolbar-enter flex items-start gap-3 rounded-[18px] border px-4 py-3 ${
+                  isDarkMode ? "border-emerald-400/25 bg-emerald-500/10" : "border-emerald-200/90 bg-emerald-50/90"
                 }`}
               >
-                This link belongs to{" "}
-                <span className={`font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
-                  {manualInviteOwner.name}
+                <span className="text-lg" aria-hidden>
+                  ✓
                 </span>
-                .
-              </p>
+                <p className={`text-sm leading-relaxed ${isDarkMode ? "text-emerald-100" : "text-emerald-900"}`}>
+                  Recognized invite from{" "}
+                  <span className="font-semibold">{manualInviteOwner.name}</span>. Tap connect below to finish.
+                </p>
+              </div>
             ) : null}
             <button
               type="button"
@@ -273,11 +347,7 @@ export default function ConnectPage() {
 
                 await connectFromToken(token, manualInviteOwner?.name ?? "");
               }}
-              className={`w-full rounded-[22px] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(109,40,217,0.28)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 ${
-                isDarkMode
-                  ? "bg-gradient-to-br from-violet-500 to-fuchsia-700"
-                  : "bg-gradient-to-br from-violet-600 to-violet-700"
-              }`}
+              className="auth-primary-glow ui-btn ui-btn-primary w-full min-h-12 px-4 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {inviteBusy
                 ? "Connecting…"
@@ -285,23 +355,25 @@ export default function ConnectPage() {
                   ? "Friend limit reached"
                   : manualInviteOwner
                     ? `Connect with ${manualInviteOwner.name}`
-                    : "Connect"}
+                    : "Connect from pasted link"}
             </button>
             {atFriendLimit ? (
-              <p className={`text-xs ${isDarkMode ? "text-amber-200/90" : "text-amber-800"}`}>
+              <p className={`text-xs leading-relaxed ${isDarkMode ? "text-amber-200/90" : "text-amber-800"}`}>
                 Remove a friend from the Friends list before adding another link.
               </p>
             ) : null}
           </div>
         </SurfaceCard>
 
-        <SurfaceCard className="discover-toolbar-enter space-y-4 !p-6 sm:!p-7">
+        <SurfaceCard className="fade-up-enter space-y-4 !p-6 sm:!p-7" style={{ animationDelay: inviteToken ? "180ms" : "140ms" }}>
           <div className="space-y-1">
-            <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
-              Share a connect link
+            <p className={eyebrow}>Inviting someone?</p>
+            <p className={`text-base font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
+              Create a shareable link
             </p>
-            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-              Create an invite and send it from any app. The other person opens it here on Connect.
+            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+              We will copy the new link when it is ready. Send it in Messages, email, or anywhere else — they open it
+              here on Connect.
             </p>
           </div>
           <button
@@ -328,7 +400,7 @@ export default function ConnectPage() {
 
                   if (navigator.clipboard?.writeText) {
                     await navigator.clipboard.writeText(result.url);
-                    setStatusMessage("Invite link copied. Send it to the other person.");
+                    setStatusMessage("Invite link copied — send it to your friend.");
                   }
                 } catch {
                   const message = "Couldn’t create the invite link. Check your connection.";
@@ -344,34 +416,29 @@ export default function ConnectPage() {
 
               await runCreate();
             }}
-            className={`w-full rounded-[22px] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(109,40,217,0.28)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 ${
-              isDarkMode
-                ? "bg-gradient-to-br from-violet-500 to-fuchsia-700"
-                : "bg-gradient-to-br from-violet-600 to-violet-700"
-            }`}
+            className="auth-primary-glow ui-btn ui-btn-primary w-full min-h-12 px-4 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {createInviteBusy
               ? "Creating link…"
               : atFriendLimit
                 ? "Friend limit reached"
-                : "Create special link"}
+                : "Create invite link"}
           </button>
           {inviteUrl ? (
             <div
-              className={`rounded-[22px] px-4 py-4 ${
-                isDarkMode ? "border border-white/12 bg-white/10" : "border border-slate-200/90 bg-slate-50"
+              className={`discover-toolbar-enter space-y-3 rounded-[22px] border px-4 py-4 ${
+                isDarkMode ? "border-violet-400/25 bg-violet-500/10" : "border-violet-200/90 bg-violet-50/80"
               }`}
             >
-              <p
-                className={`mb-2 text-xs font-semibold uppercase tracking-[0.22em] ${
-                  isDarkMode ? "text-slate-300" : "text-slate-400"
-                }`}
-              >
-                Share this link
+              <p className={`text-xs font-bold uppercase tracking-[0.18em] ${isDarkMode ? "text-violet-200" : "text-violet-700"}`}>
+                Your invite link
               </p>
-              <p className={`break-all text-sm leading-6 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
+              <p className={`break-all rounded-[14px] px-3 py-2.5 text-sm leading-relaxed ${isDarkMode ? "bg-black/25 text-slate-100" : "bg-white text-slate-700 ring-1 ring-slate-200/80"}`}>
                 {inviteUrl}
               </p>
+              <button type="button" onClick={() => void copyInviteUrl()} className="ui-btn ui-btn-secondary w-full min-h-11 text-sm">
+                Copy link again
+              </button>
             </div>
           ) : null}
           {statusMessage && !inviteToken ? (
@@ -379,7 +446,7 @@ export default function ConnectPage() {
               className={`rounded-[18px] px-4 py-3 text-sm ${
                 isDarkMode
                   ? "border border-white/12 bg-white/10 text-slate-200"
-                  : "bg-slate-50 text-slate-600"
+                  : "border border-slate-200/80 bg-slate-50 text-slate-600"
               }`}
             >
               {statusMessage}

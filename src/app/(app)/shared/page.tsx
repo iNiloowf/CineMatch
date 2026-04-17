@@ -204,7 +204,7 @@ export default function SharedWatchlistPage() {
                             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_40%,rgba(15,23,42,0.75)_100%)]" />
                             <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2 sm:left-4 sm:right-4">
                               <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 ring-1 ring-white/15 backdrop-blur-sm">
-                                {entry.movie.mediaType === "series" ? "Series" : "Film"}
+                                {entry.movie.mediaType === "series" ? "Series" : "Movie"}
                               </span>
                               <div className="flex shrink-0 gap-1.5">
                                 <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
