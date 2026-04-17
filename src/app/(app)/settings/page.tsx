@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
@@ -84,13 +84,17 @@ export default function SettingsPage() {
     achievements,
     isDarkMode,
     logout,
+    updateProfile,
     updateSettings,
   } = useAppState();
   const settings = currentUserId ? data.settings[currentUserId] : null;
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountCity, setAccountCity] = useState("");
+  const [accountBio, setAccountBio] = useState("");
+  const [accountSaveState, setAccountSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [accountSaveMessage, setAccountSaveMessage] = useState("");
 
-  if (!settings) {
-    return null;
-  }
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
@@ -103,6 +107,70 @@ export default function SettingsPage() {
     () => partitionAchievements(achievements),
     [achievements],
   );
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+    setAccountName(currentUser.name);
+    setAccountCity(currentUser.city);
+    setAccountBio(currentUser.bio);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (accountSaveState !== "saved") {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setAccountSaveState("idle");
+      setAccountSaveMessage("");
+    }, 2400);
+    return () => window.clearTimeout(timer);
+  }, [accountSaveState]);
+
+  const resetAccountDraft = () => {
+    if (!currentUser) {
+      return;
+    }
+    setAccountName(currentUser.name);
+    setAccountCity(currentUser.city);
+    setAccountBio(currentUser.bio);
+    setAccountSaveState("idle");
+    setAccountSaveMessage("");
+  };
+
+  const handleAccountSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!currentUser) {
+      return;
+    }
+
+    setAccountSaveState("saving");
+    setAccountSaveMessage("");
+
+    const result = await updateProfile({
+      name: accountName.trim() || currentUser.name,
+      city: accountCity,
+      bio: accountBio,
+      avatarImageUrl: currentUser.avatarImageUrl ?? null,
+      avatarFile: null,
+      clearAvatar: false,
+    });
+
+    if (!result.ok) {
+      setAccountSaveState("error");
+      setAccountSaveMessage(result.message ?? "Couldn’t save profile details.");
+      return;
+    }
+
+    setIsEditingAccount(false);
+    setAccountSaveState("saved");
+    setAccountSaveMessage("Profile details saved.");
+  };
+
+  if (!settings) {
+    return null;
+  }
 
   return (
     <div className="space-y-5">
@@ -147,14 +215,109 @@ export default function SettingsPage() {
                 </p>
               ) : null}
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (isEditingAccount) {
+                  resetAccountDraft();
+                  setIsEditingAccount(false);
+                  return;
+                }
+                setAccountSaveState("idle");
+                setAccountSaveMessage("");
+                setIsEditingAccount(true);
+              }}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition ${
+                isDarkMode
+                  ? "bg-white/12 text-slate-100 hover:bg-white/18"
+                  : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
+              }`}
+            >
+              {isEditingAccount ? "Close" : "Edit"}
+            </button>
           </div>
-          <p
-            className={`px-5 py-3 text-xs leading-5 sm:px-6 ${
-              isDarkMode ? "text-slate-400" : "text-slate-500"
-            }`}
-          >
-            Profile photo and bio are edited from the Profile tab.
-          </p>
+          {isEditingAccount ? (
+            <form onSubmit={handleAccountSubmit} className="space-y-4 px-5 py-4 sm:px-6 sm:py-5">
+              <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                Name
+                <input
+                  value={accountName}
+                  onChange={(event) => setAccountName(event.target.value)}
+                  className={`w-full rounded-[16px] border px-3.5 py-3 text-sm outline-none transition ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
+                      : "border-slate-200 bg-slate-50 text-slate-900 focus:border-violet-400 focus:bg-white"
+                  }`}
+                />
+              </label>
+              <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                City
+                <input
+                  value={accountCity}
+                  onChange={(event) => setAccountCity(event.target.value)}
+                  className={`w-full rounded-[16px] border px-3.5 py-3 text-sm outline-none transition ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
+                      : "border-slate-200 bg-slate-50 text-slate-900 focus:border-violet-400 focus:bg-white"
+                  }`}
+                />
+              </label>
+              <label className={`block space-y-2 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                Bio
+                <textarea
+                  value={accountBio}
+                  onChange={(event) => setAccountBio(event.target.value)}
+                  rows={3}
+                  className={`w-full rounded-[16px] border px-3.5 py-3 text-sm outline-none transition ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400"
+                      : "border-slate-200 bg-slate-50 text-slate-900 focus:border-violet-400 focus:bg-white"
+                  }`}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={accountSaveState === "saving"}
+                  className="ui-btn ui-btn-primary min-w-[8.5rem]"
+                >
+                  {accountSaveState === "saving" ? "Saving..." : "Save"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetAccountDraft();
+                    setIsEditingAccount(false);
+                  }}
+                  className="ui-btn ui-btn-secondary min-w-[8.5rem]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="px-5 py-4 sm:px-6 sm:py-5">
+              <p className={`text-xs uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Bio</p>
+              <p className={`mt-2 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                {currentUser.bio}
+              </p>
+            </div>
+          )}
+          {accountSaveState === "saved" || accountSaveState === "error" ? (
+            <p
+              className={`px-5 pb-4 text-xs font-semibold sm:px-6 ${
+                accountSaveState === "saved"
+                  ? isDarkMode
+                    ? "text-emerald-300"
+                    : "text-emerald-700"
+                  : isDarkMode
+                    ? "text-rose-300"
+                    : "text-rose-700"
+              }`}
+            >
+              {accountSaveMessage}
+            </p>
+          ) : null}
         </SurfaceCard>
       ) : null}
 

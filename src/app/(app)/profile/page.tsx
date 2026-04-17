@@ -420,19 +420,22 @@ export default function ProfilePage() {
         </div>
         <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
           {[
-            { value: acceptedMovies.length, label: "Picks" },
+            { value: acceptedMovies.length, label: "Picks", href: "/picks" },
             {
               value: linkedUsers.filter((user) => user.status === "accepted").length,
               label: "Friends",
+              href: "/shared",
             },
             {
               value: sharedMovies.filter((movie) => movie.watched).length,
               label: "Watched",
+              href: "/picks",
             },
           ].map((stat, index) => (
-            <div
+            <Link
               key={stat.label}
-              className={`discover-toolbar-enter rounded-[22px] px-2 py-3 text-center sm:px-3 sm:py-4 ${statShell}`}
+              href={stat.href}
+              className={`discover-toolbar-enter rounded-[22px] px-2 py-3 text-center transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:px-3 sm:py-4 ${statShell}`}
               style={{ animationDelay: `${80 + index * 70}ms` }}
             >
               <p className={`text-xl font-semibold tabular-nums sm:text-2xl ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -445,7 +448,7 @@ export default function ProfilePage() {
               >
                 {stat.label}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </SurfaceCard>
