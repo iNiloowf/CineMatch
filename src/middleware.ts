@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const HIDDEN_ADMIN_PATH =
+  process.env.ADMIN_ENTRY_PATH ?? "/studio/portal-v9-a9k2m7r4xq";
 
 function getProjectRef() {
   try {
@@ -11,6 +13,20 @@ function getProjectRef() {
 }
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/admin" || pathname === "/admin/") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (pathname === HIDDEN_ADMIN_PATH || pathname === `${HIDDEN_ADMIN_PATH}/`) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = "/admin";
+    return NextResponse.rewrite(rewriteUrl);
+  }
+
   const projectRef = getProjectRef();
 
   if (!projectRef) {
