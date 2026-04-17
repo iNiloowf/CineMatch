@@ -73,6 +73,39 @@ export default function FriendProfilePage() {
     () => savedMovies.find((movie) => movie.id === selectedMovieId) ?? null,
     [savedMovies, selectedMovieId],
   );
+  const partnerGenreInsights = useMemo(() => {
+    const likedCounts = new Map<string, number>();
+    const dislikedCounts = new Map<string, number>();
+    const movieById = new Map(data.movies.map((movie) => [movie.id, movie]));
+
+    for (const swipe of data.swipes) {
+      if (swipe.userId !== userId) {
+        continue;
+      }
+
+      const movie = movieById.get(swipe.movieId);
+      if (!movie) {
+        continue;
+      }
+
+      const targetCounts =
+        swipe.decision === "accepted" ? likedCounts : dislikedCounts;
+
+      for (const genre of movie.genre) {
+        targetCounts.set(genre, (targetCounts.get(genre) ?? 0) + 1);
+      }
+    }
+
+    const toSortedEntries = (counts: Map<string, number>) =>
+      Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([name, count]) => ({ name, count }));
+
+    return {
+      liked: toSortedEntries(likedCounts),
+      disliked: toSortedEntries(dislikedCounts),
+    };
+  }, [data.movies, data.swipes, userId]);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -267,6 +300,71 @@ export default function FriendProfilePage() {
         style={{ animationDelay: "110ms" }}
       >
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="friend" />
+      </SurfaceCard>
+
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "130ms" }}>
+        <div className="space-y-1">
+          <p className={sectionEyebrow}>Taste profile</p>
+          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            Genres they like most
+          </p>
+          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Based on their swipes and saved picks.
+          </p>
+        </div>
+
+        {partnerGenreInsights.liked.length === 0 ? (
+          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            No genre signal yet.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {partnerGenreInsights.liked.slice(0, 10).map((genre) => (
+              <span
+                key={`liked-${genre.name}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  isDarkMode
+                    ? "border border-emerald-400/25 bg-emerald-500/12 text-emerald-100"
+                    : "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                }`}
+              >
+                {genre.name} ({genre.count})
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className={`h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} />
+
+        <div className="space-y-1">
+          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            Genres they skip
+          </p>
+          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Based on rejected swipes (if available).
+          </p>
+        </div>
+
+        {partnerGenreInsights.disliked.length === 0 ? (
+          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Not enough rejected-swipe data yet.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {partnerGenreInsights.disliked.slice(0, 10).map((genre) => (
+              <span
+                key={`disliked-${genre.name}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  isDarkMode
+                    ? "border border-rose-400/25 bg-rose-500/12 text-rose-100"
+                    : "border border-rose-200 bg-rose-50 text-rose-800"
+                }`}
+              >
+                {genre.name} ({genre.count})
+              </span>
+            ))}
+          </div>
+        )}
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "150ms" }}>
