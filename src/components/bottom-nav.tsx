@@ -68,7 +68,7 @@ function NavIcon({ href }: { href: string }) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { isDarkMode } = useAppState();
+  const { isDarkMode, hasProAccess } = useAppState();
 
   return (
     <nav
@@ -120,6 +120,7 @@ export function BottomNav() {
                 className="max-w-full truncate text-center text-[10px] font-medium leading-none max-[380px]:text-[9px]"
               >
                 {item.label}
+                {item.href === "/shared" && !hasProAccess ? " *" : ""}
               </span>
             </Link>
           );

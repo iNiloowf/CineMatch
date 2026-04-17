@@ -7,6 +7,8 @@ export const defaultSettings = {
   hideSpoilers: true,
   cellularSync: true,
   reduceMotion: false,
+  subscriptionTier: "free" as const,
+  adminModeSimulatePro: false,
 };
 
 export const initialAppData: AppData = {

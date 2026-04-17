@@ -19,7 +19,14 @@ const PicksTrailerModalLazy = dynamic(
 type ShareToast = { message: string; variant: "success" | "error" };
 
 export default function PicksPage() {
-  const { acceptedMovies, sharedMovies, removePick, onboardingPreferences, isDarkMode } = useAppState();
+  const {
+    acceptedMovies,
+    sharedMovies,
+    removePick,
+    onboardingPreferences,
+    isDarkMode,
+    hasProAccess,
+  } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
@@ -524,6 +531,61 @@ export default function PicksPage() {
             </div>
           </SurfaceCard>
         </div>
+
+        <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
+          <div className="flex items-center justify-between gap-2">
+            <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Premium pick insights
+            </p>
+            {!hasProAccess ? (
+              <span
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  isDarkMode
+                    ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
+                    : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
+                }`}
+              >
+                Locked
+              </span>
+            ) : null}
+          </div>
+          {!hasProAccess ? (
+            <div
+              className={`rounded-[18px] border px-4 py-4 ${
+                isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/90"
+              }`}
+            >
+              <p className={`text-sm ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+                Upgrade to Pro to unlock deeper recommendations, top mood clusters, and partner
+                overlap trends.
+              </p>
+              <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                You can test Pro from Settings with the admin simulation toggle.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
+                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Shared ratio</p>
+                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {acceptedMovies.length > 0 ? Math.round((mutualPickCount / acceptedMovies.length) * 100) : 0}%
+                </p>
+              </div>
+              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
+                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Top genre signal</p>
+                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {acceptedMovies[0]?.genre?.[0] ?? "N/A"}
+                </p>
+              </div>
+              <div className={`rounded-[14px] border px-3 py-3 ${isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"}`}>
+                <p className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>High-rated picks</p>
+                <p className={`mt-1 text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {acceptedMovies.filter((movie) => movie.rating >= 7.5).length}
+                </p>
+              </div>
+            </div>
+          )}
+        </SurfaceCard>
 
         <div className="space-y-3 sm:space-y-3.5">
           {acceptedMovies.map((movie, index) => (

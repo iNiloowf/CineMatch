@@ -10,6 +10,12 @@ type ProfileRow = {
   city: string;
 };
 
+type SettingsSubscriptionRow = {
+  user_id: string;
+  subscription_tier?: "free" | "pro" | null;
+  admin_mode_simulate_pro?: boolean | null;
+};
+
 type SwipeRow = {
   user_id: string;
   movie_id: string;
@@ -45,6 +51,21 @@ type SupabaseErrorLike = {
 
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MAX = 120;
+
+function isMissingOptionalSettingsColumnError(
+  error: SupabaseErrorLike,
+  columnName: string,
+) {
+  if (!error) {
+    return false;
+  }
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes(columnName.toLowerCase()) &&
+      (normalized.includes("column") || normalized.includes("schema cache")))
+  );
+}
 
 function isMissingSupportTicketsError(error: SupabaseErrorLike) {
   if (!error) {
@@ -132,6 +153,35 @@ export async function POST(request: NextRequest) {
       .limit(20),
   ]);
 
+  const settingsResult = await supabaseAdmin
+    .from("settings")
+    .select("user_id, subscription_tier, admin_mode_simulate_pro");
+  let settingsRows: SettingsSubscriptionRow[] = [];
+  if (settingsResult.error) {
+    const settingsError = settingsResult.error as SupabaseErrorLike;
+    if (
+      isMissingOptionalSettingsColumnError(settingsError, "subscription_tier") ||
+      isMissingOptionalSettingsColumnError(settingsError, "admin_mode_simulate_pro")
+    ) {
+      const fallbackSettingsResult = await supabaseAdmin
+        .from("settings")
+        .select("user_id");
+      if (!fallbackSettingsResult.error) {
+        settingsRows = ((fallbackSettingsResult.data ?? []) as { user_id: string }[]).map(
+          (row) => ({
+            user_id: row.user_id,
+            subscription_tier: "free",
+            admin_mode_simulate_pro: false,
+          }),
+        );
+      }
+    } else {
+      return NextResponse.json({ error: settingsError?.message }, { status: 500 });
+    }
+  } else {
+    settingsRows = (settingsResult.data ?? []) as SettingsSubscriptionRow[];
+  }
+
   const firstError =
     usersCountResult.error ??
     moviesCountResult.error ??
@@ -205,6 +255,9 @@ export async function POST(request: NextRequest) {
       movie,
     ]),
   );
+  const settingsByUserId = new Map(
+    settingsRows.map((settings) => [settings.user_id, settings]),
+  );
 
   const userRows = profiles.map((profile) => {
     const accepted = swipes.filter(
@@ -217,6 +270,12 @@ export async function POST(request: NextRequest) {
       (link) =>
         link.requester_id === profile.id || link.target_id === profile.id,
     ).length;
+    const userSettings = settingsByUserId.get(profile.id);
+    const subscriptionTier =
+      userSettings?.subscription_tier === "pro" ? "pro" : "free";
+    const adminModeSimulatePro = userSettings?.admin_mode_simulate_pro ?? false;
+    const effectiveSubscriptionTier =
+      adminModeSimulatePro || subscriptionTier === "pro" ? "pro" : "free";
 
     return {
       id: profile.id,
@@ -226,8 +285,14 @@ export async function POST(request: NextRequest) {
       accepted,
       rejected,
       links: totalLinks,
+      subscriptionTier,
+      adminModeSimulatePro,
+      effectiveSubscriptionTier,
     };
   });
+  const proUsers = userRows.filter(
+    (row) => row.effectiveSubscriptionTier === "pro",
+  ).length;
 
   void logSecurityAudit({
     action: "admin_dashboard_view",
@@ -251,6 +316,7 @@ export async function POST(request: NextRequest) {
       pendingLinks: pendingLinksCountResult.count ?? 0,
       watchedEntries: watchedEntriesCountResult.count ?? 0,
       openTickets: openTicketsCount,
+      proUsers,
     },
     ticketsUnavailable,
     userRows,

@@ -21,6 +21,8 @@ type SettingsRow = {
   hide_spoilers: boolean;
   cellular_sync: boolean;
   reduce_motion?: boolean | null;
+  subscription_tier?: "free" | "pro" | null;
+  admin_mode_simulate_pro?: boolean | null;
 };
 
 type LinkRow = {
@@ -82,6 +84,81 @@ function chunk<T>(items: T[], size: number) {
 const SYNC_WINDOW_MS = 60 * 1000;
 const SYNC_MAX = 45;
 
+function isMissingOptionalSettingsColumnError(
+  error: { message?: string; code?: string } | null,
+  columnName: string,
+) {
+  if (!error) {
+    return false;
+  }
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes(columnName.toLowerCase()) &&
+      (normalized.includes("column") || normalized.includes("schema cache")))
+  );
+}
+
+async function fetchSettingsRow(
+  userId: string,
+  supabaseAdmin: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
+) {
+  const fullSelect =
+    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion, subscription_tier, admin_mode_simulate_pro";
+  const fallbackSelect =
+    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion";
+
+  const fullResult = await supabaseAdmin
+    .from("settings")
+    .select(fullSelect)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const fullError = fullResult.error as { message?: string; code?: string } | null;
+  if (!fullError) {
+    return {
+      data: (fullResult.data ?? null) as SettingsRow | null,
+      error: null,
+    };
+  }
+
+  const missingSubscriptionTier = isMissingOptionalSettingsColumnError(
+    fullError,
+    "subscription_tier",
+  );
+  const missingAdminSimulate = isMissingOptionalSettingsColumnError(
+    fullError,
+    "admin_mode_simulate_pro",
+  );
+
+  if (!missingSubscriptionTier && !missingAdminSimulate) {
+    return { data: null, error: fullError };
+  }
+
+  const fallbackResult = await supabaseAdmin
+    .from("settings")
+    .select(fallbackSelect)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (fallbackResult.error) {
+    return {
+      data: null,
+      error: fallbackResult.error as { message?: string; code?: string } | null,
+    };
+  }
+
+  return {
+    data: fallbackResult.data
+      ? ({
+          ...(fallbackResult.data as Record<string, unknown>),
+          subscription_tier: "free",
+          admin_mode_simulate_pro: false,
+        } as SettingsRow)
+      : null,
+    error: null,
+  };
+}
+
 export async function GET(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
@@ -119,19 +196,14 @@ export async function GET(request: NextRequest) {
 
   const currentUserId = authToken.userId;
 
-  const [profileResult, settingsResult, linksResult, invitesResult] =
+  const settingsResult = await fetchSettingsRow(currentUserId, supabaseAdmin);
+
+  const [profileResult, linksResult, invitesResult] =
     await Promise.all([
       supabaseAdmin
         .from("profiles")
         .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
         .eq("id", currentUserId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("settings")
-        .select(
-          "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion",
-        )
-        .eq("user_id", currentUserId)
         .maybeSingle(),
       supabaseAdmin
         .from("linked_users")
@@ -201,7 +273,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     profile: (profileResult.data ?? null) as ProfileRow | null,
-    settings: (settingsResult.data ?? null) as SettingsRow | null,
+    settings: settingsResult.data,
     links: linkRows,
     invites: (invitesResult.data ?? []) as InviteRow[],
     partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],

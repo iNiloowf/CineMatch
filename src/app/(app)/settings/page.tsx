@@ -87,6 +87,9 @@ export default function SettingsPage() {
     achievements,
     isDarkMode,
     logout,
+    hasProAccess,
+    adminSubscriptionPreviewModeEnabled,
+    setAdminSubscriptionPreviewMode,
     updateSettings,
   } = useAppState();
   const settings = currentUserId ? data.settings[currentUserId] : null;
@@ -490,6 +493,46 @@ export default function SettingsPage() {
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "110ms" }}>
+        <p className={sectionEyebrow}>Subscription</p>
+        <div
+          className={`rounded-[18px] border px-4 py-4 ${
+            isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Current plan
+            </p>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
+                hasProAccess
+                  ? isDarkMode
+                    ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/28"
+                    : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
+                  : isDarkMode
+                    ? "bg-white/10 text-slate-200 ring-1 ring-white/12"
+                    : "bg-slate-200 text-slate-700 ring-1 ring-slate-300/70"
+              }`}
+            >
+              {hasProAccess ? "Pro" : "Free"}
+            </span>
+          </div>
+          <p className={`mt-2 text-xs leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Free users keep core matching features. Pro unlocks advanced shared controls, premium
+            insights, and priority support.
+          </p>
+          <div className="mt-4">
+            <SettingToggle
+              label="Admin mode (simulate Pro purchase)"
+              description="For testing flows only. Turning this on behaves like an active Pro subscription."
+              checked={adminSubscriptionPreviewModeEnabled}
+              onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
+            />
+          </div>
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "120ms" }}>
         <p className={sectionEyebrow}>Privacy</p>
         <div className="space-y-4">
           <SettingToggle

@@ -13,6 +13,7 @@ type DashboardStats = {
   pendingLinks: number;
   watchedEntries: number;
   openTickets: number;
+  proUsers: number;
 };
 
 type DashboardUserRow = {
@@ -23,6 +24,9 @@ type DashboardUserRow = {
   accepted: number;
   rejected: number;
   links: number;
+  subscriptionTier: "free" | "pro";
+  effectiveSubscriptionTier: "free" | "pro";
+  adminModeSimulatePro: boolean;
 };
 
 type DashboardSwipeRow = {
@@ -54,7 +58,7 @@ type DashboardPayload = {
   ticketsUnavailable?: boolean;
 };
 
-type AdminTab = "overview" | "tickets" | "users" | "swipes";
+type AdminTab = "overview" | "tickets" | "users" | "swipes" | "subscriptions";
 type TicketManageStatus = "open" | "under_review" | "closed";
 
 export default function AdminDesktopPage() {
@@ -71,6 +75,12 @@ export default function AdminDesktopPage() {
   const [selectedTicket, setSelectedTicket] = useState<DashboardTicketRow | null>(null);
   const [isTicketActionLoading, setIsTicketActionLoading] = useState(false);
   const [ticketActionFeedback, setTicketActionFeedback] = useState("");
+  const [subscriptionActionState, setSubscriptionActionState] = useState<{
+    userId: string;
+    message: string;
+    isError: boolean;
+  } | null>(null);
+  const [subscriptionSavingUserId, setSubscriptionSavingUserId] = useState<string | null>(null);
 
   const getAdminAccessToken = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
@@ -230,6 +240,81 @@ export default function AdminDesktopPage() {
       }
     },
     [dashboard?.tickets, getAdminAccessToken, updateDashboardTickets],
+  );
+
+  const handleUpdateSubscription = useCallback(
+    async (
+      userId: string,
+      payload: { subscriptionTier?: "free" | "pro"; adminModeSimulatePro?: boolean },
+    ) => {
+      setSubscriptionSavingUserId(userId);
+      setSubscriptionActionState(null);
+      try {
+        const accessToken = await getAdminAccessToken();
+        const response = await fetch(`/api/admin/subscriptions/${userId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const body = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(body.error ?? "Subscription update failed.");
+        }
+
+        setDashboard((current) => {
+          if (!current) {
+            return current;
+          }
+          const nextUsers = current.userRows.map((row) => {
+            if (row.id !== userId) {
+              return row;
+            }
+            const subscriptionTier = payload.subscriptionTier ?? row.subscriptionTier;
+            const adminModeSimulatePro =
+              typeof payload.adminModeSimulatePro === "boolean"
+                ? payload.adminModeSimulatePro
+                : row.adminModeSimulatePro;
+            const effectiveSubscriptionTier =
+              adminModeSimulatePro || subscriptionTier === "pro" ? "pro" : "free";
+            return {
+              ...row,
+              subscriptionTier,
+              adminModeSimulatePro,
+              effectiveSubscriptionTier,
+            };
+          });
+          const proUsers = nextUsers.filter(
+            (row) => row.effectiveSubscriptionTier === "pro",
+          ).length;
+          return {
+            ...current,
+            userRows: nextUsers,
+            stats: {
+              ...current.stats,
+              proUsers,
+            },
+          };
+        });
+        setSubscriptionActionState({
+          userId,
+          message: "Subscription updated.",
+          isError: false,
+        });
+      } catch (error) {
+        setSubscriptionActionState({
+          userId,
+          message:
+            error instanceof Error ? error.message : "Subscription update failed.",
+          isError: true,
+        });
+      } finally {
+        setSubscriptionSavingUserId(null);
+      }
+    },
+    [getAdminAccessToken],
   );
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -606,6 +691,12 @@ export default function AdminDesktopPage() {
               isDarkMode={isDarkMode}
               onClick={() => setActiveTab("swipes")}
             />
+            <AdminTabButton
+              label="Subscriptions"
+              isActive={activeTab === "subscriptions"}
+              isDarkMode={isDarkMode}
+              onClick={() => setActiveTab("subscriptions")}
+            />
           </div>
         </div>
 
@@ -645,6 +736,7 @@ export default function AdminDesktopPage() {
               <StatCard label="Rejected swipes" value={dashboardStats?.rejectedSwipes ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Accepted links" value={dashboardStats?.acceptedLinks ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Open tickets" value={dashboardStats?.openTickets ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Pro users" value={dashboardStats?.proUsers ?? 0} isDarkMode={isDarkMode} />
             </div>
 
             <section className={`mb-6 overflow-hidden rounded-[24px] border ${glassPanel}`}>
@@ -773,6 +865,7 @@ export default function AdminDesktopPage() {
                     <th className="px-4 py-2 text-right font-semibold">Accepted</th>
                     <th className="px-4 py-2 text-right font-semibold">Rejected</th>
                     <th className="px-4 py-2 text-right font-semibold">Links</th>
+                    <th className="px-4 py-2 text-left font-semibold">Plan</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -784,11 +877,16 @@ export default function AdminDesktopPage() {
                       <td className="px-4 py-2 text-right">{row.accepted}</td>
                       <td className="px-4 py-2 text-right">{row.rejected}</td>
                       <td className="px-4 py-2 text-right">{row.links}</td>
+                      <td className="px-4 py-2">
+                        <span className="rounded-full bg-violet-500/20 px-2.5 py-1 text-xs font-semibold text-violet-200">
+                          {row.effectiveSubscriptionTier.toUpperCase()}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                   {userRows.length === 0 ? (
                     <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={6} className="px-4 py-4 text-center">
+                      <td colSpan={7} className="px-4 py-4 text-center">
                         No users found in database.
                       </td>
                     </tr>
@@ -896,6 +994,107 @@ export default function AdminDesktopPage() {
                       </tr>
                     ))
                   )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {activeTab === "subscriptions" ? (
+          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+            <div
+              className={`border-b px-4 py-3 ${
+                isDarkMode ? "border-white/10" : "border-slate-200/60"
+              }`}
+            >
+              <h2 className="text-lg font-semibold">Subscription Management</h2>
+              <p className={`mt-1 text-xs ${softText}`}>
+                Set Free/Pro and optionally simulate active Pro for test accounts.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold">User</th>
+                    <th className="px-4 py-2 text-left font-semibold">Email</th>
+                    <th className="px-4 py-2 text-left font-semibold">Current tier</th>
+                    <th className="px-4 py-2 text-left font-semibold">Effective access</th>
+                    <th className="px-4 py-2 text-left font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userRows.map((row) => (
+                    <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
+                      <td className="px-4 py-2 font-medium">{row.name}</td>
+                      <td className="px-4 py-2">{row.email}</td>
+                      <td className="px-4 py-2">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          row.subscriptionTier === "pro"
+                            ? "bg-emerald-500/20 text-emerald-200"
+                            : "bg-slate-500/20 text-slate-200"
+                        }`}>
+                          {row.subscriptionTier.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          row.effectiveSubscriptionTier === "pro"
+                            ? "bg-violet-500/20 text-violet-100"
+                            : "bg-slate-500/20 text-slate-200"
+                        }`}>
+                          {row.effectiveSubscriptionTier.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "free" })}
+                            disabled={subscriptionSavingUserId === row.id}
+                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
+                          >
+                            Set Free
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "pro" })}
+                            disabled={subscriptionSavingUserId === row.id}
+                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
+                          >
+                            Set Pro
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleUpdateSubscription(row.id, {
+                                adminModeSimulatePro: !row.adminModeSimulatePro,
+                              })
+                            }
+                            disabled={subscriptionSavingUserId === row.id}
+                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
+                          >
+                            {row.adminModeSimulatePro ? "Disable Sim" : "Enable Sim"}
+                          </button>
+                        </div>
+                        {subscriptionActionState?.userId === row.id ? (
+                          <p
+                            className={`mt-2 text-xs ${
+                              subscriptionActionState.isError
+                                ? isDarkMode
+                                  ? "text-rose-300"
+                                  : "text-rose-700"
+                                : isDarkMode
+                                  ? "text-emerald-300"
+                                  : "text-emerald-700"
+                            }`}
+                          >
+                            {subscriptionActionState.message}
+                          </p>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

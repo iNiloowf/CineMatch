@@ -78,6 +78,10 @@ export type ProfileSettings = {
   cellularSync: boolean;
   /** Softer UI motion (also respects the system “reduce motion” setting). */
   reduceMotion: boolean;
+  /** Billing-backed tier; free is default until subscription is active. */
+  subscriptionTier: "free" | "pro";
+  /** Admin testing helper: simulates active Pro without real payment. */
+  adminModeSimulatePro: boolean;
 };
 
 export type OnboardingPreferences = {

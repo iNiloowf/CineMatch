@@ -76,7 +76,7 @@ function TogglePill({
 }
 
 export default function SharedWatchlistPage() {
-  const { sharedMovieGroups, toggleWatched, toggleSharedMovie, isDarkMode } = useAppState();
+  const { sharedMovieGroups, toggleWatched, toggleSharedMovie, isDarkMode, hasProAccess } = useAppState();
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
   const [expandedDescription, setExpandedDescription] = useState<Record<string, boolean>>({});
@@ -301,18 +301,36 @@ export default function SharedWatchlistPage() {
                                 label="Keep in shared list"
                                 checked={entry.shared}
                                 isDarkMode={isDarkMode}
-                                onChange={async (checked) =>
-                                  await toggleSharedMovie(entry.partner.id, entry.movie.id, checked)
-                                }
+                                onChange={async (checked) => {
+                                  if (!hasProAccess) {
+                                    return;
+                                  }
+                                  await toggleSharedMovie(entry.partner.id, entry.movie.id, checked);
+                                }}
                               />
                               <TogglePill
                                 label="Watched together"
                                 checked={entry.watched}
                                 isDarkMode={isDarkMode}
-                                onChange={async (checked) =>
-                                  await toggleWatched(entry.partner.id, entry.movie.id, checked)
-                                }
+                                onChange={async (checked) => {
+                                  if (!hasProAccess) {
+                                    return;
+                                  }
+                                  await toggleWatched(entry.partner.id, entry.movie.id, checked);
+                                }}
                               />
+                              {!hasProAccess ? (
+                                <p
+                                  className={`rounded-[14px] border px-3 py-2 text-xs ${
+                                    isDarkMode
+                                      ? "border-violet-400/25 bg-violet-500/10 text-violet-100"
+                                      : "border-violet-200/90 bg-violet-50 text-violet-700"
+                                  }`}
+                                >
+                                  Shared controls are a Pro feature. Enable Pro test mode from Settings
+                                  to preview this flow.
+                                </p>
+                              ) : null}
                             </div>
                           </div>
                         </div>

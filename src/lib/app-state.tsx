@@ -95,6 +95,8 @@ type SettingsRow = {
   hide_spoilers: boolean;
   cellular_sync: boolean;
   reduce_motion?: boolean | null;
+  subscription_tier?: "free" | "pro" | null;
+  admin_mode_simulate_pro?: boolean | null;
 };
 
 type SwipeRow = {
@@ -172,6 +174,8 @@ type AccountSyncPayload = {
   movies: MovieRow[];
 };
 
+type SubscriptionTier = "free" | "pro";
+
 type AppStateContextValue = {
   data: AppData;
   currentUserId: string | null;
@@ -232,6 +236,11 @@ type AppStateContextValue = {
     clearAvatar?: boolean;
   }) => Promise<{ ok: boolean; message?: string }>;
   updateSettings: (payload: Partial<ProfileSettings>) => Promise<void>;
+  subscriptionTier: SubscriptionTier;
+  effectiveSubscriptionTier: SubscriptionTier;
+  hasProAccess: boolean;
+  adminSubscriptionPreviewModeEnabled: boolean;
+  setAdminSubscriptionPreviewMode: (enabled: boolean) => Promise<void>;
   acceptedMovies: Movie[];
   discoverQueue: Movie[];
   discoverSessionKey: string;
@@ -346,7 +355,19 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
     hideSpoilers: settings.hide_spoilers,
     cellularSync: settings.cellular_sync,
     reduceMotion: settings.reduce_motion ?? false,
+    subscriptionTier: settings.subscription_tier === "pro" ? "pro" : "free",
+    adminModeSimulatePro: settings.admin_mode_simulate_pro ?? false,
   };
+}
+
+function getEffectiveSubscriptionTier(settings?: ProfileSettings): SubscriptionTier {
+  if (!settings) {
+    return "free";
+  }
+  if (settings.adminModeSimulatePro) {
+    return "pro";
+  }
+  return settings.subscriptionTier;
 }
 
 function mapSwipeRow(swipe: SwipeRow) {
@@ -696,19 +717,32 @@ function isMissingReduceMotionColumnError(error: SupabaseErrorLike) {
   );
 }
 
+function isMissingOptionalSettingsColumnError(error: SupabaseErrorLike, columnName: string) {
+  if (!error) {
+    return false;
+  }
+  const normalized = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST204" ||
+    (normalized.includes(columnName.toLowerCase()) &&
+      (normalized.includes("column") || normalized.includes("schema cache")))
+  );
+}
+
 async function fetchSettingsRowForSync(
   supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
   activeUserId: string,
 ): Promise<{ data: SettingsRow | null; error: SupabaseErrorLike }> {
-  const selectWithReduceMotion =
-    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion";
-  const selectWithoutReduceMotion =
+  const baseSelect =
     "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync";
+  const selectWithAllOptionalColumns = `${baseSelect}, reduce_motion, subscription_tier, admin_mode_simulate_pro`;
+  const selectWithoutSubscriptionColumns = `${baseSelect}, reduce_motion`;
+  const selectWithoutOptionalColumns = baseSelect;
 
   const primarySelect =
     settingsSupportsReduceMotion === false
-      ? selectWithoutReduceMotion
-      : selectWithReduceMotion;
+      ? selectWithoutSubscriptionColumns
+      : selectWithAllOptionalColumns;
 
   const primaryResult = await supabaseClient
     .from("settings")
@@ -717,7 +751,7 @@ async function fetchSettingsRowForSync(
     .maybeSingle();
 
   if (!primaryResult.error) {
-    if (primarySelect === selectWithReduceMotion) {
+    if (primarySelect === selectWithAllOptionalColumns) {
       settingsSupportsReduceMotion = true;
       return {
         data: (primaryResult.data ?? null) as SettingsRow | null,
@@ -730,22 +764,35 @@ async function fetchSettingsRowForSync(
         ? ({
             ...(primaryResult.data as Record<string, unknown>),
             reduce_motion: null,
+            subscription_tier: "free",
+            admin_mode_simulate_pro: false,
           } as SettingsRow)
         : null,
       error: null,
     };
   }
 
-  if (!isMissingReduceMotionColumnError(primaryResult.error as SupabaseErrorLike)) {
+  const primaryError = primaryResult.error as SupabaseErrorLike;
+  const missingReduceMotion = isMissingReduceMotionColumnError(primaryError);
+  const missingSubscriptionTier = isMissingOptionalSettingsColumnError(
+    primaryError,
+    "subscription_tier",
+  );
+  const missingAdminSimulate = isMissingOptionalSettingsColumnError(
+    primaryError,
+    "admin_mode_simulate_pro",
+  );
+
+  if (!missingReduceMotion && !missingSubscriptionTier && !missingAdminSimulate) {
     return { data: null, error: primaryResult.error as SupabaseErrorLike };
   }
 
-  settingsSupportsReduceMotion = false;
-  const fallbackResult = await supabaseClient
-    .from("settings")
-    .select(selectWithoutReduceMotion)
-    .eq("user_id", activeUserId)
-    .maybeSingle();
+  const fallbackSelect = missingReduceMotion
+    ? selectWithoutOptionalColumns
+    : selectWithoutSubscriptionColumns;
+  settingsSupportsReduceMotion = !missingReduceMotion;
+
+  const fallbackResult = await supabaseClient.from("settings").select(fallbackSelect).eq("user_id", activeUserId).maybeSingle();
 
   if (fallbackResult.error) {
     return { data: null, error: fallbackResult.error as SupabaseErrorLike };
@@ -755,7 +802,12 @@ async function fetchSettingsRowForSync(
     data: fallbackResult.data
       ? ({
           ...(fallbackResult.data as Record<string, unknown>),
-          reduce_motion: null,
+          reduce_motion:
+            missingReduceMotion
+              ? null
+              : (fallbackResult.data as { reduce_motion?: boolean | null }).reduce_motion ?? null,
+          subscription_tier: "free",
+          admin_mode_simulate_pro: false,
         } as SettingsRow)
       : null,
     error: null,
@@ -921,6 +973,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
   const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
+  const currentSettings = currentUserId ? data.settings[currentUserId] : null;
+  const subscriptionTier: SubscriptionTier = currentSettings?.subscriptionTier ?? "free";
+  const effectiveSubscriptionTier: SubscriptionTier =
+    getEffectiveSubscriptionTier(currentSettings ?? undefined);
+  const hasProAccess = effectiveSubscriptionTier === "pro";
+  const adminSubscriptionPreviewModeEnabled =
+    currentSettings?.adminModeSimulatePro ?? false;
   const refreshDiscoverShuffle = (userId: string | null) => {
     const nextShuffleSeed =
       userId && typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -2990,12 +3049,35 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         hide_spoilers: nextSettings.hideSpoilers,
         cellular_sync: nextSettings.cellularSync,
         reduce_motion: nextSettings.reduceMotion,
+        subscription_tier: nextSettings.subscriptionTier,
+        admin_mode_simulate_pro: nextSettings.adminModeSimulatePro,
         updated_at: new Date().toISOString(),
       };
-      await supabase.from("settings").upsert(
+      const upsertResult = await supabase.from("settings").upsert(
         settingsPayload as never,
         { onConflict: "user_id" },
       );
+
+      const upsertError = upsertResult.error as SupabaseErrorLike;
+      if (
+        upsertError &&
+        (isMissingOptionalSettingsColumnError(upsertError, "subscription_tier") ||
+          isMissingOptionalSettingsColumnError(upsertError, "admin_mode_simulate_pro"))
+      ) {
+        await supabase.from("settings").upsert(
+          {
+            user_id: currentUserId,
+            dark_mode: nextSettings.darkMode,
+            notifications: nextSettings.notifications,
+            autoplay_trailers: nextSettings.autoplayTrailers,
+            hide_spoilers: nextSettings.hideSpoilers,
+            cellular_sync: nextSettings.cellularSync,
+            reduce_motion: nextSettings.reduceMotion,
+            updated_at: new Date().toISOString(),
+          } as never,
+          { onConflict: "user_id" },
+        );
+      }
     }
 
     if (typeof window !== "undefined") {
@@ -3016,6 +3098,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         },
       },
     }));
+  };
+
+  const setAdminSubscriptionPreviewMode = async (enabled: boolean) => {
+    await updateSettings({ adminModeSimulatePro: enabled });
   };
 
   const completeOnboarding = async (
@@ -3096,6 +3182,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         updateProgress,
         updateProfile,
         updateSettings,
+        subscriptionTier,
+        effectiveSubscriptionTier,
+        hasProAccess,
+        adminSubscriptionPreviewModeEnabled,
+        setAdminSubscriptionPreviewMode,
         acceptedMovies,
         discoverQueue,
         discoverSessionKey: discoverShuffleSeed,
