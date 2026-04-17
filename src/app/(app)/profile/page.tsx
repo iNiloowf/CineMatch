@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
+import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -16,10 +18,16 @@ export default function ProfilePage() {
     acceptedMovies,
     linkedUsers,
     sharedMovies,
+    achievements,
     updateProfile,
     isDarkMode,
     isReady,
   } = useAppState();
+
+  const earnedBadges = useMemo(
+    () => partitionAchievements(achievements).completed,
+    [achievements],
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -433,6 +441,10 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
+        <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
       </SurfaceCard>
 
       {isEditing ? (

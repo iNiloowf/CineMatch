@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
 import { SurfaceCard } from "@/components/surface-card";
 import type { Achievement } from "@/lib/types";
+import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
 
 function AchievementRow({
@@ -15,12 +16,10 @@ function AchievementRow({
   achievement: Achievement;
   isDarkMode: boolean;
 }) {
-  const [showDetail, setShowDetail] = useState(false);
-  const completed =
-    !achievement.isLocked && achievement.progress >= achievement.target;
   const percent = achievement.isLocked
     ? 0
     : Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
+  const inProgress = !achievement.isLocked && achievement.progress < achievement.target;
 
   return (
     <div
@@ -52,63 +51,25 @@ function AchievementRow({
               ? isDarkMode
                 ? "bg-white/8 text-slate-400"
                 : "bg-slate-100 text-slate-500"
-              : completed
+              : inProgress
                 ? isDarkMode
-                  ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/25"
-                  : "bg-emerald-100 text-emerald-700"
-                : isDarkMode
                   ? "bg-violet-500/20 text-violet-100 ring-1 ring-violet-400/22"
                   : "bg-violet-100 text-violet-700"
+                : isDarkMode
+                  ? "bg-white/8 text-slate-400"
+                  : "bg-slate-100 text-slate-500"
           }`}
         >
-          {achievement.isLocked
-            ? "—"
-            : completed
-              ? "Unlocked"
-              : `${achievement.progress}/${achievement.target}`}
+          {achievement.isLocked ? "—" : `${achievement.progress}/${achievement.target}`}
         </span>
       </div>
-      {!achievement.isLocked ? (
+      {!achievement.isLocked && inProgress ? (
         <div
           className={`mt-3 h-2 overflow-hidden rounded-full ${
             isDarkMode ? "bg-white/10" : "bg-slate-200/90"
           }`}
         >
-          <div
-            className={`h-full rounded-full ${completed ? "bg-emerald-500" : "bg-violet-600"}`}
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      ) : null}
-      {achievement.detailExplanation ? (
-        <div
-          className={`mt-3 border-t border-dashed pt-3 ${
-            isDarkMode ? "border-white/12" : "border-slate-200/90"
-          }`}
-        >
-          <button
-            type="button"
-            onClick={() => setShowDetail((open) => !open)}
-            className={`text-left text-xs font-semibold underline-offset-2 hover:underline ${
-              isDarkMode ? "text-violet-300" : "text-violet-700"
-            }`}
-            aria-expanded={showDetail}
-          >
-            {showDetail
-              ? "Hide detail"
-              : completed
-                ? "Why you unlocked this"
-                : achievement.isLocked
-                  ? "Why this is locked"
-                  : "How this tracks"}
-          </button>
-          {showDetail ? (
-            <p
-              className={`mt-2 text-xs leading-5 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
-            >
-              {achievement.detailExplanation}
-            </p>
-          ) : null}
+          <div className="h-full rounded-full bg-violet-600" style={{ width: `${percent}%` }} />
         </div>
       ) : null}
     </div>
@@ -138,12 +99,17 @@ export default function SettingsPage() {
     ? "border-t border-white/10 pt-8 mt-2"
     : "border-t border-slate-200/90 pt-8 mt-2";
 
+  const { incomplete: achievementsInProgress } = useMemo(
+    () => partitionAchievements(achievements),
+    [achievements],
+  );
+
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
-        description="Account, appearance, and progress — all in one place."
+        description="Account and preferences. In-progress goals stay here; earned badges live on Profile."
       />
 
       {currentUser ? (
@@ -262,14 +228,26 @@ export default function SettingsPage() {
                 isDarkMode ? "text-slate-300" : "text-slate-500"
               }`}
             >
-              Starter goals plus extra milestones that appear after you finish earlier ones.
+              Only goals you haven’t finished yet. Completed ones move to your Profile as badges.
             </p>
           </div>
-          <div className="space-y-3">
-            {achievements.map((achievement) => (
-              <AchievementRow key={achievement.id} achievement={achievement} isDarkMode={isDarkMode} />
-            ))}
-          </div>
+          {achievementsInProgress.length === 0 ? (
+            <p
+              className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
+                isDarkMode
+                  ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-100"
+                  : "border-emerald-200/90 bg-emerald-50/90 text-emerald-900"
+              }`}
+            >
+              You’re caught up on every goal — check your Profile for badges.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {achievementsInProgress.map((achievement) => (
+                <AchievementRow key={achievement.id} achievement={achievement} isDarkMode={isDarkMode} />
+              ))}
+            </div>
+          )}
         </SurfaceCard>
       </div>
 

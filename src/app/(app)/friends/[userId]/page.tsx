@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { PosterBackdrop } from "@/components/poster-backdrop";
@@ -11,6 +12,7 @@ import {
   computeAchievements,
   getSavedMoviesForUser,
 } from "@/lib/achievements";
+import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
 
 export default function FriendProfilePage() {
@@ -52,6 +54,11 @@ export default function FriendProfilePage() {
   const achievements = useMemo(
     () => (userId ? computeAchievements(data, userId) : []),
     [data, userId],
+  );
+
+  const earnedBadges = useMemo(
+    () => partitionAchievements(achievements).completed,
+    [achievements],
   );
 
   const savedMovies = useMemo(
@@ -128,8 +135,8 @@ export default function FriendProfilePage() {
         title={partner.name}
         description={
           linkEntry.status === "accepted"
-            ? "Their achievements and saved picks. Add anything you like to your own list."
-            : "Pending link — you’ll see full progress once you’re both active."
+            ? "Their badges and saved picks — add titles to your list if you want."
+            : "Pending link — saved picks appear when you’re both active."
         }
       />
 
@@ -177,95 +184,8 @@ export default function FriendProfilePage() {
         ) : null}
       </SurfaceCard>
 
-      <SurfaceCard className="space-y-4">
-        <div>
-          <p className={sectionEyebrow}>Their achievements</p>
-          <p
-            className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-          >
-            Progress on their account
-          </p>
-          <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Locked rows unlock after earlier goals — same rules as yours in Settings.
-          </p>
-        </div>
-        <div className="space-y-2">
-          {achievements.map((achievement) => {
-            const completed = !achievement.isLocked && achievement.progress >= achievement.target;
-            const percent = achievement.isLocked
-              ? 0
-              : Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
-
-            return (
-              <div
-                key={achievement.id}
-                className={`rounded-[18px] border px-3 py-3 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/80 bg-white/80"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p
-                      className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                    >
-                      {achievement.title}
-                      {achievement.isLocked ? (
-                        <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-amber-500">
-                          Locked
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className={`text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      {achievement.description}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                      achievement.isLocked
-                        ? isDarkMode
-                          ? "bg-white/8 text-slate-400"
-                          : "bg-slate-100 text-slate-500"
-                        : completed
-                          ? isDarkMode
-                            ? "bg-emerald-500/18 text-emerald-100"
-                            : "bg-emerald-100 text-emerald-700"
-                          : isDarkMode
-                            ? "bg-violet-500/20 text-violet-100"
-                            : "bg-violet-100 text-violet-700"
-                    }`}
-                  >
-                    {achievement.isLocked
-                      ? "—"
-                      : completed
-                        ? "Done"
-                        : `${achievement.progress}/${achievement.target}`}
-                  </span>
-                </div>
-                {!achievement.isLocked ? (
-                  <div
-                    className={`mt-2 h-1.5 overflow-hidden rounded-full ${
-                      isDarkMode ? "bg-white/10" : "bg-slate-200/90"
-                    }`}
-                  >
-                    <div
-                      className={`h-full rounded-full ${completed ? "bg-emerald-500" : "bg-violet-600"}`}
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
-                ) : null}
-                {achievement.detailExplanation ? (
-                  <p
-                    className={`mt-2 border-t pt-2 text-[11px] leading-4 ${
-                      isDarkMode ? "border-white/10 text-slate-400" : "border-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {achievement.detailExplanation}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+      <SurfaceCard className="space-y-4 !p-5 sm:!p-6">
+        <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="friend" />
       </SurfaceCard>
 
       <SurfaceCard className="space-y-4">
