@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
+import { playWaterDropletChime } from "@/lib/ui-sounds";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
@@ -22,6 +23,7 @@ import {
 import {
   Achievement,
   AppData,
+  MutualMatchToastPayload,
   AuthUser,
   Movie,
   OnboardingPreferences,
@@ -173,6 +175,8 @@ type AppStateContextValue = {
   achievements: Achievement[];
   unlockedAchievement: Achievement | null;
   dismissUnlockedAchievement: () => void;
+  mutualMatchToast: MutualMatchToastPayload | null;
+  dismissMutualMatchToast: () => void;
   login: (email: string, password: string) => Promise<AuthResult>;
   signup: (payload: {
     name: string;
@@ -812,6 +816,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const [unlockedAchievement, setUnlockedAchievement] =
     useState<Achievement | null>(null);
+  const [mutualMatchToast, setMutualMatchToast] =
+    useState<MutualMatchToastPayload | null>(null);
   const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
   const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
@@ -1871,18 +1877,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, [achievements, currentUserId]);
 
-  useEffect(() => {
-    if (!unlockedAchievement) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setUnlockedAchievement(null);
-    }, 4200);
-
-    return () => window.clearTimeout(timeout);
-  }, [unlockedAchievement]);
-
   const login = async (email: string, password: string): Promise<AuthResult> => {
     const supabase = getSupabaseBrowserClient();
 
@@ -2183,13 +2177,76 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setData((current) => mergeMoviesIntoData(current, movies));
   };
 
+  const collectMutualPartnerNamesBeforeUserAccepts = (
+    prevData: AppData,
+    activeUserId: string,
+    targetMovieId: string,
+  ): string[] => {
+    const hadUserAccept = prevData.swipes.some(
+      (swipe) =>
+        swipe.userId === activeUserId &&
+        swipe.movieId === targetMovieId &&
+        swipe.decision === "accepted",
+    );
+
+    if (hadUserAccept) {
+      return [];
+    }
+
+    const names: string[] = [];
+
+    for (const link of prevData.links) {
+      if (link.status !== "accepted" || !link.users.includes(activeUserId)) {
+        continue;
+      }
+
+      const partnerId = link.users.find((id) => id !== activeUserId);
+
+      if (!partnerId) {
+        continue;
+      }
+
+      const partnerAccepted = prevData.swipes.some(
+        (swipe) =>
+          swipe.userId === partnerId &&
+          swipe.movieId === targetMovieId &&
+          swipe.decision === "accepted",
+      );
+
+      if (!partnerAccepted) {
+        continue;
+      }
+
+      const partner = prevData.users.find((user) => user.id === partnerId);
+
+      if (partner) {
+        names.push(partner.name);
+      }
+    }
+
+    return names;
+  };
+
   const swipeMovie = async (movieId: string, decision: SwipeDecision) => {
     if (!currentUserId) {
       return;
     }
 
     const movie = data.movies.find((entry) => entry.id === movieId);
+    const matchPartners =
+      decision === "accepted"
+        ? collectMutualPartnerNamesBeforeUserAccepts(data, currentUserId, movieId)
+        : [];
     const accessToken = await getCurrentAccessToken();
+
+    const announceMutualIfNeeded = () => {
+      if (matchPartners.length > 0 && movie) {
+        setMutualMatchToast({ movieTitle: movie.title, partners: matchPartners });
+        queueMicrotask(() => {
+          playWaterDropletChime();
+        });
+      }
+    };
 
     if (movie && accessToken) {
       try {
@@ -2228,6 +2285,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             ],
           }));
           setAccountRefreshKey((current) => current + 1);
+          announceMutualIfNeeded();
           return;
         }
       } catch {
@@ -2254,6 +2312,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ],
       };
     });
+    announceMutualIfNeeded();
   };
 
   const undoSwipe = async (movieId: string) => {
@@ -2993,6 +3052,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         achievements,
         unlockedAchievement,
         dismissUnlockedAchievement: () => setUnlockedAchievement(null),
+        mutualMatchToast,
+        dismissMutualMatchToast: () => setMutualMatchToast(null),
         login,
         signup,
         logout,

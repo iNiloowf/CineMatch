@@ -2,11 +2,17 @@
 
 import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
+import { MatchToast } from "@/components/match-toast";
 import { useAppState } from "@/lib/app-state";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { isDarkMode, unlockedAchievement, dismissUnlockedAchievement } =
-    useAppState();
+  const {
+    isDarkMode,
+    unlockedAchievement,
+    dismissUnlockedAchievement,
+    mutualMatchToast,
+    dismissMutualMatchToast,
+  } = useAppState();
 
   return (
     <div
@@ -19,7 +25,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     >
       <AchievementToast
         achievement={unlockedAchievement}
+        isDarkMode={isDarkMode}
         onClose={dismissUnlockedAchievement}
+      />
+      <MatchToast
+        toast={mutualMatchToast}
+        isDarkMode={isDarkMode}
+        onClose={dismissMutualMatchToast}
       />
       <div
         data-app-shell-frame="true"

@@ -118,3 +118,9 @@ export type Achievement = {
   progress: number;
   target: number;
 };
+
+/** In-app toast when you and a linked partner both accepted the same title */
+export type MutualMatchToastPayload = {
+  movieTitle: string;
+  partners: string[];
+};

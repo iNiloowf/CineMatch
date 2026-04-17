@@ -634,6 +634,16 @@ input[type="range"] {
   animation: achievementPop 560ms var(--ease-soft) both;
 }
 
+.app-notify-banner {
+  animation: appNotifyIn 420ms var(--ease-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-notify-banner {
+    animation: none;
+  }
+}
+
 .discover-card-stage {
   will-change: transform, opacity, filter;
 }
@@ -811,6 +821,18 @@ input[type="range"] {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes appNotifyIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

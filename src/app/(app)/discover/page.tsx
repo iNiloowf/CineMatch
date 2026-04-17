@@ -743,7 +743,12 @@ function DiscoverPageContent({
       ) : null}
 
       {!isSearchOpen ? (
-      <div className="space-y-1.5">
+      <>
+        <DiscoverOnboardingNudges
+          userId={currentUserId}
+          isDarkMode={isDarkMode}
+          hasActiveBrowse={Boolean(movie)}
+        />
         <div
           className="ui-glass-panel px-3 py-2.5 max-[380px]:px-2.5"
         >
@@ -840,12 +845,7 @@ function DiscoverPageContent({
             </div>
           ) : null}
         </div>
-        <DiscoverOnboardingNudges
-          userId={currentUserId}
-          isDarkMode={isDarkMode}
-          hasActiveBrowse={Boolean(movie)}
-        />
-      </div>
+      </>
       ) : null}
 
       {isSearchOpen ? (
