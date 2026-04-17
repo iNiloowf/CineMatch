@@ -350,74 +350,183 @@ export default function ProfilePage() {
         className="fade-up-enter discover-toolbar-enter space-y-6 !p-5 sm:!p-6"
         style={{ animationDelay: "0ms" }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <div className="profile-avatar-pop relative shrink-0">
-              <div className="ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 ring-offset-transparent [animation-delay:40ms] sm:ring-offset-4">
-                <AvatarBadge
-                  initials={currentUser.avatar}
-                  imageUrl={activeAvatarPreview}
-                  sizeClassName="h-16 w-16"
-                  textClassName="text-lg font-semibold"
-                />
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="profile-avatar-pop relative shrink-0">
+                <div className="ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 ring-offset-transparent [animation-delay:40ms] sm:ring-offset-4">
+                  <AvatarBadge
+                    initials={currentUser.avatar}
+                    imageUrl={activeAvatarPreview}
+                    sizeClassName="h-16 w-16"
+                    textClassName="text-lg font-semibold"
+                  />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <h2 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {currentUser.name}
+                </h2>
+                <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  {currentUser.email}
+                </p>
               </div>
             </div>
-            <div className="min-w-0">
-              <h2 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {currentUser.name}
-              </h2>
-              <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                {currentUser.email}
-              </p>
-            </div>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetAvatarDraft();
+                    setIsEditing(false);
+                    setSaveFeedback("idle");
+                    setSaveMessage("");
+                    setRemovePhotoModalOpen(false);
+                  }}
+                  className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                    isDarkMode ? "text-slate-300 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveFeedback === "saving"}
+                  className={`auth-primary-glow rounded-full px-4 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                >
+                  {saveFeedback === "saving" ? "Saving..." : "Save"}
+                </button>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing((current) => {
+                  const next = !current;
+
+                  if (!next) {
+                    resetAvatarDraft();
+                    setSaveFeedback("idle");
+                    setSaveMessage("");
+                    setRemovePhotoModalOpen(false);
+                  }
+
+                  return next;
+                });
+              }}
+              aria-label={isEditing ? "Close profile editor" : "Edit profile"}
+              className={`auth-primary-glow flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+            >
+              {isEditing ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              )}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setIsEditing((current) => {
-                const next = !current;
-
-                if (!next) {
-                  resetAvatarDraft();
-                  setSaveFeedback("idle");
-                  setSaveMessage("");
-                  setRemovePhotoModalOpen(false);
-                }
-
-                return next;
-              });
-            }}
-            aria-label={isEditing ? "Close profile editor" : "Edit profile"}
-            className={`auth-primary-glow flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+          <div
+            className={`mt-2 rounded-[22px] px-4 py-4 ${
+              isDarkMode ? "border border-white/10 bg-white/6" : "bg-slate-50"
+            }`}
           >
             {isEditing ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
+              <div className="space-y-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="flex shrink-0 flex-col items-center gap-3">
+                    <div className="relative">
+                      <AvatarBadge
+                        initials={currentUser.avatar}
+                        imageUrl={activeAvatarPreview}
+                        sizeClassName="h-20 w-20"
+                        textClassName="text-xl font-semibold"
+                      />
+                      {canRemovePhoto ? (
+                        <button
+                          type="button"
+                          onClick={() => setRemovePhotoModalOpen(true)}
+                          aria-label="Remove profile photo"
+                          title="Remove profile photo"
+                          className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
+                            isDarkMode
+                              ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
+                              : "border-white bg-rose-500 text-white hover:bg-rose-600"
+                          }`}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                            <path d="M3 6h18" strokeLinecap="round" />
+                            <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M10 11v6M14 11v6" strokeLinecap="round" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
+                    <label
+                      className={`auth-primary-glow inline-flex cursor-pointer rounded-full px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                    >
+                      Choose photo
+                      <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+                    </label>
+                    {clearAvatarOnSave ? (
+                      <p className={`max-w-[12rem] text-center text-[11px] font-medium ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}>
+                        Photo will be removed when you save.
+                      </p>
+                    ) : null}
+                  </div>
+                  {avatarPreview ? (
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Crop preview
+                      </p>
+                      <div
+                        className={`relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-[28px] shadow-inner sm:mx-0 ${
+                          isDarkMode ? "ring-2 ring-violet-400/25" : "ring-2 ring-violet-200/80"
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob preview */}
+                        <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
+                      </div>
+                      <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Shown as a circle in the app; center the subject when you pick a photo.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+
+                <label className={`block space-y-2 ${labelClass}`}>
+                  Username
+                  <input name="name" defaultValue={currentUser.name} className={inputClass} />
+                </label>
+                <label className={`block space-y-2 ${labelClass}`}>
+                  City
+                  <input name="city" defaultValue={currentUser.city} className={inputClass} />
+                </label>
+                <label className={`block space-y-2 ${labelClass}`}>
+                  Bio
+                  <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
+                </label>
+              </div>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
-              </svg>
+              <>
+                <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
+                  City
+                </p>
+                <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {currentUser.city}
+                </p>
+                <p className={`mt-5 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                  {currentUser.bio}
+                </p>
+              </>
             )}
-          </button>
-        </div>
-        <div
-          className={`mt-2 rounded-[22px] px-4 py-4 ${
-            isDarkMode ? "border border-white/10 bg-white/6" : "bg-slate-50"
-          }`}
-        >
-          <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
-            City
-          </p>
-          <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            {currentUser.city}
-          </p>
-          <p className={`mt-5 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-            {currentUser.bio}
-          </p>
-        </div>
+          </div>
+        </form>
         <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
           {[
             { value: acceptedMovies.length, label: "Picks", href: "/picks" },
@@ -456,130 +565,6 @@ export default function ProfilePage() {
       <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
       </SurfaceCard>
-
-      {isEditing ? (
-        <SurfaceCard className="expand-soft space-y-5 !p-5 sm:!p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Edit profile</p>
-            <button
-              type="button"
-              onClick={() => {
-                resetAvatarDraft();
-                setIsEditing(false);
-                setSaveFeedback("idle");
-                setSaveMessage("");
-                setRemovePhotoModalOpen(false);
-              }}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                isDarkMode ? "text-slate-300 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              Cancel
-            </button>
-          </div>
-
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div
-              className={`rounded-[24px] px-4 py-4 ${
-                isDarkMode ? "border border-white/10 bg-white/6" : "bg-slate-50"
-              }`}
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex shrink-0 flex-col items-center gap-3">
-                  <div className="relative">
-                    <AvatarBadge
-                      initials={currentUser.avatar}
-                      imageUrl={activeAvatarPreview}
-                      sizeClassName="h-20 w-20"
-                      textClassName="text-xl font-semibold"
-                    />
-                    {canRemovePhoto ? (
-                      <button
-                        type="button"
-                        onClick={() => setRemovePhotoModalOpen(true)}
-                        aria-label="Remove profile photo"
-                        title="Remove profile photo"
-                        className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
-                          isDarkMode
-                            ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
-                            : "border-white bg-rose-500 text-white hover:bg-rose-600"
-                        }`}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                          <path d="M3 6h18" strokeLinecap="round" />
-                          <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M10 11v6M14 11v6" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    ) : null}
-                  </div>
-                  <label
-                    className={`auth-primary-glow inline-flex cursor-pointer rounded-full px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
-                  >
-                    Choose photo
-                    <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-                  </label>
-                  {clearAvatarOnSave ? (
-                    <p className={`max-w-[12rem] text-center text-[11px] font-medium ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}>
-                      Photo will be removed when you save.
-                    </p>
-                  ) : null}
-                </div>
-                {avatarPreview ? (
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Crop preview
-                    </p>
-                    <div
-                      className={`relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-[28px] shadow-inner sm:mx-0 ${
-                        isDarkMode ? "ring-2 ring-violet-400/25" : "ring-2 ring-violet-200/80"
-                      }`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob preview */}
-                      <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
-                    </div>
-                    <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Shown as a circle in the app; center the subject when you pick a photo.
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <label className={`block space-y-2 ${labelClass}`}>
-              Username
-              <input name="name" defaultValue={currentUser.name} className={inputClass} />
-            </label>
-            <label className={`block space-y-2 ${labelClass}`}>
-              City
-              <input name="city" defaultValue={currentUser.city} className={inputClass} />
-            </label>
-            <label className={`block space-y-2 ${labelClass}`}>
-              Bio
-              <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
-            </label>
-
-            <button
-              type="submit"
-              disabled={saveFeedback === "saving"}
-              className={`auth-primary-glow relative w-full overflow-hidden rounded-[22px] px-4 py-3.5 text-sm font-bold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
-            >
-              {saveFeedback === "saving" ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <span
-                    className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white"
-                    aria-hidden
-                  />
-                  Saving…
-                </span>
-              ) : (
-                "Save profile"
-              )}
-            </button>
-          </form>
-        </SurfaceCard>
-      ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {shortcutTiles.map((tile, index) => (
