@@ -13,7 +13,7 @@
 
 - [x] Loading / error / empty for all network actions (search, trailer, sync, invite) + retry CTA.
 - [ ] Route guards on authenticated app routes (no blank states for logged-out users).
-- [ ] Split `app-state` into domain hooks; replace 7s polling with focus/visibility + events + manual refresh.
+- [x] Split `app-state` into domain hooks; replace 7s polling with focus/visibility + events + manual refresh.
 
 ## UI & UX (condensed)
 

@@ -15,6 +15,8 @@ import {
   useState,
 } from "react";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
+import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
+import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import {
   getSupabaseBrowserClient,
@@ -172,6 +174,8 @@ type AppStateContextValue = {
   isSyncingAccountData: boolean;
   accountSyncError: string | null;
   retryAccountSync: () => void;
+  /** Soft refresh (e.g. tab focus); does not clear sync error state */
+  refreshAccountData: () => void;
   achievements: Achievement[];
   unlockedAchievement: Achievement | null;
   dismissUnlockedAchievement: () => void;
@@ -840,6 +844,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setDiscoverVisibilityTimestamp(Date.now());
   };
 
+  const requestAccountDataRefresh = useCallback(() => {
+    setAccountRefreshKey((current) => current + 1);
+  }, []);
+
   useEffect(() => {
     if (!currentUserId) {
       setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
@@ -1303,93 +1311,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
+  useSupabaseAccountRefreshChannels(currentUserId, requestAccountDataRefresh);
 
-    if (!supabase || !currentUserId) {
-      return;
-    }
-
-    const channel = supabase
-      .channel(`linked-users-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "linked_users",
-        },
-        (payload) => {
-          const nextRow = payload.new as Partial<LinkRow> | null;
-          const previousRow = payload.old as Partial<LinkRow> | null;
-          const touchesCurrentUser =
-            nextRow?.requester_id === currentUserId ||
-            nextRow?.target_id === currentUserId ||
-            previousRow?.requester_id === currentUserId ||
-            previousRow?.target_id === currentUserId;
-
-          if (touchesCurrentUser) {
-            setAccountRefreshKey((current) => current + 1);
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [currentUserId]);
-
-  useEffect(() => {
-    if (!currentUserId) {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        setAccountRefreshKey((current) => current + 1);
-      }
-    }, 7000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [currentUserId]);
-
-  useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
-    if (!supabase || !currentUserId) {
-      return;
-    }
-
-    const channel = supabase
-      .channel(`invite-links-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "invite_links",
-        },
-        (payload) => {
-          const nextRow = payload.new as Partial<InviteRow> | null;
-          const previousRow = payload.old as Partial<InviteRow> | null;
-          const touchesCurrentUser =
-            nextRow?.inviter_id === currentUserId ||
-            previousRow?.inviter_id === currentUserId;
-
-          if (touchesCurrentUser) {
-            setAccountRefreshKey((current) => current + 1);
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [currentUserId]);
+  useAccountSyncTriggers({
+    enabled: Boolean(currentUserId),
+    onRequestSync: requestAccountDataRefresh,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -3049,6 +2976,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         isSyncingAccountData,
         accountSyncError,
         retryAccountSync,
+        refreshAccountData: requestAccountDataRefresh,
         achievements,
         unlockedAchievement,
         dismissUnlockedAchievement: () => setUnlockedAchievement(null),
