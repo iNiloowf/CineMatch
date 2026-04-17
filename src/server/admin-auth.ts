@@ -30,6 +30,13 @@ function parseEnvList(value: string | undefined) {
   );
 }
 
+function addEnvEmail(target: Set<string>, value: string | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized) {
+    target.add(normalized);
+  }
+}
+
 function hasAdminRole(appMetadata: Record<string, unknown> | undefined) {
   if (!appMetadata) {
     return false;
@@ -93,6 +100,8 @@ export async function requireServerAdmin(
       : null;
   const adminIds = parseEnvList(process.env.ADMIN_USER_IDS);
   const adminEmails = parseEnvList(process.env.ADMIN_EMAILS);
+  addEnvEmail(adminEmails, process.env.ADMIN_DASHBOARD_EMAIL);
+  addEnvEmail(adminEmails, process.env.ADMIN_EMAIL);
   const allowlistedById = adminIds.has(data.user.id.toLowerCase());
   const allowlistedByEmail = email ? adminEmails.has(email) : false;
   const isAdmin = hasAdminRole(data.user.app_metadata) || allowlistedById || allowlistedByEmail;
