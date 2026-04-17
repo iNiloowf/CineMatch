@@ -154,15 +154,18 @@ export default function ProfilePage() {
 
   const labelClass = isDarkMode ? "text-sm font-medium text-slate-200" : "text-sm font-medium text-slate-700";
 
+  /** One shared accent system for shortcuts + primary profile actions */
+  const actionGradient =
+    "bg-gradient-to-br from-violet-600 via-fuchsia-600 to-violet-900 shadow-[0_14px_36px_rgba(109,40,217,0.35)]";
+  const actionGradientHover = "hover:shadow-[0_20px_48px_rgba(147,51,234,0.42)] hover:brightness-[1.04]";
+  const actionRing = isDarkMode ? "ring-2 ring-fuchsia-300/30" : "ring-2 ring-violet-400/55";
+
   const shortcutTiles = [
     {
       href: "/linked",
       title: "Friends",
       subtitle: "Who you match with",
-      gradient: isDarkMode
-        ? "from-violet-600/95 via-violet-700/90 to-indigo-950/95"
-        : "from-violet-500 via-violet-600 to-fuchsia-700",
-      ring: isDarkMode ? "ring-white/15" : "ring-violet-300/40",
+      shape: "rounded-[2rem] rounded-br-[2.85rem] sm:rounded-[2.25rem] sm:rounded-br-[3.25rem]",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
@@ -176,10 +179,7 @@ export default function ProfilePage() {
       href: "/connect",
       title: "Connect",
       subtitle: "Invite & link flow",
-      gradient: isDarkMode
-        ? "from-emerald-700/90 via-teal-800/92 to-slate-950/95"
-        : "from-emerald-500 via-teal-600 to-cyan-700",
-      ring: isDarkMode ? "ring-emerald-400/20" : "ring-emerald-300/45",
+      shape: "rounded-[2.35rem] sm:rounded-[2.6rem]",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" />
@@ -191,10 +191,7 @@ export default function ProfilePage() {
       href: "/settings",
       title: "Settings",
       subtitle: "Theme & preferences",
-      gradient: isDarkMode
-        ? "from-slate-700/95 via-slate-800/95 to-slate-950"
-        : "from-slate-600 via-slate-700 to-slate-800",
-      ring: isDarkMode ? "ring-white/12" : "ring-slate-300/50",
+      shape: "rounded-[2rem] rounded-tl-[2.85rem] sm:rounded-[2.25rem] sm:rounded-tl-[3.25rem]",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <circle cx="12" cy="12" r="3.2" />
@@ -349,11 +346,7 @@ export default function ProfilePage() {
               });
             }}
             aria-label={isEditing ? "Close profile editor" : "Edit profile"}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-sm transition hover:brightness-110 active:scale-95 ${
-              isDarkMode
-                ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/30"
-                : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80 hover:bg-violet-200"
-            }`}
+            className={`auth-primary-glow flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
           >
             {isEditing ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
@@ -473,11 +466,7 @@ export default function ProfilePage() {
                     ) : null}
                   </div>
                   <label
-                    className={`inline-flex cursor-pointer rounded-full px-4 py-2 text-xs font-semibold transition active:scale-[0.98] ${
-                      isDarkMode
-                        ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/28 hover:bg-violet-500/30"
-                        : "bg-violet-100 text-violet-800 ring-1 ring-violet-200/80 hover:bg-violet-200"
-                    }`}
+                    className={`auth-primary-glow inline-flex cursor-pointer rounded-full px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
                   >
                     Choose photo
                     <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
@@ -525,11 +514,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={saveFeedback === "saving"}
-              className={`relative w-full overflow-hidden rounded-[22px] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_36px_rgba(109,40,217,0.28)] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65 ${
-                isDarkMode
-                  ? "bg-gradient-to-br from-violet-500 to-fuchsia-700"
-                  : "bg-gradient-to-br from-violet-600 to-violet-700"
-              }`}
+              className={`auth-primary-glow relative w-full overflow-hidden rounded-[22px] px-4 py-3.5 text-sm font-bold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
             >
               {saveFeedback === "saving" ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -547,29 +532,47 @@ export default function ProfilePage() {
         </SurfaceCard>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {shortcutTiles.map((tile, index) => (
           <Link
             key={tile.href}
             href={tile.href}
-            className={`discover-toolbar-enter group relative flex min-h-[5.5rem] overflow-hidden rounded-[26px] p-4 text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)] ring-2 transition hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(15,23,42,0.26)] active:translate-y-0 ${tile.ring}`}
+            className={`discover-toolbar-enter group relative flex min-h-[6.25rem] overflow-hidden p-[1px] text-white transition hover:-translate-y-1 hover:scale-[1.02] active:translate-y-0 active:scale-[0.99] ${actionRing} ${tile.shape}`}
             style={{ animationDelay: `${index * 75}ms` }}
           >
-            <div
-              className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-[0.97] transition group-hover:opacity-100 ${tile.gradient}`}
+            <span
+              className={`pointer-events-none absolute inset-0 ${actionGradient} opacity-95 transition group-hover:opacity-100`}
               aria-hidden
             />
-            <div className="relative flex w-full items-center gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black/18 text-white backdrop-blur-sm ring-1 ring-white/25">
-                {tile.icon}
-              </span>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-base font-bold leading-tight tracking-tight">{tile.title}</p>
-                <p className="mt-0.5 text-xs font-medium text-white/82">{tile.subtitle}</p>
+            <span
+              className="pointer-events-none absolute -right-6 -top-10 h-28 w-28 rounded-full bg-white/20 blur-2xl transition group-hover:bg-white/28"
+              aria-hidden
+            />
+            <span
+              className="pointer-events-none absolute -bottom-8 -left-4 h-24 w-24 rounded-full bg-fuchsia-400/25 blur-xl"
+              aria-hidden
+            />
+            <div className={`relative flex w-full flex-col gap-3 p-4 sm:p-5 ${tile.shape} bg-black/10`}>
+              <div className="flex w-full items-start gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/22 text-white shadow-inner ring-2 ring-white/35">
+                  {tile.icon}
+                </span>
+                <div className="min-w-0 flex-1 pt-0.5 text-left">
+                  <p className="text-base font-extrabold leading-tight tracking-tight drop-shadow-sm">{tile.title}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85">
+                    {tile.subtitle}
+                  </p>
+                </div>
               </div>
-              <span className="shrink-0 text-lg font-light text-white/70 transition group-hover:translate-x-0.5 group-hover:text-white" aria-hidden>
-                →
-              </span>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-extrabold tracking-wide text-violet-700 shadow-md ring-1 ring-violet-200/90 transition group-hover:bg-white group-hover:shadow-lg">
+                  Open
+                  <span aria-hidden className="text-base leading-none">
+                    →
+                  </span>
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/55">Tap</span>
+              </div>
             </div>
           </Link>
         ))}
