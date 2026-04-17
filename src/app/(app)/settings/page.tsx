@@ -9,6 +9,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import type { Achievement } from "@/lib/types";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function AchievementRow({
@@ -94,6 +95,7 @@ export default function SettingsPage() {
   const [ticketPriority, setTicketPriority] = useState<"low" | "normal" | "high">("normal");
   const [ticketState, setTicketState] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [ticketFeedback, setTicketFeedback] = useState("");
+  const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -107,6 +109,8 @@ export default function SettingsPage() {
     () => partitionAchievements(achievements),
     [achievements],
   );
+
+  useEscapeToClose(isContactAdminModalOpen, () => setIsContactAdminModalOpen(false));
 
   if (!settings) {
     return null;
@@ -172,6 +176,137 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-5">
+      {isContactAdminModalOpen ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setIsContactAdminModalOpen(false)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Contact admin"
+          >
+            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-inherit">Contact admin</p>
+                {currentUser ? (
+                  <p className={`mt-1 truncate text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Sending as {currentUser.name} ({currentUser.email})
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsContactAdminModalOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <form className="ui-shell-body space-y-3 !pt-4" onSubmit={handleSubmitTicket}>
+              <label className="block space-y-2 text-sm font-semibold">
+                Subject
+                <input
+                  value={ticketSubject}
+                  onChange={(event) => setTicketSubject(event.target.value)}
+                  maxLength={120}
+                  placeholder="Example: Discover page is not loading"
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-semibold">
+                Message
+                <textarea
+                  value={ticketMessage}
+                  onChange={(event) => setTicketMessage(event.target.value)}
+                  rows={4}
+                  maxLength={1200}
+                  placeholder="Describe the issue and steps to reproduce."
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-semibold">
+                Priority
+                <select
+                  value={ticketPriority}
+                  onChange={(event) =>
+                    setTicketPriority(event.target.value as "low" | "normal" | "high")
+                  }
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+              {ticketFeedback ? (
+                <p
+                  className={`text-sm ${
+                    ticketState === "success"
+                      ? isDarkMode
+                        ? "text-emerald-300"
+                        : "text-emerald-700"
+                      : isDarkMode
+                        ? "text-rose-300"
+                        : "text-rose-700"
+                  }`}
+                >
+                  {ticketFeedback}
+                </p>
+              ) : null}
+              <div className="ui-shell-footer !px-0 !pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsContactAdminModalOpen(false)}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={ticketState === "saving"}
+                  className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
+                >
+                  {ticketState === "saving" ? "Sending ticket..." : "Send ticket"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       <PageHeader
         eyebrow="Preferences"
         title="Settings"
@@ -329,77 +464,33 @@ export default function SettingsPage() {
           If you find a bug or need help, send a support ticket from here. It will appear in the
           Admin Desktop page.
         </p>
-        <form className="mt-4 space-y-3" onSubmit={handleSubmitTicket}>
-          <label className="block space-y-2 text-sm font-semibold">
-            Subject
-            <input
-              value={ticketSubject}
-              onChange={(event) => setTicketSubject(event.target.value)}
-              maxLength={120}
-              placeholder="Example: Discover page is not loading"
-              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                isDarkMode
-                  ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
-                  : "border-slate-200 bg-white text-slate-900"
-              }`}
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-semibold">
-            Message
-            <textarea
-              value={ticketMessage}
-              onChange={(event) => setTicketMessage(event.target.value)}
-              rows={4}
-              maxLength={1200}
-              placeholder="Describe the issue and steps to reproduce."
-              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                isDarkMode
-                  ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
-                  : "border-slate-200 bg-white text-slate-900"
-              }`}
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-semibold">
-            Priority
-            <select
-              value={ticketPriority}
-              onChange={(event) =>
-                setTicketPriority(event.target.value as "low" | "normal" | "high")
-              }
-              className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                isDarkMode
-                  ? "border-white/12 bg-white/8 text-white"
-                  : "border-slate-200 bg-white text-slate-900"
-              }`}
-            >
-              <option value="low">Low</option>
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={ticketState === "saving"}
-            className="ui-btn ui-btn-primary w-full disabled:opacity-70"
+        <button
+          type="button"
+          onClick={() => setIsContactAdminModalOpen(true)}
+          className="ui-btn ui-btn-primary mt-4 w-full"
+        >
+          Open contact admin form
+        </button>
+        {ticketSubject || ticketMessage ? (
+          <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Draft saved. Reopen the popup to continue.
+          </p>
+        ) : null}
+        {ticketFeedback ? (
+          <p
+            className={`mt-2 text-sm ${
+              ticketState === "success"
+                ? isDarkMode
+                  ? "text-emerald-300"
+                  : "text-emerald-700"
+                : isDarkMode
+                  ? "text-rose-300"
+                  : "text-rose-700"
+            }`}
           >
-            {ticketState === "saving" ? "Sending ticket..." : "Send ticket to admin"}
-          </button>
-          {ticketFeedback ? (
-            <p
-              className={`text-sm ${
-                ticketState === "success"
-                  ? isDarkMode
-                    ? "text-emerald-300"
-                    : "text-emerald-700"
-                  : isDarkMode
-                    ? "text-rose-300"
-                    : "text-rose-700"
-              }`}
-            >
-              {ticketFeedback}
-            </p>
-          ) : null}
-        </form>
+            {ticketFeedback}
+          </p>
+        ) : null}
         <div
           className={`my-6 h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`}
           aria-hidden

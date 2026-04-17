@@ -1,10 +1,10 @@
 # CineMatch — Improvement Checklist
 
-_Last reviewed: Apr 2026 — signup/connect/picks/shared/settings UI passes; still no `error.tsx`, no API Zod._
+_Last reviewed: Apr 2026 — major UI passes on core routes; still no `error.tsx`, no API Zod, no CI tests, and admin credentials are currently hardcoded._
 
 ## How to improve the app (quick guide)
 
-1. **Stability first:** finish route-guard polish, add `error.tsx`, validate API inputs (Zod), then tighten Supabase RLS and auth checks — fewer surprise failures in production.
+1. **Security + stability first:** remove hardcoded admin credentials, finish route-guard polish, add `error.tsx`, validate API inputs (Zod), then tighten Supabase RLS/auth checks — fewer surprise failures in production.
 2. **Feel second:** dark-mode parity on every route, offline banner, less empty `return null` while data resolves — users should always see *something* intentional.
 3. **Speed to ship:** split the giant `app-state.tsx`, add a minimal test + CI gate so refactors don’t regress login/swipe/invite flows.
 
@@ -12,13 +12,14 @@ _Last reviewed: Apr 2026 — signup/connect/picks/shared/settings UI passes; sti
 
 ## Next steps to ship (bring it to life)
 
-_Order: stability → reliability → tests → real backend → polish._
+_Order: security + stability → reliability → tests → real backend → polish._
 
-1. **Production hardening** — Add **`error.tsx`** / **`global-error.tsx`** so runtime errors never white-screen. Add **Zod (or similar)** on `src/app/api/*` with consistent error bodies. On Supabase: **RLS**, **auth + ownership** on mutating routes, **rate limits** (invites / accept / swipe), **safe avatar storage**.
-2. **Reliability & trust** — **`ProtectedScreen`**: replace bare **`return null`** with a short “Redirecting…” / spinner so the shell never flashes empty. **Offline**: listen to **`online` / `offline`**, show a dismissible banner; optionally retry sync / failed actions when back online.
-3. **Tests + CI** — Introduce **`npm test`** (start with integration: login, invite, swipe) and a **GitHub Action** running **lint + typecheck + test** so refactors stay safe.
-4. **Product “life”** — Wire critical reads/writes to **Supabase** (trim mock-only paths when you no longer need them). Add **client error reporting** (e.g. Sentry) + **correlation ids** on API errors when you have real users. Add **privacy / terms** if you store PII or use analytics.
-5. **Polish backlog** — **`/auth/callback`**: branded loading + explicit error + retry / back to login. **Skip link** to main content in **`AppShell`**. **Picks** nested modals: focus trap + **Escape** order audit. **Long lists**: virtualize Picks / Shared / Discover search if libraries routinely exceed ~50 rows.
+1. **Production hardening** — Add **`error.tsx`** / **`global-error.tsx`** so runtime errors never white-screen. Add **Zod (or similar)** on `src/app/api/*` with consistent error bodies. Keep Supabase hardening (RLS + ownership + rate limits + safe avatar storage) as baseline.
+2. **Admin security fix (urgent)** — Remove hardcoded admin credentials from **`src/app/admin/page.tsx`** and **`src/app/api/admin/dashboard/route.ts`**. Move secrets to env vars, require server-side role/allowlist verification, and avoid exposing admin auth logic in the client bundle.
+3. **Reliability & trust** — **`ProtectedScreen`**: replace bare **`return null`** with a short “Redirecting…” / spinner so the shell never flashes empty. **Offline**: listen to **`online` / `offline`**, show a dismissible banner; optionally retry sync / failed actions when back online.
+4. **Tests + CI** — Introduce **`npm test`** (start with integration: login, invite, swipe) and a **GitHub Action** running **lint + typecheck + test** so refactors stay safe.
+5. **Product “life”** — Wire critical reads/writes to **Supabase** (trim mock-only paths when you no longer need them). Add **client error reporting** (e.g. Sentry) + **correlation ids** on API errors when you have real users. Add **privacy / terms** if you store PII or use analytics.
+6. **Polish backlog** — **`/auth/callback`**: branded loading + explicit error + retry / back to login. **Skip link** to main content in **`AppShell`**. **Picks** nested modals: focus trap + **Escape** order audit. **Long lists**: virtualize Picks / Shared / Discover search if libraries routinely exceed ~50 rows.
 
 _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com)** → account / **Dashboard** → **Usage** (and in-app **Settings**, search **usage**, if your build shows a usage bar).
 
@@ -59,7 +60,8 @@ _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com
 
 - [x] Perf: memoized list rows, lazy trailer modals, TMDB poster sizing helpers, stabler callbacks on Discover/Picks; **`npm run analyze`** (bundle analyzer) for large changes.
 - [ ] API: Zod on `src/app/api/*`, dedupe/cache search + trailer, shared filter utils client+server, centralized errors/logging. _(No Zod in repo yet.)_
-- [x] Security: Supabase session storage + server JWT verification (`docs/security-supabase-session.md`), bearer + ownership on mock mutating routes + Supabase-backed APIs, rate limits (invite create/accept, swipe POST/DELETE, account-sync GET), `security_audit_log` for invite/swipe actions, schema RLS + `profile-photos` storage (see schema / same doc).
+- [x] Security baseline: Supabase session storage + server JWT verification (`docs/security-supabase-session.md`), bearer + ownership on mock mutating routes + Supabase-backed APIs, rate limits (invite create/accept, swipe POST/DELETE, account-sync GET), `security_audit_log` for invite/swipe actions, schema RLS + `profile-photos` storage (see schema / same doc).
+- [ ] Security hardening follow-up: remove hardcoded admin credentials and enforce server-side admin authorization for `/admin` dashboard access.
 - [ ] Tests & CI: unit (discover utils), integration (auth/sync), e2e (login, swipe/undo, invite, shared toggles), visual smoke dark/light, CI gates (typecheck, lint, test). _(Scripts today: `npm run build`, `npm run lint` — no `test` script / CI workflow in tree.)_
 
 ## Native / distribution
@@ -77,6 +79,7 @@ _Use these as the next tickets; none replace the Engineering section above — t
 - [ ] **`ProtectedScreen`:** when `!currentUserId` after `isReady`, show a tiny “Signing you out…” / spinner instead of **`return null`** so the shell never flashes empty before `router.replace("/")`.
 - [ ] **Next.js errors:** add **`error.tsx`** (and optionally **`global-error.tsx`**) under `app/` and/or `(app)/` with reset + “Reload” so runtime errors don’t white-screen.
 - [ ] **Offline:** listen to `online` / `offline`, show a dismissible banner; optionally queue or retry failed swipes / sync when back online.
+- [ ] **Admin auth:** replace static admin credential checks with server-managed secrets + role check; keep credentials out of client code and rotate existing values.
 
 ### UX & visual consistency
 
