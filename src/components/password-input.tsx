@@ -3,6 +3,7 @@
 import { ChangeEventHandler, FocusEventHandler, useState } from "react";
 
 type PasswordInputProps = {
+  id?: string;
   name: string;
   placeholder: string;
   defaultValue?: string;
@@ -16,6 +17,7 @@ type PasswordInputProps = {
 };
 
 export function PasswordInput({
+  id,
   name,
   placeholder,
   defaultValue,
@@ -43,6 +45,7 @@ export function PasswordInput({
   return (
     <div className="relative">
       <input
+        id={id}
         name={name}
         type={visible ? "text" : "password"}
         required={required}
