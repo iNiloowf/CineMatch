@@ -65,6 +65,20 @@ _Use these as the next tickets; none replace the Engineering section above — t
 - [ ] **Skip link:** “Skip to main content” for keyboard users, targeting the scroll container in **`AppShell`**.
 - [ ] **i18n (optional):** if you ship beyond English, extract strings + RTL; today the UI is English-only.
 
+### Per-screen UI — what to improve next
+
+_Use this as a route-by-route “UI pass” checklist (contrast, hierarchy, empty/loading/error, touch targets, dark parity)._
+
+- [x] **`/` (login / landing):** dark parity on hero, form, demo card, and errors; primary gradient CTA vs outlined secondary **Create an account**; client-side field errors + `role="alert"` server banner; ambient blob motion + staggered panel enter + CTA shine loop (**`data-reduce-motion`** / OS reduce disables heavy motion). _Still optional:_ extra “why sign in” marketing line.
+- [ ] **`/signup`:** same as login for theme + errors; show password rules before submit; success state before redirect; align spacing with `/` so the flow feels one system.
+- [ ] **`/auth/callback`:** never a blank screen — branded spinner + short copy (“Finishing sign-in…”); explicit error panel with **Retry** / **Back to login**; respect safe area on mobile.
+- [ ] **`/discover`:** hero card readability (title vs meta vs actions); filter/search discoverability; consistent chip grammar for genres/runtime; undo/snackbar placement vs thumb zone; skeleton → content transition without layout jump.
+- [ ] **`/linked`:** scan-friendly partner rows (avatar, name, status at a glance); invite/link states with distinct color **meaning** (pending vs active); empty state with one clear next step.
+- [ ] **`/picks`:** stat cards: add micro-labels (“Saved” / “Also shared”) if numbers alone confuse; row density vs tap targets; modals: scroll affordance + sticky primary actions; trailer loading state on slow networks.
+- [ ] **`/shared`:** accordion header vs body contrast; toggle pills readable in dark (unchecked state); long descriptions: “More” / expand without losing context; mutual-match badges consistent with Discover/Picks chip style.
+- [ ] **`/profile`:** edit flow feedback (saving / saved / failed); avatar crop preview if applicable; destructive actions visually separated; dark parity for any light-only controls.
+- [ ] **`/settings`:** group toggles by theme (Appearance / Notifications / Privacy); achievements: optional detail tap (why unlocked); About / Log out visually separated from preferences.
+
 ### Architecture & data
 
 - [ ] **Decompose `app-state.tsx`:** extract auth/session, discover queue rotation, and account sync into dedicated modules or contexts to shrink the provider and simplify testing.

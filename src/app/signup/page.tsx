@@ -175,6 +175,7 @@ export default function SignUpPage() {
                 name="password"
                 placeholder="Create a password"
                 value={password}
+                isDarkMode={isDarkMode}
                 onChange={(event) => setPassword(event.target.value)}
               />
             </label>

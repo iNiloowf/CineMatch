@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEventHandler, useState } from "react";
+import { ChangeEventHandler, FocusEventHandler, useState } from "react";
 
 type PasswordInputProps = {
   name: string;
@@ -8,7 +8,11 @@ type PasswordInputProps = {
   defaultValue?: string;
   value?: string;
   onChange?: ChangeEventHandler<HTMLInputElement>;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
   required?: boolean;
+  /** When set, matches email inputs on auth screens in light/dark. */
+  isDarkMode?: boolean;
+  invalid?: boolean;
 };
 
 export function PasswordInput({
@@ -17,9 +21,24 @@ export function PasswordInput({
   defaultValue,
   value,
   onChange,
+  onBlur,
   required = true,
+  isDarkMode = false,
+  invalid = false,
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+
+  const surface = isDarkMode
+    ? invalid
+      ? "border-rose-400/55 bg-white/8 text-white ring-2 ring-rose-500/30 placeholder:text-slate-400 focus:border-rose-300 focus:bg-white/10"
+      : "border-white/10 bg-white/8 text-white placeholder:text-slate-400 focus:border-violet-400 focus:bg-white/10"
+    : invalid
+      ? "border-rose-300 bg-rose-50/50 text-slate-900 ring-2 ring-rose-200 placeholder:text-slate-400 focus:border-rose-400 focus:bg-white"
+      : "border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:bg-white";
+
+  const toggleTone = isDarkMode
+    ? "text-slate-400 hover:bg-white/10 hover:text-white"
+    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800";
 
   return (
     <div className="relative">
@@ -30,8 +49,10 @@ export function PasswordInput({
         defaultValue={defaultValue}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         placeholder={placeholder}
-        className="w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm outline-none transition focus:border-violet-400 focus:bg-white"
+        aria-invalid={invalid || undefined}
+        className={`w-full rounded-[20px] border px-4 py-3 pr-12 text-sm outline-none transition ${surface}`}
       />
       <button
         type="button"
@@ -39,7 +60,7 @@ export function PasswordInput({
         onTouchStart={(event) => event.preventDefault()}
         onClick={() => setVisible((current) => !current)}
         aria-label={visible ? "Hide password" : "Show password"}
-        className="absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full text-slate-500"
+        className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full transition ${toggleTone}`}
       >
         {visible ? (
           <svg
