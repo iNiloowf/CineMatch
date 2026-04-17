@@ -1,15 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
-import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
-import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
-import { shareMovieDeepLink } from "@/lib/share-movie-link";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -38,32 +35,12 @@ export default function ProfilePage() {
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback>("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [removePhotoModalOpen, setRemovePhotoModalOpen] = useState(false);
-  const [pickDetailId, setPickDetailId] = useState<string | null>(null);
-  const [pickToast, setPickToast] = useState<string | null>(null);
-
-  const pickDetailMovie = useMemo(
-    () => acceptedMovies.find((movie) => movie.id === pickDetailId) ?? null,
-    [acceptedMovies, pickDetailId],
-  );
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
 
   useEscapeToClose(removePhotoModalOpen, () => setRemovePhotoModalOpen(false));
-
-  useEffect(() => {
-    if (!pickToast) {
-      return;
-    }
-    const timer = window.setTimeout(() => setPickToast(null), 2600);
-    return () => window.clearTimeout(timer);
-  }, [pickToast]);
-
-  const handleSharePick = useCallback(async (movieId: string) => {
-    const msg = await shareMovieDeepLink(movieId);
-    setPickToast(msg);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -366,7 +343,7 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="You"
         title="Profile"
-        description="Badges, your saved picks, and shortcuts — tap any pick for full movie details."
+        description="Badges, your snapshot, and shortcuts."
       />
 
       <SurfaceCard
@@ -475,133 +452,6 @@ export default function ProfilePage() {
 
       <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
-      </SurfaceCard>
-
-      {pickDetailMovie ? (
-        <MovieDetailsModal
-          movie={pickDetailMovie}
-          isDarkMode={isDarkMode}
-          onClose={() => setPickDetailId(null)}
-          contextLabel="Your pick"
-          footer={({ openTrailer }) => (
-            <>
-              <button
-                type="button"
-                className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
-                onClick={() => void handleSharePick(pickDetailMovie.id)}
-              >
-                Share link
-              </button>
-              <button
-                type="button"
-                className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-0"
-                onClick={() => void openTrailer()}
-              >
-                Watch trailer
-              </button>
-              <Link
-                href="/picks"
-                className="ui-btn ui-btn-secondary flex min-h-12 w-full flex-1 items-center justify-center sm:min-w-0"
-                onClick={() => setPickDetailId(null)}
-              >
-                All picks
-              </Link>
-            </>
-          )}
-        />
-      ) : null}
-
-      <SurfaceCard className="fade-up-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "150ms" }}>
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <p className={sectionEyebrow}>My picks</p>
-            <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Tap for details — same list as Picks
-            </p>
-          </div>
-          <Link
-            href="/picks"
-            className={`text-sm font-semibold underline-offset-2 transition hover:underline ${
-              isDarkMode ? "text-violet-300 hover:text-violet-200" : "text-violet-700 hover:text-violet-800"
-            }`}
-          >
-            View all
-          </Link>
-        </div>
-        {pickToast ? (
-          <p
-            className={`rounded-[14px] px-3 py-2 text-center text-xs font-medium ${
-              isDarkMode ? "bg-violet-500/15 text-violet-100" : "bg-violet-50 text-violet-800"
-            }`}
-            role="status"
-          >
-            {pickToast}
-          </p>
-        ) : null}
-        {acceptedMovies.length === 0 ? (
-          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Nothing saved yet — say yes to movies in Discover to build this list.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {acceptedMovies.slice(0, 14).map((movie, index) => (
-              <li
-                key={movie.id}
-                className="discover-toolbar-enter"
-                style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setPickDetailId(movie.id)}
-                  className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-2.5 text-left transition duration-200 active:scale-[0.99] ${
-                    isDarkMode
-                      ? "border-white/10 bg-white/[0.03] hover:border-violet-400/25 hover:bg-white/[0.06]"
-                      : "border-slate-200/80 bg-white hover:border-violet-200 hover:shadow-sm"
-                  }`}
-                >
-                  <div
-                    className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
-                      isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                    }`}
-                  >
-                    <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
-                    {!movie.poster.imageUrl ? (
-                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
-                        CM
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      {movie.title}
-                    </p>
-                    <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>{movie.year}</p>
-                  </div>
-                  <span
-                    className={`shrink-0 text-xs font-semibold ${isDarkMode ? "text-violet-300/90" : "text-violet-600"}`}
-                    aria-hidden
-                  >
-                    →
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {acceptedMovies.length > 14 ? (
-          <p className={`text-center text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-            Showing 14 of {acceptedMovies.length}.{" "}
-            <Link
-              href="/picks"
-              className={`font-semibold underline-offset-2 hover:underline ${
-                isDarkMode ? "text-violet-300" : "text-violet-600"
-              }`}
-            >
-              Open Picks
-            </Link>{" "}
-            for the full list.
-          </p>
-        ) : null}
       </SurfaceCard>
 
       {isEditing ? (
