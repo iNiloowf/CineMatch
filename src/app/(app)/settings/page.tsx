@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
@@ -11,6 +11,8 @@ import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 
 function AchievementRow({
   achievement,
@@ -103,9 +105,17 @@ export default function SettingsPage() {
   const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
   const [billingFeedback, setBillingFeedback] = useState("");
-  const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState<string>("none");
-  const [isActivatingPro, setIsActivatingPro] = useState(false);
-  const proCheckoutUrl = process.env.NEXT_PUBLIC_PRO_CHECKOUT_URL ?? "";
+  const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
+  const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
+  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
+  const [myActiveGiftCode, setMyActiveGiftCode] = useState<{
+    code: string;
+    expiresAt: string;
+  } | null>(null);
+  const [isLoadingGiftCode, setIsLoadingGiftCode] = useState(false);
+  const [giftRedeemCode, setGiftRedeemCode] = useState("");
+  const [giftRedeemState, setGiftRedeemState] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [giftRedeemFeedback, setGiftRedeemFeedback] = useState("");
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -147,12 +157,14 @@ export default function SettingsPage() {
     }
   }, [acceptedConnectedPartners, selectedGiftPartnerId]);
 
+  useEffect(() => {
+    if (selectedPlanType !== "pro_partner_gift") {
+      setSelectedGiftPartnerId("none");
+    }
+  }, [selectedPlanType]);
+
   useEscapeToClose(isContactAdminModalOpen, () => setIsContactAdminModalOpen(false));
   useEscapeToClose(Boolean(legalModal), () => setLegalModal(null));
-
-  if (!settings) {
-    return null;
-  }
 
   const handleSubmitTicket = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -212,70 +224,167 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpgradeToPro = async () => {
+  const resolveAccessToken = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient();
+    const sessionResult = supabase
+      ? await supabase.auth.getSession()
+      : { data: { session: null } };
+    return sessionResult.data.session?.access_token ?? null;
+  }, []);
+
+  const loadMyActiveGiftCode = useCallback(async () => {
+    const accessToken = await resolveAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
+    setIsLoadingGiftCode(true);
+    try {
+      const response = await fetch("/api/subscription/gift-code?activeOnly=true", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as {
+        giftCode?: { code: string; expiresAt: string } | null;
+      };
+
+      if (response.ok && payload.giftCode?.code) {
+        setMyActiveGiftCode({
+          code: payload.giftCode.code,
+          expiresAt: payload.giftCode.expiresAt,
+        });
+        return;
+      }
+
+      setMyActiveGiftCode(null);
+    } catch {
+      setMyActiveGiftCode(null);
+    } finally {
+      setIsLoadingGiftCode(false);
+    }
+  }, [resolveAccessToken]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+    void loadMyActiveGiftCode();
+  }, [currentUserId, loadMyActiveGiftCode]);
+
+  const handleOpenCheckout = async () => {
     if (hasProAccess) {
       setBillingFeedback("You already have Pro access on this account.");
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
-    const sessionResult = supabase
-      ? await supabase.auth.getSession()
-      : { data: { session: null } };
-    const accessToken = sessionResult.data.session?.access_token ?? null;
+    if (
+      selectedPlanType === "pro_partner_gift" &&
+      (!selectedGiftPartner || selectedGiftPartnerId === "none")
+    ) {
+      setBillingFeedback("Pick one connected partner for the Partner Gift plan.");
+      return;
+    }
+
+    const accessToken = await resolveAccessToken();
 
     if (!accessToken) {
       setBillingFeedback("Please sign in again, then try Pro checkout.");
       return;
     }
 
-    setIsActivatingPro(true);
+    setIsOpeningCheckout(true);
     setBillingFeedback("");
 
     try {
-      if (proCheckoutUrl) {
-        try {
-          const checkoutUrl = new URL(proCheckoutUrl);
-          checkoutUrl.searchParams.set("buyerUserId", currentUserId ?? "");
-          if (selectedGiftPartner) {
-            checkoutUrl.searchParams.set("giftPartnerUserId", selectedGiftPartner.id);
-          }
-          window.open(checkoutUrl.toString(), "_blank", "noopener,noreferrer");
-        } catch {
-          window.open(proCheckoutUrl, "_blank", "noopener,noreferrer");
-        }
-      }
-
-      const response = await fetch("/api/subscription/activate", {
+      const response = await fetch("/api/subscription/create-intent", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          partnerUserId: selectedGiftPartner?.id,
+          planType: selectedPlanType,
+          partnerUserId:
+            selectedPlanType === "pro_partner_gift"
+              ? selectedGiftPartner?.id
+              : undefined,
         }),
+      });
+      const payload = (await response.json()) as { error?: string; checkoutUrl?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not open checkout right now.");
+      }
+
+      if (!payload.checkoutUrl) {
+        throw new Error("Checkout URL is missing.");
+      }
+
+      window.open(payload.checkoutUrl, "_blank", "noopener,noreferrer");
+      setBillingFeedback(
+        selectedPlanType === "pro_partner_gift"
+          ? "Checkout opened. After successful payment, your one-time gift code appears here."
+          : "Checkout opened. Pro activates after Stripe confirms payment.",
+      );
+    } catch (error) {
+      setBillingFeedback(
+        error instanceof Error ? error.message : "Could not open checkout right now.",
+      );
+    } finally {
+      setIsOpeningCheckout(false);
+    }
+  };
+
+  const handleRedeemGiftCode = async () => {
+    const code = giftRedeemCode.trim();
+    if (!code) {
+      setGiftRedeemState("error");
+      setGiftRedeemFeedback("Enter a gift code first.");
+      return;
+    }
+
+    const accessToken = await resolveAccessToken();
+    if (!accessToken) {
+      setGiftRedeemState("error");
+      setGiftRedeemFeedback("Please sign in again, then redeem your gift code.");
+      return;
+    }
+
+    setGiftRedeemState("saving");
+    setGiftRedeemFeedback("");
+
+    try {
+      const response = await fetch("/api/subscription/redeem-gift-code", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
       });
       const payload = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Could not activate Pro right now.");
+        throw new Error(payload.error ?? "Could not redeem this code.");
       }
 
+      setGiftRedeemState("success");
+      setGiftRedeemFeedback("Pro is now active on your account.");
+      setGiftRedeemCode("");
       refreshAccountData();
-      setBillingFeedback(
-        selectedGiftPartner
-          ? `Pro is now active for you and ${selectedGiftPartner.name}.`
-          : "Pro is now active on your account.",
-      );
     } catch (error) {
-      setBillingFeedback(
-        error instanceof Error ? error.message : "Could not activate Pro right now.",
+      setGiftRedeemState("error");
+      setGiftRedeemFeedback(
+        error instanceof Error ? error.message : "Could not redeem this code.",
       );
-    } finally {
-      setIsActivatingPro(false);
     }
   };
+
+  if (!settings) {
+    return null;
+  }
 
   return (
     <div className="space-y-5">
@@ -635,51 +744,181 @@ export default function SettingsPage() {
               Open Pro Studio
             </Link>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {[
+                {
+                  id: "pro_monthly" as const,
+                  title: "Pro Monthly",
+                  price: "$5.99 / month",
+                  note: "Flexible billing",
+                },
+                {
+                  id: "pro_yearly" as const,
+                  title: "Pro Yearly",
+                  price: "$49.99 / year",
+                  note: "Best value",
+                },
+                {
+                  id: "pro_partner_gift" as const,
+                  title: "Pro + Partner Gift",
+                  price: "$9.99 one-time",
+                  note: "Includes one redeem code",
+                },
+              ].map((plan) => (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => setSelectedPlanType(plan.id)}
+                  className={`rounded-[14px] border px-3 py-3 text-left transition ${
+                    selectedPlanType === plan.id
+                      ? isDarkMode
+                        ? "border-violet-400/45 bg-violet-500/12 ring-1 ring-violet-400/28"
+                        : "border-violet-300 bg-violet-50 ring-1 ring-violet-200/80"
+                      : isDarkMode
+                        ? "border-white/10 bg-white/[0.03]"
+                        : "border-slate-200/90 bg-white"
+                  }`}
+                >
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    {plan.title}
+                  </p>
+                  <p className={`mt-1 text-xs font-semibold ${isDarkMode ? "text-violet-200" : "text-violet-700"}`}>
+                    {plan.price}
+                  </p>
+                  <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    {plan.note}
+                  </p>
+                </button>
+              ))}
+            </div>
+
+            {selectedPlanType === "pro_partner_gift" ? (
+              acceptedConnectedPartners.length > 0 ? (
+                <label className="block space-y-2 text-sm font-semibold">
+                  Choose the connected partner for this gift
+                  <select
+                    value={selectedGiftPartnerId}
+                    onChange={(event) => setSelectedGiftPartnerId(event.target.value)}
+                    className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                      isDarkMode
+                        ? "border-white/12 bg-white/8 text-white"
+                        : "border-slate-200 bg-white text-slate-900"
+                    }`}
+                  >
+                    <option value="none">Select partner</option>
+                    {acceptedConnectedPartners.map((partner) => (
+                      <option key={partner.id} value={partner.id}>
+                        {partner.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <p className={`text-xs ${isDarkMode ? "text-amber-300" : "text-amber-700"}`}>
+                  You need at least one accepted connection to use Partner Gift.
+                </p>
+              )
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handleOpenCheckout()}
+              disabled={hasProAccess || isOpeningCheckout}
+              className="ui-btn ui-btn-primary w-full disabled:opacity-70"
+            >
+              {hasProAccess
+                ? "Pro is active"
+                : isOpeningCheckout
+                  ? "Opening checkout..."
+                  : "Continue to secure checkout"}
+            </button>
+
+            {billingFeedback ? (
+              <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                {billingFeedback}
+              </p>
+            ) : null}
+
+            <div
+              className={`rounded-[14px] border px-3 py-3 text-xs ${
+                isDarkMode ? "border-white/10 bg-white/[0.03] text-slate-300" : "border-slate-200 bg-white text-slate-600"
+              }`}
+            >
+              Secure flow: Pro activates only after Stripe confirms payment via webhook.
+            </div>
+
+            {isLoadingGiftCode ? (
+              <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Loading your partner gift code...
+              </p>
+            ) : myActiveGiftCode ? (
+              <div
+                className={`rounded-[14px] border px-3 py-3 ${
+                  isDarkMode
+                    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
+                    : "border-emerald-200/90 bg-emerald-50 text-emerald-800"
+                }`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.12em]">Your active gift code</p>
+                <p className="mt-1 text-base font-bold">{myActiveGiftCode.code}</p>
+                <p className="mt-1 text-xs">
+                  Expires on {new Date(myActiveGiftCode.expiresAt).toLocaleDateString()}.
+                </p>
+              </div>
+            ) : null}
+
+            <div
+              className={`rounded-[14px] border px-3 py-3 ${
+                isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white"
+              }`}
+            >
+              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Redeem partner gift code
+              </p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={giftRedeemCode}
+                  onChange={(event) => setGiftRedeemCode(event.target.value.toUpperCase())}
+                  placeholder="CM-GIFT-XXXX-XXXX"
+                  className={`w-full rounded-[12px] border px-3 py-2 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleRedeemGiftCode()}
+                  disabled={giftRedeemState === "saving"}
+                  className="ui-btn ui-btn-secondary shrink-0 disabled:opacity-70"
+                >
+                  {giftRedeemState === "saving" ? "Redeeming..." : "Redeem"}
+                </button>
+              </div>
+              {giftRedeemFeedback ? (
+                <p
+                  className={`mt-2 text-xs ${
+                    giftRedeemState === "success"
+                      ? isDarkMode
+                        ? "text-emerald-300"
+                        : "text-emerald-700"
+                      : isDarkMode
+                        ? "text-rose-300"
+                        : "text-rose-700"
+                  }`}
+                >
+                  {giftRedeemFeedback}
+                </p>
+              ) : null}
+            </div>
+
             <SettingToggle
               label="Admin mode (simulate Pro purchase)"
               description="For testing flows only. Turning this on behaves like an active Pro subscription."
               checked={adminSubscriptionPreviewModeEnabled}
               onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
             />
-            {acceptedConnectedPartners.length > 0 && !hasProAccess ? (
-              <label className="mt-3 block space-y-2 text-sm font-semibold">
-                Activate Pro for a connected partner too
-                <select
-                  value={selectedGiftPartnerId}
-                  onChange={(event) => setSelectedGiftPartnerId(event.target.value)}
-                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/12 bg-white/8 text-white"
-                      : "border-slate-200 bg-white text-slate-900"
-                  }`}
-                >
-                  <option value="none">Only my account</option>
-                  {acceptedConnectedPartners.map((partner) => (
-                    <option key={partner.id} value={partner.id}>
-                      {partner.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => void handleUpgradeToPro()}
-              disabled={isActivatingPro}
-              className="ui-btn ui-btn-primary mt-3 w-full disabled:opacity-70"
-            >
-              {hasProAccess
-                ? "Pro is active"
-                : isActivatingPro
-                  ? "Activating Pro..."
-                  : "Buy Pro"}
-            </button>
-            {billingFeedback ? (
-              <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                {billingFeedback}
-              </p>
-            ) : null}
           </div>
         </div>
       </SurfaceCard>
