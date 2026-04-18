@@ -258,12 +258,30 @@ export default function ProfilePage() {
       ? "border-white/12 bg-gradient-to-br from-slate-900/95 to-slate-950/95 text-slate-200"
       : "border-slate-200/90 bg-gradient-to-br from-white to-slate-100/90 text-slate-700",
     glass: isDarkMode
-      ? "border-cyan-300/35 bg-gradient-to-br from-cyan-500/14 via-violet-500/14 to-fuchsia-500/14 text-cyan-100 backdrop-blur-2xl"
-      : "border-cyan-300/85 bg-gradient-to-br from-cyan-50/95 via-white to-violet-100/70 text-cyan-700 backdrop-blur-xl",
+      ? "border-cyan-300/35 bg-[linear-gradient(135deg,rgba(34,211,238,0.18),rgba(168,85,247,0.14),rgba(236,72,153,0.14))] text-cyan-100 backdrop-blur-2xl"
+      : "border-cyan-300/85 bg-[linear-gradient(135deg,rgba(224,242,254,0.98),rgba(243,244,255,0.95),rgba(250,232,255,0.94))] text-cyan-700 backdrop-blur-xl",
     neon: isDarkMode
       ? "border-fuchsia-300/55 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.24),transparent_44%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.2),transparent_42%),linear-gradient(145deg,rgba(10,10,25,0.96),rgba(45,10,64,0.95),rgba(20,20,70,0.92))] text-fuchsia-100 shadow-[0_0_0_1px_rgba(244,114,182,0.28)]"
       : "border-fuchsia-300/70 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.2),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.18),transparent_44%),linear-gradient(140deg,rgba(250,232,255,0.95),rgba(238,242,255,0.92),rgba(224,231,255,0.94))] text-fuchsia-700",
   };
+  const proStylePatternById: Record<ProProfileStyle, string> = {
+    classic: isDarkMode
+      ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.07)_0_2px,transparent_2px_12px)] opacity-70"
+      : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.14)_0_2px,transparent_2px_12px)] opacity-70",
+    glass: isDarkMode
+      ? "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.26)_0_6%,transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.18)_0_7%,transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.12),transparent)] opacity-80"
+      : "bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85)_0_6%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.75)_0_7%,transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.6),transparent)] opacity-90",
+    neon: isDarkMode
+      ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.22)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.2)_0_5px,transparent_5px_13px)] opacity-85"
+      : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.18)_0_5px,transparent_5px_13px)] opacity-80",
+  };
+
+  const proStudioSurface = isDarkMode
+    ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
+    : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]";
+  const proStudioIconWrap = isDarkMode
+    ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
+    : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
 
   const handleSelectProfileStyle = async (style: ProProfileStyle) => {
     if (!hasProAccess || selectedProfileStyle === style) {
@@ -801,20 +819,34 @@ export default function ProfilePage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="discover-toolbar-enter !p-5 sm:!p-6" style={{ animationDelay: "95ms" }}>
+      <SurfaceCard
+        className={`discover-toolbar-enter relative overflow-hidden !p-0 ${proStudioSurface}`}
+        style={{ animationDelay: "95ms" }}
+      >
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" aria-hidden />
         <button
           type="button"
           onClick={() => setIsProStudioOpen((current) => !current)}
           aria-expanded={isProStudioOpen}
-          className={`flex w-full items-center justify-between gap-3 rounded-[20px] border px-4 py-3 text-left transition ${
-            isDarkMode ? "border-white/12 bg-white/8 text-slate-100" : "border-slate-200 bg-white text-slate-800"
-          }`}
+          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition sm:px-5"
         >
-          <div className="min-w-0">
-            <p className={sectionEyebrow}>Pro studio</p>
-            <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Choose a public profile style
-            </p>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${proStudioIconWrap}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6" strokeWidth="1.75" aria-hidden>
+                <rect x="3.5" y="6.5" width="17" height="11" rx="2.5" />
+                <path d="M7.5 6.5 10 4h4l2.5 2.5" strokeLinecap="round" />
+                <path d="m10 11 5 2.8-5 2.8v-5.6Z" fill="currentColor" stroke="none" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <p className={sectionEyebrow}>Pro studio</p>
+              <p className={`mt-0.5 text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Creative profile themes
+              </p>
+              <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}>
+                Pick a style friends can instantly notice
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span
@@ -837,7 +869,7 @@ export default function ProfilePage() {
         </button>
 
         {isProStudioOpen ? (
-          <div className="mt-4 space-y-3">
+          <div className={`space-y-3 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5 ${isDarkMode ? "border-white/10" : "border-violet-200/70"}`}>
             {!hasProAccess ? (
               <div
                 className={`rounded-[16px] border px-4 py-3 text-sm ${
@@ -864,7 +896,7 @@ export default function ProfilePage() {
                         key={styleOption.id}
                         type="button"
                         onClick={() => void handleSelectProfileStyle(styleOption.id)}
-                        className={`rounded-[16px] border px-3 py-3 text-left transition ${proStylePreviewById[styleOption.id]} ${
+                        className={`relative overflow-hidden rounded-[16px] border px-3 py-3 text-left transition ${proStylePreviewById[styleOption.id]} ${
                           selected
                             ? isDarkMode
                               ? "ring-2 ring-violet-300/45"
@@ -872,14 +904,29 @@ export default function ProfilePage() {
                             : ""
                         }`}
                       >
+                        <span className={`pointer-events-none absolute inset-0 ${proStylePatternById[styleOption.id]}`} aria-hidden />
+                        <span
+                          className={`pointer-events-none absolute right-2 top-2 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                            isDarkMode ? "text-white/75" : "text-slate-700/75"
+                          }`}
+                          aria-hidden
+                        >
+                          {styleOption.id === "classic"
+                            ? "Cinema"
+                            : styleOption.id === "glass"
+                              ? "Gloss"
+                              : "Glow"}
+                        </span>
+                        <div className="relative">
                         <p className="text-sm font-bold">{styleOption.label}</p>
                         <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                           {styleOption.id === "classic"
-                            ? "Clean premium baseline"
+                            ? "Film-strip texture and clean theater feel"
                             : styleOption.id === "glass"
-                              ? "Transparent glossy layers"
-                              : "High-contrast glow theme"}
+                              ? "Glossy poster-like reflections"
+                              : "Neon marquee with vibrant motion vibe"}
                         </p>
+                        </div>
                       </button>
                     );
                   })}
