@@ -8,6 +8,8 @@ const updateSubscriptionSchema = z.object({
   adminModeSimulatePro: z.boolean().optional(),
 });
 
+type AuthMetadataLike = Record<string, unknown> | null | undefined;
+
 function isMissingOptionalSettingsColumnError(
   error: { message?: string; code?: string } | null,
   columnName: string,
@@ -21,6 +23,26 @@ function isMissingOptionalSettingsColumnError(
     (normalized.includes(columnName.toLowerCase()) &&
       (normalized.includes("column") || normalized.includes("schema cache")))
   );
+}
+
+function readSubscriptionTierFromMetadata(metadata: AuthMetadataLike): "free" | "pro" {
+  if (!metadata || typeof metadata !== "object") {
+    return "free";
+  }
+  const raw =
+    metadata.subscription_tier ??
+    metadata.subscriptionTier;
+  return raw === "pro" ? "pro" : "free";
+}
+
+function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
+  if (!metadata || typeof metadata !== "object") {
+    return false;
+  }
+  const raw =
+    metadata.admin_mode_simulate_pro ??
+    metadata.adminModeSimulatePro;
+  return raw === true;
 }
 
 export async function PATCH(
@@ -72,13 +94,44 @@ export async function PATCH(
       isMissingOptionalSettingsColumnError(updateResult.error, "subscription_tier") ||
       isMissingOptionalSettingsColumnError(updateResult.error, "admin_mode_simulate_pro")
     ) {
-      return NextResponse.json(
-        {
-          error:
-            "Subscription columns are missing in `settings` table. Run latest migration first.",
+      const authUserResult = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (authUserResult.error) {
+        return NextResponse.json(
+          {
+            error:
+              authUserResult.error.message ??
+              "Subscription columns are missing and auth metadata fallback failed.",
+          },
+          { status: 500 },
+        );
+      }
+
+      const existingMetadata = (authUserResult.data.user?.app_metadata ?? {}) as Record<string, unknown>;
+      const nextSubscriptionTier =
+        parsedBody.data.subscriptionTier ?? readSubscriptionTierFromMetadata(existingMetadata);
+      const nextAdminSimulate =
+        typeof parsedBody.data.adminModeSimulatePro === "boolean"
+          ? parsedBody.data.adminModeSimulatePro
+          : readAdminSimulateFromMetadata(existingMetadata);
+      const metadataUpdateResult = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          ...existingMetadata,
+          subscription_tier: nextSubscriptionTier,
+          admin_mode_simulate_pro: nextAdminSimulate,
         },
-        { status: 503 },
-      );
+      });
+      if (metadataUpdateResult.error) {
+        return NextResponse.json(
+          {
+            error:
+              metadataUpdateResult.error.message ??
+              "Could not persist subscription fallback metadata.",
+          },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ ok: true, usedFallback: "auth_metadata" });
     }
 
     return NextResponse.json(

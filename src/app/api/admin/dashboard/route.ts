@@ -48,6 +48,11 @@ type SupabaseErrorLike = {
   message?: string;
   code?: string;
 } | null;
+type AuthMetadataLike = Record<string, unknown> | null | undefined;
+type AuthSubscriptionFallback = {
+  subscriptionTier: "free" | "pro";
+  adminModeSimulatePro: boolean;
+};
 
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MAX = 120;
@@ -78,6 +83,26 @@ function isMissingSupportTicketsError(error: SupabaseErrorLike) {
     (normalized.includes("support_tickets") &&
       normalized.includes("schema cache"))
   );
+}
+
+function readSubscriptionTierFromMetadata(metadata: AuthMetadataLike): "free" | "pro" {
+  if (!metadata || typeof metadata !== "object") {
+    return "free";
+  }
+  const raw =
+    metadata.subscription_tier ??
+    metadata.subscriptionTier;
+  return raw === "pro" ? "pro" : "free";
+}
+
+function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
+  if (!metadata || typeof metadata !== "object") {
+    return false;
+  }
+  const raw =
+    metadata.admin_mode_simulate_pro ??
+    metadata.adminModeSimulatePro;
+  return raw === true;
 }
 
 export async function POST(request: NextRequest) {
@@ -157,6 +182,7 @@ export async function POST(request: NextRequest) {
     .from("settings")
     .select("user_id, subscription_tier, admin_mode_simulate_pro");
   let settingsRows: SettingsSubscriptionRow[] = [];
+  let authSubscriptionFallbackByUserId = new Map<string, AuthSubscriptionFallback>();
   if (settingsResult.error) {
     const settingsError = settingsResult.error as SupabaseErrorLike;
     if (
@@ -175,6 +201,33 @@ export async function POST(request: NextRequest) {
           }),
         );
       }
+
+      const profileRowsForAuthFallback = (profilesResult.data ?? []) as ProfileRow[];
+      const authSubscriptionRows = await Promise.all(
+        profileRowsForAuthFallback.map(async (profile) => {
+          const authUserResult = await supabaseAdmin.auth.admin.getUserById(profile.id);
+          if (authUserResult.error) {
+            return null;
+          }
+          const metadata = (authUserResult.data.user?.app_metadata ?? {}) as Record<string, unknown>;
+          return {
+            userId: profile.id,
+            subscriptionTier: readSubscriptionTierFromMetadata(metadata),
+            adminModeSimulatePro: readAdminSimulateFromMetadata(metadata),
+          };
+        }),
+      );
+      authSubscriptionFallbackByUserId = new Map(
+        authSubscriptionRows
+          .filter((row): row is NonNullable<typeof row> => Boolean(row))
+          .map((row) => [
+            row.userId,
+            {
+              subscriptionTier: row.subscriptionTier,
+              adminModeSimulatePro: row.adminModeSimulatePro,
+            },
+          ]),
+      );
     } else {
       return NextResponse.json({ error: settingsError?.message }, { status: 500 });
     }
@@ -271,9 +324,15 @@ export async function POST(request: NextRequest) {
         link.requester_id === profile.id || link.target_id === profile.id,
     ).length;
     const userSettings = settingsByUserId.get(profile.id);
-    const subscriptionTier =
-      userSettings?.subscription_tier === "pro" ? "pro" : "free";
-    const adminModeSimulatePro = userSettings?.admin_mode_simulate_pro ?? false;
+    const authFallback = authSubscriptionFallbackByUserId.get(profile.id);
+    const subscriptionTier = authFallback
+      ? authFallback.subscriptionTier
+      : userSettings?.subscription_tier === "pro"
+        ? "pro"
+        : "free";
+    const adminModeSimulatePro = authFallback
+      ? authFallback.adminModeSimulatePro
+      : (userSettings?.admin_mode_simulate_pro ?? false);
     const effectiveSubscriptionTier =
       adminModeSimulatePro || subscriptionTier === "pro" ? "pro" : "free";
 

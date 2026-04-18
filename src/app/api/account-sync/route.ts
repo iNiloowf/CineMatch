@@ -71,6 +71,7 @@ type MovieRow = {
   accent_to: string;
   trailer_url?: string | null;
 };
+type AuthMetadataLike = Record<string, unknown> | null | undefined;
 
 function chunk<T>(items: T[], size: number) {
   const output: T[][] = [];
@@ -98,6 +99,26 @@ function isMissingOptionalSettingsColumnError(
     (normalized.includes(columnName.toLowerCase()) &&
       (normalized.includes("column") || normalized.includes("schema cache")))
   );
+}
+
+function readSubscriptionTierFromMetadata(metadata: AuthMetadataLike): "free" | "pro" {
+  if (!metadata || typeof metadata !== "object") {
+    return "free";
+  }
+  const raw =
+    metadata.subscription_tier ??
+    metadata.subscriptionTier;
+  return raw === "pro" ? "pro" : "free";
+}
+
+function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
+  if (!metadata || typeof metadata !== "object") {
+    return false;
+  }
+  const raw =
+    metadata.admin_mode_simulate_pro ??
+    metadata.adminModeSimulatePro;
+  return raw === true;
 }
 
 async function fetchSettingsRow(
@@ -136,6 +157,11 @@ async function fetchSettingsRow(
     return { data: null, error: fullError };
   }
 
+  const authUserResult = await supabaseAdmin.auth.admin.getUserById(userId);
+  const authMetadata = (authUserResult.data?.user?.app_metadata ?? {}) as Record<string, unknown>;
+  const fallbackSubscriptionTier = readSubscriptionTierFromMetadata(authMetadata);
+  const fallbackAdminSimulate = readAdminSimulateFromMetadata(authMetadata);
+
   const fallbackResult = await supabaseAdmin
     .from("settings")
     .select(fallbackSelect)
@@ -152,8 +178,8 @@ async function fetchSettingsRow(
     data: fallbackResult.data
       ? ({
           ...(fallbackResult.data as Record<string, unknown>),
-          subscription_tier: "free",
-          admin_mode_simulate_pro: false,
+          subscription_tier: fallbackSubscriptionTier,
+          admin_mode_simulate_pro: fallbackAdminSimulate,
         } as SettingsRow)
       : null,
     error: null,
