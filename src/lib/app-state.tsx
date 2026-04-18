@@ -151,6 +151,7 @@ type SupabaseErrorLike = {
   message?: string;
   code?: string;
 } | null;
+type AuthMetadataLike = Record<string, unknown> | null | undefined;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -735,6 +736,33 @@ function isMissingOptionalSettingsColumnError(error: SupabaseErrorLike, columnNa
   );
 }
 
+function readSubscriptionTierFromMetadata(metadata: AuthMetadataLike): "free" | "pro" {
+  if (!metadata || typeof metadata !== "object") {
+    return "free";
+  }
+  const raw = metadata.subscription_tier ?? metadata.subscriptionTier;
+  return raw === "pro" ? "pro" : "free";
+}
+
+function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
+  if (!metadata || typeof metadata !== "object") {
+    return false;
+  }
+  const raw = metadata.admin_mode_simulate_pro ?? metadata.adminModeSimulatePro;
+  return raw === true;
+}
+
+async function getAuthSubscriptionFallback(
+  supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
+) {
+  const authUserResult = await supabaseClient.auth.getUser();
+  const metadata = (authUserResult.data.user?.app_metadata ?? {}) as Record<string, unknown>;
+  return {
+    subscriptionTier: readSubscriptionTierFromMetadata(metadata),
+    adminModeSimulatePro: readAdminSimulateFromMetadata(metadata),
+  };
+}
+
 async function fetchSettingsRowForSync(
   supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
   activeUserId: string,
@@ -765,13 +793,14 @@ async function fetchSettingsRowForSync(
       };
     }
 
+    const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
     return {
       data: primaryResult.data
         ? ({
             ...(primaryResult.data as Record<string, unknown>),
             reduce_motion: null,
-            subscription_tier: "free",
-            admin_mode_simulate_pro: false,
+            subscription_tier: authSubscriptionFallback.subscriptionTier,
+            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
           } as SettingsRow)
         : null,
       error: null,
@@ -804,6 +833,7 @@ async function fetchSettingsRowForSync(
     return { data: null, error: fallbackResult.error as SupabaseErrorLike };
   }
 
+  const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
   return {
     data: fallbackResult.data
       ? ({
@@ -812,8 +842,8 @@ async function fetchSettingsRowForSync(
             missingReduceMotion
               ? null
               : (fallbackResult.data as { reduce_motion?: boolean | null }).reduce_motion ?? null,
-          subscription_tier: "free",
-          admin_mode_simulate_pro: false,
+          subscription_tier: authSubscriptionFallback.subscriptionTier,
+          admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
         } as SettingsRow)
       : null,
     error: null,
