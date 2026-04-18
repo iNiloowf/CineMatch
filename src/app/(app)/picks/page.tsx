@@ -70,7 +70,6 @@ export default function PicksPage() {
   const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
   const [billingFeedback, setBillingFeedback] = useState("");
-  const premiumInsightsStorageKey = `cinematch-picks-premium-insights-hidden-${currentUserId ?? "guest"}`;
   const premiumInsightsCloseTimerRef = useRef<number | null>(null);
 
   const pendingRemoveMovie = useMemo(
@@ -332,14 +331,6 @@ export default function PicksPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const isHidden = window.localStorage.getItem(premiumInsightsStorageKey) === "1";
-    setIsPremiumInsightsClosed(isHidden);
-    setIsPremiumInsightsClosing(false);
-  }, [premiumInsightsStorageKey]);
-  useEffect(() => {
     if (!isBuyProModalOpen) {
       return;
     }
@@ -557,9 +548,6 @@ export default function PicksPage() {
     if (isPremiumInsightsClosed || isPremiumInsightsClosing) {
       return;
     }
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(premiumInsightsStorageKey, "1");
-    }
     setIsPremiumInsightsClosing(true);
     if (premiumInsightsCloseTimerRef.current) {
       window.clearTimeout(premiumInsightsCloseTimerRef.current);
@@ -569,7 +557,7 @@ export default function PicksPage() {
       setIsPremiumInsightsClosing(false);
       premiumInsightsCloseTimerRef.current = null;
     }, PREMIUM_INSIGHTS_CLOSE_MS);
-  }, [isPremiumInsightsClosed, isPremiumInsightsClosing, premiumInsightsStorageKey]);
+  }, [isPremiumInsightsClosed, isPremiumInsightsClosing]);
 
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
