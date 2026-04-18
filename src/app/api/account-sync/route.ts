@@ -72,6 +72,13 @@ type MovieRow = {
   trailer_url?: string | null;
 };
 type AuthMetadataLike = Record<string, unknown> | null | undefined;
+const DEFAULT_SETTINGS_ROW_BASE = {
+  dark_mode: false,
+  notifications: true,
+  autoplay_trailers: false,
+  hide_spoilers: true,
+  cellular_sync: true,
+} as const;
 
 function chunk<T>(items: T[], size: number) {
   const output: T[][] = [];
@@ -138,6 +145,20 @@ async function fetchSettingsRow(
 
   const fullError = fullResult.error as { message?: string; code?: string } | null;
   if (!fullError) {
+    if (!fullResult.data) {
+      const authUserResult = await supabaseAdmin.auth.admin.getUserById(userId);
+      const authMetadata = (authUserResult.data?.user?.app_metadata ?? {}) as Record<string, unknown>;
+      return {
+        data: {
+          user_id: userId,
+          ...DEFAULT_SETTINGS_ROW_BASE,
+          reduce_motion: false,
+          subscription_tier: readSubscriptionTierFromMetadata(authMetadata),
+          admin_mode_simulate_pro: readAdminSimulateFromMetadata(authMetadata),
+        } as SettingsRow,
+        error: null,
+      };
+    }
     return {
       data: (fullResult.data ?? null) as SettingsRow | null,
       error: null,
@@ -175,13 +196,19 @@ async function fetchSettingsRow(
   }
 
   return {
-    data: fallbackResult.data
+    data: (fallbackResult.data
       ? ({
           ...(fallbackResult.data as Record<string, unknown>),
           subscription_tier: fallbackSubscriptionTier,
           admin_mode_simulate_pro: fallbackAdminSimulate,
         } as SettingsRow)
-      : null,
+      : ({
+          user_id: userId,
+          ...DEFAULT_SETTINGS_ROW_BASE,
+          reduce_motion: false,
+          subscription_tier: fallbackSubscriptionTier,
+          admin_mode_simulate_pro: fallbackAdminSimulate,
+        } as SettingsRow)),
     error: null,
   };
 }

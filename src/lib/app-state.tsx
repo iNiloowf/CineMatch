@@ -152,6 +152,13 @@ type SupabaseErrorLike = {
   code?: string;
 } | null;
 type AuthMetadataLike = Record<string, unknown> | null | undefined;
+const DEFAULT_SETTINGS_ROW_BASE = {
+  dark_mode: false,
+  notifications: true,
+  autoplay_trailers: false,
+  hide_spoilers: true,
+  cellular_sync: true,
+} as const;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -787,6 +794,19 @@ async function fetchSettingsRowForSync(
   if (!primaryResult.error) {
     if (primarySelect === selectWithAllOptionalColumns) {
       settingsSupportsReduceMotion = true;
+      if (!primaryResult.data) {
+        const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
+        return {
+          data: {
+            user_id: activeUserId,
+            ...DEFAULT_SETTINGS_ROW_BASE,
+            reduce_motion: false,
+            subscription_tier: authSubscriptionFallback.subscriptionTier,
+            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
+          } as SettingsRow,
+          error: null,
+        };
+      }
       return {
         data: (primaryResult.data ?? null) as SettingsRow | null,
         error: null,
@@ -795,14 +815,20 @@ async function fetchSettingsRowForSync(
 
     const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
     return {
-      data: primaryResult.data
+      data: (primaryResult.data
         ? ({
             ...(primaryResult.data as Record<string, unknown>),
             reduce_motion: null,
             subscription_tier: authSubscriptionFallback.subscriptionTier,
             admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
           } as SettingsRow)
-        : null,
+        : ({
+            user_id: activeUserId,
+            ...DEFAULT_SETTINGS_ROW_BASE,
+            reduce_motion: false,
+            subscription_tier: authSubscriptionFallback.subscriptionTier,
+            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
+          } as SettingsRow)),
       error: null,
     };
   }
@@ -835,7 +861,7 @@ async function fetchSettingsRowForSync(
 
   const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
   return {
-    data: fallbackResult.data
+    data: (fallbackResult.data
       ? ({
           ...(fallbackResult.data as Record<string, unknown>),
           reduce_motion:
@@ -845,7 +871,13 @@ async function fetchSettingsRowForSync(
           subscription_tier: authSubscriptionFallback.subscriptionTier,
           admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
         } as SettingsRow)
-      : null,
+      : ({
+          user_id: activeUserId,
+          ...DEFAULT_SETTINGS_ROW_BASE,
+          reduce_motion: false,
+          subscription_tier: authSubscriptionFallback.subscriptionTier,
+          admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
+        } as SettingsRow)),
     error: null,
   };
 }
