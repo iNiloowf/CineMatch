@@ -1655,11 +1655,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      let payload = getStoredAccountSnapshot(activeUserId);
-
-      if (!payload) {
-        payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
+      const cachedPayload = getStoredAccountSnapshot(activeUserId);
+      if (cachedPayload) {
+        // Hydrate quickly from cache, then continue to fetch fresh account data.
+        applyHydratedAccountPayload(activeUserId, cachedPayload);
       }
+
+      let payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
 
       if (!payload) {
         try {
@@ -1676,6 +1678,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         } catch {
           payload = null;
         }
+      }
+
+      if (!payload) {
+        payload = cachedPayload;
       }
 
       if (!payload) {
