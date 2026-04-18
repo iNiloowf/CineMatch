@@ -319,7 +319,7 @@ export function MovieSwipeCard({
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
                 aria-label="Show previous title"
-                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoPrevious
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -340,7 +340,7 @@ export function MovieSwipeCard({
                 onClick={onNext}
                 disabled={!canGoNext}
                 aria-label="Show next title"
-                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoNext
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -363,7 +363,7 @@ export function MovieSwipeCard({
                 onClick={handleOpenTrailer}
                 disabled={!hasTrailer || isLoadingTrailer}
                 aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
+                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-[999px] border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
                   hasTrailer
                     ? "bg-black/24 text-white hover:bg-black/34"
                     : "cursor-not-allowed bg-black/16 text-white/55"
