@@ -849,61 +849,44 @@ export default function PicksPage() {
           </SurfaceCard>
         </div>
 
-        <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Premium pick insights
-            </p>
-            <div className="flex items-center gap-2">
-              {!hasProAccess ? (
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+        {!isPremiumInsightsClosed ? (
+          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Premium pick insights
+              </p>
+              <div className="flex items-center gap-2">
+                {!hasProAccess ? (
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                      isDarkMode
+                        ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
+                        : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
+                    }`}
+                  >
+                    Locked
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPremiumInsightsClosed(true);
+                    if (typeof window !== "undefined") {
+                      window.localStorage.setItem(premiumInsightsStorageKey, "1");
+                    }
+                  }}
+                  aria-label="Close premium insights"
+                  className={`flex h-8 w-8 items-center justify-center rounded-[10px] border text-xs font-bold ${
                     isDarkMode
-                      ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
-                      : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
+                      ? "border-white/12 bg-white/8 text-slate-300"
+                      : "border-slate-200 bg-white text-slate-500"
                   }`}
                 >
-                  Locked
-                </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPremiumInsightsClosed(true);
-                  if (typeof window !== "undefined") {
-                    window.localStorage.setItem(premiumInsightsStorageKey, "1");
-                  }
-                }}
-                aria-label="Close premium insights"
-                className={`flex h-8 w-8 items-center justify-center rounded-[10px] border text-xs font-bold ${
-                  isDarkMode
-                    ? "border-white/12 bg-white/8 text-slate-300"
-                    : "border-slate-200 bg-white text-slate-500"
-                }`}
-              >
-                ×
-              </button>
+                  ×
+                </button>
+              </div>
             </div>
-          </div>
-          {isPremiumInsightsClosed ? (
-            <div className="flex items-center justify-between gap-2">
-              <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                Premium insights hidden.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPremiumInsightsClosed(false);
-                  if (typeof window !== "undefined") {
-                    window.localStorage.removeItem(premiumInsightsStorageKey);
-                  }
-                }}
-                className="ui-btn ui-btn-secondary !min-h-0 !px-3 !py-1.5 !text-xs"
-              >
-                Show
-              </button>
-            </div>
-          ) : !hasProAccess ? (
+            {!hasProAccess ? (
             <>
               <p className={`text-xs leading-5 sm:text-sm sm:leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 Upgrade to Pro to unlock Tonight&apos;s top 3 for both of you and a live
@@ -1058,8 +1041,9 @@ export default function PicksPage() {
                 </div>
               )}
             </>
-          )}
-        </SurfaceCard>
+            )}
+          </SurfaceCard>
+        ) : null}
 
         <div className="space-y-3 sm:space-y-3.5">
           {acceptedMovies.map((movie, index) => (
@@ -1300,11 +1284,11 @@ export default function PicksPage() {
                 </p>
               ) : null}
             </div>
-            <div className="ui-shell-footer !pt-3">
+            <div className="ui-shell-footer !flex !flex-col !pt-3">
               <button
                 type="button"
                 onClick={() => setIsBuyProModalOpen(false)}
-                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                className="ui-btn ui-btn-secondary w-full"
               >
                 Cancel
               </button>
@@ -1312,7 +1296,7 @@ export default function PicksPage() {
                 type="button"
                 onClick={() => void handleOpenCheckout()}
                 disabled={isOpeningCheckout}
-                className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
+                className="ui-btn ui-btn-primary w-full disabled:opacity-70"
               >
                 {isOpeningCheckout ? "Opening checkout..." : "Continue to secure checkout"}
               </button>
