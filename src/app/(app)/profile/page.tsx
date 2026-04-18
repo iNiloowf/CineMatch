@@ -45,6 +45,7 @@ export default function ProfilePage() {
   const [mediaPreferenceDraft, setMediaPreferenceDraft] = useState<"movie" | "series" | "both">("both");
   const [isFavoriteGenresOpen, setIsFavoriteGenresOpen] = useState(false);
   const [isDislikedGenresOpen, setIsDislikedGenresOpen] = useState(false);
+  const [isProStudioOpen, setIsProStudioOpen] = useState(true);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -241,16 +242,28 @@ export default function ProfilePage() {
   const proHeaderCardStyle = hasProAccess
     ? selectedProfileStyle === "glass"
       ? isDarkMode
-        ? "ring-1 ring-violet-300/25 bg-gradient-to-br from-violet-950/55 via-slate-950/45 to-fuchsia-950/30 shadow-[0_18px_55px_rgba(109,40,217,0.28)] backdrop-blur-xl"
-        : "ring-2 ring-cyan-200/75 bg-white/70 shadow-[0_20px_52px_rgba(14,165,233,0.18)] backdrop-blur-xl"
+        ? "ring-2 ring-cyan-300/45 bg-gradient-to-br from-cyan-500/16 via-violet-500/14 to-fuchsia-500/14 shadow-[0_24px_62px_rgba(34,211,238,0.2)] backdrop-blur-2xl"
+        : "ring-2 ring-cyan-300/85 bg-gradient-to-br from-cyan-50/90 via-white to-violet-100/70 shadow-[0_22px_56px_rgba(14,165,233,0.2)] backdrop-blur-xl"
       : selectedProfileStyle === "neon"
         ? isDarkMode
-          ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-violet-950/55 to-fuchsia-950/55 shadow-[0_0_0_1px_rgba(244,114,182,0.25),0_20px_60px_rgba(168,85,247,0.35)]"
-          : "ring-2 ring-fuchsia-300/60 bg-gradient-to-br from-fuchsia-100 via-violet-100 to-indigo-100 shadow-[0_24px_60px_rgba(192,38,211,0.24)]"
+          ? "ring-2 ring-fuchsia-300/60 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.26),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.22),transparent_42%),linear-gradient(140deg,rgba(12,10,30,0.95),rgba(38,10,60,0.95),rgba(26,26,80,0.92))] shadow-[0_0_0_1px_rgba(244,114,182,0.35),0_26px_64px_rgba(192,38,211,0.34)]"
+          : "ring-2 ring-fuchsia-400/65 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.22),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.2),transparent_45%),linear-gradient(135deg,rgba(250,232,255,0.95),rgba(238,242,255,0.92),rgba(224,231,255,0.94))] shadow-[0_22px_58px_rgba(192,38,211,0.26)]"
         : isDarkMode
-          ? "ring-1 ring-white/12 bg-slate-950/80 shadow-[0_16px_44px_rgba(15,23,42,0.3)]"
-          : "ring-2 ring-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
+          ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/96 to-slate-950/95 shadow-[0_16px_44px_rgba(15,23,42,0.32)]"
+          : "ring-2 ring-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 shadow-[0_12px_28px_rgba(15,23,42,0.11)]"
     : "";
+
+  const proStylePreviewById: Record<ProProfileStyle, string> = {
+    classic: isDarkMode
+      ? "border-white/12 bg-gradient-to-br from-slate-900/95 to-slate-950/95 text-slate-200"
+      : "border-slate-200/90 bg-gradient-to-br from-white to-slate-100/90 text-slate-700",
+    glass: isDarkMode
+      ? "border-cyan-300/35 bg-gradient-to-br from-cyan-500/14 via-violet-500/14 to-fuchsia-500/14 text-cyan-100 backdrop-blur-2xl"
+      : "border-cyan-300/85 bg-gradient-to-br from-cyan-50/95 via-white to-violet-100/70 text-cyan-700 backdrop-blur-xl",
+    neon: isDarkMode
+      ? "border-fuchsia-300/55 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.24),transparent_44%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.2),transparent_42%),linear-gradient(145deg,rgba(10,10,25,0.96),rgba(45,10,64,0.95),rgba(20,20,70,0.92))] text-fuchsia-100 shadow-[0_0_0_1px_rgba(244,114,182,0.28)]"
+      : "border-fuchsia-300/70 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.2),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.18),transparent_44%),linear-gradient(140deg,rgba(250,232,255,0.95),rgba(238,242,255,0.92),rgba(224,231,255,0.94))] text-fuchsia-700",
+  };
 
   const handleSelectProfileStyle = async (style: ProProfileStyle) => {
     if (!hasProAccess || selectedProfileStyle === style) {
@@ -788,74 +801,96 @@ export default function ProfilePage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "95ms" }}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <SurfaceCard className="discover-toolbar-enter !p-5 sm:!p-6" style={{ animationDelay: "95ms" }}>
+        <button
+          type="button"
+          onClick={() => setIsProStudioOpen((current) => !current)}
+          aria-expanded={isProStudioOpen}
+          className={`flex w-full items-center justify-between gap-3 rounded-[20px] border px-4 py-3 text-left transition ${
+            isDarkMode ? "border-white/12 bg-white/8 text-slate-100" : "border-slate-200 bg-white text-slate-800"
+          }`}
+        >
+          <div className="min-w-0">
             <p className={sectionEyebrow}>Pro studio</p>
             <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               Choose a public profile style
             </p>
           </div>
-          <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
-              hasProAccess
-                ? isDarkMode
-                  ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/30"
-                  : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
-                : isDarkMode
-                  ? "bg-white/10 text-slate-300 ring-1 ring-white/12"
-                  : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/90"
-            }`}
-          >
-            {hasProAccess ? "Pro active" : "Pro required"}
-          </span>
-        </div>
-
-        {!hasProAccess ? (
-          <div
-            className={`rounded-[16px] border px-4 py-3 text-sm ${
-              isDarkMode
-                ? "border-amber-400/30 bg-amber-500/10 text-amber-100"
-                : "border-amber-200 bg-amber-50 text-amber-800"
-            }`}
-          >
-            Unlock this section with Pro to apply public profile styles visible to friends.
-            <Link href="/settings" className="ml-2 font-semibold underline underline-offset-2">
-              Open subscription settings
-            </Link>
+          <div className="flex items-center gap-2">
+            <span
+              className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
+                hasProAccess
+                  ? isDarkMode
+                    ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/30"
+                    : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
+                  : isDarkMode
+                    ? "bg-white/10 text-slate-300 ring-1 ring-white/12"
+                    : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/90"
+              }`}
+            >
+              {hasProAccess ? "Pro active" : "Pro required"}
+            </span>
+            <span className={`text-base ${isDarkMode ? "text-slate-300" : "text-slate-500"}`} aria-hidden>
+              {isProStudioOpen ? "−" : "+"}
+            </span>
           </div>
-        ) : (
-          <>
-            <div className="space-y-2">
-              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Profile style
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {profileStyleOptions.map((styleOption) => (
-                  <button
-                    key={styleOption.id}
-                    type="button"
-                    onClick={() => void handleSelectProfileStyle(styleOption.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold transition ${
-                      selectedProfileStyle === styleOption.id
-                        ? "ui-btn ui-btn-primary !min-h-0"
-                        : "ui-btn ui-btn-secondary !min-h-0"
-                    }`}
-                  >
-                    {styleOption.label}
-                  </button>
-                ))}
-              </div>
-              <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Friends see this style on your profile card.
-              </p>
-            </div>
-          </>
-        )}
-      </SurfaceCard>
+        </button>
 
-      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
-        <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
+        {isProStudioOpen ? (
+          <div className="mt-4 space-y-3">
+            {!hasProAccess ? (
+              <div
+                className={`rounded-[16px] border px-4 py-3 text-sm ${
+                  isDarkMode
+                    ? "border-amber-400/30 bg-amber-500/10 text-amber-100"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
+                }`}
+              >
+                Unlock this section with Pro to apply public profile styles visible to friends.
+                <Link href="/settings" className="ml-2 font-semibold underline underline-offset-2">
+                  Open subscription settings
+                </Link>
+              </div>
+            ) : (
+              <>
+                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Profile style
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {profileStyleOptions.map((styleOption) => {
+                    const selected = selectedProfileStyle === styleOption.id;
+                    return (
+                      <button
+                        key={styleOption.id}
+                        type="button"
+                        onClick={() => void handleSelectProfileStyle(styleOption.id)}
+                        className={`rounded-[16px] border px-3 py-3 text-left transition ${proStylePreviewById[styleOption.id]} ${
+                          selected
+                            ? isDarkMode
+                              ? "ring-2 ring-violet-300/45"
+                              : "ring-2 ring-violet-400/55"
+                            : ""
+                        }`}
+                      >
+                        <p className="text-sm font-bold">{styleOption.label}</p>
+                        <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                          {styleOption.id === "classic"
+                            ? "Clean premium baseline"
+                            : styleOption.id === "glass"
+                              ? "Transparent glossy layers"
+                              : "High-contrast glow theme"}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Friends see this style on your profile card.
+                </p>
+              </>
+            )}
+          </div>
+        ) : null}
       </SurfaceCard>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
@@ -891,6 +926,10 @@ export default function ProfilePage() {
           </Link>
         ))}
       </div>
+
+      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
+        <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
+      </SurfaceCard>
     </div>
   );
 }
