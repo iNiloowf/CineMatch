@@ -110,7 +110,7 @@ export default function FriendProfilePage() {
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
-  const partnerProfileStyle = partner.profileStyle ?? "classic";
+  const partnerProfileStyle = partner?.profileStyle ?? "classic";
   const friendHeaderStyleClass =
     partnerProfileStyle === "glass"
       ? isDarkMode
