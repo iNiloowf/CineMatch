@@ -319,7 +319,7 @@ export function MovieSwipeCard({
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
                 aria-label="Show previous title"
-                className={`-ml-1 flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoPrevious
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -340,7 +340,7 @@ export function MovieSwipeCard({
                 onClick={onNext}
                 disabled={!canGoNext}
                 aria-label="Show next title"
-                className={`-mr-1 flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
                   canGoNext
                     ? "opacity-100 hover:bg-black/32 active:scale-95"
                     : "cursor-not-allowed opacity-35"
