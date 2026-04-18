@@ -733,9 +733,9 @@ export default function PicksPage() {
           </SurfaceCard>
         </div>
 
-        <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
-          <div className="flex items-center justify-between gap-2">
-            <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <SurfaceCard className="fade-up-enter space-y-3.5" style={{ animationDelay: "130ms" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className={`text-sm font-semibold sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               Premium pick insights
             </p>
             {!hasProAccess ? (
@@ -756,14 +756,11 @@ export default function PicksPage() {
                 isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/90"
               }`}
             >
-              <p className={`text-sm ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 Upgrade to Pro to unlock Tonight&apos;s top 3 for both of you and a live
                 taste overlap score with your partner.
               </p>
-              <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                You can test Pro from Settings with the admin simulation toggle.
-              </p>
-              <Link href="/settings" className="ui-btn ui-btn-primary mt-3">
+              <Link href="/settings" className="ui-btn ui-btn-primary mt-3 w-full sm:w-auto">
                 Buy Pro
               </Link>
             </div>
@@ -784,7 +781,7 @@ export default function PicksPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     <div
                       className={`rounded-[14px] border px-3 py-3 ${
                         isDarkMode
@@ -800,7 +797,7 @@ export default function PicksPage() {
                         Taste overlap
                       </p>
                       <p
-                        className={`mt-1 text-lg font-semibold ${
+                        className={`mt-1 text-xl font-semibold ${
                           isDarkMode ? "text-white" : "text-slate-900"
                         }`}
                       >
@@ -829,7 +826,7 @@ export default function PicksPage() {
                         Both liked
                       </p>
                       <p
-                        className={`mt-1 text-lg font-semibold ${
+                        className={`mt-1 text-xl font-semibold ${
                           isDarkMode ? "text-white" : "text-slate-900"
                         }`}
                       >
@@ -858,7 +855,7 @@ export default function PicksPage() {
                         Genre overlap
                       </p>
                       <p
-                        className={`mt-1 text-lg font-semibold ${
+                        className={`mt-1 text-xl font-semibold ${
                           isDarkMode ? "text-white" : "text-slate-900"
                         }`}
                       >
