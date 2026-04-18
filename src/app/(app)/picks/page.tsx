@@ -779,68 +779,50 @@ export default function PicksPage() {
             </div>
           </div>
           {isPremiumInsightsClosed ? (
-            <div
-              className={`rounded-[14px] border px-3 py-3 ${
-                isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/90"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                  Premium insights hidden.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPremiumInsightsClosed(false);
-                    if (typeof window !== "undefined") {
-                      window.localStorage.removeItem(premiumInsightsStorageKey);
-                    }
-                  }}
-                  className="ui-btn ui-btn-secondary !min-h-0 !px-3 !py-1.5 !text-xs"
-                >
-                  Show
-                </button>
-              </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                Premium insights hidden.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPremiumInsightsClosed(false);
+                  if (typeof window !== "undefined") {
+                    window.localStorage.removeItem(premiumInsightsStorageKey);
+                  }
+                }}
+                className="ui-btn ui-btn-secondary !min-h-0 !px-3 !py-1.5 !text-xs"
+              >
+                Show
+              </button>
             </div>
           ) : !hasProAccess ? (
-            <div
-              className={`rounded-[18px] border px-4 py-4 ${
-                isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/90"
-              }`}
-            >
+            <>
               <p className={`text-xs leading-5 sm:text-sm sm:leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 Upgrade to Pro to unlock Tonight&apos;s top 3 for both of you and a live
                 taste overlap score with your partner.
               </p>
-              <Link href="/settings" className="ui-btn ui-btn-primary mt-3 w-full sm:w-auto">
+              <Link href="/settings" className="ui-btn ui-btn-primary w-full sm:w-auto">
                 Buy Pro
               </Link>
-            </div>
+            </>
           ) : (
             <>
               {!primaryPartner ? (
-                <div
-                  className={`rounded-[18px] border px-4 py-4 ${
-                    isDarkMode
-                      ? "border-white/12 bg-white/[0.04]"
-                      : "border-slate-200/90 bg-slate-50/90"
-                  }`}
-                >
-                  <p className={`text-sm ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                    Connect with at least one accepted partner to unlock shared top picks
-                    and taste overlap.
-                  </p>
-                </div>
+                <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  Connect with at least one accepted partner to unlock shared top picks
+                  and taste overlap.
+                </p>
               ) : (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    <div
-                      className={`rounded-[14px] border px-3 py-3 ${
-                        isDarkMode
-                          ? "border-white/12 bg-white/[0.05]"
-                          : "border-slate-200/90 bg-slate-50/90"
-                      }`}
-                    >
+                  <div
+                    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${
+                      isDarkMode
+                        ? "rounded-[14px] bg-white/[0.04] divide-y divide-white/8 sm:divide-y-0 sm:divide-x sm:divide-white/8 lg:divide-x"
+                        : "rounded-[14px] bg-slate-50/90 divide-y divide-slate-200/80 sm:divide-y-0 sm:divide-x sm:divide-slate-200/80 lg:divide-x"
+                    }`}
+                  >
+                    <div className="px-3 py-3">
                       <p
                         className={`text-[11px] uppercase tracking-wide ${
                           isDarkMode ? "text-slate-400" : "text-slate-500"
@@ -863,13 +845,7 @@ export default function PicksPage() {
                         {tasteOverlap?.label ?? "N/A"} with {primaryPartner.name}
                       </p>
                     </div>
-                    <div
-                      className={`rounded-[14px] border px-3 py-3 ${
-                        isDarkMode
-                          ? "border-white/12 bg-white/[0.05]"
-                          : "border-slate-200/90 bg-slate-50/90"
-                      }`}
-                    >
+                    <div className="px-3 py-3">
                       <p
                         className={`text-[11px] uppercase tracking-wide ${
                           isDarkMode ? "text-slate-400" : "text-slate-500"
@@ -892,13 +868,7 @@ export default function PicksPage() {
                         One liked, one not: {tasteOverlap?.oneLikeOneNotCount ?? 0}
                       </p>
                     </div>
-                    <div
-                      className={`rounded-[14px] border px-3 py-3 ${
-                        isDarkMode
-                          ? "border-white/12 bg-white/[0.05]"
-                          : "border-slate-200/90 bg-slate-50/90"
-                      }`}
-                    >
+                    <div className="px-3 py-3">
                       <p
                         className={`text-[11px] uppercase tracking-wide ${
                           isDarkMode ? "text-slate-400" : "text-slate-500"
@@ -923,61 +893,53 @@ export default function PicksPage() {
                     </div>
                   </div>
 
-                  <div
-                    className={`rounded-[18px] border px-4 py-4 ${
-                      isDarkMode
-                        ? "border-white/12 bg-white/[0.04]"
-                        : "border-slate-200/90 bg-slate-50/90"
-                    }`}
-                  >
-                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      {isFridayNight
-                        ? "Tonight’s top 3 for both of you"
-                        : "This week’s top 3 for both of you"}
-                    </p>
-                    <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Ranked for you and {primaryPartner.name} using both accepted titles,
-                      genre overlap, and what only one of you has liked.
-                    </p>
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    {isFridayNight
+                      ? "Tonight’s top 3 for both of you"
+                      : "This week’s top 3 for both of you"}
+                  </p>
+                  <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Ranked for you and {primaryPartner.name} using both accepted titles,
+                    genre overlap, and what only one of you has liked.
+                  </p>
 
-                    <div className="mt-3 space-y-2">
-                      {weeklyTopSharedPicks.length === 0 ? (
-                        <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          Keep swiping. We need a bit more signal to generate your shared top 3.
-                        </p>
-                      ) : (
-                        weeklyTopSharedPicks.map((pick, index) => (
-                          <div
-                            key={pick.movieId}
-                            className={`rounded-xl border px-3 py-3 ${
+                  <div className="space-y-0">
+                    {weeklyTopSharedPicks.length === 0 ? (
+                      <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                        Keep swiping. We need a bit more signal to generate your shared top 3.
+                      </p>
+                    ) : (
+                      weeklyTopSharedPicks.map((pick, index) => (
+                        <div
+                          key={pick.movieId}
+                          className={`flex items-start justify-between gap-3 py-2 ${
+                            index > 0
+                              ? isDarkMode
+                                ? "border-t border-white/10"
+                                : "border-t border-slate-200/80"
+                              : ""
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                              {index + 1}. {pick.title} ({pick.year})
+                            </p>
+                            <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                              {pick.reasons.join(" • ")}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
                               isDarkMode
-                                ? "border-white/10 bg-slate-900/60"
-                                : "border-slate-200/90 bg-white"
+                                ? "bg-violet-500/16 text-violet-100"
+                                : "bg-violet-100 text-violet-700"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                                  {index + 1}. {pick.title} ({pick.year})
-                                </p>
-                                <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                                  {pick.reasons.join(" • ")}
-                                </p>
-                              </div>
-                              <span
-                                className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ${
-                                  isDarkMode
-                                    ? "bg-violet-500/16 text-violet-100"
-                                    : "bg-violet-100 text-violet-700"
-                                }`}
-                              >
-                                {pick.score}%
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+                            {pick.score}%
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
