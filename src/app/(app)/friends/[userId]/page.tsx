@@ -123,6 +123,18 @@ export default function FriendProfilePage() {
         : isDarkMode
           ? "border-b border-white/10 bg-slate-950"
           : "border-b border-slate-200/90 bg-white";
+  const friendHeaderPatternClass =
+    partnerProfileStyle === "glass"
+      ? isDarkMode
+        ? "bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.24)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.14)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-85"
+        : "bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.86)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.75)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.6),transparent)] opacity-90"
+      : partnerProfileStyle === "neon"
+        ? isDarkMode
+          ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.18)_0_5px,transparent_5px_13px)] opacity-85"
+          : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.18)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.16)_0_5px,transparent_5px_13px)] opacity-80"
+        : isDarkMode
+          ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
+          : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65";
 
   const handleAddPick = async (movieId: string) => {
     if (!currentUserId) {
@@ -262,6 +274,7 @@ export default function FriendProfilePage() {
         <div
           className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${friendHeaderStyleClass}`}
         >
+          <span className={`pointer-events-none absolute inset-0 ${friendHeaderPatternClass}`} aria-hidden />
           <div className="profile-avatar-pop relative shrink-0">
             <div
               className={`rounded-full p-0.5 ${isDarkMode ? "bg-gradient-to-br from-violet-400/50 to-fuchsia-500/30" : "bg-gradient-to-br from-violet-400 to-fuchsia-400"}`}
@@ -274,7 +287,7 @@ export default function FriendProfilePage() {
               />
             </div>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="relative min-w-0 flex-1">
             <p className={sectionEyebrow}>Linked friend</p>
             <p
               className={`mt-1 truncate text-lg font-bold sm:text-xl ${

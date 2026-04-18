@@ -252,6 +252,19 @@ export default function ProfilePage() {
           ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/96 to-slate-950/95 shadow-[0_16px_44px_rgba(15,23,42,0.32)]"
           : "ring-2 ring-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 shadow-[0_12px_28px_rgba(15,23,42,0.11)]"
     : "";
+  const proHeaderPatternClass = hasProAccess
+    ? selectedProfileStyle === "glass"
+      ? isDarkMode
+        ? "bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.22)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.14)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-85"
+        : "bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.75)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.6),transparent)] opacity-90"
+      : selectedProfileStyle === "neon"
+        ? isDarkMode
+          ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.18)_0_5px,transparent_5px_13px)] opacity-85"
+          : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.18)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.16)_0_5px,transparent_5px_13px)] opacity-80"
+        : isDarkMode
+          ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
+          : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65"
+    : "";
 
   const proStylePreviewById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -481,10 +494,13 @@ export default function ProfilePage() {
       />
 
       <SurfaceCard
-        className={`fade-up-enter discover-toolbar-enter space-y-6 !p-5 sm:!p-6 ${proHeaderCardStyle}`}
+        className={`fade-up-enter discover-toolbar-enter relative overflow-hidden space-y-6 !p-5 sm:!p-6 ${proHeaderCardStyle}`}
         style={{ animationDelay: "0ms" }}
       >
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        {hasProAccess ? (
+          <span className={`pointer-events-none absolute inset-0 ${proHeaderPatternClass}`} aria-hidden />
+        ) : null}
+        <form className="relative z-10 space-y-5" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               <div className="profile-avatar-pop relative shrink-0">
@@ -850,7 +866,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center gap-2">
             <span
-              className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
+              className={`rounded-full whitespace-nowrap px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
                 hasProAccess
                   ? isDarkMode
                     ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/30"
