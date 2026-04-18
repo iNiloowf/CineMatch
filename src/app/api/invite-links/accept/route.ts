@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 
   const inviterProfileResult = await supabaseAdmin
     .from("profiles")
-    .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+    .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
     .eq("id", invite.inviter_id)
     .maybeSingle();
 

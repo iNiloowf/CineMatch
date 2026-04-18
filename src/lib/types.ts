@@ -24,7 +24,16 @@ export type User = {
   avatarImageUrl?: string;
   bio: string;
   city: string;
+  /** Public visual style used on profile cards. */
+  profileStyle?: ProProfileStyle;
 };
+
+export type ProProfileStyle =
+  | "classic"
+  | "glass"
+  | "neon"
+  | "spotlight"
+  | "minimal";
 
 export type AuthUser = User & {
   password: string;

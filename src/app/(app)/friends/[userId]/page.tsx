@@ -110,6 +110,27 @@ export default function FriendProfilePage() {
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
+  const partnerProfileStyle = partner.profileStyle ?? "classic";
+  const friendHeaderStyleClass =
+    partnerProfileStyle === "glass"
+      ? isDarkMode
+        ? "border-b border-white/10 bg-gradient-to-br from-violet-950/50 via-slate-950/40 to-fuchsia-950/20 backdrop-blur-xl"
+        : "border-b border-violet-100/90 bg-gradient-to-br from-violet-50/95 via-white to-sky-50/40 backdrop-blur-xl"
+      : partnerProfileStyle === "neon"
+        ? isDarkMode
+          ? "border-b border-fuchsia-300/25 bg-gradient-to-br from-slate-950 via-violet-950/60 to-fuchsia-950/45"
+          : "border-b border-fuchsia-200/70 bg-gradient-to-br from-fuchsia-50 via-white to-violet-100"
+        : partnerProfileStyle === "spotlight"
+          ? isDarkMode
+            ? "border-b border-amber-300/25 bg-gradient-to-br from-amber-950/30 via-slate-950/55 to-violet-950/40"
+            : "border-b border-amber-200/85 bg-gradient-to-br from-amber-50 via-white to-violet-100/80"
+          : partnerProfileStyle === "minimal"
+            ? isDarkMode
+              ? "border-b border-white/10 bg-slate-950"
+              : "border-b border-slate-200/90 bg-white"
+            : isDarkMode
+              ? "border-b border-white/10 bg-gradient-to-br from-violet-950/50 via-slate-950/40 to-fuchsia-950/20"
+              : "border-b border-violet-100/90 bg-gradient-to-br from-violet-50/95 via-white to-sky-50/40";
 
   const handleAddPick = async (movieId: string) => {
     if (!currentUserId) {
@@ -247,11 +268,7 @@ export default function FriendProfilePage() {
         style={{ animationDelay: "80ms" }}
       >
         <div
-          className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${
-            isDarkMode
-              ? "border-b border-white/10 bg-gradient-to-br from-violet-950/50 via-slate-950/40 to-fuchsia-950/20"
-              : "border-b border-violet-100/90 bg-gradient-to-br from-violet-50/95 via-white to-sky-50/40"
-          }`}
+          className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${friendHeaderStyleClass}`}
         >
           <div className="profile-avatar-pop relative shrink-0">
             <div

@@ -11,6 +11,7 @@ type ProfileRow = {
   avatar_image_url?: string | null;
   bio: string;
   city: string;
+  profile_style?: "classic" | "glass" | "neon" | "spotlight" | "minimal" | null;
 };
 
 type SettingsRow = {
@@ -202,7 +203,7 @@ export async function GET(request: NextRequest) {
     await Promise.all([
       supabaseAdmin
         .from("profiles")
-        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
         .eq("id", currentUserId)
         .maybeSingle(),
       supabaseAdmin
@@ -231,7 +232,7 @@ export async function GET(request: NextRequest) {
       partnerIds.length > 0
         ? supabaseAdmin
             .from("profiles")
-            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
             .in("id", partnerIds)
         : Promise.resolve({ data: [] as ProfileRow[] }),
       supabaseAdmin

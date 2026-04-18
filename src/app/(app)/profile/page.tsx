@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
+import type { ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
@@ -26,8 +27,6 @@ export default function ProfilePage() {
     isDarkMode,
     isReady,
     hasProAccess,
-    proCustomization,
-    updateProCustomization,
   } = useAppState();
 
   const earnedBadges = useMemo(
@@ -73,12 +72,26 @@ export default function ProfilePage() {
   }, [saveFeedback]);
 
   useEffect(() => {
-    setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
-    setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
-    setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
-    setIsFavoriteGenresOpen(false);
-    setIsDislikedGenresOpen(false);
+    queueMicrotask(() => {
+      setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
+      setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
+      setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
+      setIsFavoriteGenresOpen(false);
+      setIsDislikedGenresOpen(false);
+    });
   }, [onboardingPreferences]);
+
+  const profileGenres = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data.movies.flatMap((movie) =>
+            movie.genre.filter((genre) => genre !== "Movie" && genre !== "Series"),
+          ),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [data.movies],
+  );
 
   if (!isReady) {
     return (
@@ -202,18 +215,6 @@ export default function ProfilePage() {
     setSaveMessage("Profile saved.");
   };
 
-  const profileGenres = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          data.movies.flatMap((movie) =>
-            movie.genre.filter((genre) => genre !== "Movie" && genre !== "Series"),
-          ),
-        ),
-      ).sort((left, right) => left.localeCompare(right)),
-    [data.movies],
-  );
-
   const statShell = isDarkMode
     ? "border border-white/12 bg-white/8"
     : "border border-slate-200/80 bg-slate-50/95 shadow-sm";
@@ -230,37 +231,57 @@ export default function ProfilePage() {
   const actionGradientHover = "hover:shadow-[0_20px_48px_rgba(147,51,234,0.42)] hover:brightness-[1.04]";
   const actionRing = isDarkMode ? "ring-2 ring-fuchsia-300/30" : "ring-2 ring-violet-400/55";
 
-  const premiumBadgeOptions = [
-    { id: "diamond", label: "Diamond" },
-    { id: "crown", label: "Crown" },
-    { id: "star", label: "Star" },
-  ] as const;
-  const themePackOptions = [
-    { id: "default", label: "Default" },
-    { id: "aurora", label: "Aurora" },
-    { id: "midnight", label: "Midnight" },
-    { id: "sunset", label: "Sunset" },
-  ] as const;
   const profileStyleOptions = [
     { id: "classic", label: "Classic" },
     { id: "glass", label: "Glass" },
     { id: "neon", label: "Neon" },
+    { id: "spotlight", label: "Spotlight" },
+    { id: "minimal", label: "Minimal" },
   ] as const;
-
-  const premiumBadgeLabel = premiumBadgeOptions.find(
-    (badge) => badge.id === proCustomization.premiumBadge,
-  )?.label;
+  const selectedProfileStyle: ProProfileStyle =
+    currentUser.profileStyle ?? "classic";
   const proHeaderCardStyle = hasProAccess
-    ? proCustomization.profileStyle === "glass"
+    ? selectedProfileStyle === "glass"
       ? isDarkMode
         ? "ring-1 ring-violet-300/25 bg-gradient-to-br from-violet-950/55 via-slate-950/45 to-fuchsia-950/30 shadow-[0_18px_55px_rgba(109,40,217,0.28)] backdrop-blur-xl"
         : "ring-1 ring-violet-300/35 bg-gradient-to-br from-violet-100/90 via-white/90 to-fuchsia-100/70 shadow-[0_20px_60px_rgba(124,58,237,0.2)] backdrop-blur-xl"
-      : proCustomization.profileStyle === "neon"
+      : selectedProfileStyle === "neon"
         ? isDarkMode
           ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-violet-950/55 to-fuchsia-950/55 shadow-[0_0_0_1px_rgba(244,114,182,0.25),0_20px_60px_rgba(168,85,247,0.35)]"
           : "ring-1 ring-fuchsia-300/45 bg-gradient-to-br from-fuchsia-100 via-white to-violet-100 shadow-[0_0_0_1px_rgba(244,114,182,0.2),0_20px_58px_rgba(217,70,239,0.2)]"
+        : selectedProfileStyle === "spotlight"
+          ? isDarkMode
+            ? "ring-1 ring-amber-300/40 bg-gradient-to-br from-amber-950/45 via-slate-950/60 to-violet-950/45 shadow-[0_0_0_1px_rgba(252,211,77,0.2),0_18px_52px_rgba(217,119,6,0.26)]"
+            : "ring-1 ring-amber-300/45 bg-gradient-to-br from-amber-100 via-white to-violet-100 shadow-[0_0_0_1px_rgba(251,191,36,0.2),0_18px_52px_rgba(245,158,11,0.2)]"
+          : selectedProfileStyle === "minimal"
+            ? isDarkMode
+              ? "ring-1 ring-white/12 bg-slate-950/80 shadow-[0_16px_44px_rgba(15,23,42,0.3)]"
+              : "ring-1 ring-slate-200/95 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
         : ""
     : "";
+
+  const handleSelectProfileStyle = async (style: ProProfileStyle) => {
+    if (!hasProAccess || selectedProfileStyle === style) {
+      return;
+    }
+
+    setSaveFeedback("saving");
+    const result = await updateProfile({
+      name: currentUser.name,
+      bio: currentUser.bio,
+      city: currentUser.city,
+      profileStyle: style,
+    });
+
+    if (!result.ok) {
+      setSaveFeedback("error");
+      setSaveMessage(result.message ?? "Couldn’t apply profile style right now.");
+      return;
+    }
+
+    setSaveFeedback("saved");
+    setSaveMessage("Profile style updated.");
+  };
 
   const shortcutTiles = [
     {
@@ -466,7 +487,7 @@ export default function ProfilePage() {
                           : "border border-amber-300 bg-amber-100 text-amber-800"
                       }`}
                     >
-                      PRO {premiumBadgeLabel ? `• ${premiumBadgeLabel}` : ""}
+                      PRO
                     </span>
                   ) : null}
                 </div>
@@ -780,7 +801,7 @@ export default function ProfilePage() {
           <div>
             <p className={sectionEyebrow}>Pro studio</p>
             <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Premium badges/theme packs and exclusive profile styles
+              Choose a public profile style
             </p>
           </div>
           <span
@@ -806,57 +827,13 @@ export default function ProfilePage() {
                 : "border-amber-200 bg-amber-50 text-amber-800"
             }`}
           >
-            Unlock this section with Pro to apply premium badges, theme packs, and profile styles.
+            Unlock this section with Pro to apply public profile styles visible to friends.
             <Link href="/settings" className="ml-2 font-semibold underline underline-offset-2">
               Open subscription settings
             </Link>
           </div>
         ) : (
           <>
-            <div className="space-y-2">
-              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Premium badge
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {premiumBadgeOptions.map((badge) => (
-                  <button
-                    key={badge.id}
-                    type="button"
-                    onClick={() => updateProCustomization({ premiumBadge: badge.id })}
-                    className={`px-3 py-1.5 text-xs font-semibold transition ${
-                      proCustomization.premiumBadge === badge.id
-                        ? "ui-btn ui-btn-primary !min-h-0"
-                        : "ui-btn ui-btn-secondary !min-h-0"
-                    }`}
-                  >
-                    {badge.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Theme pack
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {themePackOptions.map((themePack) => (
-                  <button
-                    key={themePack.id}
-                    type="button"
-                    onClick={() => updateProCustomization({ themePack: themePack.id })}
-                    className={`px-3 py-1.5 text-xs font-semibold transition ${
-                      proCustomization.themePack === themePack.id
-                        ? "ui-btn ui-btn-primary !min-h-0"
-                        : "ui-btn ui-btn-secondary !min-h-0"
-                    }`}
-                  >
-                    {themePack.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="space-y-2">
               <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 Profile style
@@ -866,9 +843,9 @@ export default function ProfilePage() {
                   <button
                     key={styleOption.id}
                     type="button"
-                    onClick={() => updateProCustomization({ profileStyle: styleOption.id })}
+                    onClick={() => void handleSelectProfileStyle(styleOption.id)}
                     className={`px-3 py-1.5 text-xs font-semibold transition ${
-                      proCustomization.profileStyle === styleOption.id
+                      selectedProfileStyle === styleOption.id
                         ? "ui-btn ui-btn-primary !min-h-0"
                         : "ui-btn ui-btn-secondary !min-h-0"
                     }`}
@@ -877,6 +854,9 @@ export default function ProfilePage() {
                   </button>
                 ))}
               </div>
+              <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Friends see this style on your profile card.
+              </p>
             </div>
           </>
         )}

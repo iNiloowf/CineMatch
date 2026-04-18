@@ -739,7 +739,7 @@ export default function SettingsPage() {
                   : "border-slate-200 bg-white text-slate-600"
             }`}
           >
-            Premium badges/theme packs and exclusive profile styles are available in Profile.
+            Pro users can choose public profile styles from Profile.
             <Link href="/profile" className="ml-1 font-semibold underline underline-offset-2">
               Open Pro Studio
             </Link>

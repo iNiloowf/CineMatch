@@ -31,6 +31,7 @@ import {
   Movie,
   OnboardingPreferences,
   ProfileSettings,
+  ProProfileStyle,
   SharedMovieGroup,
   SharedMovieView,
   SwipeDecision,
@@ -86,6 +87,7 @@ type ProfileRow = {
   avatar_image_url?: string | null;
   bio: string;
   city: string;
+  profile_style?: ProProfileStyle | null;
 };
 
 type SettingsRow = {
@@ -177,7 +179,6 @@ type AccountSyncPayload = {
 
 type SubscriptionTier = "free" | "pro";
 type ProThemePack = "default" | "aurora" | "midnight" | "sunset";
-type ProProfileStyle = "classic" | "glass" | "neon";
 type PremiumBadge = "diamond" | "crown" | "star";
 type ProCustomization = {
   themePack: ProThemePack;
@@ -247,6 +248,7 @@ type AppStateContextValue = {
     city: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
+    profileStyle?: ProProfileStyle;
     /** When true, clears stored profile photo (ignored if `avatarFile` is set). */
     clearAvatar?: boolean;
   }) => Promise<{ ok: boolean; message?: string }>;
@@ -319,6 +321,7 @@ function ensureLocalUser(
     avatarImageUrl?: string;
     bio?: string;
     city?: string;
+    profileStyle?: ProProfileStyle;
   },
 ) {
   const existingUser = current.users.find((user) => user.id === payload.id);
@@ -336,6 +339,7 @@ function ensureLocalUser(
               avatarImageUrl: payload.avatarImageUrl ?? user.avatarImageUrl,
               bio: payload.bio ?? user.bio,
               city: payload.city ?? user.city,
+              profileStyle: payload.profileStyle ?? user.profileStyle,
             }
           : user,
       ),
@@ -352,6 +356,7 @@ function ensureLocalUser(
     bio:
       payload.bio ?? "New to CineMatch and building the perfect watchlist.",
     city: payload.city ?? "Set your city",
+    profileStyle: payload.profileStyle ?? "classic",
   };
 
   return {
@@ -548,7 +553,10 @@ function getStoredProCustomization(userId: string): ProCustomization {
           ? parsed.themePack
           : "default",
       profileStyle:
-        parsed.profileStyle === "glass" || parsed.profileStyle === "neon"
+        parsed.profileStyle === "glass" ||
+        parsed.profileStyle === "neon" ||
+        parsed.profileStyle === "spotlight" ||
+        parsed.profileStyle === "minimal"
           ? parsed.profileStyle
           : "classic",
       premiumBadge:
@@ -1081,13 +1089,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!currentUserId) {
-      setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
-      setProCustomization({ ...DEFAULT_PRO_CUSTOMIZATION });
+      queueMicrotask(() => {
+        setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
+        setProCustomization({ ...DEFAULT_PRO_CUSTOMIZATION });
+      });
       return;
     }
 
-    setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
-    setProCustomization(getStoredProCustomization(currentUserId));
+    queueMicrotask(() => {
+      setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
+      setProCustomization(getStoredProCustomization(currentUserId));
+    });
   }, [currentUserId]);
 
   const applyHydratedAccountPayload = (
@@ -1128,6 +1140,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           avatarImageUrl: profile.avatar_image_url ?? undefined,
           bio: profile.bio,
           city: profile.city,
+          profileStyle: profile.profile_style ?? "classic",
         });
       }
 
@@ -1193,7 +1206,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   ): Promise<AccountSyncPayload | null> => {
     const profileResult = await supabaseClient
       .from("profiles")
-      .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+      .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
       .eq("id", activeUserId)
       .maybeSingle();
 
@@ -1232,7 +1245,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       partnerIds.length > 0
         ? supabaseClient
             .from("profiles")
-            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city")
+            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
             .in("id", partnerIds)
         : Promise.resolve({
             data: [] as ProfileRow[],
@@ -1876,6 +1889,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             avatarImageUrl: partner.avatarImageUrl,
             bio: partner.bio,
             city: partner.city,
+            profileStyle: partner.profileStyle,
           };
 
           const partnerAccepted = new Set(
@@ -1931,6 +1945,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               avatarImageUrl: partner.avatarImageUrl,
               bio: partner.bio,
               city: partner.city,
+              profileStyle: partner.profileStyle,
             };
 
             return {
@@ -2819,6 +2834,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             avatarImageUrl: partnerProfile?.avatar_image_url ?? undefined,
             bio: partnerProfile?.bio ?? "Connected on CineMatch.",
             city: partnerProfile?.city ?? "",
+            profileStyle: partnerProfile?.profile_style ?? "classic",
           }),
           links: [
             ...current.links.filter((link) => link.id !== acceptedLink.id),
@@ -3020,6 +3036,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city,
     avatarImageUrl,
     avatarFile,
+    profileStyle,
     clearAvatar,
   }: {
     name: string;
@@ -3027,6 +3044,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
+    profileStyle?: ProProfileStyle;
     clearAvatar?: boolean;
   }): Promise<{ ok: boolean; message?: string }> => {
     if (!currentUserId) {
@@ -3076,6 +3094,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           bio,
           city,
           avatar_image_url: nextAvatarImageUrl ?? null,
+          profile_style: profileStyle ?? currentUser?.profileStyle ?? "classic",
           updated_at: new Date().toISOString(),
         } as never)
         .eq("id", currentUserId);
@@ -3099,6 +3118,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               bio,
               city,
               avatarImageUrl: nextAvatarImageUrl,
+              profileStyle: profileStyle ?? user.profileStyle ?? "classic",
             }
           : user,
       ),
@@ -3233,14 +3253,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!currentUserId) {
-      setAccountSyncError(null);
+      queueMicrotask(() => {
+        setAccountSyncError(null);
+      });
     }
   }, [currentUserId]);
 
   useEffect(() => {
-    const themePack = hasProAccess ? proCustomization.themePack : "default";
-    document.documentElement.setAttribute("data-pro-theme-pack", themePack);
-  }, [hasProAccess, proCustomization.themePack]);
+    // Pro theme packs are disabled; keep shell theme neutral.
+    document.documentElement.setAttribute("data-pro-theme-pack", "default");
+  }, [currentUserId]);
 
   return (
     <AppStateContext.Provider
