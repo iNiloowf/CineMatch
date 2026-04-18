@@ -292,6 +292,9 @@ export default function ProfilePage() {
   const proStudioSurface = isDarkMode
     ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
     : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]";
+  const proStudioCardPatternClass = isDarkMode
+    ? "bg-[radial-gradient(circle_at_16%_18%,rgba(168,85,247,0.22)_0_16%,transparent_36%),radial-gradient(circle_at_82%_76%,rgba(59,130,246,0.16)_0_14%,transparent_34%),linear-gradient(135deg,rgba(109,40,217,0.16),transparent)] opacity-85"
+    : "bg-[radial-gradient(circle_at_16%_18%,rgba(168,85,247,0.14)_0_16%,transparent_36%),radial-gradient(circle_at_82%_76%,rgba(59,130,246,0.1)_0_14%,transparent_34%),linear-gradient(135deg,rgba(168,85,247,0.09),transparent)] opacity-90";
   const proStudioIconWrap = isDarkMode
     ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
     : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
@@ -840,11 +843,12 @@ export default function ProfilePage() {
         style={{ animationDelay: "95ms" }}
       >
         <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" aria-hidden />
+        <span className={`pointer-events-none absolute inset-0 ${proStudioCardPatternClass}`} aria-hidden />
         <button
           type="button"
           onClick={() => setIsProStudioOpen((current) => !current)}
           aria-expanded={isProStudioOpen}
-          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition sm:px-5"
+          className="relative z-10 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition sm:px-5"
         >
           <div className="flex min-w-0 items-center gap-3.5">
             <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${proStudioIconWrap}`}>
@@ -857,7 +861,7 @@ export default function ProfilePage() {
             <div className="min-w-0">
               <p className={sectionEyebrow}>Pro studio</p>
               <p className={`mt-0.5 text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                Creative profile themes
+                Pro studio
               </p>
               <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}>
                 Pick a style friends can instantly notice
@@ -885,7 +889,7 @@ export default function ProfilePage() {
         </button>
 
         {isProStudioOpen ? (
-          <div className={`space-y-3 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5 ${isDarkMode ? "border-white/10" : "border-violet-200/70"}`}>
+          <div className={`relative z-10 space-y-3 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5 ${isDarkMode ? "border-white/10" : "border-violet-200/70"}`}>
             {!hasProAccess ? (
               <div
                 className={`rounded-[16px] border px-4 py-3 text-sm ${
