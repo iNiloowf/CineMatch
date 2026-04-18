@@ -31,9 +31,7 @@ export type User = {
 export type ProProfileStyle =
   | "classic"
   | "glass"
-  | "neon"
-  | "spotlight"
-  | "minimal";
+  | "neon";
 
 export type AuthUser = User & {
   password: string;

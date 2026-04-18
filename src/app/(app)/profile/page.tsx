@@ -235,8 +235,6 @@ export default function ProfilePage() {
     { id: "classic", label: "Classic" },
     { id: "glass", label: "Glass" },
     { id: "neon", label: "Neon" },
-    { id: "spotlight", label: "Spotlight" },
-    { id: "minimal", label: "Minimal" },
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
@@ -244,20 +242,14 @@ export default function ProfilePage() {
     ? selectedProfileStyle === "glass"
       ? isDarkMode
         ? "ring-1 ring-violet-300/25 bg-gradient-to-br from-violet-950/55 via-slate-950/45 to-fuchsia-950/30 shadow-[0_18px_55px_rgba(109,40,217,0.28)] backdrop-blur-xl"
-        : "ring-1 ring-violet-300/35 bg-gradient-to-br from-violet-100/90 via-white/90 to-fuchsia-100/70 shadow-[0_20px_60px_rgba(124,58,237,0.2)] backdrop-blur-xl"
+        : "ring-2 ring-cyan-200/75 bg-white/70 shadow-[0_20px_52px_rgba(14,165,233,0.18)] backdrop-blur-xl"
       : selectedProfileStyle === "neon"
         ? isDarkMode
           ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-violet-950/55 to-fuchsia-950/55 shadow-[0_0_0_1px_rgba(244,114,182,0.25),0_20px_60px_rgba(168,85,247,0.35)]"
-          : "ring-1 ring-fuchsia-300/45 bg-gradient-to-br from-fuchsia-100 via-white to-violet-100 shadow-[0_0_0_1px_rgba(244,114,182,0.2),0_20px_58px_rgba(217,70,239,0.2)]"
-        : selectedProfileStyle === "spotlight"
-          ? isDarkMode
-            ? "ring-1 ring-amber-300/40 bg-gradient-to-br from-amber-950/45 via-slate-950/60 to-violet-950/45 shadow-[0_0_0_1px_rgba(252,211,77,0.2),0_18px_52px_rgba(217,119,6,0.26)]"
-            : "ring-1 ring-amber-300/45 bg-gradient-to-br from-amber-100 via-white to-violet-100 shadow-[0_0_0_1px_rgba(251,191,36,0.2),0_18px_52px_rgba(245,158,11,0.2)]"
-          : selectedProfileStyle === "minimal"
-            ? isDarkMode
-              ? "ring-1 ring-white/12 bg-slate-950/80 shadow-[0_16px_44px_rgba(15,23,42,0.3)]"
-              : "ring-1 ring-slate-200/95 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
-        : ""
+          : "ring-2 ring-fuchsia-300/60 bg-gradient-to-br from-fuchsia-100 via-violet-100 to-indigo-100 shadow-[0_24px_60px_rgba(192,38,211,0.24)]"
+        : isDarkMode
+          ? "ring-1 ring-white/12 bg-slate-950/80 shadow-[0_16px_44px_rgba(15,23,42,0.3)]"
+          : "ring-2 ring-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
     : "";
 
   const handleSelectProfileStyle = async (style: ProProfileStyle) => {

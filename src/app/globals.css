@@ -1436,18 +1436,6 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
   color: #f8fafc !important;
 }
 
-[data-pro-theme-pack="aurora"] [data-app-shell-root="true"] {
-  background: linear-gradient(180deg, #0a1328 0%, #18253f 40%, #0a1728 100%) !important;
-}
-
-[data-pro-theme-pack="midnight"] [data-app-shell-root="true"] {
-  background: linear-gradient(180deg, #090a12 0%, #111827 42%, #05070e 100%) !important;
-}
-
-[data-pro-theme-pack="sunset"] [data-app-shell-root="true"] {
-  background: linear-gradient(180deg, #2d1122 0%, #47214b 38%, #1b223d 100%) !important;
-}
-
 .theme-dark [data-app-shell-frame="true"] {
   color: #f8fafc !important;
 }

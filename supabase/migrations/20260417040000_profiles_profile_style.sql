@@ -12,7 +12,7 @@ begin
   ) then
     alter table public.profiles
       add constraint profiles_profile_style_check
-      check (profile_style in ('classic', 'glass', 'neon', 'spotlight', 'minimal'));
+      check (profile_style in ('classic', 'glass', 'neon'));
   end if;
 end
 $$;

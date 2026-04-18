@@ -11,7 +11,7 @@ type ProfileRow = {
   avatar_image_url?: string | null;
   bio: string;
   city: string;
-  profile_style?: "classic" | "glass" | "neon" | "spotlight" | "minimal" | null;
+  profile_style?: "classic" | "glass" | "neon" | null;
 };
 
 type SettingsRow = {
