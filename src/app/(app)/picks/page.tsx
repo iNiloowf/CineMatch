@@ -27,6 +27,7 @@ type TopSharedPick = {
   reasons: string[];
 };
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
+const PREMIUM_INSIGHTS_CLOSE_MS = 240;
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -63,12 +64,14 @@ export default function PicksPage() {
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [isPremiumInsightsClosed, setIsPremiumInsightsClosed] = useState(false);
+  const [isPremiumInsightsClosing, setIsPremiumInsightsClosing] = useState(false);
   const [isBuyProModalOpen, setIsBuyProModalOpen] = useState(false);
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
   const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
   const [billingFeedback, setBillingFeedback] = useState("");
   const premiumInsightsStorageKey = `cinematch-picks-premium-insights-hidden-${currentUserId ?? "guest"}`;
+  const premiumInsightsCloseTimerRef = useRef<number | null>(null);
 
   const pendingRemoveMovie = useMemo(
     () =>
@@ -322,6 +325,9 @@ export default function PicksPage() {
       if (shareToastTimerRef.current) {
         window.clearTimeout(shareToastTimerRef.current);
       }
+      if (premiumInsightsCloseTimerRef.current) {
+        window.clearTimeout(premiumInsightsCloseTimerRef.current);
+      }
     };
   }, []);
 
@@ -329,7 +335,9 @@ export default function PicksPage() {
     if (typeof window === "undefined") {
       return;
     }
-    setIsPremiumInsightsClosed(window.localStorage.getItem(premiumInsightsStorageKey) === "1");
+    const isHidden = window.localStorage.getItem(premiumInsightsStorageKey) === "1";
+    setIsPremiumInsightsClosed(isHidden);
+    setIsPremiumInsightsClosing(false);
   }, [premiumInsightsStorageKey]);
   useEffect(() => {
     if (!isBuyProModalOpen) {
@@ -545,6 +553,23 @@ export default function PicksPage() {
       setIsOpeningCheckout(false);
     }
   }, [resolveAccessToken, selectedGiftPartner, selectedGiftPartnerId, selectedPlanType]);
+  const handleClosePremiumInsights = useCallback(() => {
+    if (isPremiumInsightsClosed || isPremiumInsightsClosing) {
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(premiumInsightsStorageKey, "1");
+    }
+    setIsPremiumInsightsClosing(true);
+    if (premiumInsightsCloseTimerRef.current) {
+      window.clearTimeout(premiumInsightsCloseTimerRef.current);
+    }
+    premiumInsightsCloseTimerRef.current = window.setTimeout(() => {
+      setIsPremiumInsightsClosed(true);
+      setIsPremiumInsightsClosing(false);
+      premiumInsightsCloseTimerRef.current = null;
+    }, PREMIUM_INSIGHTS_CLOSE_MS);
+  }, [isPremiumInsightsClosed, isPremiumInsightsClosing, premiumInsightsStorageKey]);
 
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
@@ -850,7 +875,14 @@ export default function PicksPage() {
         </div>
 
         {!isPremiumInsightsClosed ? (
-          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-out ${
+              isPremiumInsightsClosing
+                ? "max-h-0 -translate-y-2 opacity-0"
+                : "max-h-[1100px] translate-y-0 opacity-100"
+            }`}
+          >
+            <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "130ms" }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                 Premium pick insights
@@ -869,12 +901,7 @@ export default function PicksPage() {
                 ) : null}
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsPremiumInsightsClosed(true);
-                    if (typeof window !== "undefined") {
-                      window.localStorage.setItem(premiumInsightsStorageKey, "1");
-                    }
-                  }}
+                  onClick={handleClosePremiumInsights}
                   aria-label="Close premium insights"
                   className={`flex h-8 w-8 items-center justify-center rounded-[10px] border text-xs font-bold ${
                     isDarkMode
@@ -1042,7 +1069,8 @@ export default function PicksPage() {
               )}
             </>
             )}
-          </SurfaceCard>
+            </SurfaceCard>
+          </div>
         ) : null}
 
         <div className="space-y-3 sm:space-y-3.5">
