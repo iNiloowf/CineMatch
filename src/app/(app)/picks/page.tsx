@@ -11,6 +11,7 @@ import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { computeMovieMatchPercent } from "@/lib/match-score";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const PicksTrailerModalLazy = dynamic(
   () => import("@/components/picks-trailer-modal").then((m) => m.PicksTrailerModal),
@@ -25,6 +26,7 @@ type TopSharedPick = {
   score: number;
   reasons: string[];
 };
+type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -61,6 +63,11 @@ export default function PicksPage() {
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [isPremiumInsightsClosed, setIsPremiumInsightsClosed] = useState(false);
+  const [isBuyProModalOpen, setIsBuyProModalOpen] = useState(false);
+  const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
+  const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
+  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
+  const [billingFeedback, setBillingFeedback] = useState("");
   const premiumInsightsStorageKey = `cinematch-picks-premium-insights-hidden-${currentUserId ?? "guest"}`;
 
   const pendingRemoveMovie = useMemo(
@@ -114,6 +121,21 @@ export default function PicksPage() {
       .sort((left, right) => left.name.localeCompare(right.name));
     return acceptedLinks[0] ?? null;
   }, [linkedUsers]);
+  const acceptedConnectedPartners = useMemo(
+    () =>
+      linkedUsers
+        .filter((entry) => entry.status === "accepted")
+        .map((entry) => entry.user)
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    [linkedUsers],
+  );
+  const selectedGiftPartner = useMemo(
+    () =>
+      selectedGiftPartnerId === "none"
+        ? null
+        : acceptedConnectedPartners.find((partner) => partner.id === selectedGiftPartnerId) ?? null,
+    [acceptedConnectedPartners, selectedGiftPartnerId],
+  );
   const partnerAcceptedMovieIds = useMemo(() => {
     if (!primaryPartner) {
       return new Set<string>();
@@ -309,6 +331,33 @@ export default function PicksPage() {
     }
     setIsPremiumInsightsClosed(window.localStorage.getItem(premiumInsightsStorageKey) === "1");
   }, [premiumInsightsStorageKey]);
+  useEffect(() => {
+    if (!isBuyProModalOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsBuyProModalOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isBuyProModalOpen]);
+  useEffect(() => {
+    if (selectedPlanType !== "pro_partner_gift") {
+      setSelectedGiftPartnerId("none");
+    }
+  }, [selectedPlanType]);
+  useEffect(() => {
+    if (selectedGiftPartnerId === "none") {
+      return;
+    }
+    const stillLinked = acceptedConnectedPartners.some((partner) => partner.id === selectedGiftPartnerId);
+    if (!stillLinked) {
+      setSelectedGiftPartnerId("none");
+    }
+  }, [acceptedConnectedPartners, selectedGiftPartnerId]);
 
   useEffect(() => {
     const anyOpen = Boolean(
@@ -438,6 +487,64 @@ export default function PicksPage() {
   const requestRemovePick = useCallback((movieId: string) => {
     setPendingRemoveMovieId(movieId);
   }, []);
+
+  const resolveAccessToken = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient();
+    const sessionResult = supabase
+      ? await supabase.auth.getSession()
+      : { data: { session: null } };
+    return sessionResult.data.session?.access_token ?? null;
+  }, []);
+
+  const handleOpenCheckout = useCallback(async () => {
+    if (
+      selectedPlanType === "pro_partner_gift" &&
+      (!selectedGiftPartner || selectedGiftPartnerId === "none")
+    ) {
+      setBillingFeedback("Pick one connected partner for the Partner Gift plan.");
+      return;
+    }
+
+    const accessToken = await resolveAccessToken();
+    if (!accessToken) {
+      setBillingFeedback("Please sign in again, then try Pro checkout.");
+      return;
+    }
+
+    setIsOpeningCheckout(true);
+    setBillingFeedback("");
+    try {
+      const response = await fetch("/api/subscription/create-intent", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          planType: selectedPlanType,
+          partnerUserId:
+            selectedPlanType === "pro_partner_gift"
+              ? selectedGiftPartner?.id
+              : undefined,
+        }),
+      });
+      const payload = (await response.json()) as { error?: string; checkoutUrl?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not open checkout right now.");
+      }
+      if (!payload.checkoutUrl) {
+        throw new Error("Checkout URL is missing.");
+      }
+      window.open(payload.checkoutUrl, "_blank", "noopener,noreferrer");
+      setBillingFeedback("Checkout opened in a new tab.");
+    } catch (error) {
+      setBillingFeedback(
+        error instanceof Error ? error.message : "Could not open checkout right now.",
+      );
+    } finally {
+      setIsOpeningCheckout(false);
+    }
+  }, [resolveAccessToken, selectedGiftPartner, selectedGiftPartnerId, selectedPlanType]);
 
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
@@ -802,9 +909,16 @@ export default function PicksPage() {
                 Upgrade to Pro to unlock Tonight&apos;s top 3 for both of you and a live
                 taste overlap score with your partner.
               </p>
-              <Link href="/settings" className="ui-btn ui-btn-primary w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setBillingFeedback("");
+                  setIsBuyProModalOpen(true);
+                }}
+                className="ui-btn ui-btn-primary mt-3 w-full sm:mt-4 sm:w-auto"
+              >
                 Buy Pro
-              </Link>
+              </button>
             </>
           ) : (
             <>
@@ -1055,6 +1169,152 @@ export default function PicksPage() {
                 className="ui-btn ui-btn-danger min-w-0 flex-1"
               >
                 Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isBuyProModalOpen ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close buy pro modal"
+            className="absolute inset-0 cursor-default bg-transparent"
+            onClick={() => setIsBuyProModalOpen(false)}
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Buy Pro"
+          >
+            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-inherit">Choose your Pro plan</p>
+                <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Pick a subscription and continue to secure checkout.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBuyProModalOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body space-y-3 !pt-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {[
+                  {
+                    id: "pro_monthly" as const,
+                    title: "Pro Monthly",
+                    price: "$5.99 / month",
+                    note: "Flexible billing",
+                  },
+                  {
+                    id: "pro_yearly" as const,
+                    title: "Pro Yearly",
+                    price: "$49.99 / year",
+                    note: "Best value",
+                  },
+                  {
+                    id: "pro_partner_gift" as const,
+                    title: "Pro + Partner Gift",
+                    price: "$9.99 one-time",
+                    note: "Includes one redeem code",
+                  },
+                ].map((plan) => (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => setSelectedPlanType(plan.id)}
+                    className={`rounded-[14px] border px-3 py-3 text-left transition ${
+                      selectedPlanType === plan.id
+                        ? isDarkMode
+                          ? "border-violet-400/45 bg-violet-500/12 ring-1 ring-violet-400/28"
+                          : "border-violet-300 bg-violet-50 ring-1 ring-violet-200/80"
+                        : isDarkMode
+                          ? "border-white/10 bg-white/[0.03]"
+                          : "border-slate-200/90 bg-white"
+                    }`}
+                  >
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                      {plan.title}
+                    </p>
+                    <p className={`mt-1 text-xs font-semibold ${isDarkMode ? "text-violet-200" : "text-violet-700"}`}>
+                      {plan.price}
+                    </p>
+                    <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      {plan.note}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {selectedPlanType === "pro_partner_gift" ? (
+                acceptedConnectedPartners.length > 0 ? (
+                  <label className="block space-y-2 text-sm font-semibold">
+                    Choose the connected partner for this gift
+                    <select
+                      value={selectedGiftPartnerId}
+                      onChange={(event) => setSelectedGiftPartnerId(event.target.value)}
+                      className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                        isDarkMode
+                          ? "border-white/12 bg-white/8 text-white"
+                          : "border-slate-200 bg-white text-slate-900"
+                      }`}
+                    >
+                      <option value="none">Select partner</option>
+                      {acceptedConnectedPartners.map((partner) => (
+                        <option key={partner.id} value={partner.id}>
+                          {partner.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <p className={`text-xs ${isDarkMode ? "text-amber-300" : "text-amber-700"}`}>
+                    You need at least one accepted connection to use Partner Gift.
+                  </p>
+                )
+              ) : null}
+              {billingFeedback ? (
+                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  {billingFeedback}
+                </p>
+              ) : null}
+            </div>
+            <div className="ui-shell-footer !pt-3">
+              <button
+                type="button"
+                onClick={() => setIsBuyProModalOpen(false)}
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleOpenCheckout()}
+                disabled={isOpeningCheckout}
+                className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
+              >
+                {isOpeningCheckout ? "Opening checkout..." : "Continue to secure checkout"}
               </button>
             </div>
           </div>
