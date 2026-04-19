@@ -664,68 +664,64 @@ export default function ProfilePage() {
                 </svg>
               </button>
             </div>
-            <div className="ui-shell-body !min-h-0 flex-1 overflow-y-auto !pt-3">
+            <div className="ui-shell-body !min-h-0 flex-1 overflow-y-auto !px-4 !pb-4 !pt-2">
               {skippedDiscoverMovies.length === 0 ? (
-                <p className={`text-center text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                <p className={`py-6 text-center text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Nothing here — passes older than a week roll off automatically.
                 </p>
               ) : (
-                <ul className="space-y-2.5">
+                <ul
+                  className={`divide-y overflow-hidden rounded-xl ring-1 ${
+                    isDarkMode ? "divide-white/10 ring-white/10" : "divide-slate-200/90 ring-slate-200/90"
+                  }`}
+                >
                   {skippedDiscoverMovies.map(({ movie, createdAt }) => (
-                    <li
-                      key={movie.id}
-                      className={`flex gap-3 rounded-[16px] border p-2.5 ${
-                        isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/80"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setDiscoverSkipDetailMovie(movie)}
-                        className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ${
-                          isDarkMode ? "ring-white/10" : "ring-slate-200/90"
+                    <li key={movie.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
+                      <div
+                        className={`relative h-[4.5rem] w-12 shrink-0 overflow-hidden rounded-md shadow-sm ring-1 ring-inset ${
+                          isDarkMode ? "ring-white/12" : "ring-slate-200/90"
                         }`}
-                        aria-label={`Details for ${movie.title}`}
                       >
                         {movie.poster.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element -- small cached poster
                           <img src={movie.poster.imageUrl} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <span
-                            className={`flex h-full w-full items-center justify-center text-[9px] font-bold ${
+                            className={`flex h-full w-full items-center justify-center px-0.5 text-center text-[9px] font-bold leading-tight ${
                               isDarkMode ? "bg-white/10 text-slate-300" : "bg-slate-200 text-slate-600"
                             }`}
                           >
                             {movie.title.slice(0, 2).toUpperCase()}
                           </span>
                         )}
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <button
-                          type="button"
-                          onClick={() => setDiscoverSkipDetailMovie(movie)}
-                          className={`text-left text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                        >
-                          {movie.title}
-                        </button>
-                        <p className={`mt-0.5 text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                          Skipped {new Date(createdAt).toLocaleDateString()}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <div className="min-w-0">
+                          <p
+                            className={`line-clamp-2 text-left text-sm font-semibold leading-snug ${
+                              isDarkMode ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {movie.title}
+                          </p>
+                          <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                            Skipped {new Date(createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
                           <button
                             type="button"
                             onClick={() => setDiscoverSkipDetailMovie(movie)}
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                              isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
-                            }`}
+                            className={`ui-btn ui-btn-secondary min-h-10 w-full text-xs sm:w-auto sm:min-w-[6.5rem]`}
                           >
                             Details
                           </button>
                           <button
                             type="button"
                             onClick={() => void handleRestoreDiscoverSkip(movie)}
-                            className="rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-violet-700"
+                            className={`ui-btn ui-btn-primary min-h-10 w-full text-xs sm:w-auto sm:min-w-[6.5rem]`}
                           >
-                            Back in Discover
+                            Restore
                           </button>
                         </div>
                       </div>

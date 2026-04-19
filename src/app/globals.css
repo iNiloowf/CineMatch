@@ -906,7 +906,7 @@ input[type="range"] {
   }
 }
 
-.discover-undo-toast {
+.discover-undo-alert {
   animation: discoverUndoToastIn var(--motion-duration-discover-undo) var(--motion-ease-standard) both;
 }
 
@@ -1456,7 +1456,7 @@ html[data-reduce-motion="true"] .discover-feedback-chip {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 
-html[data-reduce-motion="true"] .discover-undo-toast {
+html[data-reduce-motion="true"] .discover-undo-alert {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 

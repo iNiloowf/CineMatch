@@ -1518,80 +1518,75 @@ function DiscoverPageContent({
       ) : null}
 
       {lastSwipe ? (
-        <div className="mx-auto w-full max-w-xl shrink-0 px-1">
+        <div className="mx-auto w-full max-w-xl shrink-0 px-1" role="status" aria-live="polite">
           <div
-            className={`discover-undo-toast flex w-full min-h-[3.25rem] flex-nowrap items-center gap-2.5 rounded-2xl border px-3 py-2 shadow-lg backdrop-blur-xl ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950/90"
-                : "border-slate-200/90 bg-white/95"
+            className={`discover-undo-alert flex items-start gap-2.5 rounded-md border-l-4 px-3 py-2.5 shadow-sm ring-1 ring-inset ${
+              lastSwipe.decision === "accepted"
+                ? isDarkMode
+                  ? "border-l-emerald-400 bg-emerald-500/12 ring-emerald-400/20"
+                  : "border-l-emerald-600 bg-emerald-50 ring-emerald-600/15"
+                : isDarkMode
+                  ? "border-l-amber-400 bg-amber-500/10 ring-amber-400/18"
+                  : "border-l-amber-600 bg-amber-50 ring-amber-600/12"
             }`}
           >
-            <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            <span
+              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-[11px] font-bold leading-none ${
                 lastSwipe.decision === "accepted"
-                  ? "bg-violet-600 text-white shadow-[0_2px_8px_rgba(109,40,217,0.35)]"
+                  ? isDarkMode
+                    ? "bg-emerald-500/25 text-emerald-100"
+                    : "bg-emerald-600/15 text-emerald-800"
                   : isDarkMode
-                    ? "border border-white/12 bg-white/10 text-slate-100"
-                    : "border border-slate-200/90 bg-slate-100 text-slate-700"
+                    ? "bg-amber-500/20 text-amber-100"
+                    : "bg-amber-600/15 text-amber-900"
               }`}
+              aria-hidden
             >
-              {lastSwipe.decision === "accepted" ? "✓" : "×"}
-            </div>
-            <div className="flex min-h-[2.5rem] min-w-0 flex-1 flex-col justify-center">
-              <p
-                className={`truncate text-xs font-semibold leading-tight ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {lastSwipe.movie.title}
+              {lastSwipe.decision === "accepted" ? "✓" : "!"}
+            </span>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <p className={`text-[13px] font-semibold leading-snug ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
+                {lastSwipe.decision === "accepted" ? "Saved to picks" : "Passed on Discover"}
               </p>
-              <p
-                className={`mt-0.5 text-[10px] leading-tight ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                {lastSwipe.decision === "accepted"
-                  ? "Saved to picks"
-                  : "Skipped"}
+              <p className={`mt-0.5 text-xs leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+                <span className="font-medium">{lastSwipe.movie.title}</span>
+                {!undoTipDismissed ? (
+                  <span className={`block pt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                    Tap <span className="font-semibold">Undo</span> within a few seconds to reverse this.
+                  </span>
+                ) : null}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleUndoSwipe}
-              className="shrink-0 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-semibold leading-none text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
-            >
-              Undo
-            </button>
-          </div>
-          {!undoTipDismissed ? (
-            <div
-              className={`mt-1 flex w-full min-h-[2.25rem] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
-                isDarkMode
-                  ? "border-white/8 bg-slate-950/85 text-slate-300"
-                  : "border-slate-200/80 bg-white/90 text-slate-600"
-              }`}
-            >
-              <p className="min-w-0 flex-1">
-                Tap <span className="font-semibold text-inherit">Undo</span> within a few seconds to reverse.
-              </p>
+            <div className="flex shrink-0 flex-col items-end gap-1">
               <button
                 type="button"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.localStorage.setItem(undoTipStorageKey, "1");
-                  }
-                  setUndoTipDismissed(true);
-                }}
-                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                onClick={handleUndoSwipe}
+                className={`rounded-md px-2.5 py-1.5 text-xs font-bold tracking-wide uppercase ${
                   isDarkMode
-                    ? "text-violet-300 hover:bg-white/10"
-                    : "text-violet-700 hover:bg-slate-100"
+                    ? "bg-white/15 text-white ring-1 ring-white/20 hover:bg-white/22"
+                    : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
               >
-                OK
+                Undo
               </button>
+              {!undoTipDismissed ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.localStorage.setItem(undoTipStorageKey, "1");
+                    }
+                    setUndoTipDismissed(true);
+                  }}
+                  className={`text-[10px] font-semibold underline-offset-2 hover:underline ${
+                    isDarkMode ? "text-slate-400" : "text-slate-600"
+                  }`}
+                >
+                  Don’t show hint
+                </button>
+              ) : null}
             </div>
-          ) : null}
+          </div>
         </div>
       ) : null}
 
