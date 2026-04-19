@@ -46,6 +46,9 @@
   --rhythm-section: 1rem;
   --rhythm-page: 1.25rem;
 
+  /** Discover: toolbar ↔ card ↔ bottom nav (shared with app shell scroll padding). */
+  --discover-stack-gap: clamp(0.75rem, 2.75vw, 1.125rem);
+
   /* Radius by role */
   --radius-control: 1rem; /* icon buttons, compact controls */
   --radius-md: 1rem;

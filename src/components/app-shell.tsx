@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col">
           <div
             data-app-scroll-container="true"
-            className="flex-1 overflow-y-auto overscroll-contain pb-[clamp(0.625rem,2.75vw,1.125rem)]"
+            className="flex-1 overflow-y-auto overscroll-contain pb-[var(--discover-stack-gap)]"
           >
             {children}
           </div>

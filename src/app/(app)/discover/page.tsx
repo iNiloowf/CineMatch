@@ -735,7 +735,7 @@ function DiscoverPageContent({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-[clamp(0.625rem,2.75vw,1.125rem)] overflow-visible">
+    <div className="flex h-full min-h-0 flex-col gap-[var(--discover-stack-gap)] overflow-visible">
       {!isOnboardingComplete ? (
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
           <div
