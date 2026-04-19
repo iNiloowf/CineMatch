@@ -951,66 +951,27 @@ async function uploadProfilePhoto(
     return null;
   }
 
-  const normalizeImageFileForUpload = async (input: File): Promise<File | null> => {
+  const normalizeImageFileForUpload = async (input: File): Promise<File> => {
     if (typeof window === "undefined" || !input.type.startsWith("image/")) {
       return input;
     }
 
-    const MAX_UPLOAD_BYTES = 900 * 1024;
-    const MAX_DIMENSION_STEPS = [1600, 1280, 1080, 900];
+    const MAX_UPLOAD_BYTES = 700 * 1024;
+    const MAX_DIMENSION_STEPS = [1600, 1280, 1080, 900, 768];
 
     if (input.size <= MAX_UPLOAD_BYTES) {
       return input;
     }
 
-    const decodeImage = async (blob: Blob): Promise<{ width: number; height: number; draw: (context: CanvasRenderingContext2D, width: number, height: number) => void } | null> => {
-      if (typeof createImageBitmap === "function") {
-        try {
-          const bitmap = await createImageBitmap(blob);
-          return {
-            width: bitmap.width,
-            height: bitmap.height,
-            draw: (context, width, height) => {
-              context.drawImage(bitmap, 0, 0, width, height);
-              bitmap.close();
-            },
-          };
-        } catch {
-          // Fall back to HTMLImageElement.
-        }
-      }
-
-      let objectUrl: string | null = null;
-      try {
-        objectUrl = URL.createObjectURL(blob);
-        const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error("Unable to decode image"));
-          img.src = objectUrl as string;
-        });
-
-        return {
-          width: image.width,
-          height: image.height,
-          draw: (context, width, height) => {
-            context.drawImage(image, 0, 0, width, height);
-          },
-        };
-      } catch {
-        return null;
-      } finally {
-        if (objectUrl) {
-          URL.revokeObjectURL(objectUrl);
-        }
-      }
-    };
-
+    let objectUrl: string | null = null;
     try {
-      const decoded = await decodeImage(input);
-      if (!decoded) {
-        return null;
-      }
+      objectUrl = URL.createObjectURL(input);
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Unable to decode image"));
+        img.src = objectUrl as string;
+      });
 
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
@@ -1022,18 +983,18 @@ async function uploadProfilePhoto(
       let bestBlob: Blob | null = null;
 
       for (const maxDimension of MAX_DIMENSION_STEPS) {
-        const largestSide = Math.max(decoded.width, decoded.height);
+        const largestSide = Math.max(image.width, image.height);
         const scale = largestSide > maxDimension ? maxDimension / largestSide : 1;
-        const targetWidth = Math.max(1, Math.round(decoded.width * scale));
-        const targetHeight = Math.max(1, Math.round(decoded.height * scale));
+        const targetWidth = Math.max(1, Math.round(image.width * scale));
+        const targetHeight = Math.max(1, Math.round(image.height * scale));
 
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         context.clearRect(0, 0, targetWidth, targetHeight);
-        decoded.draw(context, targetWidth, targetHeight);
+        context.drawImage(image, 0, 0, targetWidth, targetHeight);
 
         let quality = 0.86;
-        while (quality >= 0.42) {
+        while (quality >= 0.32) {
           const encodedBlob = await new Promise<Blob | null>((resolve) => {
             canvas.toBlob(resolve, "image/jpeg", quality);
           });
@@ -1057,8 +1018,8 @@ async function uploadProfilePhoto(
         }
       }
 
-      if (!bestBlob || bestBlob.size >= input.size) {
-        return null;
+      if (!bestBlob) {
+        return input;
       }
 
       const baseName = input.name.replace(/\.[^.]+$/, "") || "profile-photo";
@@ -1066,14 +1027,15 @@ async function uploadProfilePhoto(
         type: "image/jpeg",
       });
     } catch {
-      return null;
+      return input;
+    } finally {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     }
   };
 
   const fileToUpload = await normalizeImageFileForUpload(file);
-  if (!fileToUpload) {
-    return null;
-  }
   const extension = fileToUpload.name.split(".").pop()?.toLowerCase() || "jpg";
   const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
   const filePath = `${userId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
