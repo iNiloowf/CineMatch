@@ -6,14 +6,32 @@ import { useAppState } from "@/lib/app-state";
 type SurfaceCardProps = {
   children: ReactNode;
   className?: string;
+  /**
+   * Skip the default glass / frosted surface and light-mode overlay so `className`
+   * fully controls background, border, and shadow (e.g. profile theme presets).
+   * Without this, theme gradients fight Tailwind’s default card `bg-*` utilities.
+   */
+  bare?: boolean;
 } & ComponentPropsWithoutRef<"section">;
 
 export function SurfaceCard({
   children,
   className = "",
+  bare = false,
   ...props
 }: SurfaceCardProps) {
   const { isDarkMode } = useAppState();
+
+  if (bare) {
+    return (
+      <section
+        {...props}
+        className={`ui-motion-surface fade-up-enter relative isolate overflow-hidden rounded-[28px] p-5 backdrop-blur-xl hover:-translate-y-0.5 sm:p-6 ${className}`}
+      >
+        <div className="relative z-0 flex h-full min-h-0 flex-col">{children}</div>
+      </section>
+    );
+  }
 
   return (
     <section
