@@ -1017,7 +1017,7 @@ export default function PicksPage() {
                       Connect with a partner (Connect tab) to unlock shared top picks here.
                     </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="mt-3 space-y-2 sm:mt-4">
                       {tasteOverlap ? (
                         <div
                           className={`grid grid-cols-3 gap-1.5 rounded-xl px-2 py-2 ${
