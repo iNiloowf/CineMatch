@@ -252,9 +252,9 @@ export default function ProfilePage() {
   const actionRing = isDarkMode ? "ring-2 ring-fuchsia-300/30" : "ring-2 ring-violet-400/55";
 
   const profileStyleOptions = [
-    { id: "classic", label: "Clean Contrast" },
-    { id: "glass", label: "Soft Glass" },
-    { id: "neon", label: "Vivid Glow" },
+    { id: "classic", label: "Classic" },
+    { id: "glass", label: "Glass" },
+    { id: "neon", label: "Neon" },
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
@@ -269,7 +269,7 @@ export default function ProfilePage() {
           : "ring-1 ring-fuchsia-300/80 bg-gradient-to-br from-white via-fuchsia-50/90 to-indigo-50/90 shadow-[0_18px_42px_rgba(147,51,234,0.24)]"
         : isDarkMode
           ? "ring-1 ring-white/12 bg-transparent shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
-          : "ring-1 ring-slate-200/90 bg-transparent shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
+          : "ring-1 ring-slate-300/95 bg-gradient-to-br from-white via-slate-50 to-slate-100/90 shadow-[0_12px_30px_rgba(15,23,42,0.14)]"
     : "";
   const proHeaderPatternClass = hasProAccess
     ? selectedProfileStyle === "glass"
@@ -298,8 +298,8 @@ export default function ProfilePage() {
   };
   const proStylePatternById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
-      ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.07)_0_2px,transparent_2px_12px)] opacity-70"
-      : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.14)_0_2px,transparent_2px_12px)] opacity-70",
+      ? ""
+      : "",
     glass: isDarkMode
       ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.1),transparent)] opacity-80"
       : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] opacity-88",
