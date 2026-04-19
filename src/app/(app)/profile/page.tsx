@@ -259,32 +259,28 @@ export default function ProfilePage() {
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
-  const proHeaderCardStyle = hasProAccess
-    ? selectedProfileStyle === "glass"
+  const proHeaderCardStyle = selectedProfileStyle === "glass"
+    ? isDarkMode
+      ? "ring-1 ring-cyan-300/35 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[0_18px_48px_rgba(8,145,178,0.24)] backdrop-blur-xl"
+      : "ring-1 ring-cyan-300/95 bg-gradient-to-br from-cyan-50 via-white to-sky-50 shadow-[0_16px_36px_rgba(8,145,178,0.2)] backdrop-blur-xl"
+    : selectedProfileStyle === "neon"
       ? isDarkMode
-        ? "ring-1 ring-cyan-300/35 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[0_18px_48px_rgba(8,145,178,0.24)] backdrop-blur-xl"
-        : "ring-1 ring-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/90 to-sky-50/80 shadow-[0_16px_36px_rgba(8,145,178,0.18)] backdrop-blur-xl"
-      : selectedProfileStyle === "neon"
-        ? isDarkMode
-          ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[0_22px_56px_rgba(126,34,206,0.34)]"
-          : "ring-1 ring-fuchsia-300/80 bg-gradient-to-br from-white via-fuchsia-50/90 to-indigo-50/90 shadow-[0_18px_42px_rgba(147,51,234,0.24)]"
-        : isDarkMode
-          ? "ring-1 ring-white/12 bg-transparent shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
-          : "ring-1 ring-slate-300/95 bg-gradient-to-br from-white via-slate-50 to-slate-100/90 shadow-[0_12px_30px_rgba(15,23,42,0.14)]"
-    : "";
-  const proHeaderPatternClass = hasProAccess
-    ? selectedProfileStyle === "glass"
+        ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[0_22px_56px_rgba(126,34,206,0.34)]"
+        : "ring-1 ring-fuchsia-300/90 bg-gradient-to-br from-fuchsia-50 via-white to-indigo-50 shadow-[0_20px_44px_rgba(147,51,234,0.26)]"
+      : isDarkMode
+        ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
+        : "ring-1 ring-slate-300/95 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_14px_32px_rgba(15,23,42,0.16)]";
+  const proHeaderPatternClass = selectedProfileStyle === "glass"
+    ? isDarkMode
+      ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-80"
+      : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] opacity-90"
+    : selectedProfileStyle === "neon"
       ? isDarkMode
-        ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-80"
-        : "bg-[linear-gradient(180deg,rgba(255,255,255,0.56),transparent)] opacity-85"
-      : selectedProfileStyle === "neon"
-        ? isDarkMode
-          ? "bg-[linear-gradient(120deg,rgba(236,72,153,0.14),transparent_55%)] opacity-85"
-          : "bg-[linear-gradient(120deg,rgba(217,70,239,0.14),transparent_55%)] opacity-80"
-        : isDarkMode
-          ? ""
-          : ""
-    : "";
+        ? "bg-[linear-gradient(120deg,rgba(236,72,153,0.14),transparent_55%)] opacity-85"
+        : "bg-[linear-gradient(120deg,rgba(217,70,239,0.18),transparent_55%)] opacity-85"
+      : isDarkMode
+        ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] opacity-70"
+        : "bg-[linear-gradient(180deg,rgba(255,255,255,0.45),transparent)] opacity-75";
 
   const proStylePreviewById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -703,9 +699,7 @@ export default function ProfilePage() {
         className={`fade-up-enter discover-toolbar-enter relative overflow-hidden space-y-6 !p-5 sm:!p-6 ${proHeaderCardStyle}`}
         style={{ animationDelay: "0ms" }}
       >
-        {hasProAccess ? (
-          <span className={`pointer-events-none absolute inset-0 ${proHeaderPatternClass}`} aria-hidden />
-        ) : null}
+        <span className={`pointer-events-none absolute inset-0 ${proHeaderPatternClass}`} aria-hidden />
         <form className="relative z-10 space-y-5" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
@@ -1206,7 +1200,7 @@ export default function ProfilePage() {
             className={`discover-toolbar-enter group relative flex min-h-[5.85rem] overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:min-h-[6.1rem] sm:rounded-[24px] ${tile.surface}`}
             style={{ animationDelay: `${index * 75}ms` }}
           >
-            <span className={`pointer-events-none absolute inset-x-0 top-0 h-1 ${tile.accentBar}`} aria-hidden />
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-transparent" aria-hidden />
             <div className="flex w-full items-center gap-3 px-4 py-4 sm:gap-3.5 sm:px-5 sm:py-4">
               <span
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-[1.04] sm:h-12 sm:w-12 ${tile.iconWrap}`}
