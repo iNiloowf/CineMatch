@@ -56,6 +56,7 @@ export default function ProfilePage() {
   const [isFavoriteGenresOpen, setIsFavoriteGenresOpen] = useState(false);
   const [isDislikedGenresOpen, setIsDislikedGenresOpen] = useState(false);
   const [isProStudioOpen, setIsProStudioOpen] = useState(false);
+  const [watchedReviewTab, setWatchedReviewTab] = useState<"recommended" | "notRecommended">("recommended");
   const [editingWatchedMovieId, setEditingWatchedMovieId] = useState<string | null>(null);
   const editingWatchedEntry = useMemo(
     () =>
@@ -415,6 +416,9 @@ export default function ProfilePage() {
       ),
     },
   ];
+  const activeWatchedEntries =
+    watchedReviewTab === "recommended" ? recommendedWatchedPicks : notRecommendedWatchedPicks;
+
   const watchedReviewsEditorSection = (
     <div className="space-y-4">
       <div>
@@ -437,82 +441,85 @@ export default function ProfilePage() {
           No watched reviews yet.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           <div
-            className={`rounded-[20px] border px-3 py-3 ${
-              isDarkMode
-                ? "border-emerald-400/22 bg-emerald-500/8"
-                : "border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/95 to-emerald-100/75 shadow-[0_8px_26px_rgba(16,185,129,0.14)]"
+            className={`grid grid-cols-2 gap-2 rounded-[16px] border p-1 ${
+              isDarkMode ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
             }`}
           >
-            <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
-              Recommended
-            </p>
-            <div className="mt-2 space-y-2">
-              {recommendedWatchedPicks.length === 0 ? (
-                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-              ) : (
-                recommendedWatchedPicks.map((entry) => (
-                  <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-emerald-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold">{entry.movie.title}</p>
-                        <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          {new Date(entry.watchedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                        className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                          isDarkMode ? "bg-white/12 text-slate-100" : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => setWatchedReviewTab("recommended")}
+              className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                watchedReviewTab === "recommended"
+                  ? isDarkMode
+                    ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
+                    : "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
+                  : isDarkMode
+                    ? "text-slate-300"
+                    : "text-slate-600"
+              }`}
+            >
+              Recommended ({recommendedWatchedPicks.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setWatchedReviewTab("notRecommended")}
+              className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                watchedReviewTab === "notRecommended"
+                  ? isDarkMode
+                    ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
+                    : "bg-rose-100 text-rose-800 ring-1 ring-rose-200"
+                  : isDarkMode
+                    ? "text-slate-300"
+                    : "text-slate-600"
+              }`}
+            >
+              Not recommended ({notRecommendedWatchedPicks.length})
+            </button>
           </div>
-          <div
-            className={`rounded-[20px] border px-3 py-3 ${
-              isDarkMode
-                ? "border-rose-400/22 bg-rose-500/8"
-                : "border-rose-200/90 bg-gradient-to-br from-white via-rose-50/95 to-rose-100/75 shadow-[0_8px_26px_rgba(244,63,94,0.14)]"
-            }`}
-          >
-            <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
-              Not recommended
-            </p>
-            <div className="mt-2 space-y-2">
-              {notRecommendedWatchedPicks.length === 0 ? (
-                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-              ) : (
-                notRecommendedWatchedPicks.map((entry) => (
-                  <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-rose-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold">{entry.movie.title}</p>
-                        <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          {new Date(entry.watchedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                        className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                          isDarkMode ? "bg-white/12 text-slate-100" : "bg-rose-100 text-rose-700"
-                        }`}
-                      >
-                        Edit
-                      </button>
+
+          <div className="space-y-2">
+            {activeWatchedEntries.length === 0 ? (
+              <p className={`rounded-[14px] border px-3 py-2.5 text-xs ${isDarkMode ? "border-white/10 bg-white/[0.04] text-slate-300" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+                No movies in this tab yet.
+              </p>
+            ) : (
+              activeWatchedEntries.map((entry) => (
+                <div
+                  key={`${watchedReviewTab}-${entry.movie.id}`}
+                  className={`rounded-xl border px-2.5 py-2 text-xs ${
+                    isDarkMode
+                      ? "border-white/10 bg-white/8 text-slate-100"
+                      : "border-slate-200 bg-white text-slate-700 shadow-sm"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{entry.movie.title}</p>
+                      <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                        {new Date(entry.watchedAt).toLocaleDateString()}
+                      </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingWatchedMovieId(entry.movie.id)}
+                      className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
+                        watchedReviewTab === "recommended"
+                          ? isDarkMode
+                            ? "bg-emerald-500/20 text-emerald-100"
+                            : "bg-emerald-100 text-emerald-700"
+                          : isDarkMode
+                            ? "bg-rose-500/20 text-rose-100"
+                            : "bg-rose-100 text-rose-700"
+                      }`}
+                    >
+                      Edit
+                    </button>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -744,7 +751,22 @@ export default function ProfilePage() {
               </div>
             </div>
             {isEditing ? (
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetAvatarDraft();
+                    setSaveFeedback("idle");
+                    setSaveMessage("");
+                    setRemovePhotoModalOpen(false);
+                    setIsEditing(false);
+                  }}
+                  className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                    isDarkMode ? "bg-white/10 text-slate-100 hover:bg-white/15" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={saveFeedback === "saving"}
@@ -753,47 +775,37 @@ export default function ProfilePage() {
                   {saveFeedback === "saving" ? "Saving..." : "Save"}
                 </button>
               </div>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing((current) => {
-                  const next = !current;
-
-                  if (!next) {
-                    resetAvatarDraft();
-                    setSaveFeedback("idle");
-                    setSaveMessage("");
-                    setRemovePhotoModalOpen(false);
-                  }
-
-                  return next;
-                });
-              }}
-              aria-label={isEditing ? "Close profile editor" : "Edit profile"}
-              className={`auth-primary-glow flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
-            >
-              {isEditing ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                aria-label="Edit profile"
+                className={`auth-primary-glow inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-3.5 w-3.5" aria-hidden>
                   <path d="M12 20h9" />
                   <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>
-              )}
-            </button>
+                Edit profile
+              </button>
+            )}
           </div>
           <div
             className={`mt-2 rounded-[22px] px-4 py-4 ${
-              isDarkMode ? "border border-white/10 bg-white/6" : "bg-slate-50"
+              isDarkMode
+                ? "border border-white/10 bg-transparent"
+                : "border border-slate-200/70 bg-transparent"
             }`}
           >
             {isEditing ? (
               <div className="space-y-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className={`space-y-4 rounded-[18px] border p-3 sm:p-4 ${
+                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
+                }`}>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Basic info
+                  </p>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="flex shrink-0 flex-col items-center gap-3">
                     <div className="relative">
                       <AvatarBadge
@@ -867,9 +879,20 @@ export default function ProfilePage() {
                   Bio
                   <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
                 </label>
-                {watchedReviewsEditorSection}
+                </div>
 
-                <div className="space-y-3">
+                <div className={`space-y-4 rounded-[18px] border p-3 sm:p-4 ${
+                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
+                }`}>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Watched reviews
+                  </p>
+                {watchedReviewsEditorSection}
+                </div>
+
+                <div className={`space-y-3 rounded-[18px] border p-3 sm:p-4 ${
+                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
+                }`}>
                   <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Discovery preferences
                   </p>
@@ -1009,7 +1032,8 @@ export default function ProfilePage() {
             )}
           </div>
         </form>
-        <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
+        {!isEditing ? (
+          <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
           {[
             { value: acceptedMovies.length, label: "Picks", href: "/picks" },
             {
@@ -1041,7 +1065,8 @@ export default function ProfilePage() {
               </p>
             </Link>
           ))}
-        </div>
+          </div>
+        ) : null}
       </SurfaceCard>
 
       <SurfaceCard
