@@ -739,7 +739,14 @@ export default function SettingsPage() {
                   </p>
                 ) : null}
               </div>
-              <div className="ui-shell-footer !px-0 !pt-2">
+              <div className="ui-shell-footer !flex !flex-col !flex-nowrap !gap-2 !px-4 !pt-3 sm:!px-5">
+                <button
+                  type="submit"
+                  disabled={giftRedeemState === "saving"}
+                  className="ui-btn ui-btn-primary order-2 w-full justify-center px-3 py-2.5 text-xs font-semibold leading-tight tracking-tight disabled:opacity-70 sm:text-[13px]"
+                >
+                  {giftRedeemState === "saving" ? "Applying…" : "Redeem"}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -752,16 +759,9 @@ export default function SettingsPage() {
                     });
                   }}
                   disabled={giftRedeemState === "saving"}
-                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-70"
+                  className="ui-btn ui-btn-secondary order-1 w-full justify-center px-3 py-2.5 text-xs font-semibold leading-tight tracking-tight disabled:opacity-70 sm:text-[13px]"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={giftRedeemState === "saving"}
-                  className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
-                >
-                  {giftRedeemState === "saving" ? "Redeeming..." : "Redeem code"}
                 </button>
               </div>
             </form>
