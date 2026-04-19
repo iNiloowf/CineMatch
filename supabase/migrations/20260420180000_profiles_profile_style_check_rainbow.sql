@@ -1,4 +1,4 @@
--- Allow Rainbow Pro Studio profile style (named check on public.profiles).
+-- Ensure profiles.profile_style allows rainbow (re-run safe: drops named check then re-adds).
 
 alter table public.profiles
   drop constraint if exists profiles_profile_style_check;

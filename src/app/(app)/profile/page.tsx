@@ -1397,7 +1397,7 @@ export default function ProfilePage() {
                         key={styleOption.id}
                         type="button"
                         onClick={() => void handleSelectProfileStyle(styleOption.id)}
-                        className={`relative overflow-hidden rounded-[16px] border px-3 py-3 text-left transition ${proStylePreviewById[styleOption.id]} ${
+                        className={`relative flex min-h-[4.25rem] flex-col justify-end overflow-hidden rounded-[16px] border px-3 py-3 text-left transition ${proStylePreviewById[styleOption.id]} ${
                           selected
                             ? isDarkMode
                               ? "ring-2 ring-violet-300/45"
@@ -1406,37 +1406,9 @@ export default function ProfilePage() {
                         }`}
                       >
                         <span className={`pointer-events-none absolute inset-0 ${proStylePatternById[styleOption.id]}`} aria-hidden />
-                        <span
-                          className={`pointer-events-none absolute right-2 top-2 text-[10px] font-bold uppercase tracking-[0.14em] ${
-                            isDarkMode ? "text-white/75" : "text-slate-700/75"
-                          }`}
-                          aria-hidden
-                        >
-                          {styleOption.id === "classic"
-                            ? "Clear"
-                            : styleOption.id === "glass"
-                              ? "Soft"
-                              : styleOption.id === "neon"
-                                ? "Vivid"
-                                : "Spectrum"}
-                        </span>
-                        <div className="relative">
-                        <p
-                          className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-200/90" : "text-violet-700/90"}`}
-                        >
-                          Pro Studio
+                        <p className={`relative text-sm font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                          {styleOption.label}
                         </p>
-                        <p className="text-sm font-bold">{styleOption.label}</p>
-                        <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                          {styleOption.id === "classic"
-                            ? "Sharp readability with neutral surfaces and clear hierarchy"
-                            : styleOption.id === "glass"
-                              ? "Gentle highlights and softer cards for a calm look"
-                              : styleOption.id === "neon"
-                                ? "Higher contrast accents for strong visibility and energy"
-                                : "Prismatic glow and soft spectrum washes that stay readable in any mode"}
-                        </p>
-                        </div>
                       </button>
                     );
                   })}
