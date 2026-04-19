@@ -915,11 +915,11 @@ export default function SettingsPage() {
                   key={plan.id}
                   type="button"
                   onClick={() => setSelectedPlanType(plan.id)}
-                  className={`rounded-[14px] border px-3 py-3 text-left transition ${
+                  className={`rounded-[14px] border px-3 py-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-violet-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
                     selectedPlanType === plan.id
                       ? isDarkMode
-                        ? "border-violet-400/45 bg-violet-500/12 ring-1 ring-violet-400/28"
-                        : "border-violet-300 bg-violet-50 ring-1 ring-violet-200/80"
+                        ? "border-violet-400/50 bg-violet-500/12 shadow-[inset_0_0_0_1px_rgba(167,139,250,0.35)]"
+                        : "border-violet-400/80 bg-violet-50 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.22)]"
                       : isDarkMode
                         ? "border-white/10 bg-white/[0.03]"
                         : "border-slate-200/90 bg-white"

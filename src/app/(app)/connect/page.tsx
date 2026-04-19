@@ -16,14 +16,14 @@ function ConnectBackdrop({ isDarkMode }: { isDarkMode: boolean }) {
         className={`auth-landing-blob -left-20 top-[-14%] h-[min(48vw,20rem)] w-[min(48vw,20rem)] ${
           isDarkMode
             ? "bg-[radial-gradient(circle_at_30%_30%,rgba(139,92,246,0.42),transparent_62%)]"
-            : "bg-[radial-gradient(circle_at_30%_30%,rgba(167,139,250,0.38),transparent_62%)]"
+            : "bg-[radial-gradient(circle_at_30%_30%,rgba(167,139,250,0.2),transparent_62%)]"
         }`}
       />
       <div
         className={`auth-landing-blob auth-landing-blob--b right-[-18%] bottom-[-8%] h-[min(55vw,24rem)] w-[min(55vw,24rem)] ${
           isDarkMode
             ? "bg-[radial-gradient(circle_at_40%_40%,rgba(52,211,153,0.22),transparent_58%)]"
-            : "bg-[radial-gradient(circle_at_40%_40%,rgba(52,211,153,0.28),transparent_58%)]"
+            : "bg-[radial-gradient(circle_at_40%_40%,rgba(52,211,153,0.16),transparent_58%)]"
         }`}
       />
     </div>
@@ -83,7 +83,7 @@ export default function ConnectPage() {
 
   const shellBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#161022_42%,#0c0a12_100%)]"
-    : "bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_52%,#eef2ff_100%)]";
+    : "bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_70%,#f1f5f9_100%)]";
 
   const linkCount = linkedUsers.length;
   const atFriendLimit = linkCount >= MAX_LINKED_FRIENDS;

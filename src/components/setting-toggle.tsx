@@ -23,7 +23,7 @@ export function SettingToggle({
       onClick={() => onChange(!checked)}
       aria-pressed={checked}
       className={`flex items-center justify-between gap-5 rounded-[24px] px-4 py-4 ${
-        isDarkMode ? "bg-white/6" : "bg-slate-50"
+        isDarkMode ? "bg-white/6" : "bg-slate-50/80 ring-1 ring-slate-200/70"
       }`}
     >
       <div className="min-w-0 flex-1 space-y-1 text-left">
