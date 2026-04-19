@@ -1410,10 +1410,10 @@ export default function PicksPage() {
                   await markPickWatched(pendingWatchedMovie.id, false);
                   setPendingWatchedMovieId(null);
                 }}
-                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-3 text-sm font-semibold shadow-sm transition hover:brightness-110 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 sm:min-w-0 sm:flex-1 ${
+                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400/80 sm:min-w-0 sm:flex-1 ${
                   isDarkMode
-                    ? "bg-red-600 text-white hover:bg-red-500"
-                    : "bg-red-600 text-white hover:bg-red-700"
+                    ? "border-red-500/45 bg-red-950/25 text-red-200/95 hover:border-red-400/55 hover:bg-red-950/45"
+                    : "border-red-300/90 bg-red-50/40 text-red-800 hover:border-red-400 hover:bg-red-50/90"
                 }`}
               >
                 Not for me
@@ -1424,10 +1424,10 @@ export default function PicksPage() {
                   await markPickWatched(pendingWatchedMovie.id, true);
                   setPendingWatchedMovieId(null);
                 }}
-                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-3 text-sm font-semibold shadow-sm transition hover:brightness-110 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:min-w-0 sm:flex-1 ${
+                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400/80 sm:min-w-0 sm:flex-1 ${
                   isDarkMode
-                    ? "bg-emerald-600 text-white hover:bg-emerald-500"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200/95 hover:border-emerald-400/50 hover:bg-emerald-950/40"
+                    : "border-emerald-300/90 bg-emerald-50/50 text-emerald-900 hover:border-emerald-400 hover:bg-emerald-50"
                 }`}
               >
                 Recommend
