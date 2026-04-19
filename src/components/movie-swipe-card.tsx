@@ -247,7 +247,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
-        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-3 overflow-visible rounded-[24px] p-3.5 sm:p-4 ${
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-hidden rounded-[24px] p-3 sm:p-3.5 ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
@@ -277,7 +277,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
+          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)] sm:p-4"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? undefined
@@ -293,7 +293,7 @@ export function MovieSwipeCard({
             objectFit={movie.poster.imageUrl ? "contain" : "cover"}
           />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),transparent_32%,rgba(15,23,42,0.42)_58%,rgba(3,7,18,0.82)_100%)]" />
-          <div className="relative flex min-h-[11.125rem] flex-col justify-between gap-2 sm:min-h-[12rem]">
+          <div className="relative flex min-h-[10.25rem] flex-col justify-between gap-2 sm:min-h-[11.5rem]">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
               <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -401,7 +401,7 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-3 ${
+          className={`flex min-h-0 flex-col gap-2.5 ${
             isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
         >
@@ -453,7 +453,7 @@ export function MovieSwipeCard({
 
           <div
             ref={descriptionSectionRef}
-            className={`w-full shrink-0 rounded-[22px] px-3 py-3 text-left ${
+            className={`w-full shrink-0 rounded-[22px] px-3 py-2.5 text-left ${
               isDarkMode
                 ? "bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
@@ -463,7 +463,7 @@ export function MovieSwipeCard({
             {shouldClamp ? (
               <>
                 <p
-                  className={`text-[11px] leading-5 ${
+                  className={`text-[11px] leading-[1.35rem] ${
                     shouldClamp && !isDescriptionExpanded ? "line-clamp-2" : ""
                   } ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
@@ -489,7 +489,7 @@ export function MovieSwipeCard({
               </>
             ) : (
               <p
-                className={`text-[11px] leading-5 ${
+                className={`text-[11px] leading-[1.35rem] ${
                   isDarkMode ? "text-slate-200" : "text-slate-600"
                 }`}
               >
@@ -498,7 +498,7 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mb-1 grid shrink-0 grid-cols-2 gap-2 sm:gap-3">
+          <div className="mt-auto grid shrink-0 grid-cols-2 gap-2 pb-[max(0.125rem,env(safe-area-inset-bottom,0px))] sm:gap-3">
             <button
               type="button"
               onClick={onReject}
@@ -521,8 +521,8 @@ export function MovieSwipeCard({
               className="min-h-11 min-w-0 rounded-[22px] bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_4px_16px_rgba(109,40,217,0.22)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs"
             >
               <span className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
-                <span className="shrink-0 text-sm leading-none">♡</span>
-                <span className="min-w-0 truncate">Accept</span>
+                <span className="shrink-0 text-sm leading-none">❤</span>
+                <span className="min-w-0 truncate">Like</span>
               </span>
             </button>
           </div>

@@ -1013,24 +1013,6 @@ function DiscoverPageContent({
           hasActiveBrowse={Boolean(movie)}
         />
         <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 max-[380px]:px-2.5">
-          <div className="mb-2 flex items-end justify-between gap-2">
-            <div>
-              <p
-                className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                Find titles
-              </p>
-              <p
-                className={`mt-0.5 text-[11px] leading-snug ${
-                  isDarkMode ? "text-slate-400" : "text-slate-600"
-                }`}
-              >
-                Search opens after two characters. Filter refines your stack.
-              </p>
-            </div>
-          </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
@@ -1507,9 +1489,9 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-visible pt-1 pb-2">
+      <div className="min-h-0 flex-1 overflow-hidden pt-1 pb-1">
         {movie ? (
-          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(66dvh,30rem)] flex-col overflow-visible rounded-[26px]">
+          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px]">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
