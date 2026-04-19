@@ -60,10 +60,14 @@ export function AchievementBadgesShowcase({
           return (
             <li key={achievement.id} className="flex flex-col items-center text-center">
               <div
-                className={`flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-2xl bg-gradient-to-br shadow-[0_8px_24px_rgba(15,23,42,0.25)] ring-2 ring-white/25 sm:h-14 sm:w-14 ${meta.gradient}`}
+                className={`relative flex h-[3.25rem] w-[3.25rem] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br shadow-[0_14px_28px_rgba(15,23,42,0.3),inset_0_1px_0_rgba(255,255,255,0.4)] ring-2 sm:h-14 sm:w-14 ${
+                  isDarkMode ? "ring-white/25" : "ring-white/65"
+                } ${meta.gradient}`}
                 title={`${achievement.title}: ${achievement.description}`}
               >
-                <span className="text-lg font-black tabular-nums text-white drop-shadow-sm sm:text-xl">
+                <span className="pointer-events-none absolute inset-x-1 top-1 h-2.5 rounded-full bg-white/35 blur-[1px]" />
+                <span className="pointer-events-none absolute inset-x-2 bottom-1 h-2 rounded-full bg-black/18 blur-[2px]" />
+                <span className="relative text-lg font-black tabular-nums text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)] sm:text-xl">
                   {meta.glyph}
                 </span>
               </div>

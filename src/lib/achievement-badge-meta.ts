@@ -57,6 +57,11 @@ export const ACHIEVEMENT_BADGE_BY_ID: Record<string, AchievementBadgeMeta> = {
     gradient: "from-emerald-400 via-teal-500 to-cyan-800",
     caption: "12 mutual",
   },
+  "pro-member": {
+    glyph: "PRO",
+    gradient: "from-amber-300 via-yellow-500 to-orange-600",
+    caption: "Pro member",
+  },
 };
 
 export function getAchievementBadgeMeta(achievementId: string): AchievementBadgeMeta {

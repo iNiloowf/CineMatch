@@ -6,6 +6,7 @@ import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { SettingToggle } from "@/components/setting-toggle";
 import { SurfaceCard } from "@/components/surface-card";
+import { getAchievementBadgeMeta } from "@/lib/achievement-badge-meta";
 import type { Achievement } from "@/lib/types";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
@@ -25,6 +26,7 @@ function AchievementRow({
     ? 0
     : Math.min(100, Math.round((achievement.progress / achievement.target) * 100));
   const inProgress = !achievement.isLocked && achievement.progress < achievement.target;
+  const badgeMeta = getAchievementBadgeMeta(achievement.id);
 
   return (
     <div
@@ -33,6 +35,21 @@ function AchievementRow({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
+        <div
+          className={`relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br shadow-[0_6px_16px_rgba(15,23,42,0.24)] ring-1 ${
+            achievement.isLocked
+              ? isDarkMode
+                ? "from-slate-600 to-slate-800 ring-white/12"
+                : "from-slate-300 to-slate-500 ring-slate-300/90"
+              : `${badgeMeta.gradient} ring-white/35`
+          }`}
+          aria-hidden
+        >
+          <span className="pointer-events-none absolute inset-x-1 top-1 h-2 rounded-full bg-white/30 blur-[1px]" />
+          <span className="text-[10px] font-black uppercase tracking-tight text-white drop-shadow-sm">
+            {badgeMeta.glyph}
+          </span>
+        </div>
         <div className="min-w-0 flex-1">
           <p
             className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}

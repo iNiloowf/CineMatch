@@ -6,6 +6,7 @@ export type AchievementMetrics = {
   watchedSharedCount: number;
   acceptedLinksCount: number;
   mutualPickCount: number;
+  hasProSubscription: number;
 };
 
 export function getAchievementMetrics(data: AppData, userId: string): AchievementMetrics {
@@ -58,10 +59,15 @@ export function getAchievementMetrics(data: AppData, userId: string): Achievemen
     watchedSharedCount,
     acceptedLinksCount,
     mutualPickCount: mutualPickIds.size,
+    hasProSubscription:
+      data.settings[userId]?.subscriptionTier === "pro" ||
+      data.settings[userId]?.adminModeSimulatePro
+        ? 1
+        : 0,
   };
 }
 
-type AchievementKind = "accepts" | "swipes" | "watched" | "links" | "mutuals";
+type AchievementKind = "accepts" | "swipes" | "watched" | "links" | "mutuals" | "pro";
 
 type AchievementTemplate = {
   id: string;
@@ -141,6 +147,13 @@ const ACHIEVEMENT_TEMPLATES: AchievementTemplate[] = [
     requiresIds: ["connected"],
     kind: "mutuals",
   },
+  {
+    id: "pro-member",
+    title: "Pro Member",
+    description: "Unlock Pro by starting a subscription.",
+    target: 1,
+    kind: "pro",
+  },
 ];
 
 function rawMetric(template: AchievementTemplate, metrics: AchievementMetrics): number {
@@ -155,6 +168,8 @@ function rawMetric(template: AchievementTemplate, metrics: AchievementMetrics): 
       return metrics.acceptedLinksCount;
     case "mutuals":
       return metrics.mutualPickCount;
+    case "pro":
+      return metrics.hasProSubscription;
     default:
       return 0;
   }
@@ -204,6 +219,8 @@ function buildDetailExplanation(
         return "After Explorer, you kept browsing until 60 swipes.";
       case "mutual-12":
         return "With active links, you and friends overlapped on 12+ titles.";
+      case "pro-member":
+        return "You activated Pro and unlocked premium account features.";
       default:
         return template.description;
     }
@@ -221,6 +238,10 @@ function buildDetailExplanation(
       return `You have ${v} active friend link${v === 1 ? "" : "s"}; reach ${template.target}.`;
     case "mutuals":
       return `You share ${v} mutual saved title${v === 1 ? "" : "s"} with friends; reach ${template.target}.`;
+    case "pro":
+      return v >= 1
+        ? "Pro is active on your account."
+        : "Activate Pro in Settings > Subscription to unlock this badge.";
     default:
       return template.description;
   }
