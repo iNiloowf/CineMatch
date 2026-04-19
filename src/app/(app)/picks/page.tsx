@@ -52,12 +52,15 @@ export default function PicksPage() {
     linkedUsers,
     removePick,
     markPickWatched,
+    unmarkPickWatched,
+    watchedPickReviews,
     onboardingPreferences,
     isDarkMode,
     hasProAccess,
   } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
   const [pendingWatchedMovieId, setPendingWatchedMovieId] = useState<string | null>(null);
+  const [picksListTab, setPicksListTab] = useState<"queue" | "watched">("queue");
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
@@ -105,6 +108,19 @@ export default function PicksPage() {
     }
     return map;
   }, [sharedMovies]);
+
+  const watchedMovieIdSet = useMemo(
+    () => new Set(watchedPickReviews.map((entry) => entry.movie.id)),
+    [watchedPickReviews],
+  );
+
+  const queueMovies = useMemo(
+    () => acceptedMovies.filter((movie) => !watchedMovieIdSet.has(movie.id)),
+    [acceptedMovies, watchedMovieIdSet],
+  );
+
+  const queueCount = queueMovies.length;
+  const watchedCount = watchedPickReviews.length;
 
   const mutualPickCount = useMemo(
     () => new Set(sharedMovies.map((entry) => entry.movie.id)).size,
@@ -502,6 +518,13 @@ export default function PicksPage() {
   const requestMarkWatched = useCallback((movieId: string) => {
     setPendingWatchedMovieId(movieId);
   }, []);
+
+  const handleUnwatch = useCallback(
+    (movieId: string) => {
+      void unmarkPickWatched(movieId);
+    },
+    [unmarkPickWatched],
+  );
 
   const resolveAccessToken = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
@@ -1077,21 +1100,125 @@ export default function PicksPage() {
           </div>
         ) : null}
 
-        <div className="space-y-3 sm:space-y-3.5">
-          {acceptedMovies.map((movie, index) => (
-            <PicksMovieRow
-              key={movie.id}
-              movie={movie}
-              listIndex={index}
-              matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
-              isDarkMode={isDarkMode}
-              onOpenDetails={openPickDetails}
-              onShare={handleShareMovie}
-              onMarkWatched={requestMarkWatched}
-              onRequestRemove={requestRemovePick}
-            />
-          ))}
-        </div>
+        {acceptedMovies.length > 0 ? (
+          <div className="space-y-3">
+            <div
+              className={`flex rounded-[14px] p-1 ${
+                isDarkMode
+                  ? "bg-white/[0.06] ring-1 ring-white/10"
+                  : "bg-slate-100 ring-1 ring-slate-200/90"
+              }`}
+              role="tablist"
+              aria-label="Picks lists"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={picksListTab === "queue"}
+                onClick={() => setPicksListTab("queue")}
+                className={`min-h-10 flex-1 rounded-[11px] px-2 text-xs font-semibold transition sm:text-sm ${
+                  picksListTab === "queue"
+                    ? isDarkMode
+                      ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
+                      : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90"
+                    : isDarkMode
+                      ? "text-slate-400 hover:text-slate-200"
+                      : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                To watch
+                <span className="ml-1 tabular-nums opacity-80">({queueCount})</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={picksListTab === "watched"}
+                onClick={() => setPicksListTab("watched")}
+                className={`min-h-10 flex-1 rounded-[11px] px-2 text-xs font-semibold transition sm:text-sm ${
+                  picksListTab === "watched"
+                    ? isDarkMode
+                      ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
+                      : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90"
+                    : isDarkMode
+                      ? "text-slate-400 hover:text-slate-200"
+                      : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Watched
+                <span className="ml-1 tabular-nums opacity-80">({watchedCount})</span>
+              </button>
+            </div>
+
+            <div className="space-y-3 sm:space-y-3.5">
+              {picksListTab === "queue" ? (
+                queueMovies.length > 0 ? (
+                  queueMovies.map((movie, index) => (
+                    <PicksMovieRow
+                      key={movie.id}
+                      movie={movie}
+                      listIndex={index}
+                      matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
+                      isDarkMode={isDarkMode}
+                      onOpenDetails={openPickDetails}
+                      onShare={handleShareMovie}
+                      onMarkWatched={requestMarkWatched}
+                      onRequestRemove={requestRemovePick}
+                    />
+                  ))
+                ) : (
+                  <SurfaceCard className="space-y-2 px-4 py-5 text-center sm:px-5">
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                      Everything here is marked watched
+                    </p>
+                    <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                      Open the Watched tab to review titles or mark them as not watched yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPicksListTab("watched")}
+                      className="ui-btn ui-btn-secondary mt-1 w-full sm:mx-auto sm:w-auto"
+                    >
+                      Go to Watched
+                    </button>
+                  </SurfaceCard>
+                )
+              ) : watchedPickReviews.length > 0 ? (
+                watchedPickReviews.map((entry, index) => (
+                  <PicksMovieRow
+                    key={`${entry.movie.id}-${entry.watchedAt}`}
+                    variant="watched"
+                    movie={entry.movie}
+                    watchedRecommended={entry.recommended}
+                    listIndex={index}
+                    matchingPartners={partnerNamesByPickId.get(entry.movie.id) ?? []}
+                    isDarkMode={isDarkMode}
+                    onOpenDetails={openPickDetails}
+                    onShare={handleShareMovie}
+                    onMarkWatched={requestMarkWatched}
+                    onRequestRemove={requestRemovePick}
+                    onUnwatch={handleUnwatch}
+                  />
+                ))
+              ) : (
+                <SurfaceCard className="space-y-2 px-4 py-5 text-center sm:px-5">
+                  <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    No watched titles yet
+                  </p>
+                  <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                    Mark a pick as watched from the To watch tab — it will show up here.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setPicksListTab("queue")}
+                    className="ui-btn ui-btn-secondary mt-1 w-full sm:mx-auto sm:w-auto"
+                  >
+                    Back to To watch
+                  </button>
+                </SurfaceCard>
+              )}
+            </div>
+          </div>
+        ) : null}
 
         {acceptedMovies.length === 0 ? (
           <SurfaceCard className="fade-up-enter space-y-3 text-center" style={{ animationDelay: "160ms" }}>
@@ -1200,19 +1327,26 @@ export default function PicksPage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`ui-shell ui-shell--dialog-sm relative z-10 flex max-h-[min(92dvh,26rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-[min(100%,22rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:w-full ${
               isDarkMode
                 ? "border-white/10 bg-slate-950 text-white"
                 : "border-white/80 bg-white text-slate-900"
             }`}
           >
-            <div className="ui-shell-header !border-b-black/6 shrink-0">
-              <h3 className="min-w-0 flex-1 text-lg font-semibold">Mark as watched</h3>
+            <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1 pr-2">
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-300/90" : "text-violet-600/90"}`}>
+                  Watched
+                </p>
+                <h3 id="picks-watched-dialog-title" className="mt-1 line-clamp-2 text-base font-semibold leading-snug sm:text-lg">
+                  {pendingWatchedMovie.title}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setPendingWatchedMovieId(null)}
                 aria-label="Close"
-                className={`ui-shell-close ${
+                className={`ui-shell-close shrink-0 ${
                   isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
                 }`}
               >
@@ -1228,22 +1362,29 @@ export default function PicksPage() {
                 </svg>
               </button>
             </div>
-            <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4">
-              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                You watched <span className="font-semibold text-inherit">{pendingWatchedMovie.title}</span>.
-                Do you recommend it?
+            <div className="ui-shell-body !pt-4">
+              <p
+                className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                id="picks-watched-dialog-desc"
+              >
+                Would you recommend this to a friend?
               </p>
             </div>
-            <div className={`ui-shell-footer !pt-4 shrink-0 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}>
+            <div
+              className={`ui-shell-footer !flex-col !gap-2 !pt-4 sm:!flex-row sm:!gap-3 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}
+              role="group"
+              aria-labelledby="picks-watched-dialog-title"
+              aria-describedby="picks-watched-dialog-desc"
+            >
               <button
                 type="button"
                 onClick={async () => {
                   await markPickWatched(pendingWatchedMovie.id, false);
                   setPendingWatchedMovieId(null);
                 }}
-                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                className="ui-btn ui-btn-secondary min-h-11 w-full shrink-0 whitespace-nowrap px-3 text-sm font-semibold sm:min-w-0 sm:flex-1"
               >
-                Not recommended
+                Not for me
               </button>
               <button
                 type="button"
@@ -1251,7 +1392,7 @@ export default function PicksPage() {
                   await markPickWatched(pendingWatchedMovie.id, true);
                   setPendingWatchedMovieId(null);
                 }}
-                className="ui-btn ui-btn-primary min-w-0 flex-1"
+                className="ui-btn ui-btn-primary min-h-11 w-full shrink-0 whitespace-nowrap px-3 text-sm font-semibold sm:min-w-0 sm:flex-1"
               >
                 Recommend
               </button>

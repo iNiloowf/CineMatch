@@ -15,6 +15,10 @@ export type PicksMovieRowProps = {
   onShare: (movieId: string) => void;
   onMarkWatched: (movieId: string) => void;
   onRequestRemove: (movieId: string) => void;
+  /** Watched tab: recommendation chip + share / not watched only. */
+  variant?: "default" | "watched";
+  watchedRecommended?: boolean;
+  onUnwatch?: (movieId: string) => void;
 };
 
 export const PicksMovieRow = memo(function PicksMovieRow({
@@ -26,8 +30,12 @@ export const PicksMovieRow = memo(function PicksMovieRow({
   onShare,
   onMarkWatched,
   onRequestRemove,
+  variant = "default",
+  watchedRecommended,
+  onUnwatch,
 }: PicksMovieRowProps) {
   const enterDelay = `${Math.min(listIndex, 12) * 45}ms`;
+  const isWatchedTab = variant === "watched";
 
   return (
     <SurfaceCard
