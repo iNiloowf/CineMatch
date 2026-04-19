@@ -694,7 +694,7 @@ export default function SettingsPage() {
                       setSelectedGiftPartnerId(partner.id);
                       setIsGiftPartnerPickerOpen(false);
                     }}
-                    className={`flex w-full items-center justify-between gap-3 rounded-[16px] border px-3.5 py-3 text-left text-sm font-semibold transition active:scale-[0.99] ${
+                    className={`flex w-full items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left text-sm font-semibold transition active:scale-[0.99] ${
                       selected
                         ? isDarkMode
                           ? "border-violet-400/45 bg-violet-500/15 text-violet-50 ring-1 ring-violet-400/30"
@@ -704,7 +704,15 @@ export default function SettingsPage() {
                           : "border-slate-200/90 bg-slate-50/80 text-slate-900 hover:border-slate-300 hover:bg-white"
                     }`}
                   >
-                    <span className="min-w-0 truncate">{partner.name}</span>
+                    <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                      <AvatarBadge
+                        initials={partner.avatar}
+                        imageUrl={partner.avatarImageUrl}
+                        sizeClassName="h-8 w-8 shrink-0"
+                        textClassName="text-[10px] font-bold"
+                      />
+                      <span className="min-w-0 truncate">{partner.name}</span>
+                    </span>
                     {selected ? (
                       <span
                         className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
@@ -1047,18 +1055,28 @@ export default function SettingsPage() {
                         : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
                     }`}
                   >
-                    <span
-                      className={`min-w-0 truncate ${
-                        selectedGiftPartner
-                          ? isDarkMode
-                            ? "text-white"
-                            : "text-slate-900"
-                          : isDarkMode
-                            ? "text-slate-500"
-                            : "text-slate-400"
-                      }`}
-                    >
-                      {selectedGiftPartner?.name ?? "Select partner"}
+                    <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                      {selectedGiftPartner ? (
+                        <AvatarBadge
+                          initials={selectedGiftPartner.avatar}
+                          imageUrl={selectedGiftPartner.avatarImageUrl}
+                          sizeClassName="h-8 w-8 shrink-0"
+                          textClassName="text-[10px] font-bold"
+                        />
+                      ) : null}
+                      <span
+                        className={`min-w-0 truncate ${
+                          selectedGiftPartner
+                            ? isDarkMode
+                              ? "text-white"
+                              : "text-slate-900"
+                            : isDarkMode
+                              ? "text-slate-500"
+                              : "text-slate-400"
+                        }`}
+                      >
+                        {selectedGiftPartner?.name ?? "Select partner"}
+                      </span>
                     </span>
                     <svg
                       viewBox="0 0 24 24"
