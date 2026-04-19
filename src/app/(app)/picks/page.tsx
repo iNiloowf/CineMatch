@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { matchPercentForMovie } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
@@ -28,6 +28,8 @@ type TopSharedPick = {
 };
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 const PREMIUM_INSIGHTS_CLOSE_MS = 240;
+const premiumInsightsDismissSessionKey = (userId: string | null) =>
+  `cinematch-picks-premium-insights-dismiss-v1-${userId ?? "guest"}`;
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -76,6 +78,22 @@ export default function PicksPage() {
   const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
   const [billingFeedback, setBillingFeedback] = useState("");
   const premiumInsightsCloseTimerRef = useRef<number | null>(null);
+  const premiumInsightsDismissKey = useMemo(
+    () => premiumInsightsDismissSessionKey(currentUserId),
+    [currentUserId],
+  );
+  const premiumInsightsDismissKeyRef = useRef(premiumInsightsDismissKey);
+  premiumInsightsDismissKeyRef.current = premiumInsightsDismissKey;
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    setIsPremiumInsightsClosed(
+      window.sessionStorage.getItem(premiumInsightsDismissKey) === "1",
+    );
+    setIsPremiumInsightsClosing(false);
+  }, [premiumInsightsDismissKey]);
 
   const pendingRemoveMovie = useMemo(
     () =>
@@ -596,6 +614,9 @@ export default function PicksPage() {
       window.clearTimeout(premiumInsightsCloseTimerRef.current);
     }
     premiumInsightsCloseTimerRef.current = window.setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(premiumInsightsDismissKeyRef.current, "1");
+      }
       setIsPremiumInsightsClosed(true);
       setIsPremiumInsightsClosing(false);
       premiumInsightsCloseTimerRef.current = null;
