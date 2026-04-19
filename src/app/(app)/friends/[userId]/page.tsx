@@ -397,112 +397,138 @@ export default function FriendProfilePage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "150ms" }}>
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <p className={sectionEyebrow}>Saved picks</p>
-            <p
-              className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+      <SurfaceCard className="fade-up-enter !p-5 sm:!p-6" style={{ animationDelay: "150ms" }}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0 space-y-2">
+              <p className={sectionEyebrow}>Saved picks</p>
+              <p
+                className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
+              >
+                Tap a movie for details
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-700"
+              }`}
             >
-              Tap a movie for details
-            </p>
+              {savedMovies.length} title{savedMovies.length === 1 ? "" : "s"}
+            </span>
           </div>
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-              isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-700"
-            }`}
-          >
-            {savedMovies.length} title{savedMovies.length === 1 ? "" : "s"}
-          </span>
-        </div>
 
-        {addMessage ? (
-          <p
-            className={`rounded-[14px] px-3 py-2 text-center text-xs font-medium ${
-              isDarkMode ? "bg-violet-500/15 text-violet-100" : "bg-violet-50 text-violet-800"
-            }`}
-            role="status"
-          >
-            {addMessage}
-          </p>
-        ) : null}
+          {addMessage ? (
+            <p
+              className={`rounded-[14px] px-4 py-3 text-center text-sm font-medium leading-relaxed ${
+                isDarkMode ? "bg-violet-500/15 text-violet-100" : "bg-violet-50 text-violet-800"
+              }`}
+              role="status"
+            >
+              {addMessage}
+            </p>
+          ) : null}
 
-        {savedMovies.length === 0 ? (
-          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            No saved picks yet — when they accept movies in Discover, they’ll show up here.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {savedMovies.map((movie, index) => {
-              const inMine = myAcceptedIds.has(movie.id);
+          {savedMovies.length === 0 ? (
+            <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              No saved picks yet — when they accept movies in Discover, they’ll show up here.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {savedMovies.map((movie, index) => {
+                const inMine = myAcceptedIds.has(movie.id);
 
-              return (
-                <li
-                  key={movie.id}
-                  className="discover-toolbar-enter"
-                  style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                >
-                  <div
-                    className={`flex items-center gap-3 overflow-hidden rounded-[18px] border transition duration-200 ${
-                      isDarkMode
-                        ? "border-white/10 bg-white/[0.03] hover:border-violet-400/25 hover:bg-white/[0.06]"
-                        : "border-slate-200/80 bg-white hover:border-violet-200 hover:shadow-sm"
-                    }`}
+                return (
+                  <li
+                    key={movie.id}
+                    className="discover-toolbar-enter"
+                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMovieId(movie.id)}
-                      className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left transition active:scale-[0.99]"
+                    <div
+                      className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
+                        isDarkMode
+                          ? "border-white/10 bg-white/[0.03] hover:border-violet-400/25 hover:bg-white/[0.06]"
+                          : "border-slate-200/80 bg-white hover:border-violet-200 hover:shadow-sm"
+                      }`}
                     >
-                      <div
-                        className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
-                          isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                        }`}
-                      >
-                        <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
-                        {!movie.poster.imageUrl ? (
-                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
-                            CM
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p
-                          className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                        >
-                          {movie.title}
-                        </p>
-                        <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          {movie.year}
-                          {inMine ? " · In your picks" : ""}
-                        </p>
-                      </div>
-                    </button>
-                    {linkEntry.status === "accepted" ? (
                       <button
                         type="button"
-                        disabled={inMine || addingId === movie.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleAddPick(movie.id);
-                        }}
-                        className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
-                          inMine
-                            ? isDarkMode
-                              ? "bg-white/8 text-slate-400"
-                              : "bg-slate-100 text-slate-500"
-                            : "ui-btn ui-btn-primary !min-h-0 px-3 py-1.5"
-                        }`}
+                        onClick={() => setSelectedMovieId(movie.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
                       >
-                        {inMine ? "Yours" : addingId === movie.id ? "Adding…" : "Add"}
+                        <div
+                          className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
+                            isDarkMode ? "bg-slate-800" : "bg-slate-100"
+                          }`}
+                        >
+                          <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
+                          {!movie.poster.imageUrl ? (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                              CM
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                          >
+                            {movie.title}
+                          </p>
+                          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                            {movie.year}
+                            {inMine ? " · In your picks" : ""}
+                          </p>
+                        </div>
                       </button>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                      {linkEntry.status === "accepted" ? (
+                        inMine ? (
+                          <span
+                            className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                              isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            Yours
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={addingId === movie.id}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleAddPick(movie.id);
+                            }}
+                            aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
+                            className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+                              addingId === movie.id
+                                ? isDarkMode
+                                  ? "bg-violet-500/35"
+                                  : "bg-violet-400/90"
+                                : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
+                            }`}
+                          >
+                            {addingId === movie.id ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden />
+                            ) : (
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                className="h-5 w-5"
+                                aria-hidden
+                              >
+                                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </SurfaceCard>
     </div>
   );
