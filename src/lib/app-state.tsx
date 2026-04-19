@@ -1044,6 +1044,31 @@ async function uploadProfilePhoto(
   };
 
   const fileToUpload = await normalizeImageFileForUpload(file);
+  const accessToken = await getCurrentAccessToken();
+
+  if (accessToken) {
+    try {
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      const response = await fetch("/api/profile-photo", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+      const payload = (await response.json()) as {
+        publicUrl?: string;
+      };
+
+      if (response.ok && payload.publicUrl) {
+        return payload.publicUrl;
+      }
+    } catch {
+      // Fall back to direct browser upload for local/demo environments.
+    }
+  }
+
   const extension = fileToUpload.name.split(".").pop()?.toLowerCase() || "jpg";
   const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
   const filePath = `${userId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
