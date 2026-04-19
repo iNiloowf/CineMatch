@@ -500,7 +500,7 @@ export default function ProfilePage() {
       ) : (
         <div className="space-y-3">
           <div
-            className={`grid grid-cols-2 gap-1 rounded-xl p-0.5 ${
+            className={`grid grid-cols-1 gap-1.5 rounded-xl p-0.5 sm:grid-cols-2 sm:gap-1 ${
               isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
             }`}
           >
@@ -508,7 +508,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setWatchedReviewTab("recommended")}
               aria-label={`Recommended, ${recommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[14px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-[11px] font-semibold uppercase leading-snug tracking-wide transition sm:text-xs ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -518,13 +518,15 @@ export default function ProfilePage() {
                     : "text-slate-500"
               }`}
             >
-              <span className="block truncate">Recommended ({recommendedWatchedPicks.length})</span>
+              <span className="block whitespace-normal leading-snug">
+                Recommended ({recommendedWatchedPicks.length})
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setWatchedReviewTab("notRecommended")}
               aria-label={`Not recommended, ${notRecommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[14px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-[11px] font-semibold uppercase leading-snug tracking-wide transition sm:text-xs ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
@@ -534,7 +536,9 @@ export default function ProfilePage() {
                     : "text-slate-500"
               }`}
             >
-              <span className="block truncate">Not recommended ({notRecommendedWatchedPicks.length})</span>
+              <span className="block whitespace-normal leading-snug">
+                Not recommended ({notRecommendedWatchedPicks.length})
+              </span>
             </button>
           </div>
 
