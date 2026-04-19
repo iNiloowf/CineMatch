@@ -269,7 +269,7 @@ export default function ProfilePage() {
         : "ring-1 ring-fuchsia-300/90 bg-gradient-to-b from-fuchsia-50 via-violet-50 to-indigo-100/50 shadow-[0_20px_44px_rgba(147,51,234,0.26)]"
       : isDarkMode
         ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
-        : "ring-1 ring-slate-300/95 bg-gradient-to-b from-slate-50 via-violet-50/25 to-slate-100/90 shadow-[0_14px_32px_rgba(15,23,42,0.14)]";
+        : "ring-1 ring-slate-300/95 bg-gradient-to-b from-violet-50/85 via-violet-50/35 to-slate-100/90 shadow-[0_14px_32px_rgba(15,23,42,0.14)]";
   /** Avoid white overlays in light mode — they washed out the left side and hid theme tint. */
   const proHeaderPatternClass = selectedProfileStyle === "glass"
     ? isDarkMode
@@ -694,7 +694,8 @@ export default function ProfilePage() {
 
       <SurfaceCard
         bare
-        className={`fade-up-enter discover-toolbar-enter space-y-6 ${proHeaderCardStyle}`}
+        backgroundClassName={proHeaderCardStyle}
+        className="fade-up-enter discover-toolbar-enter"
         style={{ animationDelay: "0ms" }}
       >
         {proHeaderPatternClass ? (
@@ -1074,9 +1075,9 @@ export default function ProfilePage() {
               </svg>
             </span>
             <div className="min-w-0">
-              <p className={sectionEyebrow}>Profile themes</p>
+              <p className={sectionEyebrow}>Pro Studio</p>
               <p className={`mt-0.5 text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                Profile themes
+                Pro Studio
               </p>
               <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}>
                 Choose a balanced look for both light and dark mode
@@ -1121,7 +1122,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Profile style
+                  Pro Studio styles
                 </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {profileStyleOptions.map((styleOption) => {
@@ -1153,6 +1154,11 @@ export default function ProfilePage() {
                               : "Vivid"}
                         </span>
                         <div className="relative">
+                        <p
+                          className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-200/90" : "text-violet-700/90"}`}
+                        >
+                          Pro Studio
+                        </p>
                         <p className="text-sm font-bold">{styleOption.label}</p>
                         <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                           {styleOption.id === "classic"

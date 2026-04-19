@@ -756,9 +756,9 @@ export default function SettingsPage() {
                   : "border-slate-200 bg-white text-slate-600"
             }`}
           >
-            Pro users can choose public profile themes from Profile.
+            Pro users can choose public profile looks in Profile (Pro Studio).
             <Link href="/profile" className="ml-1 font-semibold underline underline-offset-2">
-              Open profile themes
+              Open Pro Studio
             </Link>
           </div>
           <div className="mt-4 space-y-3">

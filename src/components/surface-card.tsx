@@ -12,12 +12,18 @@ type SurfaceCardProps = {
    * Without this, theme gradients fight Tailwind’s default card `bg-*` utilities.
    */
   bare?: boolean;
+  /**
+   * Full-bleed layer behind padded content (bare only). Put ring / shadow / gradients here
+   * so the fill reaches the rounded corners; padding lives on the inner shell only.
+   */
+  backgroundClassName?: string;
 } & ComponentPropsWithoutRef<"section">;
 
 export function SurfaceCard({
   children,
   className = "",
   bare = false,
+  backgroundClassName,
   ...props
 }: SurfaceCardProps) {
   const { isDarkMode } = useAppState();
@@ -26,9 +32,15 @@ export function SurfaceCard({
     return (
       <section
         {...props}
-        className={`ui-motion-surface fade-up-enter relative isolate overflow-hidden rounded-[28px] p-5 backdrop-blur-xl hover:-translate-y-0.5 sm:p-6 ${className}`}
+        className={`ui-motion-surface fade-up-enter relative isolate overflow-hidden rounded-[28px] hover:-translate-y-0.5 ${className}`}
       >
-        <div className="relative z-0 flex h-full min-h-0 flex-col">{children}</div>
+        {backgroundClassName ? (
+          <span
+            className={`pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] ${backgroundClassName}`}
+            aria-hidden
+          />
+        ) : null}
+        <div className="relative z-10 flex w-full min-w-0 flex-col gap-6 p-5 sm:p-6">{children}</div>
       </section>
     );
   }
