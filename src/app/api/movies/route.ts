@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { Movie } from "@/lib/types";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
 import { isTmdbConfigured, searchTmdbMedia } from "@/server/tmdb";
-
-const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_DISCOVER_RATING = 3;
 const MIN_DISCOVER_RUNTIME_MINUTES = 20;
 
@@ -86,7 +85,7 @@ export async function GET(request: NextRequest) {
         }
 
         const rejectedAt = new Date(entry.createdAt).getTime();
-        return Number.isFinite(rejectedAt) && now - rejectedAt < REJECT_HIDE_WINDOW_MS;
+        return Number.isFinite(rejectedAt) && now - rejectedAt < DISCOVER_REJECT_HIDE_WINDOW_MS;
       })
       .map((entry) => entry.movieId),
   );

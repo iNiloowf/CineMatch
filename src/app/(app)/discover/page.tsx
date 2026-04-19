@@ -1517,6 +1517,84 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
+      {lastSwipe ? (
+        <div className="mx-auto w-full max-w-xl shrink-0 px-1">
+          <div
+            className={`discover-undo-toast flex w-full min-h-[3.25rem] flex-nowrap items-center gap-2.5 rounded-2xl border px-3 py-2 shadow-lg backdrop-blur-xl ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950/90"
+                : "border-slate-200/90 bg-white/95"
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                lastSwipe.decision === "accepted"
+                  ? "bg-violet-600 text-white shadow-[0_2px_8px_rgba(109,40,217,0.35)]"
+                  : isDarkMode
+                    ? "border border-white/12 bg-white/10 text-slate-100"
+                    : "border border-slate-200/90 bg-slate-100 text-slate-700"
+              }`}
+            >
+              {lastSwipe.decision === "accepted" ? "✓" : "×"}
+            </div>
+            <div className="flex min-h-[2.5rem] min-w-0 flex-1 flex-col justify-center">
+              <p
+                className={`truncate text-xs font-semibold leading-tight ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {lastSwipe.movie.title}
+              </p>
+              <p
+                className={`mt-0.5 text-[10px] leading-tight ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                {lastSwipe.decision === "accepted"
+                  ? "Saved to picks"
+                  : "Skipped"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleUndoSwipe}
+              className="shrink-0 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-semibold leading-none text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
+            >
+              Undo
+            </button>
+          </div>
+          {!undoTipDismissed ? (
+            <div
+              className={`mt-1 flex w-full min-h-[2.25rem] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
+                isDarkMode
+                  ? "border-white/8 bg-slate-950/85 text-slate-300"
+                  : "border-slate-200/80 bg-white/90 text-slate-600"
+              }`}
+            >
+              <p className="min-w-0 flex-1">
+                Tap <span className="font-semibold text-inherit">Undo</span> within a few seconds to reverse.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.localStorage.setItem(undoTipStorageKey, "1");
+                  }
+                  setUndoTipDismissed(true);
+                }}
+                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                  isDarkMode
+                    ? "text-violet-300 hover:bg-white/10"
+                    : "text-violet-700 hover:bg-slate-100"
+                }`}
+              >
+                OK
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
           <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px]">
@@ -1591,84 +1669,6 @@ function DiscoverPageContent({
           />
         )}
       </div>
-
-      {lastSwipe ? (
-        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] bottom-[max(5rem,env(safe-area-inset-bottom,0px)+3.5rem)] flex w-full flex-col items-center gap-1 px-3 min-[640px]:bottom-[max(1rem,env(safe-area-inset-bottom,0px))]">
-          <div
-            className={`discover-undo-toast pointer-events-auto flex w-full max-w-sm min-h-[3.25rem] flex-nowrap items-center gap-2.5 rounded-2xl border px-3 py-2 shadow-lg backdrop-blur-xl ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950/90"
-                : "border-slate-200/90 bg-white/95"
-            }`}
-          >
-            <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                lastSwipe.decision === "accepted"
-                  ? "bg-violet-600 text-white shadow-[0_2px_8px_rgba(109,40,217,0.35)]"
-                  : isDarkMode
-                    ? "border border-white/12 bg-white/10 text-slate-100"
-                    : "border border-slate-200/90 bg-slate-100 text-slate-700"
-              }`}
-            >
-              {lastSwipe.decision === "accepted" ? "✓" : "×"}
-            </div>
-            <div className="flex min-h-[2.5rem] min-w-0 flex-1 flex-col justify-center">
-              <p
-                className={`truncate text-xs font-semibold leading-tight ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {lastSwipe.movie.title}
-              </p>
-              <p
-                className={`mt-0.5 text-[10px] leading-tight ${
-                  isDarkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                {lastSwipe.decision === "accepted"
-                  ? "Saved to picks"
-                  : "Skipped"}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleUndoSwipe}
-              className="shrink-0 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-semibold leading-none text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
-            >
-              Undo
-            </button>
-          </div>
-          {!undoTipDismissed ? (
-            <div
-              className={`pointer-events-auto flex w-full max-w-sm min-h-[2.25rem] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
-                isDarkMode
-                  ? "border-white/8 bg-slate-950/85 text-slate-300"
-                  : "border-slate-200/80 bg-white/90 text-slate-600"
-              }`}
-            >
-              <p className="min-w-0 flex-1">
-                Tap <span className="font-semibold text-inherit">Undo</span> within a few seconds to reverse.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.localStorage.setItem(undoTipStorageKey, "1");
-                  }
-                  setUndoTipDismissed(true);
-                }}
-                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
-                  isDarkMode
-                    ? "text-violet-300 hover:bg-white/10"
-                    : "text-violet-700 hover:bg-slate-100"
-                }`}
-              >
-                OK
-              </button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
+import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import {
   getSupabaseBrowserClient,
@@ -47,7 +48,6 @@ const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
 const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
-const REJECT_HIDE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
 const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
@@ -262,6 +262,8 @@ type AppStateContextValue = {
     watchedAt: string;
   }[];
   discoverQueue: Movie[];
+  /** Used with swipes to decide if a recent reject still hides a title from Discover. */
+  discoverVisibilityTimestamp: number;
   discoverSessionKey: string;
   linkedUsers: {
     user: User;
@@ -1952,7 +1954,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const rejectedAt = new Date(swipe.createdAt).getTime();
         return (
           Number.isFinite(rejectedAt) &&
-          discoverVisibilityTimestamp - rejectedAt < REJECT_HIDE_WINDOW_MS
+          discoverVisibilityTimestamp - rejectedAt < DISCOVER_REJECT_HIDE_WINDOW_MS
         );
       })
       .map((swipe) => swipe.movieId),
@@ -3541,6 +3543,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         acceptedMovies,
         watchedPickReviews,
         discoverQueue,
+        discoverVisibilityTimestamp,
         discoverSessionKey: discoverShuffleSeed,
         linkedUsers,
         sharedMovies,
