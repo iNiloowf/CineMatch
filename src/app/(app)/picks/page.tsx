@@ -10,6 +10,7 @@ import { PicksMovieRow } from "@/components/picks-movie-row";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -722,7 +723,7 @@ export default function PicksPage() {
                             {selectedMovie.year}
                           </span>
                           <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
-                            {selectedMovie.runtime}
+                            {formatRuntimeForDisplay(selectedMovie.runtime)}
                           </span>
                         </div>
                       </div>
@@ -769,7 +770,7 @@ export default function PicksPage() {
                       </span>
                       <div className="min-w-0">
                         <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {selectedMovie.runtime}
+                          {formatRuntimeForDisplay(selectedMovie.runtime)}
                         </p>
                         <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                           Runtime
@@ -1127,8 +1128,8 @@ export default function PicksPage() {
                 className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
                   picksListTab === "queue"
                     ? isDarkMode
-                      ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
-                      : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90"
+                      ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
+                      : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
                     : isDarkMode
                       ? "text-slate-400 hover:text-slate-200"
                       : "text-slate-500 hover:text-slate-800"
@@ -1145,8 +1146,8 @@ export default function PicksPage() {
                 className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
                   picksListTab === "watched"
                     ? isDarkMode
-                      ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
-                      : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90"
+                      ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
+                      : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
                     : isDarkMode
                       ? "text-slate-400 hover:text-slate-200"
                       : "text-slate-500 hover:text-slate-800"
@@ -1346,7 +1347,7 @@ export default function PicksPage() {
             <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1 pr-2">
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-300/90" : "text-violet-600/90"}`}>
-                  Watched
+                  Your take
                 </p>
                 <h3 id="picks-watched-dialog-title" className="mt-1 line-clamp-2 text-base font-semibold leading-snug sm:text-lg">
                   {pendingWatchedMovie.title}

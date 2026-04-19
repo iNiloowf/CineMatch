@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
+import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
 import type { Movie } from "@/lib/types";
 
 export type PicksMovieRowProps = {
@@ -74,7 +75,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
               {movie.year}
             </span>
             <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">
-              {movie.runtime}
+              {formatRuntimeForDisplay(movie.runtime)}
             </span>
           </div>
         </div>
@@ -198,27 +199,33 @@ export const PicksMovieRow = memo(function PicksMovieRow({
           <div className="flex w-full gap-1.5 sm:w-auto sm:justify-end">
             <button
               type="button"
-              aria-label={`Mark ${movie.title} as watched`}
+              aria-label={`Log that you watched ${movie.title}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onMarkWatched(movie.id);
               }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[6.75rem] sm:flex-none ${
                 isDarkMode
-                  ? "border border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/22"
-                  : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  ? "border-violet-400/35 bg-violet-500/18 text-violet-100 hover:bg-violet-500/28"
+                  : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
               }`}
             >
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
                 <path
-                  d="M4.75 10.25 8 13.5l7.25-7.25"
+                  d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
                   stroke="currentColor"
-                  strokeWidth="1.8"
+                  strokeWidth="1.65"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M2.5 10s2.5-4 7.5-4 7.5 4 7.5 4-2.5 4-7.5 4-7.5-4-7.5-4Z"
+                  stroke="currentColor"
+                  strokeWidth="1.65"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
-              Watched
+              Log watch
             </button>
             <button
               type="button"
