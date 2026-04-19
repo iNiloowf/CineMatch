@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
-import { computeDiscoverMatchBreakdown, computeMovieMatchPercent } from "@/lib/match-score";
+import { computeMovieMatchPercent } from "@/lib/match-score";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -38,8 +38,7 @@ export function MovieSwipeCard({
   isInteractionLocked = false,
   swipeFeedback = null,
 }: MovieSwipeCardProps) {
-  const { isDarkMode, acceptedMovies, onboardingPreferences, data, currentUserId, watchedPickReviews } =
-    useAppState();
+  const { isDarkMode, acceptedMovies, onboardingPreferences } = useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
@@ -47,7 +46,6 @@ export function MovieSwipeCard({
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
-  const [isGenreBreakdownOpen, setIsGenreBreakdownOpen] = useState(false);
   useEscapeToClose(isTrailerVisible, () => setIsTrailerVisible(false));
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -82,94 +80,6 @@ export function MovieSwipeCard({
     acceptedGenres,
     onboarding: onboardingPreferences,
   });
-
-  const rejectedMovies = useMemo(() => {
-    if (!currentUserId) {
-      return [];
-    }
-    const rejectedIds = new Set(
-      data.swipes
-        .filter((swipe) => swipe.userId === currentUserId && swipe.decision === "rejected")
-        .map((swipe) => swipe.movieId),
-    );
-    return data.movies.filter((entry) => rejectedIds.has(entry.id));
-  }, [currentUserId, data.movies, data.swipes]);
-
-  const recommendedWatchedMovies = useMemo(
-    () => watchedPickReviews.filter((entry) => entry.recommended).map((entry) => entry.movie),
-    [watchedPickReviews],
-  );
-  const notRecommendedWatchedMovies = useMemo(
-    () => watchedPickReviews.filter((entry) => !entry.recommended).map((entry) => entry.movie),
-    [watchedPickReviews],
-  );
-
-  const matchBreakdown = useMemo(
-    () =>
-      computeDiscoverMatchBreakdown(movie, {
-        likedMovies: acceptedMovies,
-        rejectedMovies,
-        recommendedWatchedMovies,
-        notRecommendedWatchedMovies,
-        onboarding: onboardingPreferences,
-      }),
-    [
-      movie,
-      acceptedMovies,
-      rejectedMovies,
-      recommendedWatchedMovies,
-      notRecommendedWatchedMovies,
-      onboardingPreferences,
-    ],
-  );
-
-  const matchBreakdownRows = useMemo(
-    () => [
-      {
-        key: "liked",
-        label: "Liked picks",
-        sub: "genres from titles you saved",
-        value: matchBreakdown.likedGenrePercent,
-        barClass: "bg-emerald-500",
-      },
-      {
-        key: "passed",
-        label: "Passed on Discover",
-        sub: "genres from titles you skipped",
-        value: matchBreakdown.passedGenrePercent,
-        barClass: "bg-slate-400",
-      },
-      {
-        key: "rec",
-        label: "You recommended",
-        sub: "watched picks you liked",
-        value: matchBreakdown.recommendedWatchedGenrePercent,
-        barClass: "bg-violet-500",
-      },
-      {
-        key: "nrec",
-        label: "You didn’t recommend",
-        sub: "watched picks you cooled on",
-        value: matchBreakdown.notRecommendedWatchedGenrePercent,
-        barClass: "bg-rose-400",
-      },
-      {
-        key: "fav",
-        label: "Favorite genres",
-        sub: "from your taste settings",
-        value: matchBreakdown.favoritesGenrePercent,
-        barClass: "bg-amber-400",
-      },
-      {
-        key: "dis",
-        label: "Avoided genres",
-        sub: "overlap with genres you dislike",
-        value: matchBreakdown.dislikedGenreOverlapPercent,
-        barClass: "bg-orange-500",
-      },
-    ],
-    [matchBreakdown],
-  );
   const handleToggleDescription = () => {
     if (!shouldClamp) {
       return;
@@ -198,7 +108,6 @@ export function MovieSwipeCard({
     setIsLoadingTrailer(false);
     setIsTrailerVisible(false);
     setIsDescriptionExpanded(false);
-    setIsGenreBreakdownOpen(false);
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
@@ -540,96 +449,6 @@ export function MovieSwipeCard({
           </div>
 
           <div
-            className={`rounded-[18px] border max-[380px]:rounded-[16px] ${
-              isDarkMode ? "border-white/10 bg-white/[0.06]" : "border border-slate-200/80 bg-white/90"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => setIsGenreBreakdownOpen((open) => !open)}
-              aria-expanded={isGenreBreakdownOpen}
-              className={`flex w-full items-center justify-between gap-1.5 px-2 py-1.5 text-left max-[380px]:px-1.5 max-[380px]:py-1 ${
-                isDarkMode ? "text-slate-200" : "text-slate-800"
-              }`}
-            >
-              <span className="min-w-0 flex-1">
-                <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-violet-300/95 max-[380px]:text-[7.5px] sm:text-[9px]">
-                  Genre match
-                </span>
-                <span
-                  className={`mt-0.5 block truncate text-[8px] font-medium leading-tight max-[380px]:text-[7.5px] sm:text-[9px] ${
-                    isDarkMode ? "text-slate-400" : "text-slate-600"
-                  }`}
-                >
-                  Likes {matchBreakdown.likedGenrePercent}% · Passes {matchBreakdown.passedGenrePercent}% · Rec{" "}
-                  {matchBreakdown.recommendedWatchedGenrePercent}%
-                </span>
-              </span>
-              <span
-                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold ring-1 max-[380px]:text-[7.5px] sm:text-[9px] ${
-                  isDarkMode
-                    ? "bg-white/10 text-slate-200 ring-white/15"
-                    : "bg-slate-100 text-slate-600 ring-slate-200/90"
-                }`}
-              >
-                {isGenreBreakdownOpen ? "Hide" : "+ detail"}
-              </span>
-            </button>
-            {isGenreBreakdownOpen ? (
-              <div
-                className={`space-y-1.5 border-t px-2 pb-2 pt-1.5 max-[380px]:px-1.5 ${
-                  isDarkMode ? "border-white/10" : "border-slate-200/80"
-                }`}
-              >
-                <p
-                  className={`text-[8px] leading-snug max-[380px]:text-[7.5px] sm:text-[9px] ${
-                    isDarkMode ? "text-slate-500" : "text-slate-500"
-                  }`}
-                >
-                  Percent = share of this title’s genres that also appear in that part of your history or taste
-                  settings.
-                </p>
-                <div className="space-y-1.5">
-                  {matchBreakdownRows.map((row) => (
-                    <div
-                      key={row.key}
-                      className="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-x-1.5 gap-y-0.5 sm:grid-cols-[minmax(0,1fr)_2.5rem] sm:gap-x-2"
-                    >
-                      <div className="min-w-0">
-                        <p
-                          className={`truncate text-[8px] font-semibold leading-tight max-[380px]:text-[7.5px] sm:text-[10px] ${
-                            isDarkMode ? "text-slate-200" : "text-slate-800"
-                          }`}
-                          title={`${row.label}: ${row.sub}`}
-                        >
-                          {row.label}
-                        </p>
-                        <div
-                          className={`mt-0.5 h-1.5 overflow-hidden rounded-full ${
-                            isDarkMode ? "bg-white/10" : "bg-slate-200/90"
-                          }`}
-                        >
-                          <div
-                            className={`h-full rounded-full ${row.barClass} transition-[width]`}
-                            style={{ width: `${Math.min(100, Math.max(0, row.value))}%` }}
-                          />
-                        </div>
-                      </div>
-                      <p
-                        className={`text-right text-[8px] font-bold tabular-nums leading-none max-[380px]:text-[7.5px] sm:text-[10px] ${
-                          isDarkMode ? "text-slate-200" : "text-slate-700"
-                        }`}
-                      >
-                        {row.value}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div
             ref={descriptionSectionRef}
             className={`w-full shrink-0 rounded-[22px] px-3 py-2.5 text-left ${
               isDarkMode
@@ -703,27 +522,19 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mt-auto grid shrink-0 grid-cols-2 gap-2.5 pb-[max(0.125rem,env(safe-area-inset-bottom,0px))] sm:gap-3">
+          <div className="mt-auto grid shrink-0 grid-cols-2 gap-2 pb-[max(0.125rem,env(safe-area-inset-bottom,0px))] sm:gap-2.5">
             <button
               type="button"
               onClick={onReject}
               disabled={isInteractionLocked}
-              className={`group min-h-12 min-w-0 rounded-[24px] border px-3 py-2.5 text-[11px] font-semibold tracking-wide transition active:scale-[0.98] max-[380px]:px-2.5 sm:min-h-[3.25rem] sm:px-4 sm:text-xs ${
+              className={`min-h-11 min-w-0 rounded-xl border px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:px-3.5 sm:text-xs ${
                 isDarkMode
-                  ? "border-white/14 bg-gradient-to-b from-white/12 to-white/[0.06] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:border-white/22 hover:from-white/16 hover:to-white/10"
-                  : "border-slate-200/95 bg-gradient-to-b from-white to-slate-50/98 text-slate-600 shadow-[0_2px_12px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:border-slate-300 hover:text-slate-800"
-              } disabled:cursor-not-allowed disabled:opacity-70`}
+                  ? "border-white/18 bg-white/[0.07] text-slate-100 hover:bg-white/12"
+                  : "border-slate-300/90 bg-white text-slate-600 shadow-sm hover:border-slate-400 hover:bg-slate-50"
+              } disabled:cursor-not-allowed disabled:opacity-65`}
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-light leading-none transition ${
-                    isDarkMode
-                      ? "bg-black/25 text-slate-100 group-hover:bg-black/35"
-                      : "bg-slate-100 text-slate-500 group-hover:bg-slate-200/90"
-                  }`}
-                >
-                  ×
-                </span>
+              <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
+                <span className="shrink-0 text-base font-normal leading-none opacity-90">×</span>
                 <span className="min-w-0 truncate">Reject</span>
               </span>
             </button>
@@ -731,12 +542,10 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="group min-h-12 min-w-0 rounded-[24px] bg-gradient-to-b from-violet-500 to-violet-700 px-3 py-2.5 text-[11px] font-semibold tracking-wide text-white shadow-[0_6px_22px_rgba(109,40,217,0.38),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:from-violet-500 hover:to-violet-700 hover:shadow-[0_8px_26px_rgba(109,40,217,0.45)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:min-h-[3.25rem] sm:px-4 sm:text-xs"
+              className="min-h-11 min-w-0 rounded-xl bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-3.5 sm:text-xs"
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm leading-none shadow-inner transition group-hover:bg-white/28">
-                  ❤
-                </span>
+              <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
+                <span className="shrink-0 text-sm leading-none">♥</span>
                 <span className="min-w-0 truncate">Like</span>
               </span>
             </button>
