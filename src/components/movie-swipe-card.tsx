@@ -241,15 +241,13 @@ export function MovieSwipeCard({
     resetDrag();
   };
 
-  const statIconWell = `flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] sm:h-11 sm:w-11 ${
-    isDarkMode ? "bg-white/12 ring-1 ring-white/10" : "bg-white ring-1 ring-slate-200/90 shadow-sm"
-  }`;
-  const statSvg = "h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]";
+  const statSvg =
+    "h-6 w-6 shrink-0 sm:h-[1.375rem] sm:w-[1.375rem]";
 
   return (
     <>
       <SurfaceCard
-        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-[var(--swipe-y-gap)] overflow-hidden rounded-[24px] p-3 [--swipe-y-gap:clamp(0.75rem,2.75vw,1rem)] sm:p-3.5 ${
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-[var(--swipe-y-gap)] overflow-hidden rounded-[24px] p-3 [--swipe-y-gap:clamp(0.875rem,3vw,1.125rem)] sm:p-3.5 ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
@@ -279,7 +277,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)] sm:p-4"
+          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.1)] sm:p-4"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? undefined
@@ -403,93 +401,89 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-[var(--swipe-y-gap)] ${
-            isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
+          className={`grid shrink-0 grid-cols-3 gap-1 rounded-[18px] px-2 py-2.5 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:rounded-[20px] sm:px-3 sm:py-3 ${
+            isDarkMode
+              ? "border border-white/14 bg-white/10"
+              : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
           }`}
         >
-          <div
-            className={`grid shrink-0 grid-cols-3 gap-1 rounded-[18px] px-2 py-2.5 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:rounded-[20px] sm:px-3 sm:py-3 ${
-              isDarkMode
-                ? "border border-white/14 bg-white/10"
-                : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
-            }`}
-          >
-            <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-              <span className={statIconWell} aria-hidden>
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`${statSvg} ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
-                  fill="currentColor"
-                >
-                  <path d="M12 3.2 14.4 9.2h6.5l-5.2 3.8 2 6.4L12 16.9 6.3 19.4l2-6.4L3.1 9.2h6.5L12 3.2z" />
-                </svg>
-              </span>
-              <div className="min-w-0 text-center sm:text-left">
-                <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {movie.rating.toFixed(1)}
-                </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                  IMDb rating
-                </p>
-              </div>
-            </div>
-            <div
-              className={`flex min-w-0 items-center justify-center gap-2 border-x px-0.5 sm:gap-2.5 sm:px-0 ${
-                isDarkMode ? "border-white/12" : "border-black/6"
-              }`}
+          <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+            <svg
+              viewBox="0 0 24 24"
+              className={`${statSvg} shrink-0 ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
+              fill="currentColor"
+              aria-hidden
             >
-              <span className={statIconWell} aria-hidden>
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`${statSvg} ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7.25v5.25l3.25 2" />
-                </svg>
-              </span>
-              <div className="min-w-0 text-center sm:text-left">
-                <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {runtimeLabel}
-                </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                  Runtime
-                </p>
-              </div>
-            </div>
-            <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-              <span className={statIconWell} aria-hidden>
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`${statSvg} ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
-                  <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
-                  <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
-                </svg>
-              </span>
-              <div className="min-w-0 text-center sm:text-left">
-                <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {matchScore}%
-                </p>
-                <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                  Match
-                </p>
-              </div>
+              <path d="M12 3.2 14.4 9.2h6.5l-5.2 3.8 2 6.4L12 16.9 6.3 19.4l2-6.4L3.1 9.2h6.5L12 3.2z" />
+            </svg>
+            <div className="min-w-0 text-center sm:text-left">
+              <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {movie.rating.toFixed(1)}
+              </p>
+              <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                IMDb rating
+              </p>
             </div>
           </div>
+          <div
+            className={`flex min-w-0 items-center justify-center gap-2 border-x px-0.5 sm:gap-2.5 sm:px-0 ${
+              isDarkMode ? "border-white/12" : "border-black/6"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className={`${statSvg} shrink-0 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 3" />
+            </svg>
+            <div className="min-w-0 text-center sm:text-left">
+              <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {runtimeLabel}
+              </p>
+              <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                Runtime
+              </p>
+            </div>
+          </div>
+          <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+            <svg
+              viewBox="0 0 24 24"
+              className={`${statSvg} shrink-0 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M8.5 14s1.4 2 3.5 2 3.5-2 3.5-2" />
+              <circle cx="9" cy="9.5" r="1.25" fill="currentColor" stroke="none" />
+              <circle cx="15" cy="9.5" r="1.25" fill="currentColor" stroke="none" />
+            </svg>
+            <div className="min-w-0 text-center sm:text-left">
+              <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                {matchScore}%
+              </p>
+              <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                Match
+              </p>
+            </div>
+          </div>
+        </div>
 
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
             ref={descriptionSectionRef}
-            className={`w-full shrink-0 rounded-[22px] px-3 py-2.5 text-left ${
+            className={`w-full rounded-[22px] px-3 py-2.5 text-left ${
+              isDescriptionExpanded ? "min-h-0 flex-1 overflow-y-auto pr-1" : "shrink-0"
+            } ${
               isDarkMode
                 ? "bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
@@ -572,17 +566,19 @@ export function MovieSwipeCard({
                   : "border-slate-300/75 bg-white/55 text-slate-700 shadow-sm hover:bg-white/75"
               } disabled:cursor-not-allowed disabled:opacity-65`}
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
+              <span className="inline-flex min-w-0 items-center justify-center gap-2">
                 <svg
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 shrink-0 opacity-90"
+                  className="h-5 w-5 shrink-0 opacity-95"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.2"
+                  strokeWidth="2"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                   aria-hidden
                 >
-                  <path d="M18 6 6 18M6 6l12 12" />
+                  <rect x="5" y="5" width="14" height="14" rx="4" fill="none" />
+                  <path d="M9.25 9.25 14.75 14.75M14.75 9.25 9.25 14.75" />
                 </svg>
                 <span className="min-w-0 truncate">Reject</span>
               </span>
@@ -593,9 +589,9 @@ export function MovieSwipeCard({
               disabled={isInteractionLocked}
               className={`min-h-11 min-w-0 rounded-[11px] border border-violet-400/45 bg-gradient-to-b from-violet-500/92 to-violet-600/95 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_8px_24px_rgba(109,40,217,0.35)] backdrop-blur-xl transition hover:from-violet-500 hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[12px] sm:px-3.5 sm:text-xs`}
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
-                <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden>
-                  <path d="M12 21s-6.2-3.5-8.2-6.4C2.5 12.8 3.5 9 6.8 8 8.6 7.5 10.4 8 12 9.2 13.6 8 15.4 7.5 17.2 8c3.3 1 4.3 4.8 2.2 6.6C17.2 17.5 12 21 12 21Z" />
+              <span className="inline-flex min-w-0 items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="currentColor" aria-hidden>
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09L12 5.09l.5-.42C13.59 3.81 15.26 3 17 3 20.08 3 22.5 5.41 22.5 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 <span className="min-w-0 truncate">Like</span>
               </span>
