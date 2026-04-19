@@ -427,7 +427,7 @@ export default function AdminDesktopPage() {
                       ? "border-white/12 bg-white/8 text-white placeholder:text-slate-500"
                       : "border-slate-200 bg-white text-slate-900"
                   }`}
-                  placeholder="admin@cinematch.app"
+                  placeholder="you@your-domain.com"
                 />
               </label>
               <label className="block space-y-2">

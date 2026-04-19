@@ -15,6 +15,7 @@ import {
 } from "react";
 import { computeAchievements } from "@/lib/achievements";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
+import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
@@ -2340,13 +2341,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const match = data.users.find(
       (user) =>
         user.email.toLowerCase() === email.toLowerCase() &&
-        user.password === password,
+        verifyOfflineDemoPassword(user, password),
     );
 
     if (!match) {
       return {
         ok: false,
-        message: "We couldn’t find a matching account. Try the demo login below.",
+        message:
+          "We couldn’t find a matching account. For offline demo, set NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD in .env.local and use that password with a seeded demo email.",
       };
     }
 

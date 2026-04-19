@@ -1,4 +1,5 @@
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
+import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
 import { AppData, ProfileSettings } from "@/lib/types";
 import { fetchTmdbMediaPool, isTmdbConfigured } from "@/server/tmdb";
 
@@ -38,12 +39,10 @@ export async function getMergedMovies() {
 
 export function loginUser(email: string, password: string) {
   const user = database.users.find(
-    (entry) =>
-      entry.email.toLowerCase() === email.toLowerCase() &&
-      entry.password === password,
+    (entry) => entry.email.toLowerCase() === email.toLowerCase(),
   );
 
-  if (!user) {
+  if (!user || !verifyOfflineDemoPassword(user, password)) {
     return null;
   }
 

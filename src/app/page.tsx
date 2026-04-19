@@ -317,43 +317,24 @@ export default function SignInPage() {
         </div>
 
         {!isSupabaseConfigured() ? (
-          <SurfaceCard className="auth-landing-stagger auth-landing-stagger--3 space-y-4 !p-5">
-            <div className="space-y-1">
-              <p
-                className={`text-sm font-semibold ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Demo access
-              </p>
-              <p
-                className={`text-sm leading-6 ${
-                  isDarkMode ? "text-slate-300" : "text-slate-600"
-                }`}
-              >
-                Supabase keys are not set yet, so you can use{" "}
-                <span className="font-mono text-[0.8125rem]">admin@cinematch.app</span> with{" "}
-                <span className="font-mono text-[0.8125rem]">admin123</span> to explore the local
-                demo app.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={async () => {
-                const result = await login("admin@cinematch.app", "admin123");
-
-                if (result.ok) {
-                  router.push("/discover");
-                }
-              }}
-              className={`w-full rounded-[22px] border px-4 py-3 text-sm font-semibold transition ${
-                isDarkMode
-                  ? "border-violet-400/35 bg-violet-500/14 text-violet-100 hover:bg-violet-500/22"
-                  : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
+          <SurfaceCard className="auth-landing-stagger auth-landing-stagger--3 space-y-3 !p-5">
+            <p
+              className={`text-sm font-semibold ${
+                isDarkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              Continue as Admin
-            </button>
+              Offline / local mode
+            </p>
+            <p
+              className={`text-sm leading-6 ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              Supabase is not configured. Add your project keys to enable hosted sign-in, or set{" "}
+              <span className="font-mono text-[0.8125rem]">NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD</span>{" "}
+              in <span className="font-mono text-[0.8125rem]">.env.local</span> and sign in with a
+              seeded in-memory demo email using that password (never commit real secrets).
+            </p>
           </SurfaceCard>
         ) : null}
       </div>

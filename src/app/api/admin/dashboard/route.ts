@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { logSecurityAudit } from "@/server/security-audit";
@@ -112,13 +113,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!adminRate.ok) {
-    return NextResponse.json(
-      { error: "Too many admin requests. Try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(adminRate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many admin requests. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(adminRate.retryAfterSec) },
+    });
   }
 
   const adminAuth = await requireServerAdmin(request);
@@ -228,7 +226,9 @@ export async function POST(request: NextRequest) {
           ]),
       );
     } else {
-      return NextResponse.json({ error: settingsError?.message }, { status: 500 });
+      return apiJsonError(500, settingsError?.message ?? "Server error.", {
+        code: API_ERROR_CODES.INTERNAL,
+      });
     }
   } else {
     settingsRows = (settingsResult.data ?? []) as SettingsSubscriptionRow[];
@@ -249,7 +249,9 @@ export async function POST(request: NextRequest) {
     recentSwipesResult.error;
 
   if (firstError) {
-    return NextResponse.json({ error: firstError.message }, { status: 500 });
+    return apiJsonError(500, firstError.message ?? "Admin dashboard query failed.", {
+      code: API_ERROR_CODES.INTERNAL,
+    });
   }
 
   const profiles = (profilesResult.data ?? []) as ProfileRow[];
@@ -280,7 +282,9 @@ export async function POST(request: NextRequest) {
     if (isMissingSupportTicketsError(ticketsError)) {
       ticketsUnavailable = true;
     } else {
-      return NextResponse.json({ error: ticketsError.message }, { status: 500 });
+      return apiJsonError(500, ticketsError.message ?? "Tickets query failed.", {
+        code: API_ERROR_CODES.INTERNAL,
+      });
     }
   } else {
     openTicketsCount = openTicketsCountResult.count ?? 0;
@@ -294,10 +298,9 @@ export async function POST(request: NextRequest) {
       : { data: [] as MovieRow[], error: null };
 
   if (movieTitlesResult.error) {
-    return NextResponse.json(
-      { error: movieTitlesResult.error.message },
-      { status: 500 },
-    );
+    return apiJsonError(500, movieTitlesResult.error.message ?? "Movies query failed.", {
+      code: API_ERROR_CODES.INTERNAL,
+    });
   }
 
   const profileById = new Map(profiles.map((profile) => [profile.id, profile]));

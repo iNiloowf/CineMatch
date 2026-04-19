@@ -35,7 +35,8 @@ export type ProProfileStyle =
   | "rainbow";
 
 export type AuthUser = User & {
-  password: string;
+  /** Set for accounts created in offline signup; otherwise use env shared demo password. */
+  password?: string;
 };
 
 export type SwipeDecision = "accepted" | "rejected";

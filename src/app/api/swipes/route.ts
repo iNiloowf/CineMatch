@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
@@ -67,9 +68,14 @@ export async function POST(request: NextRequest) {
   const authResult = await getAuthorizedUserId(request);
 
   if ("error" in authResult) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status },
+    const code =
+      authResult.status === 401
+        ? API_ERROR_CODES.UNAUTHORIZED
+        : API_ERROR_CODES.INTERNAL;
+    return apiJsonError(
+      authResult.status ?? 500,
+      authResult.error ?? "Request failed.",
+      { code },
     );
   }
 
@@ -106,10 +112,9 @@ export async function POST(request: NextRequest) {
     .upsert(moviePayload as never, { onConflict: "id" });
 
   if (movieResult.error) {
-    return NextResponse.json(
-      { error: movieResult.error.message },
-      { status: 500 },
-    );
+    return apiJsonError(500, movieResult.error.message, {
+      code: API_ERROR_CODES.INTERNAL,
+    });
   }
 
   const createdAt = new Date().toISOString();
@@ -130,9 +135,10 @@ export async function POST(request: NextRequest) {
   };
 
   if (swipeResult.error || !swipeResult.data) {
-    return NextResponse.json(
-      { error: swipeResult.error?.message ?? "The swipe could not be saved." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      swipeResult.error?.message ?? "The swipe could not be saved.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -155,9 +161,14 @@ export async function DELETE(request: NextRequest) {
   const authResult = await getAuthorizedUserId(request);
 
   if ("error" in authResult) {
-    return NextResponse.json(
-      { error: authResult.error },
-      { status: authResult.status },
+    const code =
+      authResult.status === 401
+        ? API_ERROR_CODES.UNAUTHORIZED
+        : API_ERROR_CODES.INTERNAL;
+    return apiJsonError(
+      authResult.status ?? 500,
+      authResult.error ?? "Request failed.",
+      { code },
     );
   }
 
@@ -170,13 +181,10 @@ export async function DELETE(request: NextRequest) {
   });
 
   if (!undoRate.ok) {
-    return NextResponse.json(
-      { error: "Too many undo requests. Try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(undoRate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many undo requests. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(undoRate.retryAfterSec) },
+    });
   }
 
   const parsedBody = await parseJsonBody(request, deleteSwipeBodySchema);
@@ -192,10 +200,9 @@ export async function DELETE(request: NextRequest) {
     .eq("movie_id", movieId);
 
   if (deleteResult.error) {
-    return NextResponse.json(
-      { error: deleteResult.error.message },
-      { status: 500 },
-    );
+    return apiJsonError(500, deleteResult.error.message, {
+      code: API_ERROR_CODES.INTERNAL,
+    });
   }
 
   void logSecurityAudit({

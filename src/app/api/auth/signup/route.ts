@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { signupUser } from "@/server/mock-db";
 import { z } from "zod";
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
   const result = signupUser(body);
 
   if ("error" in result) {
-    return NextResponse.json({ error: result.error }, { status: 409 });
+    return apiJsonError(409, result.error ?? "Conflict.", { code: API_ERROR_CODES.CONFLICT });
   }
 
   return NextResponse.json(result, { status: 201 });
