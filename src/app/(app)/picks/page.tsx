@@ -1410,7 +1410,11 @@ export default function PicksPage() {
                   await markPickWatched(pendingWatchedMovie.id, false);
                   setPendingWatchedMovieId(null);
                 }}
-                className="ui-btn ui-btn-secondary min-h-11 w-full shrink-0 whitespace-nowrap px-3 text-sm font-semibold sm:min-w-0 sm:flex-1"
+                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-3 text-sm font-semibold shadow-sm transition hover:brightness-110 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 sm:min-w-0 sm:flex-1 ${
+                  isDarkMode
+                    ? "bg-red-600 text-white hover:bg-red-500"
+                    : "bg-red-600 text-white hover:bg-red-700"
+                }`}
               >
                 Not for me
               </button>
@@ -1420,7 +1424,11 @@ export default function PicksPage() {
                   await markPickWatched(pendingWatchedMovie.id, true);
                   setPendingWatchedMovieId(null);
                 }}
-                className="ui-btn ui-btn-primary min-h-11 w-full shrink-0 whitespace-nowrap px-3 text-sm font-semibold sm:min-w-0 sm:flex-1"
+                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl px-3 text-sm font-semibold shadow-sm transition hover:brightness-110 active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 sm:min-w-0 sm:flex-1 ${
+                  isDarkMode
+                    ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
               >
                 Recommend
               </button>
