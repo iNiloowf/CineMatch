@@ -500,19 +500,15 @@ export default function ProfilePage() {
       ) : (
         <div className="space-y-3">
           <div
-            role="tablist"
-            aria-label="Watched reviews"
             className={`grid grid-cols-2 gap-1 rounded-xl p-0.5 ${
               isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
             }`}
           >
             <button
               type="button"
-              role="tab"
-              aria-selected={watchedReviewTab === "recommended"}
               onClick={() => setWatchedReviewTab("recommended")}
               aria-label={`Recommended, ${recommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold leading-snug transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -526,11 +522,9 @@ export default function ProfilePage() {
             </button>
             <button
               type="button"
-              role="tab"
-              aria-selected={watchedReviewTab === "notRecommended"}
               onClick={() => setWatchedReviewTab("notRecommended")}
               aria-label={`Not recommended, ${notRecommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold leading-snug transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
@@ -833,50 +827,40 @@ export default function ProfilePage() {
                 Update your recommendation for{" "}
                 <span className="font-semibold text-inherit">{editingWatchedEntry.movie.title}</span>.
               </p>
-              <div
-                className={`mt-4 grid grid-cols-2 gap-1 rounded-xl p-0.5 ${
-                  isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
-                }`}
-                role="tablist"
-                aria-label="Recommendation"
-              >
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <button
                   type="button"
-                  role="tab"
                   onClick={async () => {
                     await markPickWatched(editingWatchedEntry.movie.id, false);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-9 rounded-[10px] px-2 py-2 text-center text-[10px] font-semibold transition ${
-                    editingWatchedEntry.recommended
-                      ? isDarkMode
-                        ? "text-slate-400"
-                        : "text-slate-500"
-                      : isDarkMode
-                        ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
-                        : "bg-rose-100 text-rose-800 ring-1 ring-rose-200"
+                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
+                    isDarkMode
+                      ? "border-rose-400/30 bg-rose-500/12 text-rose-100 hover:bg-rose-500/20"
+                      : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                   }`}
                 >
-                  Not recommended
+                  <p className="text-[10px] font-semibold leading-tight">Not recommended</p>
+                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
+                    Keep this title in your watched list, marked as not recommended.
+                  </p>
                 </button>
                 <button
                   type="button"
-                  role="tab"
                   onClick={async () => {
                     await markPickWatched(editingWatchedEntry.movie.id, true);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-9 rounded-[10px] px-2 py-2 text-center text-[10px] font-semibold transition ${
-                    editingWatchedEntry.recommended
-                      ? isDarkMode
-                        ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
-                        : "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
-                      : isDarkMode
-                        ? "text-slate-400"
-                        : "text-slate-500"
+                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
+                    isDarkMode
+                      ? "border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/24"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   }`}
                 >
-                  Recommended
+                  <p className="text-[10px] font-semibold leading-tight">Recommend</p>
+                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
+                    Mark this movie as a recommendation for your profile.
+                  </p>
                 </button>
               </div>
             </div>
@@ -1109,7 +1093,17 @@ export default function ProfilePage() {
 
                 <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
 
-                <section className="space-y-3">{watchedReviewsEditorSection}</section>
+                <section className="space-y-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Watched reviews
+                    </p>
+                    <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      From Picks after you mark a title watched.
+                    </p>
+                  </div>
+                  {watchedReviewsEditorSection}
+                </section>
 
                 <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
 
