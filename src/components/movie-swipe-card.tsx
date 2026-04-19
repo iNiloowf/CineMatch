@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
-import { computeMovieMatchPercent } from "@/lib/match-score";
+import { computeDiscoverMatchBreakdown, computeMovieMatchPercent } from "@/lib/match-score";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -38,7 +38,8 @@ export function MovieSwipeCard({
   isInteractionLocked = false,
   swipeFeedback = null,
 }: MovieSwipeCardProps) {
-  const { isDarkMode, acceptedMovies, onboardingPreferences } = useAppState();
+  const { isDarkMode, acceptedMovies, onboardingPreferences, data, currentUserId, watchedPickReviews } =
+    useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
@@ -46,6 +47,7 @@ export function MovieSwipeCard({
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isSnapAnimating, setIsSnapAnimating] = useState(false);
+  const [isGenreBreakdownOpen, setIsGenreBreakdownOpen] = useState(false);
   useEscapeToClose(isTrailerVisible, () => setIsTrailerVisible(false));
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -80,6 +82,94 @@ export function MovieSwipeCard({
     acceptedGenres,
     onboarding: onboardingPreferences,
   });
+
+  const rejectedMovies = useMemo(() => {
+    if (!currentUserId) {
+      return [];
+    }
+    const rejectedIds = new Set(
+      data.swipes
+        .filter((swipe) => swipe.userId === currentUserId && swipe.decision === "rejected")
+        .map((swipe) => swipe.movieId),
+    );
+    return data.movies.filter((entry) => rejectedIds.has(entry.id));
+  }, [currentUserId, data.movies, data.swipes]);
+
+  const recommendedWatchedMovies = useMemo(
+    () => watchedPickReviews.filter((entry) => entry.recommended).map((entry) => entry.movie),
+    [watchedPickReviews],
+  );
+  const notRecommendedWatchedMovies = useMemo(
+    () => watchedPickReviews.filter((entry) => !entry.recommended).map((entry) => entry.movie),
+    [watchedPickReviews],
+  );
+
+  const matchBreakdown = useMemo(
+    () =>
+      computeDiscoverMatchBreakdown(movie, {
+        likedMovies: acceptedMovies,
+        rejectedMovies,
+        recommendedWatchedMovies,
+        notRecommendedWatchedMovies,
+        onboarding: onboardingPreferences,
+      }),
+    [
+      movie,
+      acceptedMovies,
+      rejectedMovies,
+      recommendedWatchedMovies,
+      notRecommendedWatchedMovies,
+      onboardingPreferences,
+    ],
+  );
+
+  const matchBreakdownRows = useMemo(
+    () => [
+      {
+        key: "liked",
+        label: "Liked picks",
+        sub: "genres from titles you saved",
+        value: matchBreakdown.likedGenrePercent,
+        barClass: "bg-emerald-500",
+      },
+      {
+        key: "passed",
+        label: "Passed on Discover",
+        sub: "genres from titles you skipped",
+        value: matchBreakdown.passedGenrePercent,
+        barClass: "bg-slate-400",
+      },
+      {
+        key: "rec",
+        label: "You recommended",
+        sub: "watched picks you liked",
+        value: matchBreakdown.recommendedWatchedGenrePercent,
+        barClass: "bg-violet-500",
+      },
+      {
+        key: "nrec",
+        label: "You didn’t recommend",
+        sub: "watched picks you cooled on",
+        value: matchBreakdown.notRecommendedWatchedGenrePercent,
+        barClass: "bg-rose-400",
+      },
+      {
+        key: "fav",
+        label: "Favorite genres",
+        sub: "from your taste settings",
+        value: matchBreakdown.favoritesGenrePercent,
+        barClass: "bg-amber-400",
+      },
+      {
+        key: "dis",
+        label: "Avoided genres",
+        sub: "overlap with genres you dislike",
+        value: matchBreakdown.dislikedGenreOverlapPercent,
+        barClass: "bg-orange-500",
+      },
+    ],
+    [matchBreakdown],
+  );
   const handleToggleDescription = () => {
     if (!shouldClamp) {
       return;
@@ -108,6 +198,7 @@ export function MovieSwipeCard({
     setIsLoadingTrailer(false);
     setIsTrailerVisible(false);
     setIsDescriptionExpanded(false);
+    setIsGenreBreakdownOpen(false);
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
@@ -446,6 +537,96 @@ export function MovieSwipeCard({
                 </p>
               </div>
             </div>
+          </div>
+
+          <div
+            className={`rounded-[18px] border max-[380px]:rounded-[16px] ${
+              isDarkMode ? "border-white/10 bg-white/[0.06]" : "border border-slate-200/80 bg-white/90"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setIsGenreBreakdownOpen((open) => !open)}
+              aria-expanded={isGenreBreakdownOpen}
+              className={`flex w-full items-center justify-between gap-1.5 px-2 py-1.5 text-left max-[380px]:px-1.5 max-[380px]:py-1 ${
+                isDarkMode ? "text-slate-200" : "text-slate-800"
+              }`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-violet-300/95 max-[380px]:text-[7.5px] sm:text-[9px]">
+                  Genre match
+                </span>
+                <span
+                  className={`mt-0.5 block truncate text-[8px] font-medium leading-tight max-[380px]:text-[7.5px] sm:text-[9px] ${
+                    isDarkMode ? "text-slate-400" : "text-slate-600"
+                  }`}
+                >
+                  Likes {matchBreakdown.likedGenrePercent}% · Passes {matchBreakdown.passedGenrePercent}% · Rec{" "}
+                  {matchBreakdown.recommendedWatchedGenrePercent}%
+                </span>
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold ring-1 max-[380px]:text-[7.5px] sm:text-[9px] ${
+                  isDarkMode
+                    ? "bg-white/10 text-slate-200 ring-white/15"
+                    : "bg-slate-100 text-slate-600 ring-slate-200/90"
+                }`}
+              >
+                {isGenreBreakdownOpen ? "Hide" : "+ detail"}
+              </span>
+            </button>
+            {isGenreBreakdownOpen ? (
+              <div
+                className={`space-y-1.5 border-t px-2 pb-2 pt-1.5 max-[380px]:px-1.5 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200/80"
+                }`}
+              >
+                <p
+                  className={`text-[8px] leading-snug max-[380px]:text-[7.5px] sm:text-[9px] ${
+                    isDarkMode ? "text-slate-500" : "text-slate-500"
+                  }`}
+                >
+                  Percent = share of this title’s genres that also appear in that part of your history or taste
+                  settings.
+                </p>
+                <div className="space-y-1.5">
+                  {matchBreakdownRows.map((row) => (
+                    <div
+                      key={row.key}
+                      className="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-x-1.5 gap-y-0.5 sm:grid-cols-[minmax(0,1fr)_2.5rem] sm:gap-x-2"
+                    >
+                      <div className="min-w-0">
+                        <p
+                          className={`truncate text-[8px] font-semibold leading-tight max-[380px]:text-[7.5px] sm:text-[10px] ${
+                            isDarkMode ? "text-slate-200" : "text-slate-800"
+                          }`}
+                          title={`${row.label}: ${row.sub}`}
+                        >
+                          {row.label}
+                        </p>
+                        <div
+                          className={`mt-0.5 h-1.5 overflow-hidden rounded-full ${
+                            isDarkMode ? "bg-white/10" : "bg-slate-200/90"
+                          }`}
+                        >
+                          <div
+                            className={`h-full rounded-full ${row.barClass} transition-[width]`}
+                            style={{ width: `${Math.min(100, Math.max(0, row.value))}%` }}
+                          />
+                        </div>
+                      </div>
+                      <p
+                        className={`text-right text-[8px] font-bold tabular-nums leading-none max-[380px]:text-[7.5px] sm:text-[10px] ${
+                          isDarkMode ? "text-slate-200" : "text-slate-700"
+                        }`}
+                      >
+                        {row.value}%
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div
