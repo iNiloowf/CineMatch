@@ -69,6 +69,14 @@ export type SharedHiddenMovie = {
   hiddenAt: string;
 };
 
+export type WatchedPickReview = {
+  id: string;
+  userId: string;
+  movieId: string;
+  recommended: boolean;
+  watchedAt: string;
+};
+
 export type InviteLink = {
   id: string;
   inviterId: string;
@@ -106,6 +114,7 @@ export type AppData = {
   links: LinkedUser[];
   sharedWatch: SharedWatch[];
   sharedHiddenMovies: SharedHiddenMovie[];
+  watchedPickReviews: WatchedPickReview[];
   invites: InviteLink[];
   settings: Record<string, ProfileSettings>;
 };

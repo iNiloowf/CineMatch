@@ -46,6 +46,7 @@ export const initialAppData: AppData = {
   links: [],
   sharedWatch: [],
   sharedHiddenMovies: [],
+  watchedPickReviews: [],
   invites: [],
   settings: {
     "user-admin": { ...defaultSettings },
