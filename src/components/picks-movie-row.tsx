@@ -129,6 +129,68 @@ export const PicksMovieRow = memo(function PicksMovieRow({
           </div>
         ) : null}
 
+        {isWatchedTab ? (
+          <div className="space-y-2.5 pt-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                  watchedRecommended
+                    ? isDarkMode
+                      ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
+                      : "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/90"
+                    : isDarkMode
+                      ? "bg-white/10 text-slate-200 ring-1 ring-white/15"
+                      : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/90"
+                }`}
+              >
+                {watchedRecommended ? "Recommended" : "Not for me"}
+              </span>
+            </div>
+            <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                aria-label={`Share ${movie.title}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void onShare(movie.id);
+                }}
+                className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+                  isDarkMode
+                    ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
+                    : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
+                }`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
+                  <path
+                    d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Share
+              </button>
+              {onUnwatch ? (
+                <button
+                  type="button"
+                  aria-label={`Mark ${movie.title} as not watched yet`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onUnwatch(movie.id);
+                  }}
+                  className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+                    isDarkMode
+                      ? "border-white/14 bg-white/6 text-slate-100 hover:bg-white/10"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Not watched
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : (
         <div className="flex flex-col gap-2 pt-0.5 sm:flex-row sm:items-center sm:justify-between">
           <p className={`hidden text-[11px] font-medium sm:block ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
             Tap the card for details, trailer, and share.
@@ -208,6 +270,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             </button>
           </div>
         </div>
+        )}
       </div>
     </SurfaceCard>
   );
