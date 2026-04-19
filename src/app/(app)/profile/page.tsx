@@ -261,15 +261,15 @@ export default function ProfilePage() {
   const proHeaderCardStyle = hasProAccess
     ? selectedProfileStyle === "glass"
       ? isDarkMode
-        ? "ring-1 ring-cyan-300/30 bg-gradient-to-br from-slate-900/96 via-slate-900/94 to-cyan-950/40 shadow-[0_18px_46px_rgba(8,145,178,0.2)] backdrop-blur-xl"
-        : "ring-1 ring-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/85 to-slate-50 shadow-[0_14px_34px_rgba(8,145,178,0.16)] backdrop-blur-xl"
+        ? "ring-1 ring-cyan-300/35 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[0_18px_48px_rgba(8,145,178,0.24)] backdrop-blur-xl"
+        : "ring-1 ring-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/90 to-sky-50/80 shadow-[0_16px_36px_rgba(8,145,178,0.18)] backdrop-blur-xl"
       : selectedProfileStyle === "neon"
         ? isDarkMode
-          ? "ring-1 ring-violet-300/35 bg-gradient-to-br from-slate-950 via-violet-950/45 to-indigo-950/45 shadow-[0_20px_52px_rgba(91,33,182,0.3)]"
-          : "ring-1 ring-violet-300/80 bg-gradient-to-br from-white via-violet-50/85 to-indigo-50/85 shadow-[0_16px_40px_rgba(99,102,241,0.2)]"
+          ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[0_22px_56px_rgba(126,34,206,0.34)]"
+          : "ring-1 ring-fuchsia-300/80 bg-gradient-to-br from-white via-fuchsia-50/90 to-indigo-50/90 shadow-[0_18px_42px_rgba(147,51,234,0.24)]"
         : isDarkMode
-          ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/96 to-slate-950/95 shadow-[0_16px_44px_rgba(15,23,42,0.32)]"
-          : "ring-2 ring-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 shadow-[0_12px_28px_rgba(15,23,42,0.11)]"
+          ? "ring-1 ring-white/12 bg-transparent shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
+          : "ring-1 ring-slate-200/90 bg-transparent shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
     : "";
   const proHeaderPatternClass = hasProAccess
     ? selectedProfileStyle === "glass"
@@ -278,23 +278,23 @@ export default function ProfilePage() {
         : "bg-[linear-gradient(180deg,rgba(255,255,255,0.56),transparent)] opacity-85"
       : selectedProfileStyle === "neon"
         ? isDarkMode
-          ? "bg-[linear-gradient(120deg,rgba(167,139,250,0.14),transparent_55%)] opacity-85"
-          : "bg-[linear-gradient(120deg,rgba(129,140,248,0.14),transparent_55%)] opacity-80"
+          ? "bg-[linear-gradient(120deg,rgba(236,72,153,0.14),transparent_55%)] opacity-85"
+          : "bg-[linear-gradient(120deg,rgba(217,70,239,0.14),transparent_55%)] opacity-80"
         : isDarkMode
-          ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
-          : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65"
+          ? ""
+          : ""
     : "";
 
   const proStylePreviewById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
-      ? "border-white/12 bg-gradient-to-br from-slate-900/95 to-slate-950/95 text-slate-200"
-      : "border-slate-200/90 bg-gradient-to-br from-white to-slate-100/90 text-slate-700",
+      ? "border-white/15 bg-transparent text-slate-200"
+      : "border-slate-200/90 bg-transparent text-slate-700",
     glass: isDarkMode
-      ? "border-cyan-300/30 bg-gradient-to-br from-slate-900/96 to-cyan-950/45 text-cyan-100 backdrop-blur-2xl"
-      : "border-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/90 to-slate-50 text-cyan-700 backdrop-blur-xl",
+      ? "border-cyan-300/35 bg-gradient-to-br from-slate-900/95 via-cyan-950/40 to-slate-900/95 text-cyan-100 backdrop-blur-2xl"
+      : "border-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/90 to-sky-50/85 text-cyan-700 backdrop-blur-xl",
     neon: isDarkMode
-      ? "border-violet-300/40 bg-gradient-to-br from-slate-950 via-violet-950/40 to-indigo-950/45 text-violet-100 shadow-[0_0_0_1px_rgba(139,92,246,0.25)]"
-      : "border-violet-300/75 bg-gradient-to-br from-white via-violet-50/85 to-indigo-50/85 text-violet-700",
+      ? "border-fuchsia-300/45 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/55 text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.24)]"
+      : "border-fuchsia-300/75 bg-gradient-to-br from-white via-fuchsia-50/90 to-indigo-50/90 text-fuchsia-700",
   };
   const proStylePatternById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -304,8 +304,8 @@ export default function ProfilePage() {
       ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.1),transparent)] opacity-80"
       : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] opacity-88",
     neon: isDarkMode
-      ? "bg-[linear-gradient(130deg,rgba(139,92,246,0.18),transparent_60%)] opacity-82"
-      : "bg-[linear-gradient(130deg,rgba(129,140,248,0.16),transparent_60%)] opacity-78",
+      ? "bg-[linear-gradient(130deg,rgba(236,72,153,0.16),transparent_60%)] opacity-82"
+      : "bg-[linear-gradient(130deg,rgba(217,70,239,0.16),transparent_60%)] opacity-78",
   };
 
   const proStudioSurface = isDarkMode
@@ -477,7 +477,7 @@ export default function ProfilePage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-md overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto w-full max-w-[min(92vw,30rem)] overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
               isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
             }`}
           >
@@ -502,27 +502,50 @@ export default function ProfilePage() {
                 Update your recommendation for{" "}
                 <span className="font-semibold text-inherit">{editingWatchedEntry.movie.title}</span>.
               </p>
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await markPickWatched(editingWatchedEntry.movie.id, false);
+                    setEditingWatchedMovieId(null);
+                  }}
+                  className={`min-h-12 rounded-[16px] border px-3 py-3 text-left transition ${
+                    isDarkMode
+                      ? "border-rose-400/30 bg-rose-500/12 text-rose-100 hover:bg-rose-500/20"
+                      : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                  }`}
+                >
+                  <p className="text-sm font-semibold">Not recommended</p>
+                  <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
+                    Keep this title in your watched list, marked as not recommended.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await markPickWatched(editingWatchedEntry.movie.id, true);
+                    setEditingWatchedMovieId(null);
+                  }}
+                  className={`min-h-12 rounded-[16px] border px-3 py-3 text-left transition ${
+                    isDarkMode
+                      ? "border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/24"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  }`}
+                >
+                  <p className="text-sm font-semibold">Recommend</p>
+                  <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
+                    Mark this movie as a recommendation for your profile.
+                  </p>
+                </button>
+              </div>
             </div>
-            <div className="ui-shell-footer !pt-4">
+            <div className="ui-shell-footer !pt-3">
               <button
                 type="button"
-                onClick={async () => {
-                  await markPickWatched(editingWatchedEntry.movie.id, false);
-                  setEditingWatchedMovieId(null);
-                }}
-                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                onClick={() => setEditingWatchedMovieId(null)}
+                className="ui-btn ui-btn-secondary min-w-0 w-full"
               >
-                Not recommended
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await markPickWatched(editingWatchedEntry.movie.id, true);
-                  setEditingWatchedMovieId(null);
-                }}
-                className="ui-btn ui-btn-primary min-w-0 flex-1"
-              >
-                Recommend
+                Cancel
               </button>
             </div>
           </div>
@@ -915,6 +938,107 @@ export default function ProfilePage() {
             </Link>
           ))}
         </div>
+        <div className="space-y-4">
+          <div>
+            <p className={sectionEyebrow}>Watched reviews</p>
+            <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Movies you watched and reviewed
+            </p>
+            <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              Marked from your Picks page after watching.
+            </p>
+          </div>
+          {watchedPickReviews.length === 0 ? (
+            <div
+              className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
+                isDarkMode
+                  ? "border-white/10 bg-white/[0.03] text-slate-300"
+                  : "border-slate-200/80 bg-slate-50/80 text-slate-600"
+              }`}
+            >
+              No watched reviews yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div
+                className={`rounded-[20px] border px-3 py-3 ${
+                  isDarkMode
+                    ? "border-emerald-400/22 bg-emerald-500/8"
+                    : "border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/95 to-emerald-100/75 shadow-[0_8px_26px_rgba(16,185,129,0.14)]"
+                }`}
+              >
+                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
+                  Recommended
+                </p>
+                <div className="mt-2 space-y-2">
+                  {recommendedWatchedPicks.length === 0 ? (
+                    <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+                  ) : (
+                    recommendedWatchedPicks.map((entry) => (
+                      <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-emerald-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold">{entry.movie.title}</p>
+                            <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                              {new Date(entry.watchedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingWatchedMovieId(entry.movie.id)}
+                            className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
+                              isDarkMode ? "bg-white/12 text-slate-100" : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div
+                className={`rounded-[20px] border px-3 py-3 ${
+                  isDarkMode
+                    ? "border-rose-400/22 bg-rose-500/8"
+                    : "border-rose-200/90 bg-gradient-to-br from-white via-rose-50/95 to-rose-100/75 shadow-[0_8px_26px_rgba(244,63,94,0.14)]"
+                }`}
+              >
+                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
+                  Not recommended
+                </p>
+                <div className="mt-2 space-y-2">
+                  {notRecommendedWatchedPicks.length === 0 ? (
+                    <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+                  ) : (
+                    notRecommendedWatchedPicks.map((entry) => (
+                      <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-rose-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold">{entry.movie.title}</p>
+                            <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                              {new Date(entry.watchedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingWatchedMovieId(entry.movie.id)}
+                            className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
+                              isDarkMode ? "bg-white/12 text-slate-100" : "bg-rose-100 text-rose-700"
+                            }`}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </SurfaceCard>
 
       <SurfaceCard
@@ -1037,108 +1161,6 @@ export default function ProfilePage() {
             )}
           </div>
         ) : null}
-      </SurfaceCard>
-
-      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "108ms" }}>
-        <div>
-          <p className={sectionEyebrow}>Watched reviews</p>
-          <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Movies you watched and reviewed
-          </p>
-          <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Marked from your Picks page after watching.
-          </p>
-        </div>
-        {watchedPickReviews.length === 0 ? (
-          <div
-            className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
-              isDarkMode
-                ? "border-white/10 bg-white/[0.03] text-slate-300"
-                : "border-slate-200/80 bg-slate-50/80 text-slate-600"
-            }`}
-          >
-            No watched reviews yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div
-              className={`rounded-[20px] border px-3 py-3 ${
-                isDarkMode
-                  ? "border-emerald-400/22 bg-emerald-500/8"
-                  : "border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/95 to-emerald-100/75 shadow-[0_8px_26px_rgba(16,185,129,0.14)]"
-              }`}
-            >
-              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
-                Recommended
-              </p>
-              <div className="mt-2 space-y-2">
-                {recommendedWatchedPicks.length === 0 ? (
-                  <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-                ) : (
-                  recommendedWatchedPicks.map((entry) => (
-                    <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-emerald-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{entry.movie.title}</p>
-                          <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                            {new Date(entry.watchedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                          className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                            isDarkMode ? "bg-white/12 text-slate-100" : "bg-emerald-100 text-emerald-700"
-                          }`}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <div
-              className={`rounded-[20px] border px-3 py-3 ${
-                isDarkMode
-                  ? "border-rose-400/22 bg-rose-500/8"
-                  : "border-rose-200/90 bg-gradient-to-br from-white via-rose-50/95 to-rose-100/75 shadow-[0_8px_26px_rgba(244,63,94,0.14)]"
-              }`}
-            >
-              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
-                Not recommended
-              </p>
-              <div className="mt-2 space-y-2">
-                {notRecommendedWatchedPicks.length === 0 ? (
-                  <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-                ) : (
-                  notRecommendedWatchedPicks.map((entry) => (
-                    <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-rose-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{entry.movie.title}</p>
-                          <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                            {new Date(entry.watchedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                          className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                            isDarkMode ? "bg-white/12 text-slate-100" : "bg-rose-100 text-rose-700"
-                          }`}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </SurfaceCard>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">

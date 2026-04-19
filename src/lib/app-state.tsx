@@ -3345,6 +3345,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ...payload,
     };
 
+    // Apply settings immediately so theme and toggles feel instant.
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        THEME_STORAGE_KEY,
+        nextSettings.darkMode ? "dark" : "light",
+      );
+    }
+    persistUserTheme(currentUserId, nextSettings.darkMode);
+    setPreferredDarkMode(nextSettings.darkMode);
+
+    setData((current) => ({
+      ...current,
+      settings: {
+        ...current.settings,
+        [currentUserId]: {
+          ...nextSettings,
+        },
+      },
+    }));
+
     if (supabase && isSupabaseConfigured()) {
       const settingsPayload = {
         user_id: currentUserId,
@@ -3384,25 +3404,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         );
       }
     }
-
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        THEME_STORAGE_KEY,
-        nextSettings.darkMode ? "dark" : "light",
-      );
-    }
-    persistUserTheme(currentUserId, nextSettings.darkMode);
-    setPreferredDarkMode(nextSettings.darkMode);
-
-    setData((current) => ({
-      ...current,
-      settings: {
-        ...current.settings,
-        [currentUserId]: {
-          ...nextSettings,
-        },
-      },
-    }));
   };
 
   const setAdminSubscriptionPreviewMode = async (enabled: boolean) => {
