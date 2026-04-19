@@ -294,7 +294,7 @@ export default function SharedWatchlistPage() {
                                   <button
                                     type="button"
                                     onClick={() => toggleDescription(key)}
-                                    className={`min-h-9 text-xs font-semibold underline-offset-2 hover:underline ${
+                                    className={`shared-detail-link min-h-9 underline-offset-2 hover:underline ${
                                       isDarkMode ? "text-violet-300" : "text-violet-700"
                                     }`}
                                   >
@@ -304,7 +304,7 @@ export default function SharedWatchlistPage() {
                                 <button
                                   type="button"
                                   onClick={() => setDetailsMovie(entry)}
-                                  className={`min-h-9 text-xs font-semibold underline-offset-2 hover:underline ${
+                                  className={`shared-detail-link min-h-9 underline-offset-2 hover:underline ${
                                     isDarkMode ? "text-slate-300" : "text-slate-600"
                                   }`}
                                 >
