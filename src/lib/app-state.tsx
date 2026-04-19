@@ -951,15 +951,23 @@ async function uploadProfilePhoto(
     return null;
   }
 
-  const normalizeImageFileForUpload = async (input: File): Promise<File> => {
+  const normalizeImageFileForUpload = async (
+    input: File,
+    options?: { targetMaxBytes?: number; forceJpeg?: boolean },
+  ): Promise<File> => {
     if (typeof window === "undefined" || !input.type.startsWith("image/")) {
       return input;
     }
 
-    const MAX_UPLOAD_BYTES = 700 * 1024;
+    const MAX_UPLOAD_BYTES = options?.targetMaxBytes ?? 700 * 1024;
     const MAX_DIMENSION_STEPS = [1600, 1280, 1080, 900, 768];
+    const forceJpeg =
+      options?.forceJpeg === true ||
+      !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+        input.type.toLowerCase(),
+      );
 
-    if (input.size <= MAX_UPLOAD_BYTES) {
+    if (!forceJpeg && input.size <= MAX_UPLOAD_BYTES) {
       return input;
     }
 
@@ -1044,12 +1052,32 @@ async function uploadProfilePhoto(
     .from(PROFILE_PHOTOS_BUCKET)
     .upload(filePath, fileToUpload, {
       cacheControl: "3600",
-      upsert: true,
+      upsert: false,
       contentType: fileToUpload.type || undefined,
     });
 
   if (uploadResult.error) {
-    return null;
+    const fallbackFile = await normalizeImageFileForUpload(file, {
+      targetMaxBytes: 450 * 1024,
+      forceJpeg: true,
+    });
+    const fallbackPath = `${userId}/${Date.now()}-${crypto.randomUUID()}.jpg`;
+    const fallbackUploadResult = await supabase.storage
+      .from(PROFILE_PHOTOS_BUCKET)
+      .upload(fallbackPath, fallbackFile, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "image/jpeg",
+      });
+
+    if (fallbackUploadResult.error) {
+      return null;
+    }
+
+    const fallbackPublicUrl = supabase.storage
+      .from(PROFILE_PHOTOS_BUCKET)
+      .getPublicUrl(fallbackPath).data.publicUrl;
+    return fallbackPublicUrl || null;
   }
 
   const { data } = supabase.storage
