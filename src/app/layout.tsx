@@ -1,11 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { AppStateProvider } from "@/lib/app-state";
+import { htmlMetadataIcons } from "@/lib/pwa-app-icons";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CineMatch",
   description: "A polished mobile-first movie matching app.",
+  applicationName: "CineMatch",
+  icons: htmlMetadataIcons(),
+  appleWebApp: {
+    capable: true,
+    title: "CineMatch",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0b1a" },
+  ],
 };
 
 export default function RootLayout({
