@@ -65,14 +65,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const publicUrl = admin.storage
+  const signedUrlResult = await admin.storage
     .from(PROFILE_PHOTOS_BUCKET)
-    .getPublicUrl(filePath).data.publicUrl;
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365);
 
-  if (!publicUrl) {
-    return NextResponse.json({ error: "Could not resolve uploaded photo URL." }, { status: 500 });
+  const imageUrl = signedUrlResult.data?.signedUrl;
+
+  if (!imageUrl) {
+    return NextResponse.json(
+      { error: "Could not resolve uploaded photo URL." },
+      { status: 500 },
+    );
   }
 
-  return NextResponse.json({ publicUrl });
+  return NextResponse.json({ imageUrl });
 }
 

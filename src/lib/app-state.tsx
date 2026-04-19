@@ -1058,11 +1058,12 @@ async function uploadProfilePhoto(
         body: formData,
       });
       const payload = (await response.json()) as {
+        imageUrl?: string;
         publicUrl?: string;
       };
 
-      if (response.ok && payload.publicUrl) {
-        return payload.publicUrl;
+      if (response.ok && (payload.imageUrl || payload.publicUrl)) {
+        return payload.imageUrl ?? payload.publicUrl ?? null;
       }
     } catch {
       // Fall back to direct browser upload for local/demo environments.
