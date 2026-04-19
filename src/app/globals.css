@@ -18,8 +18,8 @@
   --motion-duration-modal: 300ms;
   --motion-duration-discover-out: 190ms;
   --motion-duration-discover-in: 260ms;
-  --motion-duration-discover-swipe-accept: 360ms;
-  --motion-duration-discover-swipe-reject: 340ms;
+  --motion-duration-discover-swipe-accept: 220ms;
+  --motion-duration-discover-swipe-reject: 200ms;
   --motion-duration-discover-feedback: 260ms;
   --motion-duration-discover-undo: 320ms;
   --motion-duration-toast-pop: 560ms;

@@ -2545,7 +2545,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       decision === "accepted"
         ? collectMutualPartnerNamesBeforeUserAccepts(data, currentUserId, movieId)
         : [];
-    const accessToken = await getCurrentAccessToken();
 
     const announceMutualIfNeeded = () => {
       if (matchPartners.length > 0 && movie) {
@@ -2555,6 +2554,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         });
       }
     };
+
+    /** Apply swipe locally first so Discover can advance without waiting on the network. */
+    setData((current) => {
+      const existingWithoutCurrentChoice = current.swipes.filter(
+        (swipe) =>
+          !(swipe.userId === currentUserId && swipe.movieId === movieId),
+      );
+
+      return {
+        ...mergeMoviesIntoData(current, movie ? [movie] : []),
+        swipes: [
+          ...existingWithoutCurrentChoice,
+          {
+            userId: currentUserId,
+            movieId,
+            decision,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
+    });
+    announceMutualIfNeeded();
+
+    const accessToken = await getCurrentAccessToken();
 
     if (movie && accessToken) {
       try {
@@ -2594,34 +2617,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           }));
           // Do not bump account refresh here: a full sync reapplies cached snapshots
           // and can briefly wipe this swipe, so Discover shows the same card again.
-          announceMutualIfNeeded();
           return;
         }
       } catch {
-        // Fall through to local optimistic storage so the app stays usable.
+        // Swipe is already stored locally; network can fail silently here.
       }
     }
-
-    setData((current) => {
-      const existingWithoutCurrentChoice = current.swipes.filter(
-        (swipe) =>
-          !(swipe.userId === currentUserId && swipe.movieId === movieId),
-      );
-
-      return {
-        ...mergeMoviesIntoData(current, movie ? [movie] : []),
-        swipes: [
-          ...existingWithoutCurrentChoice,
-          {
-            userId: currentUserId,
-            movieId,
-            decision,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      };
-    });
-    announceMutualIfNeeded();
   };
 
   const undoSwipe = async (movieId: string) => {

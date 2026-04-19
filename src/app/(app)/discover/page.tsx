@@ -618,29 +618,27 @@ function DiscoverPageContent({
       window.clearTimeout(undoToastTimeoutRef.current);
     }
 
-    swipeTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        await swipeMovie(swipedMovie.id, decision);
-      } finally {
-        registerMovies([swipedMovie]);
-        setBrowseIndex(nextBrowseIndex);
-        setSwipeFeedback(null);
-        setSharedLinkOverlayMovie((current) =>
-          current?.id === swipedMovie.id ? null : current,
+    swipeTimeoutRef.current = window.setTimeout(() => {
+      registerMovies([swipedMovie]);
+      setBrowseIndex(nextBrowseIndex);
+      setSwipeFeedback(null);
+      setSharedLinkOverlayMovie((current) =>
+        current?.id === swipedMovie.id ? null : current,
+      );
+      setLastSwipe({
+        movie: swipedMovie,
+        decision,
+        browseIndex: safeBrowseIndex,
+        focusedMovieId,
+      });
+      undoToastTimeoutRef.current = window.setTimeout(() => {
+        setLastSwipe((current) =>
+          current?.movie.id === swipedMovie.id ? null : current,
         );
-        setLastSwipe({
-          movie: swipedMovie,
-          decision,
-          browseIndex: safeBrowseIndex,
-          focusedMovieId,
-        });
-        undoToastTimeoutRef.current = window.setTimeout(() => {
-          setLastSwipe((current) =>
-            current?.movie.id === swipedMovie.id ? null : current,
-          );
-        }, 5200);
-      }
-    }, 230);
+      }, 5200);
+
+      void swipeMovie(swipedMovie.id, decision);
+    }, 48);
   }, [
     movie,
     transitionState,
