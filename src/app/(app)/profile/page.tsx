@@ -261,12 +261,12 @@ export default function ProfilePage() {
   const proHeaderCardStyle = hasProAccess
     ? selectedProfileStyle === "glass"
       ? isDarkMode
-        ? "ring-2 ring-cyan-300/45 bg-gradient-to-br from-cyan-500/16 via-violet-500/14 to-fuchsia-500/14 shadow-[0_24px_62px_rgba(34,211,238,0.2)] backdrop-blur-2xl"
-        : "ring-2 ring-cyan-300/85 bg-gradient-to-br from-cyan-50/90 via-white to-violet-100/70 shadow-[0_22px_56px_rgba(14,165,233,0.2)] backdrop-blur-xl"
+        ? "ring-1 ring-cyan-300/30 bg-gradient-to-br from-slate-900/96 via-slate-900/94 to-cyan-950/40 shadow-[0_18px_46px_rgba(8,145,178,0.2)] backdrop-blur-xl"
+        : "ring-1 ring-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/85 to-slate-50 shadow-[0_14px_34px_rgba(8,145,178,0.16)] backdrop-blur-xl"
       : selectedProfileStyle === "neon"
         ? isDarkMode
-          ? "ring-2 ring-fuchsia-300/60 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.26),transparent_46%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.22),transparent_42%),linear-gradient(140deg,rgba(12,10,30,0.95),rgba(38,10,60,0.95),rgba(26,26,80,0.92))] shadow-[0_0_0_1px_rgba(244,114,182,0.35),0_26px_64px_rgba(192,38,211,0.34)]"
-          : "ring-2 ring-fuchsia-400/65 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.22),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.2),transparent_45%),linear-gradient(135deg,rgba(250,232,255,0.95),rgba(238,242,255,0.92),rgba(224,231,255,0.94))] shadow-[0_22px_58px_rgba(192,38,211,0.26)]"
+          ? "ring-1 ring-violet-300/35 bg-gradient-to-br from-slate-950 via-violet-950/45 to-indigo-950/45 shadow-[0_20px_52px_rgba(91,33,182,0.3)]"
+          : "ring-1 ring-violet-300/80 bg-gradient-to-br from-white via-violet-50/85 to-indigo-50/85 shadow-[0_16px_40px_rgba(99,102,241,0.2)]"
         : isDarkMode
           ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/95 via-slate-900/96 to-slate-950/95 shadow-[0_16px_44px_rgba(15,23,42,0.32)]"
           : "ring-2 ring-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 shadow-[0_12px_28px_rgba(15,23,42,0.11)]"
@@ -274,12 +274,12 @@ export default function ProfilePage() {
   const proHeaderPatternClass = hasProAccess
     ? selectedProfileStyle === "glass"
       ? isDarkMode
-        ? "bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.22)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.14)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-85"
-        : "bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85)_0_7%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.75)_0_8%,transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.6),transparent)] opacity-90"
+        ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-80"
+        : "bg-[linear-gradient(180deg,rgba(255,255,255,0.56),transparent)] opacity-85"
       : selectedProfileStyle === "neon"
         ? isDarkMode
-          ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.18)_0_5px,transparent_5px_13px)] opacity-85"
-          : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.18)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.16)_0_5px,transparent_5px_13px)] opacity-80"
+          ? "bg-[linear-gradient(120deg,rgba(167,139,250,0.14),transparent_55%)] opacity-85"
+          : "bg-[linear-gradient(120deg,rgba(129,140,248,0.14),transparent_55%)] opacity-80"
         : isDarkMode
           ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
           : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65"
@@ -290,22 +290,22 @@ export default function ProfilePage() {
       ? "border-white/12 bg-gradient-to-br from-slate-900/95 to-slate-950/95 text-slate-200"
       : "border-slate-200/90 bg-gradient-to-br from-white to-slate-100/90 text-slate-700",
     glass: isDarkMode
-      ? "border-cyan-300/35 bg-[linear-gradient(135deg,rgba(34,211,238,0.18),rgba(168,85,247,0.14),rgba(236,72,153,0.14))] text-cyan-100 backdrop-blur-2xl"
-      : "border-cyan-300/85 bg-[linear-gradient(135deg,rgba(224,242,254,0.98),rgba(243,244,255,0.95),rgba(250,232,255,0.94))] text-cyan-700 backdrop-blur-xl",
+      ? "border-cyan-300/30 bg-gradient-to-br from-slate-900/96 to-cyan-950/45 text-cyan-100 backdrop-blur-2xl"
+      : "border-cyan-200/90 bg-gradient-to-br from-white via-cyan-50/90 to-slate-50 text-cyan-700 backdrop-blur-xl",
     neon: isDarkMode
-      ? "border-fuchsia-300/55 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.24),transparent_44%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.2),transparent_42%),linear-gradient(145deg,rgba(10,10,25,0.96),rgba(45,10,64,0.95),rgba(20,20,70,0.92))] text-fuchsia-100 shadow-[0_0_0_1px_rgba(244,114,182,0.28)]"
-      : "border-fuchsia-300/70 bg-[radial-gradient(circle_at_top_left,rgba(244,114,182,0.2),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.18),transparent_44%),linear-gradient(140deg,rgba(250,232,255,0.95),rgba(238,242,255,0.92),rgba(224,231,255,0.94))] text-fuchsia-700",
+      ? "border-violet-300/40 bg-gradient-to-br from-slate-950 via-violet-950/40 to-indigo-950/45 text-violet-100 shadow-[0_0_0_1px_rgba(139,92,246,0.25)]"
+      : "border-violet-300/75 bg-gradient-to-br from-white via-violet-50/85 to-indigo-50/85 text-violet-700",
   };
   const proStylePatternById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
       ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.07)_0_2px,transparent_2px_12px)] opacity-70"
       : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.14)_0_2px,transparent_2px_12px)] opacity-70",
     glass: isDarkMode
-      ? "bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.26)_0_6%,transparent_22%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.18)_0_7%,transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.12),transparent)] opacity-80"
-      : "bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85)_0_6%,transparent_24%),radial-gradient(circle_at_82%_72%,rgba(255,255,255,0.75)_0_7%,transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.6),transparent)] opacity-90",
+      ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.1),transparent)] opacity-80"
+      : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] opacity-88",
     neon: isDarkMode
-      ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.22)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.2)_0_5px,transparent_5px_13px)] opacity-85"
-      : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.18)_0_5px,transparent_5px_13px)] opacity-80",
+      ? "bg-[linear-gradient(130deg,rgba(139,92,246,0.18),transparent_60%)] opacity-82"
+      : "bg-[linear-gradient(130deg,rgba(129,140,248,0.16),transparent_60%)] opacity-78",
   };
 
   const proStudioSurface = isDarkMode
