@@ -340,6 +340,82 @@ input[type="range"] {
   line-height: 1.25;
 }
 
+/* Profile Rainbow — same spectrum as .ui-modal-accent-bar + prismatic border */
+.surface-rainbow-top-accent::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 0.3125rem;
+  z-index: 25;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  background: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #fbbf24, #34d399);
+  box-shadow: 0 0 22px rgba(167, 139, 250, 0.45);
+  pointer-events: none;
+}
+
+.profile-rainbow-card-dark {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(to bottom right, rgb(3 7 18 / 0.98), rgb(76 5 120 / 0.78), rgb(15 23 42 / 0.97)),
+    linear-gradient(90deg, #34d399, #22d3ee, #38bdf8, #818cf8, #c084fc, #e879f9, #fb7185, #fbbf24, #4ade80, #34d399);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 0 40px rgba(167, 139, 250, 0.28),
+    0 0 64px rgba(34, 211, 238, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.profile-rainbow-card-light {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(
+      to bottom right,
+      rgb(255 255 255 / 0.99),
+      rgb(254 243 199 / 0.94),
+      rgb(224 242 254 / 0.96),
+      rgb(250 245 255 / 0.98)
+    ),
+    linear-gradient(90deg, #34d399, #22d3ee, #38bdf8, #818cf8, #c084fc, #e879f9, #fb7185, #fbbf24, #4ade80, #34d399);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 0 44px rgba(168, 85, 247, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.profile-rainbow-swatch-dark {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(to bottom right, rgb(15 23 42 / 0.98), rgb(91 33 182 / 0.72), rgb(15 23 42 / 0.98)),
+    linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #fbbf24, #4ade80, #34d399);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.profile-rainbow-swatch-light {
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(to bottom right, rgb(255 253 250), rgb(254 249 231 / 0.96), rgb(239 246 255 / 0.98)),
+    linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #fbbf24, #4ade80, #34d399);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.friend-profile-rainbow-header-dark {
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #fbbf24, #34d399) 1;
+  background: linear-gradient(to bottom right, rgb(2 6 23 / 0.96), rgb(59 7 100 / 0.62), rgb(2 6 23 / 0.96));
+}
+
+.friend-profile-rainbow-header-light {
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, #34d399, #22d3ee, #a78bfa, #f472b6, #fbbf24, #34d399) 1;
+  background: linear-gradient(to bottom right, rgb(255 255 255 / 0.98), rgb(254 243 232 / 0.92), rgb(239 246 255 / 0.96));
+}
+
 .picks-stat-enter {
   animation: fadeUp 480ms var(--motion-ease-standard) both;
 }
