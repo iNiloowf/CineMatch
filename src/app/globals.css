@@ -304,6 +304,21 @@ input[type="range"] {
   }
 }
 
+/* Shared watchlist — system sans, compact copy (separate from body SF Pro) */
+.shared-ui-copy {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  letter-spacing: -0.012em;
+}
+
 .picks-stat-enter {
   animation: fadeUp 480ms var(--motion-ease-standard) both;
 }

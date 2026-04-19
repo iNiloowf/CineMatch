@@ -53,7 +53,7 @@ function TogglePill({
       role="switch"
       aria-checked={checked}
       onClick={() => void onChange(!checked)}
-      className={`flex w-full items-center justify-between gap-2.5 rounded-[16px] border px-3.5 py-3 text-left text-[12px] font-semibold transition ${
+      className={`flex w-full items-center justify-between gap-2.5 rounded-[16px] border px-3 py-2.5 text-left text-[11px] font-semibold transition ${
         checked
           ? "border-violet-500/40 bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.22)]"
           : isDarkMode
@@ -116,12 +116,13 @@ export default function SharedWatchlistPage() {
           description="Open each person to see what you matched on together."
         />
 
+        <div className="shared-ui-copy space-y-4 sm:space-y-5">
         {sharedMovieGroups.length === 0 ? (
           <SurfaceCard className="space-y-2 text-center">
-            <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               No linked people yet
             </p>
-            <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
               Link with someone and their name will show up here right away.
             </p>
           </SurfaceCard>
@@ -159,17 +160,17 @@ export default function SharedWatchlistPage() {
                     className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-[18px] px-2 py-2 text-left transition sm:px-3"
                   >
                     <div className="min-w-0">
-                      <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                      <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {group.partner.name}
                       </p>
-                      <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                      <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
                         {group.movies.length > 0
                           ? `${group.movies.filter((movie) => movie.shared).length} titles you both picked`
                           : "No shared picks yet"}
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${mutualChipClass(isDarkMode)}`}
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${mutualChipClass(isDarkMode)}`}
                     >
                       {isOpen ? "Hide" : "Show"}
                     </span>
@@ -184,7 +185,7 @@ export default function SharedWatchlistPage() {
                   >
                     {group.movies.length === 0 ? (
                       <div
-                        className={`rounded-[20px] border px-4 py-4 text-sm leading-6 ${
+                        className={`rounded-[20px] border px-4 py-3.5 text-xs leading-relaxed ${
                           isDarkMode
                             ? "border-white/10 bg-white/[0.05] text-slate-300"
                             : "border-slate-200/90 bg-white text-slate-600"
@@ -228,20 +229,20 @@ export default function SharedWatchlistPage() {
                             </div>
                             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_40%,rgba(15,23,42,0.75)_100%)]" />
                             <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2 sm:left-4 sm:right-4">
-                              <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 ring-1 ring-white/15 backdrop-blur-sm">
+                              <span className="rounded-full bg-black/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/95 ring-1 ring-white/15 backdrop-blur-sm">
                                 {entry.movie.mediaType === "series" ? "Series" : "Movie"}
                               </span>
                               <div className="flex shrink-0 gap-1.5">
-                                <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
+                                <span className="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
                                   {entry.movie.year}
                                 </span>
-                                <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
+                                <span className="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
                                   {entry.movie.runtime}
                                 </span>
                               </div>
                             </div>
                             <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
-                              <h3 className="line-clamp-2 text-base font-bold leading-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-lg">
+                              <h3 className="line-clamp-2 text-[0.9375rem] font-bold leading-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-base">
                                 {entry.movie.title}
                               </h3>
                             </div>
@@ -250,27 +251,27 @@ export default function SharedWatchlistPage() {
                           <div className="space-y-3 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span
-                                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${mutualChipClass(isDarkMode)}`}
+                                className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${mutualChipClass(isDarkMode)}`}
                               >
                                 Shared match
                               </span>
                               <span
-                                className={`max-w-full truncate rounded-full px-2.5 py-1 text-[11px] font-semibold ${partnerChipClass(isDarkMode)}`}
+                                className={`max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-semibold ${partnerChipClass(isDarkMode)}`}
                               >
                                 You & {entry.partner.name}
                               </span>
                               <span
-                                className={`rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}
                               >
                                 ★ {entry.movie.rating.toFixed(1)}
                               </span>
                             </div>
 
-                            <p className={`text-sm leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                            <p className={`text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
                               Both of you said yes to this title.
                             </p>
 
-                            <p className={`text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                            <p className={`text-[11px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                               {entry.movie.genre.join(" • ")}
                             </p>
 
@@ -282,7 +283,7 @@ export default function SharedWatchlistPage() {
                               }`}
                             >
                               <p
-                                className={`text-[13px] leading-relaxed ${
+                                className={`text-xs leading-relaxed ${
                                   !expanded && needsMore ? "line-clamp-3" : ""
                                 } ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}
                               >
@@ -293,7 +294,7 @@ export default function SharedWatchlistPage() {
                                   <button
                                     type="button"
                                     onClick={() => toggleDescription(key)}
-                                    className={`min-h-10 text-sm font-semibold underline-offset-2 hover:underline ${
+                                    className={`min-h-9 text-xs font-semibold underline-offset-2 hover:underline ${
                                       isDarkMode ? "text-violet-300" : "text-violet-700"
                                     }`}
                                   >
@@ -303,18 +304,18 @@ export default function SharedWatchlistPage() {
                                 <button
                                   type="button"
                                   onClick={() => setDetailsMovie(entry)}
-                                  className={`min-h-10 text-sm font-semibold underline-offset-2 hover:underline ${
+                                  className={`min-h-9 text-xs font-semibold underline-offset-2 hover:underline ${
                                     isDarkMode ? "text-slate-300" : "text-slate-600"
                                   }`}
                                 >
-                                  Poster & full details
+                                  Full details
                                 </button>
                               </div>
                             </div>
 
                             <div className="space-y-2.5 pt-0.5">
                               <TogglePill
-                                label="Keep in shared list (Pro)"
+                                label={hasProAccess ? "Keep in shared list" : "Keep in shared list (Pro)"}
                                 checked={entry.shared}
                                 locked={!hasProAccess}
                                 isDarkMode={isDarkMode}
@@ -335,7 +336,7 @@ export default function SharedWatchlistPage() {
                               />
                               {!hasProAccess ? (
                                 <div
-                                  className={`rounded-[14px] border px-3 py-2 text-xs ${
+                                  className={`rounded-[14px] border px-3 py-2 text-[11px] leading-relaxed ${
                                     isDarkMode
                                       ? "border-violet-400/25 bg-violet-500/10 text-violet-100"
                                       : "border-violet-200/90 bg-violet-50 text-violet-700"
@@ -345,7 +346,7 @@ export default function SharedWatchlistPage() {
                                     Only “Keep in shared list” is Pro. “Watched together” is free for
                                     everyone.
                                   </p>
-                                  <Link href="/settings" className="ui-btn ui-btn-primary mt-2 !px-3 !py-1.5 !text-xs">
+                                  <Link href="/settings" className="ui-btn ui-btn-primary mt-2 !px-3 !py-1.5 !text-[11px]">
                                     Buy Pro
                                   </Link>
                                 </div>
@@ -361,6 +362,7 @@ export default function SharedWatchlistPage() {
             );
           })}
         </div>
+        </div>
       </div>
 
       {detailsMovie ? (
@@ -372,14 +374,14 @@ export default function SharedWatchlistPage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`shared-details-modal ui-shell ui-shell--dialog-md relative z-10 flex max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] flex-col overflow-hidden rounded-[30px] shadow-[0_16px_48px_rgba(15,23,42,0.16)] ${
+            className={`shared-details-modal shared-ui-copy ui-shell ui-shell--dialog-md relative z-10 flex max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] flex-col overflow-hidden rounded-[30px] shadow-[0_16px_48px_rgba(15,23,42,0.16)] ${
               isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
             }`}
           >
             <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header !border-b-black/6 shrink-0">
               <p
-                className={`min-w-0 flex-1 text-xs font-medium tracking-[0.01em] ${
+                className={`min-w-0 flex-1 text-[11px] font-medium tracking-[0.01em] ${
                   isDarkMode ? "text-slate-300" : "text-slate-500"
                 }`}
               >
@@ -439,31 +441,31 @@ export default function SharedWatchlistPage() {
                     />
                   </Link>
                   <span
-                    className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${mutualChipClass(isDarkMode)}`}
+                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${mutualChipClass(isDarkMode)}`}
                   >
                     Shared match
                   </span>
                 </div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    <h3 className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                       {detailsMovie.movie.title}
                     </h3>
-                    <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                    <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                       {detailsMovie.movie.year} • {detailsMovie.movie.runtime} • with {detailsMovie.partner.name}
                     </p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}>
                     ★ {detailsMovie.movie.rating.toFixed(1)}
                   </span>
                 </div>
 
-                <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                   {detailsMovie.movie.genre.join(" • ")}
                 </p>
 
                 <p
-                  className={`text-sm leading-7 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
+                  className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
                 >
                   {detailsMovie.movie.description}
                 </p>
