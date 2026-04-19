@@ -1,74 +1,122 @@
 # CineMatch
 
-Mobile-first movie matching app built with Next.js and Tailwind CSS.
+**CineMatch** is a mobile-first web app for discovering films, saving picks, linking with friends, and sharing watchlists—built as a polished Next.js experience with optional Supabase auth, TMDB-backed catalog data, and an Android shell via Capacitor.
 
-## What is included
+---
 
-- Login and signup flow with Supabase auth support
-- Discover screen with accept and reject movie actions
-- Accepted Movies / Your Picks page
-- Linked People page
-- Shared Watchlist with watched checkboxes
-- Profile and Settings pages
-- Mock-first state layer so the UI works immediately
-- Backend route handlers for auth, movies, swipes, links, shared watchlists, profile, and settings
-- Beginner-friendly SQL schema in [database/schema.sql](/C:/Users/niloo/Documents/New%20project/database/schema.sql)
-- Capacitor Android wrapper for APK builds in [android](/C:/Users/niloo/Documents/New%20project/android)
+## Summary
 
-## Run it
+| | |
+| --- | --- |
+| **Goal** | Swipe-style **Discover**, curate **Picks**, manage **Linked** people, collaborate on a **Shared** watchlist, and tune taste in **Profile** / **Settings**. |
+| **Stack** | **Next.js 16** (App Router), **React 19**, **TypeScript**, **Tailwind CSS 4**, **Supabase** client + API routes, **Stripe** hooks where billing applies, **Capacitor 8** for Android. |
+| **Data** | UI-first **mock / sync** layer for fast local iteration; **TMDB** for real posters, metadata, and search when configured; **Supabase** schema and SQL under `database/` and `supabase/migrations/` for production-shaped data. |
+| **Distribution** | Installable feel via **Web App Manifest** and icons under `public/icons/` (optional CDN icon via `NEXT_PUBLIC_APP_ICON_URL`). Native builds through **`android/`** + `npm run cap:*`. |
+
+---
+
+## Features (at a glance)
+
+- **Discover** — Genre filters, swipe accept/reject, undo, match-style feedback, onboarding nudges.
+- **Picks** — Saved titles, watched flow, recommendations, sharing back to shared lists, trailers where available.
+- **Linked** — Invite links, accept flow, friend connections.
+- **Shared** — Shared watchlist toggles, mutual picks, expandable rows.
+- **Profile & Settings** — Avatar, bio, discovery preferences, achievements, theme, subscription entry points.
+- **Auth** — Email/password and related API routes; magic-link / signup email flows when mail is configured.
+- **Admin** — Dashboard routes exist for operations (lock down credentials before any public admin use).
+
+---
+
+## Quick start
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open **http://localhost:3000** (dev server binds `0.0.0.0` so LAN devices can hit it).
 
-## Real movie API
+```bash
+npm run build   # production build
+npm start       # run production server
+npm run lint    # eslint
+```
 
-This app now supports [TMDB](https://developer.themoviedb.org/) as its real movie catalog source.
+---
 
-1. Create a TMDB account.
-2. Get an API Read Access Token from your TMDB API settings.
-3. Copy `.env.example` to `.env.local`.
-4. Add `TMDB_API_READ_ACCESS_TOKEN=...`
-5. Restart the dev server.
+## Environment variables
 
-When the key is present, the app keeps the current mock data for safety and also pulls in real TMDB movies for Discover.
+Create **`.env.local`** in the project root (never commit real secrets). Common keys:
 
-## Demo account
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase anon / publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only admin operations (protect fiercely) |
+| `NEXT_PUBLIC_APP_URL` | Canonical app URL for auth emails and invite links |
+| `TMDB_API_READ_ACCESS_TOKEN` **or** `TMDB_API_KEY` | [TMDB](https://developer.themoviedb.org/) catalog + images |
+| `NEXT_PUBLIC_APP_ICON_URL` | Optional HTTPS PNG (≥512 recommended) for PWA / home-screen icon |
+| Stripe / checkout URLs | As needed for subscription flows (`NEXT_PUBLIC_PRO_CHECKOUT_*` patterns in server code) |
+
+Without TMDB, the app still runs using built-in / mock paths; with TMDB, Discover and search enrich from the live catalog.
+
+---
+
+## TMDB setup (real movies)
+
+1. Create a [TMDB](https://www.themoviedb.org/) account and open API settings.
+2. Create a **Read Access Token** (preferred) or **API Key**.
+3. Add to `.env.local`:
+   - `TMDB_API_READ_ACCESS_TOKEN=...` **or**
+   - `TMDB_API_KEY=...`
+4. Restart `npm run dev`.
+
+---
+
+## Demo login (local only)
+
+Example credentials sometimes used for **local UI smoke tests** (change or remove before any real deployment):
 
 - Email: `admin@cinematch.app`
 - Password: `admin123`
 
-## Android APK
+Treat these as **non-production** only; use strong secrets, RLS, and env-based admin auth in production.
 
-This repo is now prepared for Capacitor-based Android builds and points to the hosted app at `https://cinematch.ca`.
+---
 
-1. Sync the native project after web-side changes:
+## Android (Capacitor)
+
+The `android/` project targets the deployed app (`https://cinematch.ca` in `capacitor.config.ts`—adjust for your host).
+
 ```bash
-npm run cap:sync
-```
-
-2. Open Android Studio:
-```bash
+npm run cap:sync        # copy web assets / config into Android
 npm run cap:open:android
+npm run cap:run:android
 ```
 
-3. In Android Studio, build the APK:
-- `Build`
-- `Build Bundle(s) / APK(s)`
-- `Build APK(s)`
+Build signed release APKs / App Bundles from **Android Studio** (Build → Build Bundle(s) / APK(s)).
 
-4. Android Studio will show the generated APK location when the build finishes.
+---
 
-Helpful scripts:
-- `npm run cap:sync`
-- `npm run cap:open:android`
-- `npm run cap:run:android`
+## Repository map
 
-## Project notes
+| Path | What |
+| --- | --- |
+| `src/app/` | App Router pages, layouts, API route handlers |
+| `src/lib/` | Client state, hooks, Supabase helpers, shared logic |
+| `src/components/` | Reusable UI |
+| `database/schema.sql` | Reference SQL schema |
+| `supabase/migrations/` | Incremental DB migrations |
+| `docs/` | Security notes, visual system, etc. |
+| `NEXT_TASKS.md` | Short prioritized follow-ups |
+| `IMPROVEMENT_CHECKLIST.md` | Deeper backlog and completed items |
 
-- The frontend uses browser-persisted mock data first so the app is smooth and runnable right away.
-- The backend route handlers use an in-memory mock database in `src/server/mock-db.ts`.
-- The SQL schema is ready for the next step if you want to move this to Supabase or Postgres.
-- TMDB covers the movie fields we need for this app: title, poster, overview, rating, year, runtime, and genres.
+---
+
+## Contributing / next steps
+
+See **`NEXT_TASKS.md`** and **`IMPROVEMENT_CHECKLIST.md`** for security hardening (admin auth, Zod on APIs, error boundaries, tests, CI) before treating this as production-ready.
+
+---
+
+_CineMatch — movie matching for the small screen._
