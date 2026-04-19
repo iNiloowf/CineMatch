@@ -416,13 +416,11 @@ export default function ProfilePage() {
     watchedReviewTab === "recommended" ? recommendedWatchedPicks : notRecommendedWatchedPicks;
 
   const watchedReviewsEditorSection = (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {watchedPickReviews.length === 0 ? (
         <div
-          className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
-            isDarkMode
-              ? "border-white/10 bg-white/[0.03] text-slate-300"
-              : "border-slate-200/80 bg-slate-50/80 text-slate-600"
+          className={`rounded-xl px-4 py-3.5 text-center text-sm ${
+            isDarkMode ? "bg-white/[0.04] text-slate-300" : "bg-slate-100/90 text-slate-600"
           }`}
         >
           No watched reviews yet.
@@ -430,8 +428,8 @@ export default function ProfilePage() {
       ) : (
         <div className="space-y-3">
           <div
-            className={`grid grid-cols-2 gap-2 rounded-[16px] border p-1 ${
-              isDarkMode ? "border-white/10 bg-white/5" : "border-slate-200 bg-white"
+            className={`grid grid-cols-2 gap-1.5 rounded-xl p-1 ${
+              isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
             }`}
           >
             <button
@@ -466,20 +464,18 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className={`divide-y overflow-hidden rounded-xl ${
+            isDarkMode ? "divide-white/10 bg-white/[0.04]" : "divide-slate-200/80 bg-slate-50/80"
+          }`}>
             {activeWatchedEntries.length === 0 ? (
-              <p className={`rounded-[14px] border px-3 py-2.5 text-xs ${isDarkMode ? "border-white/10 bg-white/[0.04] text-slate-300" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+              <p className={`px-3 py-3 text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 No movies in this tab yet.
               </p>
             ) : (
               activeWatchedEntries.map((entry) => (
                 <div
                   key={`${watchedReviewTab}-${entry.movie.id}`}
-                  className={`rounded-xl border px-2.5 py-2 text-xs ${
-                    isDarkMode
-                      ? "border-white/10 bg-white/8 text-slate-100"
-                      : "border-slate-200 bg-white text-slate-700 shadow-sm"
-                  }`}
+                  className={`px-3 py-2.5 text-xs ${isDarkMode ? "text-slate-100" : "text-slate-700"}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -700,7 +696,7 @@ export default function ProfilePage() {
         style={{ animationDelay: "0ms" }}
       >
         <span className={`pointer-events-none absolute inset-0 ${proHeaderPatternClass}`} aria-hidden />
-        <form className="relative z-10 space-y-5" onSubmit={handleSubmit}>
+        <form className="relative z-10 space-y-6" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               <div className="profile-avatar-pop relative shrink-0">
@@ -774,18 +770,10 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
-          <div
-            className={`mt-2 rounded-[22px] px-4 py-4 ${
-              isDarkMode
-                ? "border border-white/10 bg-transparent"
-                : "border border-slate-200/70 bg-transparent"
-            }`}
-          >
+          <div className="mt-1 space-y-8 sm:space-y-9">
             {isEditing ? (
-              <div className="space-y-5">
-                <div className={`space-y-4 rounded-[18px] border p-3 sm:p-4 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
-                }`}>
+              <div className="space-y-8 sm:space-y-9">
+                <section className="space-y-4">
                   <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Basic info
                   </p>
@@ -863,23 +851,25 @@ export default function ProfilePage() {
                   Bio
                   <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
                 </label>
-                </div>
+                </section>
 
-                <div className={`space-y-4 rounded-[18px] border p-3 sm:p-4 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
-                }`}>
-                  <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Watched reviews
-                  </p>
-                  <p className={`text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Movies you marked from Picks after watching.
-                  </p>
-                {watchedReviewsEditorSection}
-                </div>
+                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
 
-                <div className={`space-y-3 rounded-[18px] border p-3 sm:p-4 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
-                }`}>
+                <section className="space-y-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Watched reviews
+                    </p>
+                    <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      From Picks after you mark a title watched.
+                    </p>
+                  </div>
+                  {watchedReviewsEditorSection}
+                </section>
+
+                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
+
+                <section className="space-y-3">
                   <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Discovery preferences
                   </p>
@@ -1002,34 +992,28 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   </div>
-                </div>
+                </section>
               </div>
             ) : (
-              <>
-                <div
-                  className={`space-y-3 rounded-[18px] border p-3.5 ${
-                    isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      City
-                    </p>
-                    <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      {currentUser.city}
-                    </p>
-                  </div>
-                  <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200"}`} />
-                  <div className="space-y-1.5">
-                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Bio
-                    </p>
-                    <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                      {currentUser.bio}
-                    </p>
-                  </div>
+              <div className="space-y-5 pt-0.5">
+                <div>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    City
+                  </p>
+                  <p className={`mt-1.5 truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    {currentUser.city}
+                  </p>
                 </div>
-              </>
+                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
+                <div>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Bio
+                  </p>
+                  <p className={`mt-1.5 text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                    {currentUser.bio}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </form>
