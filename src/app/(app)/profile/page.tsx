@@ -708,18 +708,26 @@ export default function ProfilePage() {
                             Skipped {new Date(createdAt).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:justify-end sm:gap-2">
                           <button
                             type="button"
                             onClick={() => setDiscoverSkipDetailMovie(movie)}
-                            className={`ui-btn ui-btn-secondary min-h-10 w-full text-xs sm:w-auto sm:min-w-[6.5rem]`}
+                            className={`inline-flex min-h-8 w-full items-center justify-center rounded-md border px-2 py-1 text-[10px] font-medium leading-tight tracking-wide transition sm:w-auto sm:min-w-[5.25rem] ${
+                              isDarkMode
+                                ? "border-white/14 bg-white/[0.06] font-[system-ui,sans-serif] text-slate-200 hover:bg-white/10"
+                                : "border-slate-200/90 bg-white font-[system-ui,sans-serif] text-slate-700 hover:bg-slate-50"
+                            }`}
                           >
                             Details
                           </button>
                           <button
                             type="button"
                             onClick={() => void handleRestoreDiscoverSkip(movie)}
-                            className={`ui-btn ui-btn-primary min-h-10 w-full text-xs sm:w-auto sm:min-w-[6.5rem]`}
+                            className={`inline-flex min-h-8 w-full items-center justify-center rounded-md px-2 py-1 text-[10px] font-semibold leading-tight tracking-wide transition sm:w-auto sm:min-w-[5.25rem] ${
+                              isDarkMode
+                                ? "bg-violet-600 font-[system-ui,sans-serif] text-white hover:bg-violet-500"
+                                : "bg-violet-600 font-[system-ui,sans-serif] text-white hover:bg-violet-700"
+                            }`}
                           >
                             Restore
                           </button>

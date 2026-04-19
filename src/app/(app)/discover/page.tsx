@@ -1518,54 +1518,56 @@ function DiscoverPageContent({
       ) : null}
 
       {lastSwipe ? (
-        <div className="mx-auto w-full max-w-xl shrink-0 px-1" role="status" aria-live="polite">
+        <div className="mx-auto w-full max-w-xl shrink-0 px-2" role="status" aria-live="polite">
           <div
-            className={`discover-undo-alert flex items-start gap-2.5 rounded-md border-l-4 px-3 py-2.5 shadow-sm ring-1 ring-inset ${
-              lastSwipe.decision === "accepted"
-                ? isDarkMode
-                  ? "border-l-emerald-400 bg-emerald-500/12 ring-emerald-400/20"
-                  : "border-l-emerald-600 bg-emerald-50 ring-emerald-600/15"
-                : isDarkMode
-                  ? "border-l-amber-400 bg-amber-500/10 ring-amber-400/18"
-                  : "border-l-amber-600 bg-amber-50 ring-amber-600/12"
+            className={`discover-undo-notification flex items-center gap-3 rounded-[1.25rem] border px-3 py-2.5 shadow-[0_10px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:px-3.5 ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950/82 text-slate-100"
+                : "border-slate-200/80 bg-white/92 text-slate-900"
             }`}
           >
-            <span
-              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm text-[11px] font-bold leading-none ${
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                 lastSwipe.decision === "accepted"
-                  ? isDarkMode
-                    ? "bg-emerald-500/25 text-emerald-100"
-                    : "bg-emerald-600/15 text-emerald-800"
+                  ? "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.45)]"
                   : isDarkMode
-                    ? "bg-amber-500/20 text-amber-100"
-                    : "bg-amber-600/15 text-amber-900"
+                    ? "bg-slate-700 text-slate-100 ring-1 ring-white/10"
+                    : "bg-slate-800 text-white"
               }`}
               aria-hidden
             >
-              {lastSwipe.decision === "accepted" ? "✓" : "!"}
-            </span>
-            <div className="min-w-0 flex-1 pt-0.5">
-              <p className={`text-[13px] font-semibold leading-snug ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>
-                {lastSwipe.decision === "accepted" ? "Saved to picks" : "Passed on Discover"}
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10 21h4" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1 font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+              <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                CineMatch
               </p>
-              <p className={`mt-0.5 text-xs leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
-                <span className="font-medium">{lastSwipe.movie.title}</span>
+              <p className="mt-0.5 truncate text-[13px] font-semibold leading-tight">
+                {lastSwipe.decision === "accepted" ? "Saved to picks" : "Skipped for now"}
+              </p>
+              <p className={`mt-0.5 truncate text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                {lastSwipe.movie.title}
                 {!undoTipDismissed ? (
-                  <span className={`block pt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-                    Tap <span className="font-semibold">Undo</span> within a few seconds to reverse this.
+                  <span className={`mt-1 block text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                    Tap{" "}
+                    <span
+                      className={`font-semibold ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
+                    >
+                      Undo
+                    </span>{" "}
+                    to reverse.
                   </span>
                 ) : null}
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex shrink-0 flex-col items-stretch gap-1.5">
               <button
                 type="button"
                 onClick={handleUndoSwipe}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-bold tracking-wide uppercase ${
-                  isDarkMode
-                    ? "bg-white/15 text-white ring-1 ring-white/20 hover:bg-white/22"
-                    : "bg-slate-900 text-white hover:bg-slate-800"
-                }`}
+                className="rounded-full bg-violet-600 px-3 py-1.5 text-center text-[11px] font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
               >
                 Undo
               </button>
@@ -1578,11 +1580,9 @@ function DiscoverPageContent({
                     }
                     setUndoTipDismissed(true);
                   }}
-                  className={`text-[10px] font-semibold underline-offset-2 hover:underline ${
-                    isDarkMode ? "text-slate-400" : "text-slate-600"
-                  }`}
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-medium tracking-wide ${isDarkMode ? "text-slate-500 hover:bg-white/8" : "text-slate-500 hover:bg-slate-100"}`}
                 >
-                  Don’t show hint
+                  Hide tip
                 </button>
               ) : null}
             </div>
