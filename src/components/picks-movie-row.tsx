@@ -125,7 +125,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
           <p className={`hidden text-[11px] font-medium sm:block ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
             Tap the card for details, trailer, and share.
           </p>
-          <div className="flex w-full gap-2 sm:w-auto sm:justify-end">
+          <div className="flex w-full gap-1.5 sm:w-auto sm:justify-end">
             <button
               type="button"
               aria-label={`Mark ${movie.title} as watched`}
@@ -133,13 +133,13 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 onMarkWatched(movie.id);
               }}
-              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[14px] px-3 text-xs font-semibold transition active:scale-[0.98] sm:min-w-[7.25rem] sm:flex-none ${
+              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/22"
                   : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4 shrink-0">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
                 <path
                   d="M4.75 10.25 8 13.5l7.25-7.25"
                   stroke="currentColor"
@@ -157,13 +157,13 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 void onShare(movie.id);
               }}
-              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[14px] px-3 text-xs font-semibold transition active:scale-[0.98] sm:min-w-[7.25rem] sm:flex-none ${
+              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
                   : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4 shrink-0">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
                 <path
                   d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
                   stroke="currentColor"
@@ -181,13 +181,13 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 onRequestRemove(movie.id);
               }}
-              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[14px] border px-3 text-xs font-semibold transition active:scale-[0.98] sm:min-w-[7.25rem] sm:flex-none ${
+              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
                   : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4 shrink-0">
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
                 <path
                   d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
                   stroke="currentColor"
