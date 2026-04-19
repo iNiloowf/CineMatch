@@ -219,6 +219,7 @@ type AppStateContextValue = {
   swipeMovie: (movieId: string, decision: SwipeDecision) => Promise<void>;
   undoSwipe: (movieId: string) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
+  markPickWatched: (movieId: string, recommended: boolean) => Promise<void>;
   toggleSharedMovie: (
     partnerId: string,
     movieId: string,
@@ -253,6 +254,11 @@ type AppStateContextValue = {
   adminSubscriptionPreviewModeEnabled: boolean;
   setAdminSubscriptionPreviewMode: (enabled: boolean) => Promise<void>;
   acceptedMovies: Movie[];
+  watchedPickReviews: {
+    movie: Movie;
+    recommended: boolean;
+    watchedAt: string;
+  }[];
   discoverQueue: Movie[];
   discoverSessionKey: string;
   linkedUsers: {
@@ -278,7 +284,11 @@ function normalizeAppDataFromStorage(parsed: AppData): AppData {
   for (const [userId, row] of Object.entries(parsed.settings ?? {})) {
     settings[userId] = mergeProfileSettings(row as Partial<ProfileSettings>);
   }
-  return { ...parsed, settings };
+  return {
+    ...parsed,
+    settings,
+    watchedPickReviews: parsed.watchedPickReviews ?? [],
+  };
 }
 
 function cloneInitialData(): AppData {
@@ -941,16 +951,91 @@ async function uploadProfilePhoto(
     return null;
   }
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const normalizeImageFileForUpload = async (input: File): Promise<File> => {
+    if (typeof window === "undefined" || !input.type.startsWith("image/")) {
+      return input;
+    }
+
+    const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+    const MAX_DIMENSION = 1600;
+
+    if (input.size <= MAX_UPLOAD_BYTES) {
+      return input;
+    }
+
+    let objectUrl: string | null = null;
+    try {
+      objectUrl = URL.createObjectURL(input);
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Unable to decode image"));
+        img.src = objectUrl as string;
+      });
+
+      const largestSide = Math.max(image.width, image.height);
+      const scale =
+        largestSide > MAX_DIMENSION ? MAX_DIMENSION / largestSide : 1;
+      const targetWidth = Math.max(1, Math.round(image.width * scale));
+      const targetHeight = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        return input;
+      }
+
+      context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      let quality = 0.86;
+      let encodedBlob: Blob | null = null;
+
+      while (quality >= 0.54) {
+        encodedBlob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, "image/jpeg", quality);
+        });
+
+        if (encodedBlob && encodedBlob.size <= MAX_UPLOAD_BYTES) {
+          break;
+        }
+
+        quality -= 0.08;
+      }
+
+      if (!encodedBlob) {
+        return input;
+      }
+
+      if (encodedBlob.size >= input.size) {
+        return input;
+      }
+
+      const baseName = input.name.replace(/\.[^.]+$/, "") || "profile-photo";
+      return new File([encodedBlob], `${baseName}.jpg`, {
+        type: "image/jpeg",
+      });
+    } catch {
+      return input;
+    } finally {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+  };
+
+  const fileToUpload = await normalizeImageFileForUpload(file);
+  const extension = fileToUpload.name.split(".").pop()?.toLowerCase() || "jpg";
   const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
   const filePath = `${userId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
 
   const uploadResult = await supabase.storage
     .from(PROFILE_PHOTOS_BUCKET)
-    .upload(filePath, file, {
+    .upload(filePath, fileToUpload, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type || undefined,
+      contentType: fileToUpload.type || undefined,
     });
 
   if (uploadResult.error) {
@@ -1740,6 +1825,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
 
   const acceptedMovies = data.movies.filter((movie) => acceptedIds.has(movie.id));
+  const watchedPickReviews = currentUserId
+    ? data.watchedPickReviews
+        .filter((entry) => entry.userId === currentUserId)
+        .map((entry) => ({
+          movie: data.movies.find((movie) => movie.id === entry.movieId),
+          recommended: entry.recommended,
+          watchedAt: entry.watchedAt,
+        }))
+        .filter(
+          (
+            entry,
+          ): entry is {
+            movie: Movie;
+            recommended: boolean;
+            watchedAt: string;
+          } => Boolean(entry.movie),
+        )
+        .sort(
+          (left, right) =>
+            new Date(right.watchedAt).getTime() - new Date(left.watchedAt).getTime(),
+        )
+    : [];
   const acceptedGenreCounts = acceptedMovies.reduce<Map<string, number>>(
     (counts, movie) => {
       movie.genre.forEach((entry) => {
@@ -2623,7 +2730,52 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             swipe.decision === "accepted"
           ),
       ),
+      watchedPickReviews: current.watchedPickReviews.filter(
+        (entry) =>
+          !(entry.userId === currentUserId && entry.movieId === movieId),
+      ),
     }));
+  };
+
+  const markPickWatched = async (movieId: string, recommended: boolean) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    setData((current) => {
+      const existing = current.watchedPickReviews.find(
+        (entry) => entry.userId === currentUserId && entry.movieId === movieId,
+      );
+
+      if (existing) {
+        return {
+          ...current,
+          watchedPickReviews: current.watchedPickReviews.map((entry) =>
+            entry.id === existing.id
+              ? {
+                  ...entry,
+                  recommended,
+                  watchedAt: new Date().toISOString(),
+                }
+              : entry,
+          ),
+        };
+      }
+
+      return {
+        ...current,
+        watchedPickReviews: [
+          ...current.watchedPickReviews,
+          {
+            id: `watched-pick-${crypto.randomUUID()}`,
+            userId: currentUserId,
+            movieId,
+            recommended,
+            watchedAt: new Date().toISOString(),
+          },
+        ],
+      };
+    });
   };
 
   const toggleSharedMovie = async (
@@ -3121,8 +3273,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     const supabase = getSupabaseBrowserClient();
-    const nextSettings = {
+    const baseSettings = {
       ...(data.settings[currentUserId] ?? defaultSettings),
+      darkMode: preferredDarkMode,
+    };
+    const nextSettings = {
+      ...baseSettings,
       ...payload,
     };
 
@@ -3261,6 +3417,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         swipeMovie,
         undoSwipe,
         removePick,
+        markPickWatched,
         toggleSharedMovie,
         linkUser,
         unlinkUser,
@@ -3276,6 +3433,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         adminSubscriptionPreviewModeEnabled,
         setAdminSubscriptionPreviewMode,
         acceptedMovies,
+        watchedPickReviews,
         discoverQueue,
         discoverSessionKey: discoverShuffleSeed,
         linkedUsers,
