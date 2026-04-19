@@ -21,6 +21,7 @@ export default function ProfilePage() {
     acceptedMovies,
     linkedUsers,
     sharedMovies,
+    watchedPickReviews,
     achievements,
     completeOnboarding,
     updateProfile,
@@ -32,6 +33,14 @@ export default function ProfilePage() {
   const earnedBadges = useMemo(
     () => partitionAchievements(achievements).completed,
     [achievements],
+  );
+  const recommendedWatchedPicks = useMemo(
+    () => watchedPickReviews.filter((entry) => entry.recommended),
+    [watchedPickReviews],
+  );
+  const notRecommendedWatchedPicks = useMemo(
+    () => watchedPickReviews.filter((entry) => !entry.recommended),
+    [watchedPickReviews],
   );
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
@@ -958,6 +967,78 @@ export default function ProfilePage() {
             )}
           </div>
         ) : null}
+      </SurfaceCard>
+
+      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "108ms" }}>
+        <div>
+          <p className={sectionEyebrow}>Watched reviews</p>
+          <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            Movies you watched and reviewed
+          </p>
+          <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+            Marked from your Picks page after watching.
+          </p>
+        </div>
+        {watchedPickReviews.length === 0 ? (
+          <div
+            className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
+              isDarkMode
+                ? "border-white/10 bg-white/[0.03] text-slate-300"
+                : "border-slate-200/80 bg-slate-50/80 text-slate-600"
+            }`}
+          >
+            No watched reviews yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div
+              className={`rounded-[20px] border px-3 py-3 ${
+                isDarkMode ? "border-emerald-400/22 bg-emerald-500/8" : "border-emerald-200/90 bg-emerald-50/70"
+              }`}
+            >
+              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
+                Recommended
+              </p>
+              <div className="mt-2 space-y-2">
+                {recommendedWatchedPicks.length === 0 ? (
+                  <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+                ) : (
+                  recommendedWatchedPicks.map((entry) => (
+                    <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "bg-white text-slate-700"}`}>
+                      <p className="font-semibold">{entry.movie.title}</p>
+                      <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                        {new Date(entry.watchedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div
+              className={`rounded-[20px] border px-3 py-3 ${
+                isDarkMode ? "border-rose-400/22 bg-rose-500/8" : "border-rose-200/90 bg-rose-50/70"
+              }`}
+            >
+              <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
+                Not recommended
+              </p>
+              <div className="mt-2 space-y-2">
+                {notRecommendedWatchedPicks.length === 0 ? (
+                  <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+                ) : (
+                  notRecommendedWatchedPicks.map((entry) => (
+                    <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "bg-white text-slate-700"}`}>
+                      <p className="font-semibold">{entry.movie.title}</p>
+                      <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                        {new Date(entry.watchedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </SurfaceCard>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">

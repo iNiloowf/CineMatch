@@ -51,11 +51,13 @@ export default function PicksPage() {
     sharedMovies,
     linkedUsers,
     removePick,
+    markPickWatched,
     onboardingPreferences,
     isDarkMode,
     hasProAccess,
   } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
+  const [pendingWatchedMovieId, setPendingWatchedMovieId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
@@ -78,6 +80,13 @@ export default function PicksPage() {
         ? acceptedMovies.find((movie) => movie.id === pendingRemoveMovieId) ?? null
         : null,
     [acceptedMovies, pendingRemoveMovieId],
+  );
+  const pendingWatchedMovie = useMemo(
+    () =>
+      pendingWatchedMovieId
+        ? acceptedMovies.find((movie) => movie.id === pendingWatchedMovieId) ?? null
+        : null,
+    [acceptedMovies, pendingWatchedMovieId],
   );
   const selectedMovie = useMemo(
     () =>
@@ -360,7 +369,7 @@ export default function PicksPage() {
 
   useEffect(() => {
     const anyOpen = Boolean(
-      selectedMovieId || pendingRemoveMovieId || isTrailerVisible,
+      selectedMovieId || pendingRemoveMovieId || pendingWatchedMovieId || isTrailerVisible,
     );
     if (!anyOpen) {
       return;
@@ -379,6 +388,10 @@ export default function PicksPage() {
         setPendingRemoveMovieId(null);
         return;
       }
+      if (pendingWatchedMovieId) {
+        setPendingWatchedMovieId(null);
+        return;
+      }
       if (selectedMovieId) {
         setSelectedMovieId(null);
       }
@@ -386,7 +399,7 @@ export default function PicksPage() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedMovieId, pendingRemoveMovieId, isTrailerVisible]);
+  }, [selectedMovieId, pendingRemoveMovieId, pendingWatchedMovieId, isTrailerVisible]);
 
   const showShareToast = useCallback((message: string, variant: ShareToast["variant"]) => {
     if (shareToastTimerRef.current) {
@@ -485,6 +498,9 @@ export default function PicksPage() {
 
   const requestRemovePick = useCallback((movieId: string) => {
     setPendingRemoveMovieId(movieId);
+  }, []);
+  const requestMarkWatched = useCallback((movieId: string) => {
+    setPendingWatchedMovieId(movieId);
   }, []);
 
   const resolveAccessToken = useCallback(async () => {
@@ -1071,6 +1087,7 @@ export default function PicksPage() {
               isDarkMode={isDarkMode}
               onOpenDetails={openPickDetails}
               onShare={handleShareMovie}
+              onMarkWatched={requestMarkWatched}
               onRequestRemove={requestRemovePick}
             />
           ))}
@@ -1169,6 +1186,74 @@ export default function PicksPage() {
                 className="ui-btn ui-btn-danger min-w-0 flex-1"
               >
                 Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {pendingWatchedMovie ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close watched confirmation"
+            onClick={() => setPendingWatchedMovieId(null)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-sm relative z-10 flex max-h-[min(92dvh,26rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
+              isDarkMode
+                ? "border-white/10 bg-slate-950 text-white"
+                : "border-white/80 bg-white text-slate-900"
+            }`}
+          >
+            <div className="ui-shell-header !border-b-black/6 shrink-0">
+              <h3 className="min-w-0 flex-1 text-lg font-semibold">Mark as watched</h3>
+              <button
+                type="button"
+                onClick={() => setPendingWatchedMovieId(null)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4">
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                You watched <span className="font-semibold text-inherit">{pendingWatchedMovie.title}</span>.
+                Do you recommend it?
+              </p>
+            </div>
+            <div className={`ui-shell-footer !pt-4 shrink-0 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}>
+              <button
+                type="button"
+                onClick={async () => {
+                  await markPickWatched(pendingWatchedMovie.id, false);
+                  setPendingWatchedMovieId(null);
+                }}
+                className="ui-btn ui-btn-secondary min-w-0 flex-1"
+              >
+                Not recommended
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await markPickWatched(pendingWatchedMovie.id, true);
+                  setPendingWatchedMovieId(null);
+                }}
+                className="ui-btn ui-btn-primary min-w-0 flex-1"
+              >
+                Recommend
               </button>
             </div>
           </div>

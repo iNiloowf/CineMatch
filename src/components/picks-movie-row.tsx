@@ -13,6 +13,7 @@ export type PicksMovieRowProps = {
   listIndex?: number;
   onOpenDetails: (movieId: string) => void;
   onShare: (movieId: string) => void;
+  onMarkWatched: (movieId: string) => void;
   onRequestRemove: (movieId: string) => void;
 };
 
@@ -23,6 +24,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
   listIndex = 0,
   onOpenDetails,
   onShare,
+  onMarkWatched,
   onRequestRemove,
 }: PicksMovieRowProps) {
   const enterDelay = `${Math.min(listIndex, 12) * 45}ms`;
@@ -124,6 +126,30 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             Tap the card for details, trailer, and share.
           </p>
           <div className="flex w-full gap-2 sm:w-auto sm:justify-end">
+            <button
+              type="button"
+              aria-label={`Mark ${movie.title} as watched`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMarkWatched(movie.id);
+              }}
+              className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[14px] px-4 text-sm font-semibold transition active:scale-[0.98] sm:min-w-[7.5rem] sm:flex-none ${
+                isDarkMode
+                  ? "border border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/22"
+                  : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4 shrink-0">
+                <path
+                  d="M4.75 10.25 8 13.5l7.25-7.25"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Watched
+            </button>
             <button
               type="button"
               aria-label={`Share ${movie.title}`}
