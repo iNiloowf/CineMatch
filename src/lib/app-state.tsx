@@ -951,81 +951,129 @@ async function uploadProfilePhoto(
     return null;
   }
 
-  const normalizeImageFileForUpload = async (input: File): Promise<File> => {
+  const normalizeImageFileForUpload = async (input: File): Promise<File | null> => {
     if (typeof window === "undefined" || !input.type.startsWith("image/")) {
       return input;
     }
 
-    const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
-    const MAX_DIMENSION = 1600;
+    const MAX_UPLOAD_BYTES = 900 * 1024;
+    const MAX_DIMENSION_STEPS = [1600, 1280, 1080, 900];
 
     if (input.size <= MAX_UPLOAD_BYTES) {
       return input;
     }
 
-    let objectUrl: string | null = null;
-    try {
-      objectUrl = URL.createObjectURL(input);
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error("Unable to decode image"));
-        img.src = objectUrl as string;
-      });
+    const decodeImage = async (blob: Blob): Promise<{ width: number; height: number; draw: (context: CanvasRenderingContext2D, width: number, height: number) => void } | null> => {
+      if (typeof createImageBitmap === "function") {
+        try {
+          const bitmap = await createImageBitmap(blob);
+          return {
+            width: bitmap.width,
+            height: bitmap.height,
+            draw: (context, width, height) => {
+              context.drawImage(bitmap, 0, 0, width, height);
+              bitmap.close();
+            },
+          };
+        } catch {
+          // Fall back to HTMLImageElement.
+        }
+      }
 
-      const largestSide = Math.max(image.width, image.height);
-      const scale =
-        largestSide > MAX_DIMENSION ? MAX_DIMENSION / largestSide : 1;
-      const targetWidth = Math.max(1, Math.round(image.width * scale));
-      const targetHeight = Math.max(1, Math.round(image.height * scale));
+      let objectUrl: string | null = null;
+      try {
+        objectUrl = URL.createObjectURL(blob);
+        const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Unable to decode image"));
+          img.src = objectUrl as string;
+        });
+
+        return {
+          width: image.width,
+          height: image.height,
+          draw: (context, width, height) => {
+            context.drawImage(image, 0, 0, width, height);
+          },
+        };
+      } catch {
+        return null;
+      } finally {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+    };
+
+    try {
+      const decoded = await decodeImage(input);
+      if (!decoded) {
+        return null;
+      }
+
       const canvas = document.createElement("canvas");
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
       const context = canvas.getContext("2d");
 
       if (!context) {
         return input;
       }
 
-      context.drawImage(image, 0, 0, targetWidth, targetHeight);
+      let bestBlob: Blob | null = null;
 
-      let quality = 0.86;
-      let encodedBlob: Blob | null = null;
+      for (const maxDimension of MAX_DIMENSION_STEPS) {
+        const largestSide = Math.max(decoded.width, decoded.height);
+        const scale = largestSide > maxDimension ? maxDimension / largestSide : 1;
+        const targetWidth = Math.max(1, Math.round(decoded.width * scale));
+        const targetHeight = Math.max(1, Math.round(decoded.height * scale));
 
-      while (quality >= 0.54) {
-        encodedBlob = await new Promise<Blob | null>((resolve) => {
-          canvas.toBlob(resolve, "image/jpeg", quality);
-        });
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        context.clearRect(0, 0, targetWidth, targetHeight);
+        decoded.draw(context, targetWidth, targetHeight);
 
-        if (encodedBlob && encodedBlob.size <= MAX_UPLOAD_BYTES) {
-          break;
+        let quality = 0.86;
+        while (quality >= 0.42) {
+          const encodedBlob = await new Promise<Blob | null>((resolve) => {
+            canvas.toBlob(resolve, "image/jpeg", quality);
+          });
+
+          if (!encodedBlob) {
+            break;
+          }
+
+          if (!bestBlob || encodedBlob.size < bestBlob.size) {
+            bestBlob = encodedBlob;
+          }
+
+          if (encodedBlob.size <= MAX_UPLOAD_BYTES) {
+            const baseName = input.name.replace(/\.[^.]+$/, "") || "profile-photo";
+            return new File([encodedBlob], `${baseName}.jpg`, {
+              type: "image/jpeg",
+            });
+          }
+
+          quality -= 0.08;
         }
-
-        quality -= 0.08;
       }
 
-      if (!encodedBlob) {
-        return input;
-      }
-
-      if (encodedBlob.size >= input.size) {
-        return input;
+      if (!bestBlob || bestBlob.size >= input.size) {
+        return null;
       }
 
       const baseName = input.name.replace(/\.[^.]+$/, "") || "profile-photo";
-      return new File([encodedBlob], `${baseName}.jpg`, {
+      return new File([bestBlob], `${baseName}.jpg`, {
         type: "image/jpeg",
       });
     } catch {
-      return input;
-    } finally {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      return null;
     }
   };
 
   const fileToUpload = await normalizeImageFileForUpload(file);
+  if (!fileToUpload) {
+    return null;
+  }
   const extension = fileToUpload.name.split(".").pop()?.toLowerCase() || "jpg";
   const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
   const filePath = `${userId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
