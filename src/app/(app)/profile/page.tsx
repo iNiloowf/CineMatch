@@ -421,15 +421,6 @@ export default function ProfilePage() {
 
   const watchedReviewsEditorSection = (
     <div className="space-y-4">
-      <div>
-        <p className={sectionEyebrow}>Watched reviews</p>
-        <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-          Movies you watched and reviewed
-        </p>
-        <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-          Marked from your Picks page after watching.
-        </p>
-      </div>
       {watchedPickReviews.length === 0 ? (
         <div
           className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
@@ -450,7 +441,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setWatchedReviewTab("recommended")}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+              className={`min-w-0 rounded-xl px-2 py-2 text-[10px] font-semibold leading-tight transition sm:px-3 sm:text-xs ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -460,12 +451,12 @@ export default function ProfilePage() {
                     : "text-slate-600"
               }`}
             >
-              Recommended ({recommendedWatchedPicks.length})
+              <span className="block truncate">Recommended ({recommendedWatchedPicks.length})</span>
             </button>
             <button
               type="button"
               onClick={() => setWatchedReviewTab("notRecommended")}
-              className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+              className={`min-w-0 rounded-xl px-2 py-2 text-[10px] font-semibold leading-tight transition sm:px-3 sm:text-xs ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
@@ -475,7 +466,7 @@ export default function ProfilePage() {
                     : "text-slate-600"
               }`}
             >
-              Not recommended ({notRecommendedWatchedPicks.length})
+              <span className="block truncate">Not recommended ({notRecommendedWatchedPicks.length})</span>
             </button>
           </div>
 
@@ -780,13 +771,12 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setIsEditing(true)}
                 aria-label="Edit profile"
-                className={`auth-primary-glow inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                className={`auth-primary-glow flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition active:scale-95 ${actionGradient} ${actionGradientHover} ${actionRing}`}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-3.5 w-3.5" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
                   <path d="M12 20h9" />
                   <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>
-                Edit profile
               </button>
             )}
           </div>
@@ -886,6 +876,9 @@ export default function ProfilePage() {
                 }`}>
                   <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Watched reviews
+                  </p>
+                  <p className={`text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Movies you marked from Picks after watching.
                   </p>
                 {watchedReviewsEditorSection}
                 </div>
@@ -1019,15 +1012,29 @@ export default function ProfilePage() {
               </div>
             ) : (
               <>
-                <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
-                  City
-                </p>
-                <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {currentUser.city}
-                </p>
-                <p className={`mt-5 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                  {currentUser.bio}
-                </p>
+                <div
+                  className={`space-y-3 rounded-[18px] border p-3.5 ${
+                    isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      City
+                    </p>
+                    <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                      {currentUser.city}
+                    </p>
+                  </div>
+                  <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200"}`} />
+                  <div className="space-y-1.5">
+                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Bio
+                    </p>
+                    <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                      {currentUser.bio}
+                    </p>
+                  </div>
+                </div>
               </>
             )}
           </div>
