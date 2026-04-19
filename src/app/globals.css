@@ -21,7 +21,6 @@
   --motion-duration-discover-swipe-accept: 220ms;
   --motion-duration-discover-swipe-reject: 200ms;
   --motion-duration-discover-feedback: 260ms;
-  --motion-duration-discover-undo: 320ms;
   --motion-duration-toast-pop: 560ms;
   --motion-duration-banner-in: 420ms;
   --motion-duration-fade-up: 520ms;
@@ -982,10 +981,6 @@ input[type="range"] {
   }
 }
 
-.discover-undo-notification {
-  animation: discoverUndoToastIn var(--motion-duration-discover-undo) var(--motion-ease-standard) both;
-}
-
 .discover-toolbar-enter {
   animation: discoverToolbarIn var(--motion-duration-enter) var(--motion-ease-standard) both;
 }
@@ -1286,18 +1281,6 @@ input[type="range"] {
   }
 }
 
-@keyframes discoverUndoToastIn {
-  0% {
-    opacity: 0;
-    transform: translateY(22px) scale(0.94);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 @keyframes discoverToolbarIn {
   from {
     opacity: 0;
@@ -1529,10 +1512,6 @@ html[data-reduce-motion="true"] .discover-card-swipe-rejected {
 }
 
 html[data-reduce-motion="true"] .discover-feedback-chip {
-  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
-}
-
-html[data-reduce-motion="true"] .discover-undo-notification {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 
