@@ -1,6 +1,6 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
@@ -68,10 +68,9 @@ export async function requireServerAdmin(
   if (!auth) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "You must be signed in to use admin endpoints." },
-        { status: 401 },
-      ),
+      response: apiJsonError(401, "You must be signed in to use admin endpoints.", {
+        code: API_ERROR_CODES.UNAUTHORIZED,
+      }),
     };
   }
 
@@ -79,9 +78,10 @@ export async function requireServerAdmin(
   if (!supabaseAdmin) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "Admin endpoints are not configured on the server yet." },
-        { status: 500 },
+      response: apiJsonError(
+        500,
+        "Admin endpoints are not configured on the server yet.",
+        { code: API_ERROR_CODES.INTERNAL },
       ),
     };
   }
@@ -90,10 +90,9 @@ export async function requireServerAdmin(
   if (error || !data.user) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "Admin session could not be verified." },
-        { status: 401 },
-      ),
+      response: apiJsonError(401, "Admin session could not be verified.", {
+        code: API_ERROR_CODES.UNAUTHORIZED,
+      }),
     };
   }
 
@@ -113,12 +112,10 @@ export async function requireServerAdmin(
   if (!isAdmin) {
     return {
       ok: false,
-      response: NextResponse.json(
-        {
-          error:
-            "Your account does not have admin access. Add your email to ADMIN_DASHBOARD_EMAIL or ADMIN_EMAILS and restart the server.",
-        },
-        { status: 403 },
+      response: apiJsonError(
+        403,
+        "Your account does not have admin access. Add your email to ADMIN_DASHBOARD_EMAIL or ADMIN_EMAILS and restart the server.",
+        { code: API_ERROR_CODES.FORBIDDEN },
       ),
     };
   }
