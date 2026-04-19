@@ -259,17 +259,18 @@ export default function ProfilePage() {
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
+  /** Theme-aware frame: solid border + inset sheen + outer glow (border avoids ring/shadow conflicts). */
   const proHeaderCardStyle = selectedProfileStyle === "glass"
     ? isDarkMode
-      ? "ring-1 ring-cyan-300/35 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[0_18px_48px_rgba(8,145,178,0.24)] backdrop-blur-xl"
-      : "ring-1 ring-cyan-300/95 bg-gradient-to-b from-cyan-50 via-sky-50/90 to-cyan-100/40 shadow-[0_16px_36px_rgba(8,145,178,0.2)] backdrop-blur-xl"
+      ? "border-2 border-cyan-400/45 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_24px_rgba(34,211,238,0.18),0_18px_48px_rgba(8,145,178,0.28)] backdrop-blur-xl"
+      : "border-2 border-cyan-400/55 bg-gradient-to-b from-cyan-50 via-sky-50/90 to-cyan-100/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_0_28px_rgba(6,182,212,0.2),0_14px_36px_rgba(8,145,178,0.18)] backdrop-blur-xl"
     : selectedProfileStyle === "neon"
       ? isDarkMode
-        ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[0_22px_56px_rgba(126,34,206,0.34)]"
-        : "ring-1 ring-fuchsia-300/90 bg-gradient-to-b from-fuchsia-50 via-violet-50 to-indigo-100/50 shadow-[0_20px_44px_rgba(147,51,234,0.26)]"
+        ? "border-2 border-fuchsia-400/50 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_28px_rgba(232,121,249,0.22),0_20px_52px_rgba(147,51,234,0.32)]"
+        : "border-2 border-fuchsia-500/55 bg-gradient-to-b from-fuchsia-50 via-violet-50 to-indigo-100/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_0_32px_rgba(217,70,239,0.18),0_16px_40px_rgba(147,51,234,0.2)]"
       : isDarkMode
-        ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
-        : "ring-1 ring-slate-300/95 bg-gradient-to-b from-violet-50/85 via-violet-50/35 to-slate-100/90 shadow-[0_14px_32px_rgba(15,23,42,0.14)]";
+        ? "border-2 border-violet-400/40 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_22px_rgba(167,139,250,0.16),0_14px_38px_rgba(91,33,182,0.2)]"
+        : "border-2 border-violet-400/50 bg-gradient-to-b from-violet-50/85 via-violet-50/35 to-slate-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_26px_rgba(139,92,246,0.14),0_12px_34px_rgba(109,40,217,0.12)]";
   /** Avoid white overlays in light mode — they washed out the left side and hid theme tint. */
   const proHeaderPatternClass = selectedProfileStyle === "glass"
     ? isDarkMode
