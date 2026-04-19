@@ -818,7 +818,7 @@ export default function ProfilePage() {
                 </svg>
               </button>
             </div>
-            <div className="ui-shell-body !pt-4">
+            <div className="ui-shell-body !pt-4 font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
               <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 Update your recommendation for{" "}
                 <span className="font-semibold text-inherit">{editingWatchedEntry.movie.title}</span>.
@@ -830,14 +830,14 @@ export default function ProfilePage() {
                     await markPickWatched(editingWatchedEntry.movie.id, false);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-12 rounded-[16px] border px-3 py-3 text-left transition ${
+                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
                     isDarkMode
                       ? "border-rose-400/30 bg-rose-500/12 text-rose-100 hover:bg-rose-500/20"
                       : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                   }`}
                 >
-                  <p className="text-sm font-semibold">Not recommended</p>
-                  <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
+                  <p className="text-[10px] font-semibold leading-tight">Not recommended</p>
+                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
                     Keep this title in your watched list, marked as not recommended.
                   </p>
                 </button>
@@ -847,14 +847,14 @@ export default function ProfilePage() {
                     await markPickWatched(editingWatchedEntry.movie.id, true);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-12 rounded-[16px] border px-3 py-3 text-left transition ${
+                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
                     isDarkMode
                       ? "border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/24"
                       : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   }`}
                 >
-                  <p className="text-sm font-semibold">Recommend</p>
-                  <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
+                  <p className="text-[10px] font-semibold leading-tight">Recommend</p>
+                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
                     Mark this movie as a recommendation for your profile.
                   </p>
                 </button>

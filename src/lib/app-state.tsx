@@ -1491,6 +1491,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("theme-dark", isDarkMode);
+    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
+    if (typeof document.body !== "undefined") {
+      document.body.style.background = isDarkMode ? "#0d0a14" : "#f6f7fb";
+      document.body.style.color = isDarkMode ? "#f8fafc" : "#0f172a";
+    }
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -3369,7 +3374,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           : user,
       ),
     }));
-    setAccountRefreshKey((current) => current + 1);
+    // Avoid full account sync here — it delays the UI and reapplies cached snapshots.
     return { ok: true };
   };
 
@@ -3421,31 +3426,33 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         admin_mode_simulate_pro: nextSettings.adminModeSimulatePro,
         updated_at: new Date().toISOString(),
       };
-      const upsertResult = await supabase.from("settings").upsert(
-        settingsPayload as never,
-        { onConflict: "user_id" },
-      );
-
-      const upsertError = upsertResult.error as SupabaseErrorLike;
-      if (
-        upsertError &&
-        (isMissingOptionalSettingsColumnError(upsertError, "subscription_tier") ||
-          isMissingOptionalSettingsColumnError(upsertError, "admin_mode_simulate_pro"))
-      ) {
-        await supabase.from("settings").upsert(
-          {
-            user_id: currentUserId,
-            dark_mode: nextSettings.darkMode,
-            notifications: nextSettings.notifications,
-            autoplay_trailers: nextSettings.autoplayTrailers,
-            hide_spoilers: nextSettings.hideSpoilers,
-            cellular_sync: nextSettings.cellularSync,
-            reduce_motion: nextSettings.reduceMotion,
-            updated_at: new Date().toISOString(),
-          } as never,
+      void (async () => {
+        const upsertResult = await supabase.from("settings").upsert(
+          settingsPayload as never,
           { onConflict: "user_id" },
         );
-      }
+
+        const upsertError = upsertResult.error as SupabaseErrorLike;
+        if (
+          upsertError &&
+          (isMissingOptionalSettingsColumnError(upsertError, "subscription_tier") ||
+            isMissingOptionalSettingsColumnError(upsertError, "admin_mode_simulate_pro"))
+        ) {
+          await supabase.from("settings").upsert(
+            {
+              user_id: currentUserId,
+              dark_mode: nextSettings.darkMode,
+              notifications: nextSettings.notifications,
+              autoplay_trailers: nextSettings.autoplayTrailers,
+              hide_spoilers: nextSettings.hideSpoilers,
+              cellular_sync: nextSettings.cellularSync,
+              reduce_motion: nextSettings.reduceMotion,
+              updated_at: new Date().toISOString(),
+            } as never,
+            { onConflict: "user_id" },
+          );
+        }
+      })();
     }
   };
 
