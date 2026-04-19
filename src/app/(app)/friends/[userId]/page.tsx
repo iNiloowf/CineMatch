@@ -120,9 +120,13 @@ export default function FriendProfilePage() {
         ? isDarkMode
           ? "border-b border-fuchsia-300/25 bg-gradient-to-br from-slate-950 via-violet-950/60 to-fuchsia-950/45"
           : "border-b border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-100 via-violet-100 to-indigo-100"
-        : isDarkMode
-          ? "border-b border-white/10 bg-slate-950"
-          : "border-b border-slate-200/90 bg-white";
+        : partnerProfileStyle === "rainbow"
+          ? isDarkMode
+            ? "border-b border-white/12 bg-gradient-to-br from-slate-950 via-violet-950/40 to-slate-950"
+            : "border-b border-white/90 bg-gradient-to-br from-rose-50/95 via-amber-50/85 via-sky-50/85 to-violet-50/95"
+          : isDarkMode
+            ? "border-b border-white/10 bg-slate-950"
+            : "border-b border-slate-200/90 bg-white";
   const friendHeaderPatternClass =
     partnerProfileStyle === "glass"
       ? isDarkMode
@@ -132,9 +136,13 @@ export default function FriendProfilePage() {
         ? isDarkMode
           ? "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.2)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(59,130,246,0.18)_0_5px,transparent_5px_13px)] opacity-85"
           : "bg-[repeating-linear-gradient(45deg,rgba(236,72,153,0.18)_0_6px,transparent_6px_14px),repeating-linear-gradient(-45deg,rgba(99,102,241,0.16)_0_5px,transparent_5px_13px)] opacity-80"
-        : isDarkMode
-          ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
-          : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65";
+        : partnerProfileStyle === "rainbow"
+          ? isDarkMode
+            ? "bg-[radial-gradient(100%_120%_at_0%_0%,rgba(251,113,133,0.2),transparent_46%),radial-gradient(95%_100%_at_100%_0%,rgba(251,191,36,0.14),transparent_42%),radial-gradient(100%_95%_at_50%_105%,rgba(56,189,248,0.16),transparent_48%),radial-gradient(85%_85%_at_88%_78%,rgba(167,139,250,0.16),transparent_44%)] opacity-78"
+            : "bg-[radial-gradient(100%_120%_at_4%_6%,rgba(251,113,133,0.16),transparent_44%),radial-gradient(95%_100%_at_98%_8%,rgba(253,224,71,0.14),transparent_40%),radial-gradient(100%_100%_at_50%_100%,rgba(125,211,252,0.16),transparent_46%),radial-gradient(85%_90%_at_90%_88%,rgba(196,181,253,0.18),transparent_42%)] opacity-85"
+          : isDarkMode
+            ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
+            : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65";
 
   const handleAddPick = async (movieId: string) => {
     if (!currentUserId) {

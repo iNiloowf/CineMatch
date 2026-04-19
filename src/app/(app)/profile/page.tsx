@@ -256,6 +256,7 @@ export default function ProfilePage() {
     { id: "classic", label: "Classic" },
     { id: "glass", label: "Glass" },
     { id: "neon", label: "Neon" },
+    { id: "rainbow", label: "Rainbow" },
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
@@ -268,9 +269,13 @@ export default function ProfilePage() {
       ? isDarkMode
         ? "border-2 border-fuchsia-400/50 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_28px_rgba(232,121,249,0.22),0_20px_52px_rgba(147,51,234,0.32)]"
         : "border-2 border-fuchsia-500/55 bg-gradient-to-b from-fuchsia-50 via-violet-50 to-indigo-100/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_0_32px_rgba(217,70,239,0.18),0_16px_40px_rgba(147,51,234,0.2)]"
-      : isDarkMode
-        ? "border-2 border-violet-400/40 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_22px_rgba(167,139,250,0.16),0_14px_38px_rgba(91,33,182,0.2)]"
-        : "border-2 border-violet-400/50 bg-gradient-to-b from-violet-50/85 via-violet-50/35 to-slate-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_26px_rgba(139,92,246,0.14),0_12px_34px_rgba(109,40,217,0.12)]";
+      : selectedProfileStyle === "rainbow"
+        ? isDarkMode
+          ? "border-2 border-white/14 bg-gradient-to-br from-slate-950 via-violet-950/40 to-slate-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_36px_rgba(244,63,94,0.14),0_0_52px_rgba(59,130,246,0.12),0_0_40px_rgba(167,139,250,0.14),0_20px_52px_rgba(15,23,42,0.55)]"
+          : "border-2 border-white/95 bg-gradient-to-br from-rose-50/95 via-amber-50/75 via-sky-50/75 to-violet-50/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_0_40px_rgba(236,72,153,0.12),0_0_48px_rgba(59,130,246,0.08),0_14px_42px_rgba(139,92,246,0.1)]"
+        : isDarkMode
+          ? "border-2 border-violet-400/40 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_22px_rgba(167,139,250,0.16),0_14px_38px_rgba(91,33,182,0.2)]"
+          : "border-2 border-violet-400/50 bg-gradient-to-b from-violet-50/85 via-violet-50/35 to-slate-100/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_26px_rgba(139,92,246,0.14),0_12px_34px_rgba(109,40,217,0.12)]";
   /** Avoid white overlays in light mode — they washed out the left side and hid theme tint. */
   const proHeaderPatternClass = selectedProfileStyle === "glass"
     ? isDarkMode
@@ -280,9 +285,13 @@ export default function ProfilePage() {
       ? isDarkMode
         ? "bg-[linear-gradient(120deg,rgba(236,72,153,0.14),transparent_55%)] opacity-85"
         : "bg-[linear-gradient(120deg,rgba(217,70,239,0.12),transparent_60%)] opacity-90"
-      : isDarkMode
-        ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] opacity-70"
-        : "";
+      : selectedProfileStyle === "rainbow"
+        ? isDarkMode
+          ? "bg-[radial-gradient(100%_120%_at_0%_0%,rgba(251,113,133,0.22),transparent_46%),radial-gradient(95%_100%_at_100%_0%,rgba(251,191,36,0.16),transparent_42%),radial-gradient(100%_95%_at_50%_105%,rgba(56,189,248,0.18),transparent_48%),radial-gradient(85%_85%_at_88%_78%,rgba(167,139,250,0.18),transparent_44%)] opacity-80"
+          : "bg-[radial-gradient(100%_120%_at_4%_6%,rgba(251,113,133,0.2),transparent_44%),radial-gradient(95%_100%_at_98%_8%,rgba(253,224,71,0.18),transparent_40%),radial-gradient(100%_100%_at_50%_100%,rgba(125,211,252,0.2),transparent_46%),radial-gradient(85%_90%_at_90%_88%,rgba(196,181,253,0.22),transparent_42%)] opacity-88"
+        : isDarkMode
+          ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] opacity-70"
+          : "";
 
   const proStylePreviewById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -294,6 +303,9 @@ export default function ProfilePage() {
     neon: isDarkMode
       ? "border-fuchsia-300/45 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/55 text-fuchsia-100 shadow-[0_0_0_1px_rgba(232,121,249,0.24)]"
       : "border-fuchsia-300/75 bg-gradient-to-br from-white via-fuchsia-50/90 to-indigo-50/90 text-fuchsia-700",
+    rainbow: isDarkMode
+      ? "border-white/18 bg-gradient-to-br from-slate-950/98 via-violet-950/35 to-slate-950 text-slate-100 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
+      : "border-slate-200/90 bg-gradient-to-br from-rose-50 via-amber-50/85 via-cyan-50/80 to-violet-100 text-slate-800 shadow-sm",
   };
   const proStylePatternById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -305,6 +317,9 @@ export default function ProfilePage() {
     neon: isDarkMode
       ? "bg-[linear-gradient(130deg,rgba(236,72,153,0.16),transparent_60%)] opacity-82"
       : "bg-[linear-gradient(130deg,rgba(217,70,239,0.16),transparent_60%)] opacity-78",
+    rainbow: isDarkMode
+      ? "bg-[conic-gradient(from_200deg_at_70%_40%,rgba(251,113,133,0.14),rgba(253,224,71,0.1),rgba(52,211,153,0.12),rgba(56,189,248,0.14),rgba(129,140,248,0.14),rgba(232,121,249,0.12),rgba(251,113,133,0.14))] opacity-75"
+      : "bg-[conic-gradient(from_160deg_at_65%_35%,rgba(251,113,133,0.14),rgba(253,224,71,0.12),rgba(45,212,191,0.1),rgba(56,189,248,0.12),rgba(129,140,248,0.12),rgba(232,121,249,0.1),rgba(251,113,133,0.14))] opacity-80",
   };
 
   const proStudioSurface = isDarkMode
@@ -1138,7 +1153,7 @@ export default function ProfilePage() {
                 <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Pro Studio styles
                 </p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {profileStyleOptions.map((styleOption) => {
                     const selected = selectedProfileStyle === styleOption.id;
                     return (
@@ -1165,7 +1180,9 @@ export default function ProfilePage() {
                             ? "Clear"
                             : styleOption.id === "glass"
                               ? "Soft"
-                              : "Vivid"}
+                              : styleOption.id === "neon"
+                                ? "Vivid"
+                                : "Spectrum"}
                         </span>
                         <div className="relative">
                         <p
@@ -1179,7 +1196,9 @@ export default function ProfilePage() {
                             ? "Sharp readability with neutral surfaces and clear hierarchy"
                             : styleOption.id === "glass"
                               ? "Gentle highlights and softer cards for a calm look"
-                              : "Higher contrast accents for strong visibility and energy"}
+                              : styleOption.id === "neon"
+                                ? "Higher contrast accents for strong visibility and energy"
+                                : "Prismatic glow and soft spectrum washes that stay readable in any mode"}
                         </p>
                         </div>
                       </button>
