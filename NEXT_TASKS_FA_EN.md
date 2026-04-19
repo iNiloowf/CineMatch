@@ -1,5 +1,4 @@
-# کارهای پیشِ رو — CineMatch  
-# Your next tasks — CineMatch
+# کارهای پیشِ رو — CineMatch
 
 ---
 
@@ -22,13 +21,13 @@
 
 ---
 
-## Summary (English)
+# Your next tasks — CineMatch
 
-Ship **security and stability** first (admin auth, error boundaries, API validation), then **UX reliability** (no empty shell flash, offline awareness), then **tests + CI**. Use `IMPROVEMENT_CHECKLIST.md` for the full backlog and “Done” history.
+## Summary
 
----
+Ship **security and stability** first (admin auth, error boundaries, API validation), then **UX reliability** (no empty shell flash, offline awareness), then **tests + CI**. See **`IMPROVEMENT_CHECKLIST.md`** for the full backlog and what is already done.
 
-## Task list (English)
+## Checklist
 
 1. **Admin:** Remove hardcoded admin credentials from `/admin` and admin API routes; use env + server-side role checks only.
 2. **Errors:** Add `error.tsx` (and optionally `global-error.tsx`) so runtime failures don’t white-screen.
@@ -41,4 +40,4 @@ Ship **security and stability** first (admin auth, error boundaries, API validat
 
 ---
 
-_Last written: Apr 2026 — complements `IMPROVEMENT_CHECKLIST.md`; not a replacement._
+_Last updated: Apr 2026 — complements `IMPROVEMENT_CHECKLIST.md`; not a replacement._
