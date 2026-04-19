@@ -20,7 +20,6 @@ type DashboardUserRow = {
   id: string;
   name: string;
   email: string;
-  city: string;
   accepted: number;
   rejected: number;
   links: number;
@@ -862,7 +861,6 @@ export default function AdminDesktopPage() {
                   <tr>
                     <th className="px-4 py-2 text-left font-semibold">Name</th>
                     <th className="px-4 py-2 text-left font-semibold">Email</th>
-                    <th className="px-4 py-2 text-left font-semibold">City</th>
                     <th className="px-4 py-2 text-right font-semibold">Accepted</th>
                     <th className="px-4 py-2 text-right font-semibold">Rejected</th>
                     <th className="px-4 py-2 text-right font-semibold">Links</th>
@@ -874,7 +872,6 @@ export default function AdminDesktopPage() {
                     <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
                       <td className="px-4 py-2 font-medium">{row.name}</td>
                       <td className="px-4 py-2">{row.email}</td>
-                      <td className="px-4 py-2">{row.city}</td>
                       <td className="px-4 py-2 text-right">{row.accepted}</td>
                       <td className="px-4 py-2 text-right">{row.rejected}</td>
                       <td className="px-4 py-2 text-right">{row.links}</td>
@@ -887,7 +884,7 @@ export default function AdminDesktopPage() {
                   ))}
                   {userRows.length === 0 ? (
                     <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={7} className="px-4 py-4 text-center">
+                      <td colSpan={6} className="px-4 py-4 text-center">
                         No users found in database.
                       </td>
                     </tr>

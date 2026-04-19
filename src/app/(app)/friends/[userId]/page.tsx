@@ -299,11 +299,6 @@ export default function FriendProfilePage() {
             <p className={`mt-0.5 truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
               {partner.email}
             </p>
-            {partner.city ? (
-              <p className={`mt-1 text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                {partner.city}
-              </p>
-            ) : null}
           </div>
         </div>
         {partner.bio ? (

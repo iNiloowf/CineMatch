@@ -306,7 +306,7 @@ export default function FriendsPage() {
                       </span>
                     </div>
                     <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      {linked.user.city}
+                      {linked.user.email}
                     </p>
                   </div>
                 </div>

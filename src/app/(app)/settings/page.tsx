@@ -795,11 +795,6 @@ export default function SettingsPage() {
                 {currentUser.name}
               </p>
               <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>{currentUser.email}</p>
-              {currentUser.city ? (
-                <p className={`text-xs font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                  {currentUser.city}
-                </p>
-              ) : null}
               <p className={`mt-2 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 {currentUser.bio}
               </p>

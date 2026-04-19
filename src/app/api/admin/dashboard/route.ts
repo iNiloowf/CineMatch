@@ -7,7 +7,6 @@ type ProfileRow = {
   id: string;
   full_name: string;
   email: string;
-  city: string;
 };
 
 type SettingsSubscriptionRow = {
@@ -167,7 +166,7 @@ export async function POST(request: NextRequest) {
       .eq("watched", true),
     supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, city")
+      .select("id, full_name, email")
       .order("created_at", { ascending: true }),
     supabaseAdmin.from("swipes").select("user_id, decision"),
     supabaseAdmin.from("linked_users").select("requester_id, target_id, status"),
@@ -340,7 +339,6 @@ export async function POST(request: NextRequest) {
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
-      city: profile.city,
       accepted,
       rejected,
       links: totalLinks,

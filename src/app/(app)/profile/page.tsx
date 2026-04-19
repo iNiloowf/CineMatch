@@ -191,7 +191,7 @@ export default function ProfilePage() {
     const result = await updateProfile({
       name: String(formData.get("name") ?? currentUser.name).trim() || currentUser.name,
       bio: String(formData.get("bio") ?? ""),
-      city: String(formData.get("city") ?? ""),
+      city: "",
       avatarImageUrl: clearAvatarOnSave ? null : currentUser.avatarImageUrl,
       avatarFile: clearAvatarOnSave ? null : avatarFile,
       clearAvatar: clearAvatarOnSave,
@@ -326,7 +326,7 @@ export default function ProfilePage() {
     const result = await updateProfile({
       name: currentUser.name,
       bio: currentUser.bio,
-      city: currentUser.city,
+      city: "",
       profileStyle: style,
     });
 
@@ -851,18 +851,16 @@ export default function ProfilePage() {
                   ) : null}
                 </div>
 
-                <label className={`block space-y-2 ${labelClass}`}>
-                  Username
-                  <input name="name" defaultValue={currentUser.name} className={inputClass} />
-                </label>
-                <label className={`block space-y-2 ${labelClass}`}>
-                  City
-                  <input name="city" defaultValue={currentUser.city} className={inputClass} />
-                </label>
-                <label className={`block space-y-2 ${labelClass}`}>
-                  Bio
-                  <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
-                </label>
+                <div className="flex min-w-0 flex-1 flex-col gap-5 sm:max-w-xl">
+                  <label className={`block space-y-2.5 ${labelClass}`}>
+                    Username
+                    <input name="name" defaultValue={currentUser.name} className={inputClass} autoComplete="username" />
+                  </label>
+                  <label className={`block space-y-2.5 ${labelClass}`}>
+                    Bio
+                    <textarea name="bio" defaultValue={currentUser.bio} rows={5} className={`${inputClass} min-h-[7.5rem]`} />
+                  </label>
+                </div>
                 </section>
 
                 <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
@@ -881,107 +879,123 @@ export default function ProfilePage() {
 
                 <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
 
-                <section className="space-y-3">
+                <section className="space-y-4">
                   <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Discovery preferences
                   </p>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsFavoriteGenresOpen((current) => !current)}
-                      className={`flex w-full items-center justify-between rounded-[16px] border px-3.5 py-3 text-left text-sm font-semibold transition ${
-                        isDarkMode ? "border-white/12 bg-white/8 text-slate-100" : "border-slate-200 bg-white text-slate-800"
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div
+                      className={`flex flex-col gap-3 rounded-[18px] border p-4 ${
+                        isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/50"
                       }`}
                     >
-                      <span>
-                        Select genres you like
-                        <span className={`ml-2 text-xs font-medium ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          ({favoriteGenresDraft.length} selected)
-                        </span>
-                      </span>
-                      <span aria-hidden>{isFavoriteGenresOpen ? "−" : "+"}</span>
-                    </button>
-                    {isFavoriteGenresOpen ? (
-                      <div className="flex flex-wrap gap-2">
-                        {profileGenres.map((genre) => {
-                          const active = favoriteGenresDraft.includes(genre);
-                          return (
-                            <button
-                              key={`fav-${genre}`}
-                              type="button"
-                              onClick={() =>
-                                setFavoriteGenresDraft((current) =>
-                                  current.includes(genre)
-                                    ? current.filter((entry) => entry !== genre)
-                                    : [...current, genre],
-                                )
-                              }
-                              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                                active
-                                  ? "bg-violet-600 text-white"
-                                  : isDarkMode
-                                    ? "border border-white/12 bg-white/8 text-slate-200"
-                                    : "border border-slate-200 bg-white text-slate-700"
-                              }`}
-                            >
-                              {genre}
-                            </button>
-                          );
-                        })}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Genres you like</p>
+                          <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                            {favoriteGenresDraft.length} selected
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsFavoriteGenresOpen((current) => !current)}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                            isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
+                          }`}
+                        >
+                          {isFavoriteGenresOpen ? "Hide" : "Edit"}
+                        </button>
                       </div>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsDislikedGenresOpen((current) => !current)}
-                      className={`flex w-full items-center justify-between rounded-[16px] border px-3.5 py-3 text-left text-sm font-semibold transition ${
-                        isDarkMode ? "border-white/12 bg-white/8 text-slate-100" : "border-slate-200 bg-white text-slate-800"
+                      {isFavoriteGenresOpen ? (
+                        <div className="flex max-h-[min(40vh,14rem)] flex-wrap gap-2 overflow-y-auto pr-0.5">
+                          {profileGenres.map((genre) => {
+                            const active = favoriteGenresDraft.includes(genre);
+                            return (
+                              <button
+                                key={`fav-${genre}`}
+                                type="button"
+                                onClick={() =>
+                                  setFavoriteGenresDraft((current) =>
+                                    current.includes(genre)
+                                      ? current.filter((entry) => entry !== genre)
+                                      : [...current, genre],
+                                  )
+                                }
+                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                                  active
+                                    ? "bg-violet-600 text-white"
+                                    : isDarkMode
+                                      ? "border border-white/12 bg-white/8 text-slate-200"
+                                      : "border border-slate-200 bg-white text-slate-700"
+                                }`}
+                              >
+                                {genre}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div
+                      className={`flex flex-col gap-3 rounded-[18px] border p-4 ${
+                        isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/50"
                       }`}
                     >
-                      <span>
-                        Select genres you dislike
-                        <span className={`ml-2 text-xs font-medium ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          ({dislikedGenresDraft.length} selected)
-                        </span>
-                      </span>
-                      <span aria-hidden>{isDislikedGenresOpen ? "−" : "+"}</span>
-                    </button>
-                    {isDislikedGenresOpen ? (
-                      <div className="flex flex-wrap gap-2">
-                        {profileGenres.map((genre) => {
-                          const active = dislikedGenresDraft.includes(genre);
-                          return (
-                            <button
-                              key={`dislike-${genre}`}
-                              type="button"
-                              onClick={() =>
-                                setDislikedGenresDraft((current) =>
-                                  current.includes(genre)
-                                    ? current.filter((entry) => entry !== genre)
-                                    : [...current, genre],
-                                )
-                              }
-                              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                                active
-                                  ? "bg-rose-600 text-white"
-                                  : isDarkMode
-                                    ? "border border-white/12 bg-white/8 text-slate-200"
-                                    : "border border-slate-200 bg-white text-slate-700"
-                              }`}
-                            >
-                              {genre}
-                            </button>
-                          );
-                        })}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Genres you dislike</p>
+                          <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                            {dislikedGenresDraft.length} selected
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsDislikedGenresOpen((current) => !current)}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                            isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
+                          }`}
+                        >
+                          {isDislikedGenresOpen ? "Hide" : "Edit"}
+                        </button>
                       </div>
-                    ) : null}
+                      {isDislikedGenresOpen ? (
+                        <div className="flex max-h-[min(40vh,14rem)] flex-wrap gap-2 overflow-y-auto pr-0.5">
+                          {profileGenres.map((genre) => {
+                            const active = dislikedGenresDraft.includes(genre);
+                            return (
+                              <button
+                                key={`dislike-${genre}`}
+                                type="button"
+                                onClick={() =>
+                                  setDislikedGenresDraft((current) =>
+                                    current.includes(genre)
+                                      ? current.filter((entry) => entry !== genre)
+                                      : [...current, genre],
+                                  )
+                                }
+                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                                  active
+                                    ? "bg-rose-600 text-white"
+                                    : isDarkMode
+                                      ? "border border-white/12 bg-white/8 text-slate-200"
+                                      : "border border-slate-200 bg-white text-slate-700"
+                                }`}
+                              >
+                                {genre}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                      Prefer to discover
-                    </p>
-                    <div className="flex flex-wrap gap-2">
+                  <div
+                    className={`rounded-[18px] border p-4 ${
+                      isDarkMode ? "border-white/12 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/50"
+                    }`}
+                  >
+                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Prefer to discover</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {[
                         { id: "both", label: "Both" },
                         { id: "movie", label: "Movies" },
@@ -1007,15 +1021,12 @@ export default function ProfilePage() {
                 </section>
               </div>
             ) : (
-              <div className="space-y-3 pt-0.5">
+              <div className="space-y-2.5 pt-0.5">
                 <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   About
                 </p>
-                <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                  {currentUser.city}
-                </p>
-                <p className={`text-sm leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                  {currentUser.bio}
+                <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  {currentUser.bio?.trim() ? currentUser.bio : "—"}
                 </p>
               </div>
             )}
