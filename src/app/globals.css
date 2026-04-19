@@ -262,6 +262,24 @@ input[type="range"] {
   animation: fadeUp var(--motion-duration-fade-up) var(--motion-ease-standard) both;
 }
 
+/* Picks row: compact actions — UI-native sans, matches caption scale + semibold weight */
+.picks-row-action {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-size: var(--font-scale-caption);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
 .picks-stat-enter {
   animation: fadeUp 480ms var(--motion-ease-standard) both;
 }

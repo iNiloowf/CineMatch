@@ -133,7 +133,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 onMarkWatched(movie.id);
               }}
-              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/22"
                   : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
@@ -157,7 +157,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 void onShare(movie.id);
               }}
-              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
                   : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
@@ -181,7 +181,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 onRequestRemove(movie.id);
               }}
-              className={`inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 text-[11px] font-medium tracking-[0.01em] transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
                   : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
