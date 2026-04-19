@@ -153,8 +153,8 @@ export default function FriendProfilePage() {
     }
   };
 
-  const handleShareMovie = useCallback(async (movieId: string) => {
-    const msg = await shareMovieDeepLink(movieId);
+  const handleShareMovie = useCallback(async (movieId: string, title?: string) => {
+    const msg = await shareMovieDeepLink(movieId, title);
     setAddMessage(msg);
     window.setTimeout(() => setAddMessage(null), 2400);
   }, []);
@@ -206,7 +206,7 @@ export default function FriendProfilePage() {
               <button
                 type="button"
                 className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
-                onClick={() => void handleShareMovie(selectedMovie.id)}
+                onClick={() => void handleShareMovie(selectedMovie.id, selectedMovie.title)}
               >
                 Share link
               </button>

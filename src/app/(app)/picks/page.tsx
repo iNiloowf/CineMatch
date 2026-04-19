@@ -433,12 +433,16 @@ export default function PicksPage() {
     }
 
     const shareUrl = `${window.location.origin}/discover?movieId=${encodeURIComponent(movieId)}`;
+    const title =
+      acceptedMovies.find((m) => m.id === movieId)?.title ??
+      data.movies.find((m) => m.id === movieId)?.title ??
+      "this title";
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "CineMatch movie pick",
-          text: "Check this movie in CineMatch",
+          title: `${title} · CineMatch`,
+          text: `Open in CineMatch to swipe on “${title}”.`,
           url: shareUrl,
         });
         showShareToast("Shared — your pick link is ready to send.", "success");
@@ -466,7 +470,7 @@ export default function PicksPage() {
 
       showShareToast("Couldn’t share or copy the link. Try again.", "error");
     }
-  }, [showShareToast]);
+  }, [acceptedMovies, data.movies, showShareToast]);
 
   const fetchTrailerForSelected = useCallback(async () => {
     if (!selectedMovie || trailerUrl) {
@@ -1116,7 +1120,7 @@ export default function PicksPage() {
                 role="tab"
                 aria-selected={picksListTab === "queue"}
                 onClick={() => setPicksListTab("queue")}
-                className={`min-h-10 flex-1 rounded-[11px] px-2 text-xs font-semibold transition sm:text-sm ${
+                className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
                   picksListTab === "queue"
                     ? isDarkMode
                       ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
@@ -1127,14 +1131,14 @@ export default function PicksPage() {
                 }`}
               >
                 To watch
-                <span className="ml-1 tabular-nums opacity-80">({queueCount})</span>
+                <span className="ml-1 tabular-nums font-semibold opacity-80">({queueCount})</span>
               </button>
               <button
                 type="button"
                 role="tab"
                 aria-selected={picksListTab === "watched"}
                 onClick={() => setPicksListTab("watched")}
-                className={`min-h-10 flex-1 rounded-[11px] px-2 text-xs font-semibold transition sm:text-sm ${
+                className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
                   picksListTab === "watched"
                     ? isDarkMode
                       ? "bg-slate-900 text-white shadow-sm ring-1 ring-white/12"
@@ -1145,7 +1149,7 @@ export default function PicksPage() {
                 }`}
               >
                 Watched
-                <span className="ml-1 tabular-nums opacity-80">({watchedCount})</span>
+                <span className="ml-1 tabular-nums font-semibold opacity-80">({watchedCount})</span>
               </button>
             </div>
 

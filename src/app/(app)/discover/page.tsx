@@ -91,6 +91,8 @@ function DiscoverPageContent({
   type SharedMovieFetch = "idle" | "loading" | "error" | "missing";
   const [sharedMovieFetch, setSharedMovieFetch] = useState<SharedMovieFetch>("idle");
   const [sharedMovieRetryKey, setSharedMovieRetryKey] = useState(0);
+  /** Keeps a pick link working when the title is not in Discover (e.g. already in picks / hidden). */
+  const [sharedLinkOverlayMovie, setSharedLinkOverlayMovie] = useState<Movie | null>(null);
   const transitionTimeoutRef = useRef<number | null>(null);
   const swipeTimeoutRef = useRef<number | null>(null);
   const undoToastTimeoutRef = useRef<number | null>(null);
@@ -158,9 +160,12 @@ function DiscoverPageContent({
 
     if (existingMovie) {
       registerMovies([existingMovie]);
+      setSelectedGenres([]);
+      setSharedLinkOverlayMovie(existingMovie);
       setFocusedMovieId(existingMovie.id);
       setIsSearchSheetOpen(false);
       setSharedMovieFetch("idle");
+      router.replace("/discover", { scroll: false });
       return;
     }
 
@@ -199,9 +204,12 @@ function DiscoverPageContent({
         }
 
         registerMovies([payload.movie]);
+        setSelectedGenres([]);
+        setSharedLinkOverlayMovie(payload.movie);
         setFocusedMovieId(payload.movie.id);
         setIsSearchSheetOpen(false);
         setSharedMovieFetch("idle");
+        router.replace("/discover", { scroll: false });
       } catch {
         if (!active) {
           return;
@@ -217,6 +225,7 @@ function DiscoverPageContent({
   }, [
     discoverQueue,
     registerMovies,
+    router,
     searchResults,
     sharedMovieId,
     sharedMovieRetryKey,
@@ -366,15 +375,18 @@ function DiscoverPageContent({
       ? 0
       : Math.min(browseIndex, filteredQueue.length - 1);
   const focusedMovie =
-    (focusedMovieId
-      ? filteredQueue.find((entry) => entry.id === focusedMovieId) ??
-        searchResults.find((entry) => entry.id === focusedMovieId)
-      : null) ?? null;
+    focusedMovieId
+      ? discoverQueue.find((entry) => entry.id === focusedMovieId) ??
+        filteredQueue.find((entry) => entry.id === focusedMovieId) ??
+        searchResults.find((entry) => entry.id === focusedMovieId) ??
+        (sharedLinkOverlayMovie?.id === focusedMovieId ? sharedLinkOverlayMovie : null)
+      : null;
   const movie = focusedMovie ?? filteredQueue[safeBrowseIndex];
 
   useEffect(() => {
     setBrowseIndex(0);
     setFocusedMovieId(null);
+    setSharedLinkOverlayMovie(null);
   }, [discoverSessionKey]);
 
   useEffect(() => {
@@ -400,9 +412,12 @@ function DiscoverPageContent({
     }
 
     if (!discoverQueue.some((entry) => entry.id === focusedMovieId)) {
+      if (sharedLinkOverlayMovie?.id === focusedMovieId) {
+        return;
+      }
       setFocusedMovieId(null);
     }
-  }, [discoverQueue, focusedMovieId]);
+  }, [discoverQueue, focusedMovieId, sharedLinkOverlayMovie]);
 
   useEffect(() => {
     if (filteredQueue.length === 0) {
@@ -508,6 +523,9 @@ function DiscoverPageContent({
     }
 
     if (focusedMovieId) {
+      setSharedLinkOverlayMovie((current) =>
+        current?.id === focusedMovieId ? null : current,
+      );
       setFocusedMovieId(null);
 
       if (filteredQueue.length === 0) {
@@ -551,6 +569,7 @@ function DiscoverPageContent({
 
   const handleSelectSearchMovie = useCallback((selectedMovie: Movie) => {
     registerMovies([selectedMovie]);
+    setSharedLinkOverlayMovie(null);
     setFocusedMovieId(selectedMovie.id);
     const movieIndex = discoverQueue.findIndex((entry) => entry.id === selectedMovie.id);
 
@@ -604,6 +623,9 @@ function DiscoverPageContent({
       registerMovies([swipedMovie]);
       setSwipeFeedback(null);
       await swipeMovie(swipedMovie.id, decision);
+      setSharedLinkOverlayMovie((current) =>
+        current?.id === swipedMovie.id ? null : current,
+      );
       setLastSwipe({
         movie: swipedMovie,
         decision,
