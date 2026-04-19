@@ -735,7 +735,7 @@ function DiscoverPageContent({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-visible">
+    <div className="flex h-full min-h-0 flex-col gap-[clamp(0.625rem,2.75vw,1.125rem)] overflow-visible">
       {!isOnboardingComplete ? (
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
           <div
@@ -917,128 +917,92 @@ function DiscoverPageContent({
       ) : null}
 
       {!isSearchOpen ? (
-        <div className="flex items-center justify-between px-1 pb-1 pt-0.5">
-          <h1
-            className={`text-[1.45rem] font-semibold tracking-[-0.03em] ${
-              isDarkMode ? "text-white" : "text-slate-900"
-            }`}
-          >
-            CineMatch
-          </h1>
-          <div ref={menuRef} className="relative">
-            <button
-              type="button"
-              aria-label="Open more options"
-              aria-expanded={isMoreMenuOpen}
-              onClick={() => setIsMoreMenuOpen((current) => !current)}
-              className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
-                isDarkMode
-                  ? "text-slate-300 hover:bg-white/8"
-                  : "text-slate-700 hover:bg-black/5"
+        <div className="shrink-0 space-y-2 sm:space-y-2.5">
+          <div className="flex items-center justify-between px-1 pb-0 pt-0.5">
+            <h1
+              className={`text-[1.45rem] font-semibold tracking-[-0.03em] ${
+                isDarkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="ui-icon-md"
-                aria-hidden="true"
+              CineMatch
+            </h1>
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                aria-label="Open more options"
+                aria-expanded={isMoreMenuOpen}
+                onClick={() => setIsMoreMenuOpen((current) => !current)}
+                className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
+                  isDarkMode
+                    ? "text-slate-300 hover:bg-white/8"
+                    : "text-slate-700 hover:bg-black/5"
+                }`}
               >
-                <circle cx="12" cy="5" r="1.8" />
-                <circle cx="12" cy="12" r="1.8" />
-                <circle cx="12" cy="19" r="1.8" />
-              </svg>
-            </button>
-            {isMoreMenuOpen ? (
-              <div
-                className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 p-2"
-              >
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMoreMenuOpen(false)}
-                  className="ui-menu-item block px-3 py-2.5 font-medium"
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="ui-icon-md"
+                  aria-hidden="true"
                 >
-                  Settings
-                </Link>
-                <Link
-                  href="/profile"
-                  onClick={() => setIsMoreMenuOpen(false)}
-                  className="ui-menu-item block px-3 py-2.5 font-medium"
-                >
-                  Profile
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => void handlePasteInviteLink()}
-                  className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium"
-                >
-                  Paste Link
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void toggleDarkMode();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="ui-menu-item mt-1 flex w-full items-center justify-between px-3 py-2.5 text-left font-medium"
-                >
-                  <span>Dark mode</span>
-                  <span
-                    className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                      isDarkMode
-                        ? "bg-violet-500/24 text-violet-200"
-                        : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {isDarkMode ? "On" : "Off"}
-                  </span>
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-
-      {menuBanner ? (
-        <div
-          className={`fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 ${
-            menuBanner.onRetry ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-        >
-          <div className="flex max-w-md flex-col items-center gap-2">
-            <div
-              className={`ui-toast-note px-4 py-2 text-center font-semibold ${
-                menuBanner.variant === "error"
-                  ? isDarkMode
-                    ? "border border-rose-400/30 text-rose-100 shadow-[0_10px_32px_rgba(244,63,94,0.12)]"
-                    : "border border-rose-200/80 text-rose-800 shadow-[0_10px_32px_rgba(244,63,94,0.08)]"
-                  : menuBanner.variant === "success"
-                    ? isDarkMode
-                      ? "border border-emerald-400/32 text-emerald-50 shadow-[0_10px_32px_rgba(16,185,129,0.14)]"
-                      : "border border-emerald-200/90 text-emerald-900 shadow-[0_10px_32px_rgba(16,185,129,0.1)]"
-                    : isDarkMode
-                      ? "border border-white/12 text-slate-100"
-                      : "border border-slate-200/85 text-slate-800"
-              }`}
-            >
-              {menuBanner.message}
-            </div>
-            {menuBanner.onRetry ? (
-              <button type="button" onClick={menuBanner.onRetry} className="ui-btn ui-btn-primary text-xs">
-                Try again
+                  <circle cx="12" cy="5" r="1.8" />
+                  <circle cx="12" cy="12" r="1.8" />
+                  <circle cx="12" cy="19" r="1.8" />
+                </svg>
               </button>
-            ) : null}
+              {isMoreMenuOpen ? (
+                <div
+                  className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 p-2"
+                >
+                  <Link
+                    href="/settings"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className="ui-menu-item block px-3 py-2.5 font-medium"
+                  >
+                    Settings
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className="ui-menu-item block px-3 py-2.5 font-medium"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void handlePasteInviteLink()}
+                    className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium"
+                  >
+                    Paste Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void toggleDarkMode();
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className="ui-menu-item mt-1 flex w-full items-center justify-between px-3 py-2.5 text-left font-medium"
+                  >
+                    <span>Dark mode</span>
+                    <span
+                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
+                        isDarkMode
+                          ? "bg-violet-500/24 text-violet-200"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {isDarkMode ? "On" : "Off"}
+                    </span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ) : null}
-
-      {!isSearchOpen ? (
-      <>
-        <DiscoverOnboardingNudges
-          userId={currentUserId}
-          isDarkMode={isDarkMode}
-          hasActiveBrowse={Boolean(movie)}
-        />
-        <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 max-[380px]:px-2.5">
+          <DiscoverOnboardingNudges
+            userId={currentUserId}
+            isDarkMode={isDarkMode}
+            hasActiveBrowse={Boolean(movie)}
+          />
+          <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 max-[380px]:px-2.5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
@@ -1149,7 +1113,40 @@ function DiscoverPageContent({
             </div>
           ) : null}
         </div>
-      </>
+        </div>
+      ) : null}
+
+      {menuBanner ? (
+        <div
+          className={`fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 ${
+            menuBanner.onRetry ? "pointer-events-auto" : "pointer-events-none"
+          }`}
+        >
+          <div className="flex max-w-md flex-col items-center gap-2">
+            <div
+              className={`ui-toast-note px-4 py-2 text-center font-semibold ${
+                menuBanner.variant === "error"
+                  ? isDarkMode
+                    ? "border border-rose-400/30 text-rose-100 shadow-[0_10px_32px_rgba(244,63,94,0.12)]"
+                    : "border border-rose-200/80 text-rose-800 shadow-[0_10px_32px_rgba(244,63,94,0.08)]"
+                  : menuBanner.variant === "success"
+                    ? isDarkMode
+                      ? "border border-emerald-400/32 text-emerald-50 shadow-[0_10px_32px_rgba(16,185,129,0.14)]"
+                      : "border border-emerald-200/90 text-emerald-900 shadow-[0_10px_32px_rgba(16,185,129,0.1)]"
+                    : isDarkMode
+                      ? "border border-white/12 text-slate-100"
+                      : "border border-slate-200/85 text-slate-800"
+              }`}
+            >
+              {menuBanner.message}
+            </div>
+            {menuBanner.onRetry ? (
+              <button type="button" onClick={menuBanner.onRetry} className="ui-btn ui-btn-primary text-xs">
+                Try again
+              </button>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
       {isSearchOpen ? (
@@ -1517,7 +1514,7 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden pt-1 pb-1">
+      <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
           <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px]">
             <div

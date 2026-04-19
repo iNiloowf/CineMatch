@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <div
         data-app-shell-frame="true"
-        className={`fade-up-enter mx-auto flex h-[calc(100svh-env(safe-area-inset-bottom,0px)-1.5rem)] h-[calc(100dvh-env(safe-area-inset-bottom,0px)-1.5rem)] max-w-md flex-col gap-4 sm:h-[calc(100svh-env(safe-area-inset-bottom,0px)-2rem)] sm:h-[calc(100dvh-env(safe-area-inset-bottom,0px)-2rem)] sm:gap-4 ${
+        className={`fade-up-enter mx-auto flex h-[calc(100svh-env(safe-area-inset-bottom,0px)-1.5rem)] h-[calc(100dvh-env(safe-area-inset-bottom,0px)-1.5rem)] max-w-md flex-col gap-0 sm:h-[calc(100svh-env(safe-area-inset-bottom,0px)-2rem)] sm:h-[calc(100dvh-env(safe-area-inset-bottom,0px)-2rem)] ${
           isDarkMode
             ? "text-slate-100"
             : "text-slate-900"
@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col">
           <div
             data-app-scroll-container="true"
-            className="flex-1 overflow-y-auto overscroll-contain pb-5"
+            className="flex-1 overflow-y-auto overscroll-contain pb-[clamp(0.625rem,2.75vw,1.125rem)]"
           >
             {children}
           </div>
