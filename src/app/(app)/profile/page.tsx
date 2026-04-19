@@ -262,25 +262,26 @@ export default function ProfilePage() {
   const proHeaderCardStyle = selectedProfileStyle === "glass"
     ? isDarkMode
       ? "ring-1 ring-cyan-300/35 bg-gradient-to-br from-slate-900/96 via-cyan-950/35 to-slate-900/95 shadow-[0_18px_48px_rgba(8,145,178,0.24)] backdrop-blur-xl"
-      : "ring-1 ring-cyan-300/95 bg-gradient-to-br from-cyan-50 via-white to-sky-50 shadow-[0_16px_36px_rgba(8,145,178,0.2)] backdrop-blur-xl"
+      : "ring-1 ring-cyan-300/95 bg-gradient-to-b from-cyan-50 via-sky-50/90 to-cyan-100/40 shadow-[0_16px_36px_rgba(8,145,178,0.2)] backdrop-blur-xl"
     : selectedProfileStyle === "neon"
       ? isDarkMode
         ? "ring-1 ring-fuchsia-300/40 bg-gradient-to-br from-slate-950 via-fuchsia-950/45 to-indigo-950/50 shadow-[0_22px_56px_rgba(126,34,206,0.34)]"
-        : "ring-1 ring-fuchsia-300/90 bg-gradient-to-br from-fuchsia-50 via-white to-indigo-50 shadow-[0_20px_44px_rgba(147,51,234,0.26)]"
+        : "ring-1 ring-fuchsia-300/90 bg-gradient-to-b from-fuchsia-50 via-violet-50 to-indigo-100/50 shadow-[0_20px_44px_rgba(147,51,234,0.26)]"
       : isDarkMode
         ? "ring-1 ring-white/12 bg-gradient-to-br from-slate-900/92 via-slate-900/96 to-slate-950/96 shadow-[0_14px_34px_rgba(15,23,42,0.26)]"
-        : "ring-1 ring-slate-300/95 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_14px_32px_rgba(15,23,42,0.16)]";
+        : "ring-1 ring-slate-300/95 bg-gradient-to-b from-slate-50 via-violet-50/25 to-slate-100/90 shadow-[0_14px_32px_rgba(15,23,42,0.14)]";
+  /** Avoid white overlays in light mode — they washed out the left side and hid theme tint. */
   const proHeaderPatternClass = selectedProfileStyle === "glass"
     ? isDarkMode
       ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-80"
-      : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62),transparent)] opacity-90"
+      : "bg-[linear-gradient(180deg,rgba(6,182,212,0.12),transparent_72%)] opacity-100"
     : selectedProfileStyle === "neon"
       ? isDarkMode
         ? "bg-[linear-gradient(120deg,rgba(236,72,153,0.14),transparent_55%)] opacity-85"
-        : "bg-[linear-gradient(120deg,rgba(217,70,239,0.18),transparent_55%)] opacity-85"
+        : "bg-[linear-gradient(120deg,rgba(217,70,239,0.12),transparent_60%)] opacity-90"
       : isDarkMode
         ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] opacity-70"
-        : "bg-[linear-gradient(180deg,rgba(255,255,255,0.45),transparent)] opacity-75";
+        : "";
 
   const proStylePreviewById: Record<ProProfileStyle, string> = {
     classic: isDarkMode
@@ -696,12 +697,18 @@ export default function ProfilePage() {
         className={`fade-up-enter discover-toolbar-enter space-y-6 ${proHeaderCardStyle}`}
         style={{ animationDelay: "0ms" }}
       >
-        <span className={`pointer-events-none absolute inset-0 z-0 ${proHeaderPatternClass}`} aria-hidden />
-        <form className="relative z-10 space-y-6" onSubmit={handleSubmit}>
+        {proHeaderPatternClass ? (
+          <span className={`pointer-events-none absolute inset-0 z-0 ${proHeaderPatternClass}`} aria-hidden />
+        ) : null}
+        <form className="relative z-10 w-full min-w-0 space-y-6 bg-transparent" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               <div className="profile-avatar-pop relative shrink-0">
-                <div className="ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 ring-offset-transparent [animation-delay:40ms] sm:ring-offset-4">
+                <div
+                  className={`ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 [animation-delay:40ms] sm:ring-offset-4 ${
+                    isDarkMode ? "ring-offset-transparent" : "ring-offset-slate-50"
+                  }`}
+                >
                   <AvatarBadge
                     initials={currentUser.avatar}
                     imageUrl={activeAvatarPreview}
