@@ -56,9 +56,28 @@ Create **`.env.local`** in the project root (never commit real secrets). Common 
 | `NEXT_PUBLIC_APP_URL` | Canonical app URL for auth emails and invite links |
 | `TMDB_API_READ_ACCESS_TOKEN` **or** `TMDB_API_KEY` | [TMDB](https://developer.themoviedb.org/) catalog + images |
 | `NEXT_PUBLIC_APP_ICON_URL` | Optional HTTPS PNG (≥512 recommended) for PWA / home-screen icon |
+| `ADMIN_ENTRY_PATH` | Secret URL path that opens the admin dashboard (see below); **set your own value in production** |
 | Stripe / checkout URLs | As needed for subscription flows (`NEXT_PUBLIC_PRO_CHECKOUT_*` patterns in server code) |
 
 Without TMDB, the app still runs using built-in / mock paths; with TMDB, Discover and search enrich from the live catalog.
+
+---
+
+## Admin dashboard (hidden URL)
+
+The UI is **not** meant to be opened at `/admin` in the browser bar. `src/middleware.ts` only serves the admin app when you hit a **separate, hard-to-guess path** (it rewrites internally and strips direct `/admin` access without that handshake).
+
+| | |
+| --- | --- |
+| **Env** | `ADMIN_ENTRY_PATH` — must start with `/` (e.g. `/ops/a7f3-9k2-private`). |
+| **Default** (if unset) | `/studio/portal-v9-a9k2m7r4xq` |
+
+**Examples**
+
+- Local: `http://localhost:3000/studio/portal-v9-a9k2m7r4xq` (or your `ADMIN_ENTRY_PATH` value)
+- Hosted: `https://<your-domain><ADMIN_ENTRY_PATH>`
+
+Override the default in **`.env.local`** / production env so the repo default is not a known entry on the public internet.
 
 ---
 
