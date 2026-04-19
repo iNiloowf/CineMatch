@@ -261,8 +261,8 @@ export default function FriendProfilePage() {
           title={partner.name}
           description={
             linkEntry.status === "accepted"
-              ? "Badges, saved picks — tap a title for full details."
-              : "Pending link — saved picks appear when you’re both active."
+              ? "Saved picks — tap a title for details."
+              : "Pending link — picks appear when you’re both active."
           }
         />
       </div>
@@ -315,78 +315,86 @@ export default function FriendProfilePage() {
             {partner.bio}
           </p>
         ) : null}
+        <div
+          className={`border-t px-5 pb-5 pt-4 sm:px-6 ${
+            isDarkMode ? "border-white/10" : "border-slate-200/85"
+          }`}
+        >
+          <AchievementBadgesShowcase
+            earned={earnedBadges}
+            isDarkMode={isDarkMode}
+            variant="friend"
+            compact
+          />
+        </div>
       </SurfaceCard>
 
-      <SurfaceCard
-        className="fade-up-enter space-y-4 !p-5 sm:!p-6"
-        style={{ animationDelay: "110ms" }}
-      >
-        <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="friend" />
-      </SurfaceCard>
-
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "130ms" }}>
-        <div className="space-y-1">
+      <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
+        <div
+          className={`border-b px-5 py-3.5 sm:px-6 ${isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/85 bg-slate-50/60"}`}
+        >
           <p className={sectionEyebrow}>Taste profile</p>
-          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Genres they like most
-          </p>
-          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Based on their swipes and saved picks.
-          </p>
         </div>
-
-        {partnerGenreInsights.liked.length === 0 ? (
-          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            No genre signal yet.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {partnerGenreInsights.liked.slice(0, 10).map((genre) => (
-              <span
-                key={`liked-${genre.name}`}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  isDarkMode
-                    ? "border border-emerald-400/25 bg-emerald-500/12 text-emerald-100"
-                    : "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                }`}
-              >
-                {genre.name} ({genre.count})
-              </span>
-            ))}
+        <div className="grid sm:grid-cols-2">
+          <div
+            className={`border-b px-5 py-4 sm:border-b-0 sm:border-e ${isDarkMode ? "border-white/10" : "border-slate-200/85"}`}
+          >
+            <p
+              className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                isDarkMode ? "text-emerald-300/95" : "text-emerald-700"
+              }`}
+            >
+              Likes
+            </p>
+            {partnerGenreInsights.liked.length === 0 ? (
+              <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {partnerGenreInsights.liked.slice(0, 10).map((genre) => (
+                  <span
+                    key={`liked-${genre.name}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      isDarkMode
+                        ? "border border-emerald-400/30 bg-emerald-500/12 text-emerald-100"
+                        : "border border-emerald-200/90 bg-emerald-50/95 text-emerald-900"
+                    }`}
+                  >
+                    {genre.name}
+                    <span className="tabular-nums opacity-80"> · {genre.count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-
-        <div className={`h-px w-full ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} />
-
-        <div className="space-y-1">
-          <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Genres they skip
-          </p>
-          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Based on rejected swipes (if available).
-          </p>
+          <div className="px-5 py-4">
+            <p
+              className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                isDarkMode ? "text-rose-300/95" : "text-rose-700"
+              }`}
+            >
+              Skips
+            </p>
+            {partnerGenreInsights.disliked.length === 0 ? (
+              <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {partnerGenreInsights.disliked.slice(0, 10).map((genre) => (
+                  <span
+                    key={`disliked-${genre.name}`}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      isDarkMode
+                        ? "border border-rose-400/30 bg-rose-500/12 text-rose-100"
+                        : "border border-rose-200/90 bg-rose-50/95 text-rose-900"
+                    }`}
+                  >
+                    {genre.name}
+                    <span className="tabular-nums opacity-80"> · {genre.count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-
-        {partnerGenreInsights.disliked.length === 0 ? (
-          <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            Not enough rejected-swipe data yet.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {partnerGenreInsights.disliked.slice(0, 10).map((genre) => (
-              <span
-                key={`disliked-${genre.name}`}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  isDarkMode
-                    ? "border border-rose-400/25 bg-rose-500/12 text-rose-100"
-                    : "border border-rose-200 bg-rose-50 text-rose-800"
-                }`}
-              >
-                {genre.name} ({genre.count})
-              </span>
-            ))}
-          </div>
-        )}
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "150ms" }}>
