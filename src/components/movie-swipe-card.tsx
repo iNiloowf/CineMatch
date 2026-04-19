@@ -241,10 +241,15 @@ export function MovieSwipeCard({
     resetDrag();
   };
 
+  const statIconWell = `flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] sm:h-11 sm:w-11 ${
+    isDarkMode ? "bg-white/12 ring-1 ring-white/10" : "bg-white ring-1 ring-slate-200/90 shadow-sm"
+  }`;
+  const statSvg = "h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]";
+
   return (
     <>
       <SurfaceCard
-        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-2.5 overflow-hidden rounded-[24px] p-3 sm:p-3.5 ${
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col gap-[var(--swipe-y-gap)] overflow-hidden rounded-[24px] p-3 [--swipe-y-gap:clamp(0.75rem,2.75vw,1rem)] sm:p-3.5 ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
@@ -398,19 +403,27 @@ export function MovieSwipeCard({
         </div>
 
         <div
-          className={`flex min-h-0 flex-col gap-2.5 ${
+          className={`flex min-h-0 flex-col gap-[var(--swipe-y-gap)] ${
             isDescriptionExpanded ? "shrink-0 pr-1" : "flex-1 overflow-hidden"
           }`}
         >
           <div
-            className={`grid shrink-0 grid-cols-3 gap-1 rounded-[24px] px-2 py-2 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:px-3 sm:py-2.5 ${
+            className={`grid shrink-0 grid-cols-3 gap-1 rounded-[18px] px-2 py-2.5 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:rounded-[20px] sm:px-3 sm:py-3 ${
               isDarkMode
                 ? "border border-white/14 bg-white/10"
                 : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             }`}
           >
-            <div className="flex min-w-0 items-center justify-center gap-1 sm:gap-2">
-              <span className="shrink-0 text-sm leading-none text-violet-500 sm:text-base">★</span>
+            <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+              <span className={statIconWell} aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`${statSvg} ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
+                  fill="currentColor"
+                >
+                  <path d="M12 3.2 14.4 9.2h6.5l-5.2 3.8 2 6.4L12 16.9 6.3 19.4l2-6.4L3.1 9.2h6.5L12 3.2z" />
+                </svg>
+              </span>
               <div className="min-w-0 text-center sm:text-left">
                 <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {movie.rating.toFixed(1)}
@@ -421,11 +434,23 @@ export function MovieSwipeCard({
               </div>
             </div>
             <div
-              className={`flex min-w-0 items-center justify-center gap-1 border-x px-0.5 sm:gap-2 sm:px-0 ${
+              className={`flex min-w-0 items-center justify-center gap-2 border-x px-0.5 sm:gap-2.5 sm:px-0 ${
                 isDarkMode ? "border-white/12" : "border-black/6"
               }`}
             >
-              <span className={`shrink-0 text-[0.95rem] leading-none sm:text-[1.1rem] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>◷</span>
+              <span className={statIconWell} aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`${statSvg} ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7.25v5.25l3.25 2" />
+                </svg>
+              </span>
               <div className="min-w-0 text-center sm:text-left">
                 <p className={`text-xs font-semibold max-[380px]:truncate sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {runtimeLabel}
@@ -435,8 +460,22 @@ export function MovieSwipeCard({
                 </p>
               </div>
             </div>
-            <div className="flex min-w-0 items-center justify-center gap-1 sm:gap-2">
-              <span className="shrink-0 text-sm leading-none text-emerald-500 sm:text-base">☺</span>
+            <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+              <span className={statIconWell} aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`${statSvg} ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
+                  <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                  <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
               <div className="min-w-0 text-center sm:text-left">
                 <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {matchScore}%
@@ -527,14 +566,24 @@ export function MovieSwipeCard({
               type="button"
               onClick={onReject}
               disabled={isInteractionLocked}
-              className={`min-h-11 min-w-0 rounded-xl border px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:px-3.5 sm:text-xs ${
+              className={`min-h-11 min-w-0 rounded-[11px] border px-3 py-2.5 text-[11px] font-semibold backdrop-blur-xl transition max-[380px]:px-2.5 sm:rounded-[12px] sm:px-3.5 sm:text-xs ${
                 isDarkMode
-                  ? "border-white/18 bg-white/[0.07] text-slate-100 hover:bg-white/12"
-                  : "border-slate-300/90 bg-white text-slate-600 shadow-sm hover:border-slate-400 hover:bg-slate-50"
+                  ? "border-white/20 bg-white/[0.14] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-white/[0.2]"
+                  : "border-slate-300/75 bg-white/55 text-slate-700 shadow-sm hover:bg-white/75"
               } disabled:cursor-not-allowed disabled:opacity-65`}
             >
               <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
-                <span className="shrink-0 text-base font-normal leading-none opacity-90">×</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 shrink-0 opacity-90"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
                 <span className="min-w-0 truncate">Reject</span>
               </span>
             </button>
@@ -542,10 +591,12 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="min-h-11 min-w-0 rounded-xl bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-3.5 sm:text-xs"
+              className={`min-h-11 min-w-0 rounded-[11px] border border-violet-400/45 bg-gradient-to-b from-violet-500/92 to-violet-600/95 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_8px_24px_rgba(109,40,217,0.35)] backdrop-blur-xl transition hover:from-violet-500 hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[12px] sm:px-3.5 sm:text-xs`}
             >
               <span className="inline-flex min-w-0 items-center justify-center gap-1.5">
-                <span className="shrink-0 text-sm leading-none">♥</span>
+                <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="currentColor" aria-hidden>
+                  <path d="M12 21s-6.2-3.5-8.2-6.4C2.5 12.8 3.5 9 6.8 8 8.6 7.5 10.4 8 12 9.2 13.6 8 15.4 7.5 17.2 8c3.3 1 4.3 4.8 2.2 6.6C17.2 17.5 12 21 12 21Z" />
+                </svg>
                 <span className="min-w-0 truncate">Like</span>
               </span>
             </button>

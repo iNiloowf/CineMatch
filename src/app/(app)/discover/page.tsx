@@ -1450,45 +1450,50 @@ function DiscoverPageContent({
               </button>
             </div>
 
-            <div className="ui-shell-body flex flex-wrap content-start gap-2 !pt-3">
-              {genres.map((genre) => {
-                const active =
-                  genre === "All"
-                    ? selectedGenres.length === 0
-                    : selectedGenres.includes(genre);
+            <div className="ui-shell-body !min-h-0 !max-h-[min(52dvh,26rem)] !overflow-y-auto !overflow-x-hidden overscroll-contain !px-2 !pb-1 !pt-3 sm:!px-4 sm:!pb-2">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+                {genres.map((genre) => {
+                  const active =
+                    genre === "All"
+                      ? selectedGenres.length === 0
+                      : selectedGenres.includes(genre);
+                  const isAll = genre === "All";
 
-                return (
-                  <button
-                    key={genre}
-                    type="button"
-                    onClick={() => {
-                      if (genre === "All") {
+                  return (
+                    <button
+                      key={genre}
+                      type="button"
+                      onClick={() => {
+                        if (genre === "All") {
+                          setBrowseIndex(0);
+                          setFocusedMovieId(null);
+                          setSelectedGenres([]);
+                          return;
+                        }
+
                         setBrowseIndex(0);
                         setFocusedMovieId(null);
-                        setSelectedGenres([]);
-                        return;
-                      }
-
-                      setBrowseIndex(0);
-                      setFocusedMovieId(null);
-                      setSelectedGenres((current) =>
-                        current.includes(genre)
-                          ? current.filter((entry) => entry !== genre)
-                          : [...current, genre],
-                      );
-                    }}
-                    className={`ui-chip-btn max-[380px]:px-3 max-[380px]:py-1.5 max-[380px]:text-xs ${
-                      active
-                        ? "bg-violet-600 text-white"
-                        : isDarkMode
-                          ? "bg-white/8 text-slate-200"
-                          : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {genre}
-                  </button>
-                );
-              })}
+                        setSelectedGenres((current) =>
+                          current.includes(genre)
+                            ? current.filter((entry) => entry !== genre)
+                            : [...current, genre],
+                        );
+                      }}
+                      className={`ui-chip-btn !h-auto min-h-[2.75rem] w-full justify-center text-center text-sm leading-snug sm:min-h-[3rem] sm:text-[0.9375rem] ${
+                        isAll ? "col-span-2 sm:col-span-3" : ""
+                      } ${
+                        active
+                          ? "border border-violet-500/35 bg-violet-600 text-white shadow-sm"
+                          : isDarkMode
+                            ? "border border-white/10 bg-white/[0.08] text-slate-100 backdrop-blur-sm hover:bg-white/[0.12]"
+                            : "border border-slate-200/90 bg-white/80 text-slate-700 shadow-sm backdrop-blur-sm hover:bg-white"
+                      }`}
+                    >
+                      {genre}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div className="ui-shell-footer !pt-4">
               <button
