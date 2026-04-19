@@ -669,7 +669,7 @@ export function MovieSwipeCard({
               ) : (
                 <div className="relative min-h-0">
                   <p
-                    className={`line-clamp-3 pr-[2.85rem] text-[11px] leading-[1.35rem] ${
+                    className={`line-clamp-3 pr-[3.35rem] text-[11px] leading-[1.35rem] ${
                       isDarkMode ? "text-slate-200" : "text-slate-600"
                     }`}
                   >
@@ -683,9 +683,10 @@ export function MovieSwipeCard({
                       event.stopPropagation();
                       handleToggleDescription();
                     }}
-                    className={`absolute bottom-0 right-0 z-[1] inline-flex h-[1.35rem] items-end px-0.5 pb-px text-[9px] font-semibold leading-none ${
+                    className={`absolute bottom-0 right-0 z-[1] inline-flex min-h-11 items-end rounded-lg px-1 leading-5 ${
                       isDarkMode ? "text-violet-300" : "text-violet-600"
                     }`}
+                    style={{ fontSize: "11px" }}
                   >
                     More
                   </button>
@@ -702,19 +703,27 @@ export function MovieSwipeCard({
             )}
           </div>
 
-          <div className="mt-auto grid shrink-0 grid-cols-2 gap-2 pb-[max(0.125rem,env(safe-area-inset-bottom,0px))] sm:gap-3">
+          <div className="mt-auto grid shrink-0 grid-cols-2 gap-2.5 pb-[max(0.125rem,env(safe-area-inset-bottom,0px))] sm:gap-3">
             <button
               type="button"
               onClick={onReject}
               disabled={isInteractionLocked}
-              className={`min-h-11 min-w-0 rounded-[22px] px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs ${
+              className={`group min-h-12 min-w-0 rounded-[24px] border px-3 py-2.5 text-[11px] font-semibold tracking-wide transition active:scale-[0.98] max-[380px]:px-2.5 sm:min-h-[3.25rem] sm:px-4 sm:text-xs ${
                 isDarkMode
-                  ? "border border-white/10 bg-white/8 text-slate-200 hover:bg-white/12"
-                  : "border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
-              }`}
+                  ? "border-white/14 bg-gradient-to-b from-white/12 to-white/[0.06] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:border-white/22 hover:from-white/16 hover:to-white/10"
+                  : "border-slate-200/95 bg-gradient-to-b from-white to-slate-50/98 text-slate-600 shadow-[0_2px_12px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:border-slate-300 hover:text-slate-800"
+              } disabled:cursor-not-allowed disabled:opacity-70`}
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
-                <span className="shrink-0 text-sm leading-none">×</span>
+              <span className="inline-flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base font-light leading-none transition ${
+                    isDarkMode
+                      ? "bg-black/25 text-slate-100 group-hover:bg-black/35"
+                      : "bg-slate-100 text-slate-500 group-hover:bg-slate-200/90"
+                  }`}
+                >
+                  ×
+                </span>
                 <span className="min-w-0 truncate">Reject</span>
               </span>
             </button>
@@ -722,10 +731,12 @@ export function MovieSwipeCard({
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className="min-h-11 min-w-0 rounded-[22px] bg-violet-600 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_4px_16px_rgba(109,40,217,0.22)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-4 sm:py-3 sm:text-xs"
+              className="group min-h-12 min-w-0 rounded-[24px] bg-gradient-to-b from-violet-500 to-violet-700 px-3 py-2.5 text-[11px] font-semibold tracking-wide text-white shadow-[0_6px_22px_rgba(109,40,217,0.38),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:from-violet-500 hover:to-violet-700 hover:shadow-[0_8px_26px_rgba(109,40,217,0.45)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:min-h-[3.25rem] sm:px-4 sm:text-xs"
             >
-              <span className="inline-flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
-                <span className="shrink-0 text-sm leading-none">❤</span>
+              <span className="inline-flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm leading-none shadow-inner transition group-hover:bg-white/28">
+                  ❤
+                </span>
                 <span className="min-w-0 truncate">Like</span>
               </span>
             </button>

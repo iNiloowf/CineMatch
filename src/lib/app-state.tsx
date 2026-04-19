@@ -2592,7 +2592,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               },
             ],
           }));
-          setAccountRefreshKey((current) => current + 1);
+          // Do not bump account refresh here: a full sync reapplies cached snapshots
+          // and can briefly wipe this swipe, so Discover shows the same card again.
           announceMutualIfNeeded();
           return;
         }

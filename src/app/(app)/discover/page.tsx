@@ -1593,26 +1593,26 @@ function DiscoverPageContent({
       </div>
 
       {lastSwipe ? (
-        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] bottom-[max(5rem,env(safe-area-inset-bottom,0px)+3.5rem)] flex flex-col items-center gap-1 px-3 min-[640px]:bottom-[max(1rem,env(safe-area-inset-bottom,0px))]">
+        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] bottom-[max(5rem,env(safe-area-inset-bottom,0px)+3.5rem)] flex w-full flex-col items-center gap-1 px-3 min-[640px]:bottom-[max(1rem,env(safe-area-inset-bottom,0px))]">
           <div
-            className={`discover-undo-toast pointer-events-auto flex w-full max-w-sm flex-nowrap items-center gap-2 rounded-2xl border px-2.5 py-2 shadow-lg backdrop-blur-xl ${
+            className={`discover-undo-toast pointer-events-auto flex w-full max-w-sm min-h-[3.25rem] flex-nowrap items-center gap-2.5 rounded-2xl border px-3 py-2 shadow-lg backdrop-blur-xl ${
               isDarkMode
                 ? "border-white/10 bg-slate-950/90"
                 : "border-slate-200/90 bg-white/95"
             }`}
           >
             <div
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                 lastSwipe.decision === "accepted"
-                  ? "bg-violet-600 text-white"
+                  ? "bg-violet-600 text-white shadow-[0_2px_8px_rgba(109,40,217,0.35)]"
                   : isDarkMode
-                    ? "bg-white/10 text-slate-200"
-                    : "bg-slate-100 text-slate-600"
+                    ? "border border-white/12 bg-white/10 text-slate-100"
+                    : "border border-slate-200/90 bg-slate-100 text-slate-700"
               }`}
             >
               {lastSwipe.decision === "accepted" ? "✓" : "×"}
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="flex min-h-[2.5rem] min-w-0 flex-1 flex-col justify-center">
               <p
                 className={`truncate text-xs font-semibold leading-tight ${
                   isDarkMode ? "text-white" : "text-slate-900"
@@ -1633,14 +1633,14 @@ function DiscoverPageContent({
             <button
               type="button"
               onClick={handleUndoSwipe}
-              className="shrink-0 rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
+              className="shrink-0 rounded-full bg-violet-600 px-3 py-1.5 text-[10px] font-semibold leading-none text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
             >
               Undo
             </button>
           </div>
           {!undoTipDismissed ? (
             <div
-              className={`pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-xl border px-2 py-1 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
+              className={`pointer-events-auto flex w-full max-w-sm min-h-[2.25rem] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
                 isDarkMode
                   ? "border-white/8 bg-slate-950/85 text-slate-300"
                   : "border-slate-200/80 bg-white/90 text-slate-600"
