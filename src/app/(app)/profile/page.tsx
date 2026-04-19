@@ -252,9 +252,9 @@ export default function ProfilePage() {
   const actionRing = isDarkMode ? "ring-2 ring-fuchsia-300/30" : "ring-2 ring-violet-400/55";
 
   const profileStyleOptions = [
-    { id: "classic", label: "Classic" },
-    { id: "glass", label: "Glass" },
-    { id: "neon", label: "Neon" },
+    { id: "classic", label: "Clean Contrast" },
+    { id: "glass", label: "Soft Glass" },
+    { id: "neon", label: "Vivid Glow" },
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     currentUser.profileStyle ?? "classic";
@@ -938,12 +938,12 @@ export default function ProfilePage() {
               </svg>
             </span>
             <div className="min-w-0">
-              <p className={sectionEyebrow}>Pro studio</p>
+              <p className={sectionEyebrow}>Profile themes</p>
               <p className={`mt-0.5 text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                Pro studio
+                Profile themes
               </p>
               <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}>
-                Pick a style friends can instantly notice
+                Choose a balanced look for both light and dark mode
               </p>
             </div>
           </div>
@@ -1011,19 +1011,19 @@ export default function ProfilePage() {
                           aria-hidden
                         >
                           {styleOption.id === "classic"
-                            ? "Cinema"
+                            ? "Clear"
                             : styleOption.id === "glass"
-                              ? "Gloss"
-                              : "Glow"}
+                              ? "Soft"
+                              : "Vivid"}
                         </span>
                         <div className="relative">
                         <p className="text-sm font-bold">{styleOption.label}</p>
                         <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                           {styleOption.id === "classic"
-                            ? "Film-strip texture and clean theater feel"
+                            ? "Sharp readability with neutral surfaces and clear hierarchy"
                             : styleOption.id === "glass"
-                              ? "Glossy poster-like reflections"
-                              : "Neon marquee with vibrant motion vibe"}
+                              ? "Gentle highlights and softer cards for a calm look"
+                              : "Higher contrast accents for strong visibility and energy"}
                         </p>
                         </div>
                       </button>
