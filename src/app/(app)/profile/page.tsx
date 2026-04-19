@@ -508,7 +508,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setWatchedReviewTab("recommended")}
               aria-label={`Recommended, ${recommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-[14px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -524,7 +524,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setWatchedReviewTab("notRecommended")}
               aria-label={`Not recommended, ${notRecommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-[10px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-[14px] font-semibold uppercase leading-snug tracking-[0.14em] transition ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
