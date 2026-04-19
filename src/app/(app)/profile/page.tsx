@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
+import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { useAppState } from "@/lib/app-state";
-import type { ProProfileStyle } from "@/lib/types";
+import type { Movie, ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
@@ -16,7 +18,9 @@ type SaveFeedback = "idle" | "saving" | "saved" | "error";
 export default function ProfilePage() {
   const {
     currentUser,
+    currentUserId,
     data,
+    discoverVisibilityTimestamp,
     onboardingPreferences,
     acceptedMovies,
     linkedUsers,
@@ -26,6 +30,9 @@ export default function ProfilePage() {
     completeOnboarding,
     updateProfile,
     markPickWatched,
+    registerMovies,
+    swipeMovie,
+    undoSwipe,
     isDarkMode,
     isReady,
     hasProAccess,
@@ -56,6 +63,8 @@ export default function ProfilePage() {
   const [isFavoriteGenresOpen, setIsFavoriteGenresOpen] = useState(false);
   const [isDislikedGenresOpen, setIsDislikedGenresOpen] = useState(false);
   const [isProStudioOpen, setIsProStudioOpen] = useState(false);
+  const [discoverSkipsModalOpen, setDiscoverSkipsModalOpen] = useState(false);
+  const [discoverSkipDetailMovie, setDiscoverSkipDetailMovie] = useState<Movie | null>(null);
   const [watchedReviewTab, setWatchedReviewTab] = useState<"recommended" | "notRecommended">("recommended");
   const [editingWatchedMovieId, setEditingWatchedMovieId] = useState<string | null>(null);
   const editingWatchedEntry = useMemo(
@@ -72,6 +81,8 @@ export default function ProfilePage() {
 
   useEscapeToClose(removePhotoModalOpen, () => setRemovePhotoModalOpen(false));
   useEscapeToClose(Boolean(editingWatchedEntry), () => setEditingWatchedMovieId(null));
+  useEscapeToClose(discoverSkipsModalOpen && !discoverSkipDetailMovie, () => setDiscoverSkipsModalOpen(false));
+  useEscapeToClose(Boolean(discoverSkipDetailMovie), () => setDiscoverSkipDetailMovie(null));
 
   useEffect(() => {
     return () => {
@@ -112,6 +123,47 @@ export default function ProfilePage() {
         ),
       ).sort((left, right) => left.localeCompare(right)),
     [data.movies],
+  );
+
+  const skippedDiscoverMovies = useMemo(() => {
+    if (!currentUserId) {
+      return [];
+    }
+
+    const rows = data.swipes
+      .filter((swipe) => {
+        if (swipe.userId !== currentUserId || swipe.decision !== "rejected") {
+          return false;
+        }
+        const rejectedAt = new Date(swipe.createdAt).getTime();
+        return (
+          Number.isFinite(rejectedAt) &&
+          discoverVisibilityTimestamp - rejectedAt < DISCOVER_REJECT_HIDE_WINDOW_MS
+        );
+      })
+      .map((swipe) => {
+        const movie = data.movies.find((entry) => entry.id === swipe.movieId);
+        return movie ? { movie, createdAt: swipe.createdAt } : null;
+      })
+      .filter((entry): entry is { movie: Movie; createdAt: string } => entry !== null);
+
+    rows.sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+    return rows;
+  }, [currentUserId, data.movies, data.swipes, discoverVisibilityTimestamp]);
+
+  const handleRestoreDiscoverSkip = useCallback(
+    async (movie: Movie, options?: { closeModals?: boolean }) => {
+      registerMovies([movie]);
+      await undoSwipe(movie.id);
+      if (options?.closeModals) {
+        setDiscoverSkipDetailMovie(null);
+        setDiscoverSkipsModalOpen(false);
+      }
+    },
+    [registerMovies, undoSwipe],
   );
 
   if (!isReady) {
@@ -579,6 +631,156 @@ export default function ProfilePage() {
           </div>
         </div>
       ) : null}
+      {discoverSkipsModalOpen && !discoverSkipDetailMovie ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setDiscoverSkipsModalOpen(false)}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex max-h-[min(78dvh,32rem)] w-full max-w-[min(92vw,26rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+          >
+            <span className="ui-modal-accent-bar" aria-hidden />
+            <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-inherit">Skipped on Discover</p>
+                <p className={`mt-0.5 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Remove a skip to show the title in Discover again.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDiscoverSkipsModalOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"}`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="ui-shell-body !min-h-0 flex-1 overflow-y-auto !pt-3">
+              {skippedDiscoverMovies.length === 0 ? (
+                <p className={`text-center text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Nothing here — passes older than a week roll off automatically.
+                </p>
+              ) : (
+                <ul className="space-y-2.5">
+                  {skippedDiscoverMovies.map(({ movie, createdAt }) => (
+                    <li
+                      key={movie.id}
+                      className={`flex gap-3 rounded-[16px] border p-2.5 ${
+                        isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200/90 bg-slate-50/80"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setDiscoverSkipDetailMovie(movie)}
+                        className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ${
+                          isDarkMode ? "ring-white/10" : "ring-slate-200/90"
+                        }`}
+                        aria-label={`Details for ${movie.title}`}
+                      >
+                        {movie.poster.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- small cached poster
+                          <img src={movie.poster.imageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span
+                            className={`flex h-full w-full items-center justify-center text-[9px] font-bold ${
+                              isDarkMode ? "bg-white/10 text-slate-300" : "bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {movie.title.slice(0, 2).toUpperCase()}
+                          </span>
+                        )}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setDiscoverSkipDetailMovie(movie)}
+                          className={`text-left text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                        >
+                          {movie.title}
+                        </button>
+                        <p className={`mt-0.5 text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          Skipped {new Date(createdAt).toLocaleDateString()}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setDiscoverSkipDetailMovie(movie)}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
+                            }`}
+                          >
+                            Details
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleRestoreDiscoverSkip(movie)}
+                            className="rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-violet-700"
+                          >
+                            Back in Discover
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {discoverSkipDetailMovie ? (
+        <MovieDetailsModal
+          movie={discoverSkipDetailMovie}
+          isDarkMode={isDarkMode}
+          onClose={() => setDiscoverSkipDetailMovie(null)}
+          contextLabel="Skipped on Discover"
+          footer={({ openTrailer }) => {
+            const inPicks = acceptedMovies.some((m) => m.id === discoverSkipDetailMovie.id);
+            return (
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-[8rem]"
+                  onClick={() => void openTrailer()}
+                >
+                  Trailer
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-[8rem]"
+                  onClick={() => void handleRestoreDiscoverSkip(discoverSkipDetailMovie, { closeModals: true })}
+                >
+                  Back in Discover
+                </button>
+                <button
+                  type="button"
+                  disabled={inPicks}
+                  className="ui-btn ui-btn-primary min-h-12 w-full flex-1 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[8rem]"
+                  onClick={() => {
+                    void (async () => {
+                      registerMovies([discoverSkipDetailMovie]);
+                      await swipeMovie(discoverSkipDetailMovie.id, "accepted");
+                      setDiscoverSkipDetailMovie(null);
+                      setDiscoverSkipsModalOpen(false);
+                    })();
+                  }}
+                >
+                  {inPicks ? "Already in picks" : "Add to picks"}
+                </button>
+              </div>
+            );
+          }}
+        />
+      ) : null}
       {editingWatchedEntry ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
@@ -797,10 +999,10 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
-          <div className="mt-1 space-y-8 sm:space-y-9">
+          <div className="mt-1 space-y-5 sm:space-y-6">
             {isEditing ? (
-              <div className="space-y-8 sm:space-y-9">
-                <section className="space-y-4">
+              <div className="space-y-5 sm:space-y-6">
+                <section className="space-y-3">
                   <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Basic info
                   </p>
@@ -866,14 +1068,14 @@ export default function ProfilePage() {
                   ) : null}
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col gap-5 sm:max-w-xl">
-                  <label className={`block space-y-2.5 ${labelClass}`}>
+                <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:max-w-xl">
+                  <label className={`block space-y-2 ${labelClass}`}>
                     Username
                     <input name="name" defaultValue={currentUser.name} className={inputClass} autoComplete="username" />
                   </label>
-                  <label className={`block space-y-2.5 ${labelClass}`}>
+                  <label className={`block space-y-2 ${labelClass}`}>
                     Bio
-                    <textarea name="bio" defaultValue={currentUser.bio} rows={5} className={`${inputClass} min-h-[7.5rem]`} />
+                    <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={`${inputClass} min-h-[5.5rem] resize-y`} />
                   </label>
                 </div>
                 </section>
@@ -922,32 +1124,34 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       {isFavoriteGenresOpen ? (
-                        <div className="flex max-h-[min(40vh,14rem)] flex-wrap gap-2 overflow-y-auto pr-0.5">
-                          {profileGenres.map((genre) => {
-                            const active = favoriteGenresDraft.includes(genre);
-                            return (
-                              <button
-                                key={`fav-${genre}`}
-                                type="button"
-                                onClick={() =>
-                                  setFavoriteGenresDraft((current) =>
-                                    current.includes(genre)
-                                      ? current.filter((entry) => entry !== genre)
-                                      : [...current, genre],
-                                  )
-                                }
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                                  active
-                                    ? "bg-violet-600 text-white"
-                                    : isDarkMode
-                                      ? "border border-white/12 bg-white/8 text-slate-200"
-                                      : "border border-slate-200 bg-white text-slate-700"
-                                }`}
-                              >
-                                {genre}
-                              </button>
-                            );
-                          })}
+                        <div className="max-h-[min(40vh,14rem)] overflow-y-auto overscroll-contain pr-0.5">
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {profileGenres.map((genre) => {
+                              const active = favoriteGenresDraft.includes(genre);
+                              return (
+                                <button
+                                  key={`fav-${genre}`}
+                                  type="button"
+                                  onClick={() =>
+                                    setFavoriteGenresDraft((current) =>
+                                      current.includes(genre)
+                                        ? current.filter((entry) => entry !== genre)
+                                        : [...current, genre],
+                                    )
+                                  }
+                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-[11px] font-semibold leading-tight transition sm:text-xs ${
+                                    active
+                                      ? "bg-violet-600 text-white shadow-sm"
+                                      : isDarkMode
+                                        ? "border border-white/12 bg-white/8 text-slate-200"
+                                        : "border border-slate-200/90 bg-white text-slate-700"
+                                  }`}
+                                >
+                                  {genre}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -974,32 +1178,34 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       {isDislikedGenresOpen ? (
-                        <div className="flex max-h-[min(40vh,14rem)] flex-wrap gap-2 overflow-y-auto pr-0.5">
-                          {profileGenres.map((genre) => {
-                            const active = dislikedGenresDraft.includes(genre);
-                            return (
-                              <button
-                                key={`dislike-${genre}`}
-                                type="button"
-                                onClick={() =>
-                                  setDislikedGenresDraft((current) =>
-                                    current.includes(genre)
-                                      ? current.filter((entry) => entry !== genre)
-                                      : [...current, genre],
-                                  )
-                                }
-                                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                                  active
-                                    ? "bg-rose-600 text-white"
-                                    : isDarkMode
-                                      ? "border border-white/12 bg-white/8 text-slate-200"
-                                      : "border border-slate-200 bg-white text-slate-700"
-                                }`}
-                              >
-                                {genre}
-                              </button>
-                            );
-                          })}
+                        <div className="max-h-[min(40vh,14rem)] overflow-y-auto overscroll-contain pr-0.5">
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {profileGenres.map((genre) => {
+                              const active = dislikedGenresDraft.includes(genre);
+                              return (
+                                <button
+                                  key={`dislike-${genre}`}
+                                  type="button"
+                                  onClick={() =>
+                                    setDislikedGenresDraft((current) =>
+                                      current.includes(genre)
+                                        ? current.filter((entry) => entry !== genre)
+                                        : [...current, genre],
+                                    )
+                                  }
+                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-[11px] font-semibold leading-tight transition sm:text-xs ${
+                                    active
+                                      ? "bg-rose-600 text-white shadow-sm"
+                                      : isDarkMode
+                                        ? "border border-white/12 bg-white/8 text-slate-200"
+                                        : "border border-slate-200/90 bg-white text-slate-700"
+                                  }`}
+                                >
+                                  {genre}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -1033,6 +1239,36 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   </div>
+                </section>
+
+                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
+
+                <section className="space-y-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Discover skips
+                    </p>
+                    <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Titles you pass stay off your Discover stack for about a week. Open the list to bring one back
+                      into your queue, read details, or save it to picks.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDiscoverSkipsModalOpen(true)}
+                    className={`w-full rounded-[16px] border px-4 py-3 text-left text-sm font-semibold transition sm:max-w-md ${
+                      isDarkMode
+                        ? "border-white/14 bg-white/[0.06] text-white hover:bg-white/[0.1]"
+                        : "border-slate-200/90 bg-white text-slate-900 shadow-sm hover:bg-slate-50"
+                    }`}
+                  >
+                    <span className="block">Recently skipped on Discover</span>
+                    <span className={`mt-0.5 block text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      {skippedDiscoverMovies.length === 0
+                        ? "No hidden titles right now"
+                        : `${skippedDiscoverMovies.length} title${skippedDiscoverMovies.length === 1 ? "" : "s"} hidden from Discover`}
+                    </span>
+                  </button>
                 </section>
               </div>
             ) : (
