@@ -488,7 +488,7 @@ export default function ProfilePage() {
     watchedReviewTab === "recommended" ? recommendedWatchedPicks : notRecommendedWatchedPicks;
 
   const watchedReviewsEditorSection = (
-    <div className="space-y-3 font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+    <div className="space-y-3">
       {watchedPickReviews.length === 0 ? (
         <div
           className={`rounded-xl px-4 py-3.5 text-center text-[10px] leading-snug ${
@@ -500,14 +500,15 @@ export default function ProfilePage() {
       ) : (
         <div className="space-y-3">
           <div
-            className={`grid grid-cols-2 gap-1.5 rounded-xl p-1 ${
+            className={`grid grid-cols-2 gap-1 rounded-xl p-0.5 font-[Segoe_UI,Roboto,Helvetica_Neue,Arial,sans-serif] ${
               isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
             }`}
           >
             <button
               type="button"
               onClick={() => setWatchedReviewTab("recommended")}
-              className={`min-w-0 rounded-xl px-2 py-1.5 text-[9px] font-semibold leading-tight tracking-wide transition sm:px-2.5 ${
+              aria-label={`Recommended, ${recommendedWatchedPicks.length} movies`}
+              className={`min-w-0 rounded-[10px] px-1.5 py-1 text-[8px] font-medium leading-tight tracking-tight transition sm:px-2 ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -522,7 +523,8 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setWatchedReviewTab("notRecommended")}
-              className={`min-w-0 rounded-xl px-2 py-1.5 text-[9px] font-semibold leading-tight tracking-wide transition sm:px-2.5 ${
+              aria-label={`Not recommended, ${notRecommendedWatchedPicks.length} movies`}
+              className={`min-w-0 rounded-[10px] px-1.5 py-1 text-[8px] font-medium leading-tight tracking-tight transition sm:px-2 ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
@@ -536,9 +538,11 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className={`divide-y overflow-hidden rounded-xl ${
-            isDarkMode ? "divide-white/10 bg-white/[0.04]" : "divide-slate-200/80 bg-slate-50/80"
-          }`}>
+          <div
+            className={`divide-y overflow-hidden rounded-xl font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] ${
+              isDarkMode ? "divide-white/10 bg-white/[0.04]" : "divide-slate-200/80 bg-slate-50/80"
+            }`}
+          >
             {activeWatchedEntries.length === 0 ? (
               <p className={`px-3 py-3 text-[10px] leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 No movies in this tab yet.
