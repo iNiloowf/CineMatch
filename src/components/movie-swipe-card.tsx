@@ -15,6 +15,13 @@ const MovieTrailerModalLazy = dynamic(
   { ssr: false },
 );
 
+/** Splits on sentence-ending punctuation followed by whitespace (English blurbs). */
+function splitIntoSentences(text: string): string[] {
+  const t = text.trim();
+  if (!t) return [];
+  return t.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0);
+}
+
 type MovieSwipeCardProps = {
   movie: Movie;
   onAccept: () => void;
@@ -50,7 +57,17 @@ export function MovieSwipeCard({
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const descriptionSectionRef = useRef<HTMLDivElement | null>(null);
-  const shouldClamp = movie.description.length > 92;
+  const sentences = useMemo(
+    () => splitIntoSentences(movie.description),
+    [movie.description],
+  );
+  const firstThreeSentencesText = useMemo(
+    () => sentences.slice(0, 3).join(" "),
+    [sentences],
+  );
+  const showMoreAfterThirdSentence = sentences.length > 3;
+  const shouldClamp =
+    showMoreAfterThirdSentence || movie.description.length > 92;
   /* ~½ previous display sizes; floor longest titles so they stay legible */
   const titleSizeClass =
     movie.title.length > 34
@@ -485,6 +502,28 @@ export function MovieSwipeCard({
                     </button>
                   </div>
                 </>
+              ) : showMoreAfterThirdSentence ? (
+                <p
+                  className={`text-[11px] leading-[1.35rem] ${
+                    isDarkMode ? "text-slate-200" : "text-slate-600"
+                  }`}
+                >
+                  {firstThreeSentencesText}{" "}
+                  <button
+                    type="button"
+                    aria-label="Show full description"
+                    aria-expanded={false}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleToggleDescription();
+                    }}
+                    className={`inline-flex min-h-8 items-center rounded-md px-0.5 align-baseline text-[11px] font-semibold underline-offset-2 hover:underline ${
+                      isDarkMode ? "text-violet-300" : "text-violet-600"
+                    }`}
+                  >
+                    More
+                  </button>
+                </p>
               ) : (
                 <div className="flex items-end gap-2">
                   <p
