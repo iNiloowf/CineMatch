@@ -15,13 +15,6 @@ const MovieTrailerModalLazy = dynamic(
   { ssr: false },
 );
 
-/** Splits on sentence-ending punctuation followed by whitespace (English blurbs). */
-function splitIntoSentences(text: string): string[] {
-  const t = text.trim();
-  if (!t) return [];
-  return t.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0);
-}
-
 type MovieSwipeCardProps = {
   movie: Movie;
   onAccept: () => void;
@@ -57,17 +50,7 @@ export function MovieSwipeCard({
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const descriptionSectionRef = useRef<HTMLDivElement | null>(null);
-  const sentences = useMemo(
-    () => splitIntoSentences(movie.description),
-    [movie.description],
-  );
-  const firstThreeSentencesText = useMemo(
-    () => sentences.slice(0, 3).join(" "),
-    [sentences],
-  );
-  const showMoreAfterThirdSentence = sentences.length > 3;
-  const shouldClamp =
-    showMoreAfterThirdSentence || movie.description.length > 92;
+  const shouldClamp = movie.description.length > 92;
   /* ~½ previous display sizes; floor longest titles so they stay legible */
   const titleSizeClass =
     movie.title.length > 34
@@ -502,32 +485,10 @@ export function MovieSwipeCard({
                     </button>
                   </div>
                 </>
-              ) : showMoreAfterThirdSentence ? (
-                <p
-                  className={`text-[11px] leading-[1.35rem] ${
-                    isDarkMode ? "text-slate-200" : "text-slate-600"
-                  }`}
-                >
-                  {firstThreeSentencesText}{" "}
-                  <button
-                    type="button"
-                    aria-label="Show full description"
-                    aria-expanded={false}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleToggleDescription();
-                    }}
-                    className={`inline-flex min-h-8 items-center rounded-md px-0.5 align-baseline text-[11px] font-semibold underline-offset-2 hover:underline ${
-                      isDarkMode ? "text-violet-300" : "text-violet-600"
-                    }`}
-                  >
-                    More
-                  </button>
-                </p>
               ) : (
-                <div className="flex items-end gap-2">
+                <div className="relative min-h-0">
                   <p
-                    className={`min-w-0 flex-1 text-[11px] leading-[1.35rem] line-clamp-2 ${
+                    className={`line-clamp-3 pr-[3.75rem] text-[11px] leading-[1.35rem] ${
                       isDarkMode ? "text-slate-200" : "text-slate-600"
                     }`}
                   >
@@ -541,10 +502,11 @@ export function MovieSwipeCard({
                       event.stopPropagation();
                       handleToggleDescription();
                     }}
-                    className={`min-h-11 shrink-0 rounded-lg px-1 leading-5 ${
-                      isDarkMode ? "text-violet-300" : "text-violet-600"
+                    className={`absolute bottom-0 right-0 z-[1] inline-flex h-[1.35rem] max-w-[calc(100%-0.5rem)] items-center justify-end bg-gradient-to-l pl-6 text-[11px] font-semibold leading-none ${
+                      isDarkMode
+                        ? "from-white/18 via-white/12 to-transparent text-violet-300"
+                        : "from-slate-50 from-30% via-slate-50/95 to-transparent text-violet-600"
                     }`}
-                    style={{ fontSize: "11px" }}
                   >
                     More
                   </button>
