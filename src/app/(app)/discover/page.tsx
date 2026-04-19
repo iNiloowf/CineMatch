@@ -619,24 +619,27 @@ function DiscoverPageContent({
     }
 
     swipeTimeoutRef.current = window.setTimeout(async () => {
-      setBrowseIndex(nextBrowseIndex);
-      registerMovies([swipedMovie]);
-      setSwipeFeedback(null);
-      await swipeMovie(swipedMovie.id, decision);
-      setSharedLinkOverlayMovie((current) =>
-        current?.id === swipedMovie.id ? null : current,
-      );
-      setLastSwipe({
-        movie: swipedMovie,
-        decision,
-        browseIndex: safeBrowseIndex,
-        focusedMovieId,
-      });
-      undoToastTimeoutRef.current = window.setTimeout(() => {
-        setLastSwipe((current) =>
-          current?.movie.id === swipedMovie.id ? null : current,
+      try {
+        await swipeMovie(swipedMovie.id, decision);
+      } finally {
+        registerMovies([swipedMovie]);
+        setBrowseIndex(nextBrowseIndex);
+        setSwipeFeedback(null);
+        setSharedLinkOverlayMovie((current) =>
+          current?.id === swipedMovie.id ? null : current,
         );
-      }, 5200);
+        setLastSwipe({
+          movie: swipedMovie,
+          decision,
+          browseIndex: safeBrowseIndex,
+          focusedMovieId,
+        });
+        undoToastTimeoutRef.current = window.setTimeout(() => {
+          setLastSwipe((current) =>
+            current?.movie.id === swipedMovie.id ? null : current,
+          );
+        }, 5200);
+      }
     }, 230);
   }, [
     movie,
@@ -1587,16 +1590,16 @@ function DiscoverPageContent({
       </div>
 
       {lastSwipe ? (
-        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] flex justify-center px-4 bottom-[max(5.75rem,env(safe-area-inset-bottom,0px)+4.25rem)] min-[640px]:bottom-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
+        <div className="pointer-events-none fixed inset-x-0 z-[var(--z-toast-anchor)] bottom-[max(5rem,env(safe-area-inset-bottom,0px)+3.5rem)] flex flex-col items-center gap-1 px-3 min-[640px]:bottom-[max(1rem,env(safe-area-inset-bottom,0px))]">
           <div
-            className={`discover-undo-toast pointer-events-auto flex w-full max-w-md flex-wrap items-center gap-2 rounded-[26px] border px-3 py-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl max-[380px]:max-w-[calc(100vw-0.75rem)] max-[380px]:gap-2 sm:gap-3 sm:px-4 ${
+            className={`discover-undo-toast pointer-events-auto flex w-full max-w-sm flex-nowrap items-center gap-2 rounded-2xl border px-2.5 py-2 shadow-lg backdrop-blur-xl ${
               isDarkMode
-                ? "border-white/10 bg-slate-950/92"
-                : "border-white/80 bg-white/94"
+                ? "border-white/10 bg-slate-950/90"
+                : "border-slate-200/90 bg-white/95"
             }`}
           >
             <div
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                 lastSwipe.decision === "accepted"
                   ? "bg-violet-600 text-white"
                   : isDarkMode
@@ -1608,56 +1611,59 @@ function DiscoverPageContent({
             </div>
             <div className="min-w-0 flex-1">
               <p
-                className={`truncate text-sm font-semibold ${
+                className={`truncate text-xs font-semibold leading-tight ${
                   isDarkMode ? "text-white" : "text-slate-900"
                 }`}
               >
                 {lastSwipe.movie.title}
               </p>
               <p
-                className={`text-xs ${
-                  isDarkMode ? "text-slate-300" : "text-slate-500"
+                className={`mt-0.5 text-[10px] leading-tight ${
+                  isDarkMode ? "text-slate-400" : "text-slate-500"
                 }`}
               >
                 {lastSwipe.decision === "accepted"
-                  ? "Added to your picks."
-                  : "Removed from Discover for now."}
+                  ? "Saved to picks"
+                  : "Skipped"}
               </p>
             </div>
             <button
               type="button"
               onClick={handleUndoSwipe}
-              className="ui-btn ui-btn-primary shrink-0 rounded-full px-3 py-2 text-xs max-[380px]:mt-0.5 max-[380px]:w-full max-[380px]:basis-full max-[380px]:justify-center sm:mt-0 sm:w-auto sm:basis-auto"
+              className="shrink-0 rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"
             >
               Undo
             </button>
-            {!undoTipDismissed ? (
-              <div className="flex w-full basis-full flex-col gap-2 border-t border-black/8 pt-2 sm:flex-row sm:items-center sm:justify-between">
-                <p
-                  className={`min-w-0 text-[11px] leading-snug sm:flex-1 ${
-                    isDarkMode ? "text-slate-300" : "text-slate-600"
-                  }`}
-                >
-                  You can undo a swipe for a few seconds with{" "}
-                  <span className="font-semibold text-inherit">Undo</span> here.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      window.localStorage.setItem(undoTipStorageKey, "1");
-                    }
-                    setUndoTipDismissed(true);
-                  }}
-                  className={`ui-btn ui-btn-ghost shrink-0 self-end text-xs sm:self-auto ${
-                    isDarkMode ? "text-violet-200" : "text-violet-700"
-                  }`}
-                >
-                  Got it
-                </button>
-              </div>
-            ) : null}
           </div>
+          {!undoTipDismissed ? (
+            <div
+              className={`pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-xl border px-2 py-1 text-[9px] leading-snug shadow-sm backdrop-blur-md ${
+                isDarkMode
+                  ? "border-white/8 bg-slate-950/85 text-slate-300"
+                  : "border-slate-200/80 bg-white/90 text-slate-600"
+              }`}
+            >
+              <p className="min-w-0 flex-1">
+                Tap <span className="font-semibold text-inherit">Undo</span> within a few seconds to reverse.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.localStorage.setItem(undoTipStorageKey, "1");
+                  }
+                  setUndoTipDismissed(true);
+                }}
+                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                  isDarkMode
+                    ? "text-violet-300 hover:bg-white/10"
+                    : "text-violet-700 hover:bg-slate-100"
+                }`}
+              >
+                OK
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

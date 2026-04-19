@@ -488,7 +488,7 @@ export function MovieSwipeCard({
               ) : (
                 <div className="relative min-h-0">
                   <p
-                    className={`line-clamp-3 pr-[3.75rem] text-[11px] leading-[1.35rem] ${
+                    className={`line-clamp-3 pr-[2.85rem] text-[11px] leading-[1.35rem] ${
                       isDarkMode ? "text-slate-200" : "text-slate-600"
                     }`}
                   >
@@ -502,10 +502,8 @@ export function MovieSwipeCard({
                       event.stopPropagation();
                       handleToggleDescription();
                     }}
-                    className={`absolute bottom-0 right-0 z-[1] inline-flex h-[1.35rem] max-w-[calc(100%-0.5rem)] items-center justify-end bg-gradient-to-l pl-6 text-[11px] font-semibold leading-none ${
-                      isDarkMode
-                        ? "from-white/18 via-white/12 to-transparent text-violet-300"
-                        : "from-slate-50 from-30% via-slate-50/95 to-transparent text-violet-600"
+                    className={`absolute bottom-0 right-0 z-[1] inline-flex h-[1.35rem] items-end px-0.5 pb-px text-[9px] font-semibold leading-none ${
+                      isDarkMode ? "text-violet-300" : "text-violet-600"
                     }`}
                   >
                     More
