@@ -415,6 +415,109 @@ export default function ProfilePage() {
       ),
     },
   ];
+  const watchedReviewsEditorSection = (
+    <div className="space-y-4">
+      <div>
+        <p className={sectionEyebrow}>Watched reviews</p>
+        <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          Movies you watched and reviewed
+        </p>
+        <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+          Marked from your Picks page after watching.
+        </p>
+      </div>
+      {watchedPickReviews.length === 0 ? (
+        <div
+          className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
+            isDarkMode
+              ? "border-white/10 bg-white/[0.03] text-slate-300"
+              : "border-slate-200/80 bg-slate-50/80 text-slate-600"
+          }`}
+        >
+          No watched reviews yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div
+            className={`rounded-[20px] border px-3 py-3 ${
+              isDarkMode
+                ? "border-emerald-400/22 bg-emerald-500/8"
+                : "border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/95 to-emerald-100/75 shadow-[0_8px_26px_rgba(16,185,129,0.14)]"
+            }`}
+          >
+            <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
+              Recommended
+            </p>
+            <div className="mt-2 space-y-2">
+              {recommendedWatchedPicks.length === 0 ? (
+                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+              ) : (
+                recommendedWatchedPicks.map((entry) => (
+                  <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-emerald-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{entry.movie.title}</p>
+                        <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                          {new Date(entry.watchedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingWatchedMovieId(entry.movie.id)}
+                        className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
+                          isDarkMode ? "bg-white/12 text-slate-100" : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <div
+            className={`rounded-[20px] border px-3 py-3 ${
+              isDarkMode
+                ? "border-rose-400/22 bg-rose-500/8"
+                : "border-rose-200/90 bg-gradient-to-br from-white via-rose-50/95 to-rose-100/75 shadow-[0_8px_26px_rgba(244,63,94,0.14)]"
+            }`}
+          >
+            <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
+              Not recommended
+            </p>
+            <div className="mt-2 space-y-2">
+              {notRecommendedWatchedPicks.length === 0 ? (
+                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
+              ) : (
+                notRecommendedWatchedPicks.map((entry) => (
+                  <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-rose-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{entry.movie.title}</p>
+                        <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                          {new Date(entry.watchedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingWatchedMovieId(entry.movie.id)}
+                        className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
+                          isDarkMode ? "bg-white/12 text-slate-100" : "bg-rose-100 text-rose-700"
+                        }`}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -764,6 +867,7 @@ export default function ProfilePage() {
                   Bio
                   <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={inputClass} />
                 </label>
+                {watchedReviewsEditorSection}
 
                 <div className="space-y-3">
                   <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -937,107 +1041,6 @@ export default function ProfilePage() {
               </p>
             </Link>
           ))}
-        </div>
-        <div className="space-y-4">
-          <div>
-            <p className={sectionEyebrow}>Watched reviews</p>
-            <p className={`mt-1 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Movies you watched and reviewed
-            </p>
-            <p className={`mt-1 text-xs leading-5 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              Marked from your Picks page after watching.
-            </p>
-          </div>
-          {watchedPickReviews.length === 0 ? (
-            <div
-              className={`rounded-[20px] border px-4 py-4 text-center text-sm ${
-                isDarkMode
-                  ? "border-white/10 bg-white/[0.03] text-slate-300"
-                  : "border-slate-200/80 bg-slate-50/80 text-slate-600"
-              }`}
-            >
-              No watched reviews yet.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div
-                className={`rounded-[20px] border px-3 py-3 ${
-                  isDarkMode
-                    ? "border-emerald-400/22 bg-emerald-500/8"
-                    : "border-emerald-200/90 bg-gradient-to-br from-white via-emerald-50/95 to-emerald-100/75 shadow-[0_8px_26px_rgba(16,185,129,0.14)]"
-                }`}
-              >
-                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-emerald-200" : "text-emerald-700"}`}>
-                  Recommended
-                </p>
-                <div className="mt-2 space-y-2">
-                  {recommendedWatchedPicks.length === 0 ? (
-                    <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-                  ) : (
-                    recommendedWatchedPicks.map((entry) => (
-                      <div key={`rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-emerald-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold">{entry.movie.title}</p>
-                            <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                              {new Date(entry.watchedAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                            className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                              isDarkMode ? "bg-white/12 text-slate-100" : "bg-emerald-100 text-emerald-700"
-                            }`}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div
-                className={`rounded-[20px] border px-3 py-3 ${
-                  isDarkMode
-                    ? "border-rose-400/22 bg-rose-500/8"
-                    : "border-rose-200/90 bg-gradient-to-br from-white via-rose-50/95 to-rose-100/75 shadow-[0_8px_26px_rgba(244,63,94,0.14)]"
-                }`}
-              >
-                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-rose-200" : "text-rose-700"}`}>
-                  Not recommended
-                </p>
-                <div className="mt-2 space-y-2">
-                  {notRecommendedWatchedPicks.length === 0 ? (
-                    <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>No movies here yet.</p>
-                  ) : (
-                    notRecommendedWatchedPicks.map((entry) => (
-                      <div key={`no-rec-${entry.movie.id}`} className={`rounded-xl px-2.5 py-2 text-xs ${isDarkMode ? "bg-white/8 text-slate-100" : "border border-rose-100/90 bg-white/95 text-slate-700 shadow-sm"}`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold">{entry.movie.title}</p>
-                            <p className={`${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                              {new Date(entry.watchedAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                            className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${
-                              isDarkMode ? "bg-white/12 text-slate-100" : "bg-rose-100 text-rose-700"
-                            }`}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </SurfaceCard>
 
