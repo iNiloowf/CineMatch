@@ -133,6 +133,7 @@ export default function SettingsPage() {
   const [giftRedeemCode, setGiftRedeemCode] = useState("");
   const [giftRedeemState, setGiftRedeemState] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [giftRedeemFeedback, setGiftRedeemFeedback] = useState("");
+  const [isGiftRedeemModalOpen, setIsGiftRedeemModalOpen] = useState(false);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -182,6 +183,7 @@ export default function SettingsPage() {
 
   useEscapeToClose(isContactAdminModalOpen, () => setIsContactAdminModalOpen(false));
   useEscapeToClose(Boolean(legalModal), () => setLegalModal(null));
+  useEscapeToClose(isGiftRedeemModalOpen, () => setIsGiftRedeemModalOpen(false));
 
   const handleSubmitTicket = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -634,6 +636,138 @@ export default function SettingsPage() {
           </div>
         </div>
       ) : null}
+      {isGiftRedeemModalOpen ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => {
+              setIsGiftRedeemModalOpen(false);
+              queueMicrotask(() => {
+                if (giftRedeemState !== "saving") {
+                  setGiftRedeemState("idle");
+                  setGiftRedeemFeedback("");
+                }
+              });
+            }}
+            className="absolute inset-0 cursor-default bg-transparent"
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto w-full max-w-[min(92vw,26rem)] overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.28)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gift-redeem-title"
+          >
+            <span
+              className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400"
+              aria-hidden
+            />
+            <div className={`ui-shell-header relative ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p id="gift-redeem-title" className="text-lg font-semibold text-inherit">
+                  Redeem partner gift
+                </p>
+                <p className={`mt-1 text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Enter the one-time code your partner shared from Pro + Partner Gift.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsGiftRedeemModalOpen(false);
+                  queueMicrotask(() => {
+                    if (giftRedeemState !== "saving") {
+                      setGiftRedeemState("idle");
+                      setGiftRedeemFeedback("");
+                    }
+                  });
+                }}
+                disabled={giftRedeemState === "saving"}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                } disabled:opacity-50`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleRedeemGiftCode();
+              }}
+            >
+              <div className="ui-shell-body space-y-4 !pt-5">
+                <label className="block space-y-2">
+                  <span className={`text-sm font-semibold ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
+                    Partner gift code
+                  </span>
+                  <input
+                    value={giftRedeemCode}
+                    onChange={(event) => setGiftRedeemCode(event.target.value.toUpperCase())}
+                    placeholder="CM-GIFT-XXXX-XXXX"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    className={`w-full rounded-[16px] border px-3.5 py-3 text-sm font-medium tracking-wide outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
+                      isDarkMode
+                        ? "border-white/14 bg-white/[0.06] text-white placeholder:text-slate-500"
+                        : "border-slate-200 bg-slate-50/90 text-slate-900 placeholder:text-slate-400"
+                    }`}
+                  />
+                </label>
+                {giftRedeemFeedback ? (
+                  <p
+                    className={`rounded-[14px] px-3 py-2.5 text-sm leading-snug ${
+                      giftRedeemState === "success"
+                        ? isDarkMode
+                          ? "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-400/25"
+                          : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80"
+                        : isDarkMode
+                          ? "bg-rose-500/12 text-rose-100 ring-1 ring-rose-400/22"
+                          : "bg-rose-50 text-rose-800 ring-1 ring-rose-200/80"
+                    }`}
+                  >
+                    {giftRedeemFeedback}
+                  </p>
+                ) : null}
+              </div>
+              <div className="ui-shell-footer !px-0 !pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsGiftRedeemModalOpen(false);
+                    queueMicrotask(() => {
+                      if (giftRedeemState !== "saving") {
+                        setGiftRedeemState("idle");
+                        setGiftRedeemFeedback("");
+                      }
+                    });
+                  }}
+                  disabled={giftRedeemState === "saving"}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1 disabled:opacity-70"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={giftRedeemState === "saving"}
+                  className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
+                >
+                  {giftRedeemState === "saving" ? "Redeeming..." : "Redeem code"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       <PageHeader
         eyebrow="Preferences"
@@ -885,50 +1019,28 @@ export default function SettingsPage() {
               </div>
             ) : null}
 
-            <div
-              className={`rounded-[14px] border px-3 py-3 ${
-                isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white"
+            <button
+              type="button"
+              onClick={() => {
+                setGiftRedeemState("idle");
+                setGiftRedeemFeedback("");
+                setIsGiftRedeemModalOpen(true);
+              }}
+              className={`w-full rounded-[14px] border px-4 py-3 text-left text-sm font-semibold transition active:scale-[0.99] ${
+                isDarkMode
+                  ? "border-emerald-400/28 bg-emerald-500/10 text-emerald-50 hover:bg-emerald-500/16"
+                  : "border-emerald-200/90 bg-emerald-50/90 text-emerald-900 hover:bg-emerald-100/90"
               }`}
             >
-              <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                Redeem partner gift code
-              </p>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                <input
-                  value={giftRedeemCode}
-                  onChange={(event) => setGiftRedeemCode(event.target.value.toUpperCase())}
-                  placeholder="CM-GIFT-XXXX-XXXX"
-                  className={`w-full rounded-[12px] border px-3 py-2 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
-                      : "border-slate-200 bg-white text-slate-900"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleRedeemGiftCode()}
-                  disabled={giftRedeemState === "saving"}
-                  className="ui-btn ui-btn-secondary shrink-0 disabled:opacity-70"
-                >
-                  {giftRedeemState === "saving" ? "Redeeming..." : "Redeem"}
-                </button>
-              </div>
-              {giftRedeemFeedback ? (
-                <p
-                  className={`mt-2 text-xs ${
-                    giftRedeemState === "success"
-                      ? isDarkMode
-                        ? "text-emerald-300"
-                        : "text-emerald-700"
-                      : isDarkMode
-                        ? "text-rose-300"
-                        : "text-rose-700"
-                  }`}
-                >
-                  {giftRedeemFeedback}
-                </p>
-              ) : null}
-            </div>
+              <span
+                className={`block text-xs font-bold uppercase tracking-[0.14em] ${
+                  isDarkMode ? "text-emerald-200/90" : "text-emerald-700/90"
+                }`}
+              >
+                Have a code?
+              </span>
+              <span className="mt-1 block">Redeem partner gift code</span>
+            </button>
 
             <SettingToggle
               label="Admin mode (simulate Pro purchase)"
