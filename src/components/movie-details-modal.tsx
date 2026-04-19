@@ -154,6 +154,7 @@ export function MovieDetailsModal({
           isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
         }`}
       >
+        <span className="ui-modal-accent-bar" aria-hidden />
         <div
           className={`ui-shell-header !border-b-black/6 !py-3 !pt-[max(1rem,env(safe-area-inset-top,0px))] shrink-0`}
         >

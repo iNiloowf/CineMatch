@@ -120,6 +120,7 @@ export default function FriendsPage() {
                 : "border-white/70 bg-white"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div
               className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-200"}`}
             >

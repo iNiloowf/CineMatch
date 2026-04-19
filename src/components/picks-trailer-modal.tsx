@@ -48,6 +48,7 @@ export function PicksTrailerModal({
           isDarkMode ? "border-white/10 bg-slate-950/96" : "border-white/75 bg-white/96"
         }`}
       >
+        <span className="ui-modal-accent-bar" aria-hidden />
         <div className="ui-shell-header !border-b-black/6 !py-3 shrink-0">
           <p
             className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${

@@ -493,6 +493,7 @@ export default function AdminDesktopPage() {
                   : "border-slate-200/90 bg-white text-slate-900"
               }`}
             >
+              <span className="ui-modal-accent-bar" aria-hidden />
               <div
                 className={`flex items-start gap-3 border-b px-6 py-5 ${
                   isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/90 bg-slate-50/70"

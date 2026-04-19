@@ -526,6 +526,7 @@ export default function ProfilePage() {
               isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">Remove profile photo?</p>
               <button
@@ -576,6 +577,7 @@ export default function ProfilePage() {
               isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">Edit recommendation</p>
               <button

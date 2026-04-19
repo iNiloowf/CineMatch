@@ -376,6 +376,7 @@ export default function SharedWatchlistPage() {
               isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header !border-b-black/6 shrink-0">
               <p
                 className={`min-w-0 flex-1 text-xs font-medium tracking-[0.01em] ${

@@ -745,6 +745,7 @@ function DiscoverPageContent({
                 : "border-slate-200/90 bg-white text-slate-900"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header">
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-semibold">Tune your recommendations</p>
@@ -1164,6 +1165,7 @@ function DiscoverPageContent({
                 : "border-slate-200/80 bg-white"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div
               className={`ui-shell-header !border-b-black/5 backdrop-blur-xl !pt-[max(1rem,env(safe-area-inset-top,0px))] ${
                 isDarkMode ? "bg-slate-950/90" : "bg-white/75"
@@ -1412,6 +1414,7 @@ function DiscoverPageContent({
                 : "border border-white/70 bg-white"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header">
               <div className="min-w-0 flex-1">
                 <p

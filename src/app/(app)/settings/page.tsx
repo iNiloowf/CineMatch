@@ -425,6 +425,7 @@ export default function SettingsPage() {
             aria-modal="true"
             aria-label="Contact admin"
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-semibold text-inherit">Contact admin</p>
@@ -555,6 +556,7 @@ export default function SettingsPage() {
             aria-modal="true"
             aria-label={legalModal === "privacy" ? "Privacy Policy" : "Terms of Service"}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-semibold text-inherit">
@@ -662,10 +664,7 @@ export default function SettingsPage() {
             aria-modal="true"
             aria-labelledby="gift-redeem-title"
           >
-            <span
-              className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-violet-500 to-amber-400"
-              aria-hidden
-            />
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header relative ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1 pt-0.5">
                 <p id="gift-redeem-title" className="text-lg font-semibold text-inherit">

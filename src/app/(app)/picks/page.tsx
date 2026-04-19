@@ -644,6 +644,7 @@ export default function PicksPage() {
                 isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
               }`}
             >
+              <span className="ui-modal-accent-bar" aria-hidden />
               <div
                 className={`ui-shell-header !border-b-black/6 !py-3 !pt-[max(1rem,env(safe-area-inset-top,0px))] shrink-0`}
               >
@@ -1286,6 +1287,7 @@ export default function PicksPage() {
                 : "border-white/80 bg-white text-slate-900"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header !border-b-black/6 shrink-0">
               <h3 className="min-w-0 flex-1 text-lg font-semibold">Remove from your picks?</h3>
               <button
@@ -1358,6 +1360,7 @@ export default function PicksPage() {
                 : "border-white/80 bg-white text-slate-900"
             }`}
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1 pr-2">
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-300/90" : "text-violet-600/90"}`}>
@@ -1443,6 +1446,7 @@ export default function PicksPage() {
             aria-modal="true"
             aria-label="Buy Pro"
           >
+            <span className="ui-modal-accent-bar" aria-hidden />
             <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
               <div className="min-w-0 flex-1">
                 <p className="text-lg font-semibold text-inherit">Choose your Pro plan</p>

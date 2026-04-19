@@ -550,6 +550,27 @@ input[type="range"] {
   overflow: hidden;
 }
 
+/* Colorful top stripe on dialogs / sheets (same family as Settings → Redeem partner gift). */
+.ui-modal-accent-bar {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 0.3125rem;
+  z-index: 20;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #34d399,
+    #22d3ee,
+    #a78bfa,
+    #f472b6,
+    #fbbf24
+  );
+  box-shadow: 0 0 22px rgba(167, 139, 250, 0.38);
+}
+
 .ui-shell--dialog-sm {
   max-width: 24rem;
 }
