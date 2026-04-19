@@ -220,6 +220,8 @@ type AppStateContextValue = {
   undoSwipe: (movieId: string) => Promise<void>;
   removePick: (movieId: string) => Promise<void>;
   markPickWatched: (movieId: string, recommended: boolean) => Promise<void>;
+  /** Clears watched status for a pick (movie stays in your picks). */
+  unmarkPickWatched: (movieId: string) => Promise<void>;
   toggleSharedMovie: (
     partnerId: string,
     movieId: string,
@@ -2842,6 +2844,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const unmarkPickWatched = async (movieId: string) => {
+    if (!currentUserId) {
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      watchedPickReviews: current.watchedPickReviews.filter(
+        (entry) => !(entry.userId === currentUserId && entry.movieId === movieId),
+      ),
+    }));
+  };
+
   const toggleSharedMovie = async (
     partnerId: string,
     movieId: string,
@@ -3256,8 +3271,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     const supabase = getSupabaseBrowserClient();
-    let nextAvatarImageUrl: string | undefined =
-      clearAvatar ? undefined : (avatarImageUrl ?? undefined);
+    const passedAvatar =
+      typeof avatarImageUrl === "string" && avatarImageUrl.trim().length > 0
+        ? avatarImageUrl.trim()
+        : undefined;
+
+    let nextAvatarImageUrl: string | undefined;
+    if (clearAvatar) {
+      nextAvatarImageUrl = undefined;
+    } else if (!avatarFile) {
+      nextAvatarImageUrl = passedAvatar ?? currentUser?.avatarImageUrl;
+    }
 
     if (supabase && isSupabaseConfigured()) {
       if (clearAvatar) {
@@ -3276,11 +3300,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         nextAvatarImageUrl = uploadedUrl;
       }
 
+      const authMetadata: Record<string, string | null> = {
+        full_name: name,
+      };
+      if (clearAvatar) {
+        authMetadata.avatar_image_url = null;
+      } else if (nextAvatarImageUrl) {
+        authMetadata.avatar_image_url = nextAvatarImageUrl;
+      }
+
       const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          full_name: name,
-          avatar_image_url: null,
-        },
+        data: authMetadata,
       });
 
       if (authError) {
@@ -3290,17 +3320,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      const profilePatch: Record<string, unknown> = {
+        full_name: name,
+        avatar_text: getAvatarText(name, currentUser?.email ?? ""),
+        bio,
+        city,
+        profile_style: profileStyle ?? currentUser?.profileStyle ?? "classic",
+        updated_at: new Date().toISOString(),
+      };
+      if (clearAvatar) {
+        profilePatch.avatar_image_url = null;
+      } else if (typeof nextAvatarImageUrl === "string" && nextAvatarImageUrl.length > 0) {
+        profilePatch.avatar_image_url = nextAvatarImageUrl;
+      }
+
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({
-          full_name: name,
-          avatar_text: getAvatarText(name, currentUser?.email ?? ""),
-          bio,
-          city,
-          avatar_image_url: nextAvatarImageUrl ?? null,
-          profile_style: profileStyle ?? currentUser?.profileStyle ?? "classic",
-          updated_at: new Date().toISOString(),
-        } as never)
+        .update(profilePatch as never)
         .eq("id", currentUserId);
 
       if (profileError) {
@@ -3321,7 +3357,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               avatar: getAvatarText(name, user.email),
               bio,
               city,
-              avatarImageUrl: nextAvatarImageUrl,
+              avatarImageUrl: clearAvatar
+                ? undefined
+                : (nextAvatarImageUrl ?? user.avatarImageUrl),
               profileStyle: profileStyle ?? user.profileStyle ?? "classic",
             }
           : user,
@@ -3483,6 +3521,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         undoSwipe,
         removePick,
         markPickWatched,
+        unmarkPickWatched,
         toggleSharedMovie,
         linkUser,
         unlinkUser,

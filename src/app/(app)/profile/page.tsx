@@ -692,10 +692,11 @@ export default function ProfilePage() {
       />
 
       <SurfaceCard
-        className={`fade-up-enter discover-toolbar-enter relative overflow-hidden space-y-6 !p-5 sm:!p-6 ${proHeaderCardStyle}`}
+        bare
+        className={`fade-up-enter discover-toolbar-enter space-y-6 ${proHeaderCardStyle}`}
         style={{ animationDelay: "0ms" }}
       >
-        <span className={`pointer-events-none absolute inset-0 ${proHeaderPatternClass}`} aria-hidden />
+        <span className={`pointer-events-none absolute inset-0 z-0 ${proHeaderPatternClass}`} aria-hidden />
         <form className="relative z-10 space-y-6" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
@@ -995,24 +996,16 @@ export default function ProfilePage() {
                 </section>
               </div>
             ) : (
-              <div className="space-y-5 pt-0.5">
-                <div>
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    City
-                  </p>
-                  <p className={`mt-1.5 truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                    {currentUser.city}
-                  </p>
-                </div>
-                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
-                <div>
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Bio
-                  </p>
-                  <p className={`mt-1.5 text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                    {currentUser.bio}
-                  </p>
-                </div>
+              <div className="space-y-3 pt-0.5">
+                <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  About
+                </p>
+                <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {currentUser.city}
+                </p>
+                <p className={`text-sm leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  {currentUser.bio}
+                </p>
               </div>
             )}
           </div>
@@ -1058,7 +1051,6 @@ export default function ProfilePage() {
         className={`discover-toolbar-enter relative overflow-hidden !p-0 ${proStudioSurface}`}
         style={{ animationDelay: "95ms" }}
       >
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500" aria-hidden />
         <span className={`pointer-events-none absolute inset-0 ${proStudioCardPatternClass}`} aria-hidden />
         <button
           type="button"
