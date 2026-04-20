@@ -65,7 +65,7 @@ Without TMDB, the app still runs using built-in / mock paths; with TMDB, Discove
 
 ## Admin dashboard (hidden URL)
 
-The UI is **not** meant to be opened at `/admin` in the browser bar. `src/middleware.ts` only serves the admin app when you hit a **separate, hard-to-guess path** (it rewrites internally and strips direct `/admin` access without that handshake).
+The UI is **not** meant to be opened at `/admin` in the browser bar. `src/proxy.ts` only serves the admin app when you hit a **separate, hard-to-guess path** (it rewrites internally and strips direct `/admin` access without that handshake).
 
 | | |
 | --- | --- |

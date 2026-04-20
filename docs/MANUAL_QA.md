@@ -49,7 +49,7 @@ Use this checklist before a release or after risky changes (auth, sync, payments
 
 ## API / observability (optional)
 
-- [ ] Responses include **`x-request-id`** when middleware is enabled (same value on request and response for debugging).
+- [ ] Responses include **`x-request-id`** when the Next.js **proxy** is enabled (same value on request and response for debugging).
 
 ## Android / Capacitor (if shipping mobile)
 
