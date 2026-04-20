@@ -1,7 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Movie } from "@/lib/types";
+import { defaultSettings } from "@/lib/mock-data";
+import { useAppState } from "@/lib/app-state";
+import { applyTrailerAutoplayPreference } from "@/lib/trailer-embed-url";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export type MovieTrailerModalProps = {
@@ -33,6 +36,17 @@ export function MovieTrailerModal({
 }: MovieTrailerModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(true, panelRef);
+  const { currentUserId, data } = useAppState();
+  const autoplayTrailers = useMemo(() => {
+    if (!currentUserId) {
+      return defaultSettings.autoplayTrailers;
+    }
+    return { ...defaultSettings, ...data.settings[currentUserId] }.autoplayTrailers;
+  }, [currentUserId, data.settings]);
+  const trailerSrc = useMemo(
+    () => applyTrailerAutoplayPreference(trailerUrl, autoplayTrailers),
+    [trailerUrl, autoplayTrailers],
+  );
 
   return (
     <div
@@ -84,7 +98,7 @@ export function MovieTrailerModal({
             <div className="relative aspect-video w-full bg-black">
               {trailerUrl ? (
                 <iframe
-                  src={trailerUrl}
+                  src={trailerSrc ?? trailerUrl}
                   title={`${movie.title} trailer`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen

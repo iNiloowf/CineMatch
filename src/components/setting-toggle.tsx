@@ -20,8 +20,9 @@ export function SettingToggle({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      aria-pressed={checked}
       className={`flex items-center justify-between gap-5 rounded-[24px] px-4 py-4 ${
         isDarkMode ? "bg-white/6" : "bg-slate-50/80 ring-1 ring-slate-200/70"
       }`}
@@ -43,13 +44,14 @@ export function SettingToggle({
         </p>
       </div>
       <span
-        className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition ${
+        className={`relative inline-flex h-8 w-14 shrink-0 rounded-full transition ${
           checked ? "bg-violet-600" : isDarkMode ? "bg-slate-500 ring-1 ring-white/10" : "bg-slate-300"
         }`}
       >
         <span
-          className={`inline-block h-6 w-6 rounded-full bg-white shadow transition ${
-            checked ? "translate-x-7" : "translate-x-1"
+          aria-hidden
+          className={`pointer-events-none absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-[left] duration-200 ease-out ${
+            checked ? "left-[calc(100%-1.75rem)]" : "left-1"
           }`}
         />
       </span>

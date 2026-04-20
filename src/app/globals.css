@@ -119,6 +119,32 @@
   --color-chip-on-dark-text: rgba(255, 255, 255, 0.95);
 }
 
+/*
+ * WebKit (Safari / iOS / Capacitor): Tailwind’s backdrop-blur utilities only set `backdrop-filter`
+ * in some builds; dark-mode frosted surfaces need `-webkit-backdrop-filter` to visibly blur.
+ */
+.theme-dark .backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(4px);
+}
+.theme-dark .backdrop-blur-md {
+  -webkit-backdrop-filter: blur(12px);
+}
+.theme-dark .backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(16px);
+}
+.theme-dark .backdrop-blur-xl {
+  -webkit-backdrop-filter: blur(24px);
+}
+.theme-dark .backdrop-blur-2xl {
+  -webkit-backdrop-filter: blur(40px);
+}
+.theme-dark .backdrop-blur-\[2px\] {
+  -webkit-backdrop-filter: blur(2px);
+}
+.theme-dark .backdrop-blur-\[3px\] {
+  -webkit-backdrop-filter: blur(3px);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -452,6 +478,7 @@ input[type="range"] {
   border-radius: var(--radius-xl);
   background: var(--color-surface-glass);
   box-shadow: var(--elev-card);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
 
@@ -461,6 +488,7 @@ input[type="range"] {
   background: var(--color-surface-glass);
   color: var(--color-text-strong);
   font-size: var(--font-scale-body);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -555,6 +583,7 @@ input[type="range"] {
   font-size: var(--font-scale-meta);
   font-weight: 600;
   padding: 0.125rem 0.5rem;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -606,6 +635,7 @@ input[type="range"] {
   border-radius: var(--radius-panel);
   background: color-mix(in srgb, var(--color-surface-glass) 96%, transparent);
   box-shadow: var(--elev-menu);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
@@ -935,6 +965,7 @@ input[type="range"] {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
   animation: discoverFeedbackChip var(--motion-duration-discover-feedback) var(--motion-ease-standard) both;

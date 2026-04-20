@@ -226,7 +226,7 @@ function parseTmdbMovieId(movieId: string) {
 
 function buildYoutubeEmbedUrl(videoKey: string) {
   const searchParams = new URLSearchParams({
-    autoplay: "1",
+    autoplay: "0",
     rel: "0",
     modestbranding: "1",
     playsinline: "1",

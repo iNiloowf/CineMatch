@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAppState } from "@/lib/app-state";
+import { defaultSettings } from "@/lib/mock-data";
+import { applyTrailerAutoplayPreference } from "@/lib/trailer-embed-url";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type PicksTrailerModalProps = {
@@ -28,6 +31,17 @@ export function PicksTrailerModal({
   const [playerReady, setPlayerReady] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(true, panelRef);
+  const { currentUserId, data } = useAppState();
+  const autoplayTrailers = useMemo(() => {
+    if (!currentUserId) {
+      return defaultSettings.autoplayTrailers;
+    }
+    return { ...defaultSettings, ...data.settings[currentUserId] }.autoplayTrailers;
+  }, [currentUserId, data.settings]);
+  const trailerSrc = useMemo(
+    () => applyTrailerAutoplayPreference(trailerUrl, autoplayTrailers),
+    [trailerUrl, autoplayTrailers],
+  );
 
   useEffect(() => {
     setPlayerReady(false);
@@ -108,7 +122,7 @@ export function PicksTrailerModal({
               {trailerUrl ? (
                 <>
                   <iframe
-                    src={trailerUrl}
+                    src={trailerSrc ?? trailerUrl}
                     title={`${title} trailer`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
