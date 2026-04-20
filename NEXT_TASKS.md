@@ -1,40 +1,54 @@
 <!-- Agents: keep this file in English. Do not commit/push this file unless the user explicitly asks. -->
 
-# Your next tasks — CineMatch
+# CineMatch — Task list (organized)
 
-## Summary
+**Stack:** Next.js 16, React 19, Supabase, Capacitor Android, Vitest + GitHub Actions CI. Request boundary: **`src/proxy.ts`**.
 
-**Stack:** Next.js 16, React 19, Supabase, Capacitor Android, Vitest + GitHub Actions CI. Request boundary: **`src/proxy.ts`**. Core routes implemented; APIs use Zod + shared helpers (`discover-quality`, `api-validation`).
-
-**Shipped work** is on `main` (git history). **Manual QA:** `docs/MANUAL_QA.md`. Older UI notes: `IMPROVEMENT_CHECKLIST.md` (mostly historical).
-
-### Completed (tick)
-
-- [x] **Discover deck + API quality** — `src/lib/discover-quality.ts` + `src/lib/discover-queue.ts` (`buildDiscoverQueue`); `GET /api/movies` uses shared `passesDiscoverQualityThreshold` (no client/API drift).
-- [x] **Route loading / empty / error** — `src/components/app-route-status.tsx` (`AppRouteLoading`, `AppRouteEmptyCard`, `AppRouteNetworkStatus`) wired on ProtectedScreen, Profile, Shared, Picks, Discover empty states.
-- [x] Next.js **`middleware` → `proxy`** — `src/proxy.ts` (`export function proxy`: admin rewrite, `x-request-id`, stale `sb-*` cookies); see [Next.js 16 guidance](https://nextjs.org/docs/messages/middleware-to-proxy).
-- [x] **Play Store / Capacitor baseline** — `versionCode` 2 / `versionName` 1.0.1; splash (`Theme.SplashScreen`, `splash.xml`, `SplashScreen.installSplashScreen`); `strings.xml` privacy/terms URLs + `permission_internet_description`; `docs/GOOGLE_PLAY_PUBLISHING.md`.
-- [x] **Virtualize Discover search** — `VirtualScrollList` when `sortedSearchResults.length` ≥ 24 (`discover/page.tsx`); short lists stay a plain map.
-- [x] **Virtualize Shared partner movies** — `SharedPartnerMovieCard` in `src/components/shared-partner-movie-card.tsx`; `VirtualScrollList` when a partner’s movie list ≥ 24; otherwise unchanged map.
-- [x] **Images & CLS (TMDB)** — `next.config.ts` `images.remotePatterns` for `image.tmdb.org`; `PosterBackdrop` uses `next/image` for TMDB URLs, `<img>` fallback for other hosts.
-- [x] **Discover sheets audit** — Search + genre filter: `useEscapeToClose` already; added **tap outside** on overlay to close, `stopPropagation` on sheet, `role="dialog"`, `aria-modal`, `aria-labelledby` for titles.
+**Where to look:** shipped work = `main` · **Manual QA:** `docs/MANUAL_QA.md` · **Older UI history:** `IMPROVEMENT_CHECKLIST.md`
 
 ---
 
-## Next tasks (open — priority only)
+## A. Priority items 1–5 (done)
 
-1. [x] **Shrink `app-state.tsx` (sync path)** — Extracted into `src/lib/account-sync/` (`types`, `chunk-items`, `settings-fetch`, `fetch-from-browser`, `snapshot-storage`). `app-state` imports these; optional further hook splits remain possible.
+Each row: **what** → **note** (why it matters / where in repo).
 
-2. [x] **Stronger automated tests** — Unit tests added: `src/lib/discover-quality.test.ts`, `src/lib/discover-queue.test.ts` (Vitest). Integration/E2E (MSW/Playwright) still optional for later.
+| # | Task | Note |
+|---|------|------|
+| 1 | **Shrink `app-state.tsx` (sync path)** | Sync logic split into `src/lib/account-sync/` (`types`, `chunk-items`, `settings-fetch`, `fetch-from-browser`, `snapshot-storage`). Easier to test and maintain; more hook splits optional later. |
+| 2 | **Stronger automated tests** | Vitest: `discover-quality.test.ts`, `discover-queue.test.ts`. MSW/Playwright-style integration tests still optional. |
+| 3 | **Android + Play release discipline** | Runbook: `docs/RELEASE_CHECKLIST.md`. Versions live in `android/app/build.gradle` (bump each store upload). |
+| 4 | **Bundle budget** | How-to: `docs/BUNDLE_BUDGET.md`. Command: `npm run analyze` after big UI/deps changes. |
+| 5 | **Production monitoring** | `@sentry/nextjs` when `NEXT_PUBLIC_SENTRY_DSN` is set (`sentry.*.config.ts`, `instrumentation.ts`, `withSentryConfig` in `next.config.ts`). Pair with `x-request-id` in logs if you debug API issues. |
 
-3. [x] **Android + Play release discipline** — Checklist: `docs/RELEASE_CHECKLIST.md`. `versionCode` / `versionName` bumped in `android/app/build.gradle` with this batch; follow checklist per release.
+---
 
-4. [x] **Bundle budget** — Documented: `docs/BUNDLE_BUDGET.md` (`npm run analyze`).
+## B. Other shipped work (reference)
 
-5. [x] **Production monitoring** — `@sentry/nextjs` added; `sentry.client.config.ts`, `sentry.server.config.ts`, `instrumentation.ts`; `next.config.ts` uses `withSentryConfig` when `NEXT_PUBLIC_SENTRY_DSN` is set. Correlate with `x-request-id` in server logs as needed.
+| Area | Note |
+|------|------|
+| Discover deck + API quality | `discover-quality.ts` + `discover-queue.ts`; `GET /api/movies` shares `passesDiscoverQualityThreshold`. |
+| Route loading / empty / error | `AppRouteLoading`, `AppRouteEmptyCard`, `AppRouteNetworkStatus` on core routes. |
+| **`middleware` → `proxy`** | `src/proxy.ts` — admin rewrite, `x-request-id`, cookie cleanup. |
+| Play / Capacitor baseline | Splash, strings, `GOOGLE_PLAY_PUBLISHING.md` (see doc for store form). |
+| Virtualized lists | Discover search & Shared partner lists when count ≥ 24 (`VirtualScrollList`). |
+| Images & CLS | TMDB `remotePatterns`; `PosterBackdrop` + `next/image` where applicable. |
+| Discover sheets | Tap-outside to close, dialog roles/labels for search & genre filter. |
+
+---
+
+## C. Optional next ideas (not committed as “must do”)
+
+| Idea | Note |
+|------|------|
+| Landing “why sign in” line | Extra marketing on `/` if you want stronger conversion. |
+| Settings toggle grouping | Group toggles by theme (partially done). |
+| i18n / RTL | Only if you leave English-only; product is English today. |
+| Cookie consent + analytics | If you add non-essential cookies or third-party trackers. |
+| PWA install / offline shell | If web install matters beyond the Capacitor app. |
+| More E2E / MSW tests | Login → swipe → invite flows; complements current Vitest unit tests. |
 
 ---
 
 _Maintainer: English only. Git: only commit/push this file if you ask._
 
-_Last updated: Apr 2026 — Open list trimmed to priorities; optional analytics/PWA/Sentry-as-nice-to-have removed; release and monitoring called out explicitly._
+_Last updated: Apr 2026 — table layout for scan-friendly notes._
