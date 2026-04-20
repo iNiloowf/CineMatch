@@ -67,6 +67,8 @@ const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
+/** Per-device preference; survives account sync overwriting stale server rows (same pattern as theme). */
+const USER_AUTOPLAY_TRAILERS_PREFIX = "cinematch-user-autoplay-trailers";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
@@ -298,7 +300,7 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
   return {
     darkMode: settings.dark_mode,
     notifications: settings.notifications,
-    autoplayTrailers: settings.autoplay_trailers,
+    autoplayTrailers: settings.autoplay_trailers ?? false,
     hideSpoilers: settings.hide_spoilers,
     cellularSync: settings.cellular_sync,
     reduceMotion: settings.reduce_motion ?? false,
@@ -393,6 +395,37 @@ function persistUserTheme(userId: string, isDark: boolean) {
   window.localStorage.setItem(
     `${USER_THEME_STORAGE_PREFIX}-${userId}`,
     isDark ? "dark" : "light",
+  );
+}
+
+function getStoredUserAutoplayTrailers(userId: string): boolean | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const value = window.localStorage.getItem(
+    `${USER_AUTOPLAY_TRAILERS_PREFIX}-${userId}`,
+  );
+
+  if (value === "1") {
+    return true;
+  }
+
+  if (value === "0") {
+    return false;
+  }
+
+  return null;
+}
+
+function persistUserAutoplayTrailers(userId: string, enabled: boolean) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    `${USER_AUTOPLAY_TRAILERS_PREFIX}-${userId}`,
+    enabled ? "1" : "0",
   );
 }
 
@@ -895,18 +928,43 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         })),
       ];
 
+      if (ownSettings) {
+        const mapped = mapSettingsRow(ownSettings);
+        if (getStoredUserAutoplayTrailers(activeUserId) === null) {
+          const previous = next.settings[activeUserId];
+          if (
+            previous !== undefined &&
+            mergeProfileSettings(previous).autoplayTrailers
+          ) {
+            persistUserAutoplayTrailers(activeUserId, true);
+          }
+        }
+        const autoplayTrailersResolved =
+          getStoredUserAutoplayTrailers(activeUserId) ?? mapped.autoplayTrailers;
+
+        return {
+          ...next,
+          swipes: currentSwipes,
+          links: currentLinks,
+          invites: currentInvites,
+          sharedWatch: currentSharedWatch,
+          settings: {
+            ...next.settings,
+            [activeUserId]: {
+              ...mapped,
+              autoplayTrailers: autoplayTrailersResolved,
+            },
+          },
+        };
+      }
+
       return {
         ...next,
         swipes: currentSwipes,
         links: currentLinks,
         invites: currentInvites,
         sharedWatch: currentSharedWatch,
-        settings: ownSettings
-          ? {
-              ...next.settings,
-              [activeUserId]: mapSettingsRow(ownSettings),
-            }
-          : next.settings,
+        settings: next.settings,
       };
     });
 
@@ -2802,6 +2860,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
     }
     persistUserTheme(currentUserId, nextSettings.darkMode);
+    persistUserAutoplayTrailers(currentUserId, nextSettings.autoplayTrailers);
     setPreferredDarkMode(nextSettings.darkMode);
 
     setData((current) => ({
