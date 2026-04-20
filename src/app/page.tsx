@@ -6,35 +6,13 @@ import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { loginFormSchema, MIN_AUTH_PASSWORD_LEN } from "@/lib/auth-form-schemas";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-
-const MIN_PASSWORD_LEN = 6;
-
-function emailLooksValid(value: string) {
-  const trimmed = value.trim();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-}
 
 type FieldErrors = {
   email?: string;
   password?: string;
 };
-
-function validateSignInFields(email: string, password: string): FieldErrors {
-  const next: FieldErrors = {};
-  const trimmed = email.trim();
-  if (!trimmed) {
-    next.email = "Enter your email.";
-  } else if (!emailLooksValid(trimmed)) {
-    next.email = "Enter a valid email address.";
-  }
-  if (!password) {
-    next.password = "Enter your password.";
-  } else if (password.length < MIN_PASSWORD_LEN) {
-    next.password = `Use at least ${MIN_PASSWORD_LEN} characters.`;
-  }
-  return next;
-}
 
 function AuthLandingBlobs({ isDarkMode }: { isDarkMode: boolean }) {
   return (
@@ -131,15 +109,20 @@ export default function SignInPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthError("");
-    const nextField = validateSignInFields(email, password);
-    setFieldErrors(nextField);
-    if (nextField.email || nextField.password) {
+    const parsed = loginFormSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const flat = parsed.error.flatten().fieldErrors;
+      setFieldErrors({
+        email: flat.email?.[0],
+        password: flat.password?.[0],
+      });
       return;
     }
+    setFieldErrors({});
 
     setIsSubmitting(true);
 
-    const result = await login(email, password);
+    const result = await login(parsed.data.email, parsed.data.password);
 
     setIsSubmitting(false);
 
@@ -236,7 +219,7 @@ export default function SignInPage() {
                     if (!t) {
                       return;
                     }
-                    if (!emailLooksValid(t)) {
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) {
                       setFieldErrors((prev) => ({
                         ...prev,
                         email: "Enter a valid email address.",
@@ -273,10 +256,10 @@ export default function SignInPage() {
                     if (!password) {
                       return;
                     }
-                    if (password.length < MIN_PASSWORD_LEN) {
+                    if (password.length < MIN_AUTH_PASSWORD_LEN) {
                       setFieldErrors((prev) => ({
                         ...prev,
-                        password: `Use at least ${MIN_PASSWORD_LEN} characters.`,
+                        password: `Use at least ${MIN_AUTH_PASSWORD_LEN} characters.`,
                       }));
                     }
                   }}
@@ -338,6 +321,23 @@ export default function SignInPage() {
             </p>
           </SurfaceCard>
         ) : null}
+
+        <nav
+          className={`auth-landing-stagger text-center text-[0.8125rem] ${
+            isDarkMode ? "text-slate-500" : "text-slate-500"
+          }`}
+          aria-label="Legal"
+        >
+          <Link href="/privacy" className="underline-offset-2 hover:underline">
+            Privacy
+          </Link>
+          <span className="mx-2 opacity-70" aria-hidden>
+            ·
+          </span>
+          <Link href="/terms" className="underline-offset-2 hover:underline">
+            Terms
+          </Link>
+        </nav>
       </div>
     </div>
   );

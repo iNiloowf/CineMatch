@@ -8,6 +8,8 @@
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "cap:sync": "npx cap sync android",
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android"
@@ -35,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

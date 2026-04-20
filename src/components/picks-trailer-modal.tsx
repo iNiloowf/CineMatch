@@ -34,6 +34,17 @@ export function PicksTrailerModal({
     return () => window.clearTimeout(fallback);
   }, [trailerUrl]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   const showFetchState = isLoadingTrailer && !trailerUrl;
   const showPlayerLoading = Boolean(trailerUrl) && !playerReady && !trailerError;
 

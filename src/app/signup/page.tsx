@@ -6,45 +6,14 @@ import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
+import { MIN_AUTH_PASSWORD_LEN, signupFormSchema } from "@/lib/auth-form-schemas";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-
-const MIN_PASSWORD_LEN = 6;
-
-function emailLooksValid(value: string) {
-  const trimmed = value.trim();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
-}
 
 type FieldErrors = {
   name?: string;
   email?: string;
   password?: string;
 };
-
-function validateSignUpFields(name: string, email: string, password: string): FieldErrors {
-  const next: FieldErrors = {};
-  const trimmedName = name.trim();
-  if (!trimmedName) {
-    next.name = "Enter your name.";
-  } else if (trimmedName.length < 2) {
-    next.name = "Use at least 2 characters for your name.";
-  }
-
-  const trimmedEmail = email.trim();
-  if (!trimmedEmail) {
-    next.email = "Enter your email.";
-  } else if (!emailLooksValid(trimmedEmail)) {
-    next.email = "Enter a valid email address.";
-  }
-
-  if (!password) {
-    next.password = "Choose a password.";
-  } else if (password.length < MIN_PASSWORD_LEN) {
-    next.password = `Use at least ${MIN_PASSWORD_LEN} characters.`;
-  }
-
-  return next;
-}
 
 function AuthLandingBlobs({ isDarkMode }: { isDarkMode: boolean }) {
   return (
@@ -192,11 +161,17 @@ export default function SignUpPage() {
     setAuthError("");
     setSuccess("");
 
-    const nextField = validateSignUpFields(name, email, password);
-    setFieldErrors(nextField);
-    if (nextField.name || nextField.email || nextField.password) {
+    const parsed = signupFormSchema.safeParse({ name, email, password });
+    if (!parsed.success) {
+      const flat = parsed.error.flatten().fieldErrors;
+      setFieldErrors({
+        name: flat.name?.[0],
+        email: flat.email?.[0],
+        password: flat.password?.[0],
+      });
       return;
     }
+    setFieldErrors({});
 
     setIsSubmitting(true);
 
@@ -207,9 +182,9 @@ export default function SignUpPage() {
     }
 
     const result = await signup({
-      name: name.trim(),
-      email: email.trim(),
-      password,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      password: parsed.data.password,
     });
 
     setIsSubmitting(false);
@@ -347,7 +322,7 @@ export default function SignUpPage() {
                     if (!t) {
                       return;
                     }
-                    if (!emailLooksValid(t)) {
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) {
                       setFieldErrors((prev) => ({
                         ...prev,
                         email: "Enter a valid email address.",
@@ -379,7 +354,7 @@ export default function SignUpPage() {
                     Password rules
                   </p>
                   <ul className="mt-1.5 list-inside list-disc space-y-0.5">
-                    <li>At least {MIN_PASSWORD_LEN} characters (required).</li>
+                    <li>At least {MIN_AUTH_PASSWORD_LEN} characters (required).</li>
                     <li>Mix letters and numbers when you can — harder to guess.</li>
                     <li>Avoid your name or email in the password.</li>
                   </ul>
@@ -400,10 +375,10 @@ export default function SignUpPage() {
                     if (!password) {
                       return;
                     }
-                    if (password.length < MIN_PASSWORD_LEN) {
+                    if (password.length < MIN_AUTH_PASSWORD_LEN) {
                       setFieldErrors((prev) => ({
                         ...prev,
-                        password: `Use at least ${MIN_PASSWORD_LEN} characters.`,
+                        password: `Use at least ${MIN_AUTH_PASSWORD_LEN} characters.`,
                       }));
                     }
                   }}
