@@ -199,12 +199,12 @@ export const PicksMovieRow = memo(function PicksMovieRow({
           <div className="flex w-full gap-1.5 sm:w-auto sm:justify-end">
             <button
               type="button"
-              aria-label={`Log that you watched ${movie.title}`}
+              aria-label={`Mark ${movie.title} as watched`}
               onClick={(event) => {
                 event.stopPropagation();
                 onMarkWatched(movie.id);
               }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[6.75rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[8.5rem] sm:flex-none ${
                 isDarkMode
                   ? "border-violet-400/35 bg-violet-500/18 text-violet-100 hover:bg-violet-500/28"
                   : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
@@ -225,7 +225,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   strokeLinejoin="round"
                 />
               </svg>
-              Log watch
+              Mark as watched
             </button>
             <button
               type="button"
