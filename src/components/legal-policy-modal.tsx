@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  PrivacyPolicyDocumentBody,
+  TermsOfServiceDocumentBody,
+} from "@/components/legal-policy-document-bodies";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type LegalPolicyModalVariant = "privacy" | "terms" | null;
@@ -26,7 +30,7 @@ export function LegalPolicyModal({ variant, isDarkMode, onClose }: LegalPolicyMo
         className="absolute inset-0 cursor-default bg-transparent"
       />
       <div
-        className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+        className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex max-h-[min(92dvh,40rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
           isDarkMode
             ? "border-white/12 bg-slate-950 text-slate-100"
             : "border-slate-200/90 bg-white text-slate-900"
@@ -37,16 +41,14 @@ export function LegalPolicyModal({ variant, isDarkMode, onClose }: LegalPolicyMo
       >
         <span className="ui-modal-accent-bar" aria-hidden />
         <div
-          className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}
+          className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}
         >
           <div className="min-w-0 flex-1">
             <p className="text-lg font-semibold text-inherit">
               {variant === "privacy" ? "Privacy Policy" : "Terms of Service"}
             </p>
             <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              {variant === "privacy"
-                ? "Simple summary for CineMatch users."
-                : "Basic usage terms for CineMatch."}
+              Last updated: April 2026
             </p>
           </div>
           <button
@@ -69,38 +71,14 @@ export function LegalPolicyModal({ variant, isDarkMode, onClose }: LegalPolicyMo
             </svg>
           </button>
         </div>
-        <div className="ui-shell-body space-y-3 !pt-4 text-sm leading-6">
+        <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4 pb-2 text-sm">
           {variant === "privacy" ? (
-            <>
-              <p>
-                We collect only the data needed to run CineMatch: account info, profile details,
-                movie interactions, and support tickets.
-              </p>
-              <p>
-                Your data is used for app features (matching, shared watchlists, support) and is
-                stored in Supabase.
-              </p>
-              <p>
-                You can request account or data deletion by contacting support from the app.
-              </p>
-            </>
+            <PrivacyPolicyDocumentBody isDarkMode={isDarkMode} crossLinkTarget="_blank" />
           ) : (
-            <>
-              <p>
-                By using CineMatch, you agree to use the app lawfully and avoid abuse, spam, or
-                attempts to access other users’ private data.
-              </p>
-              <p>
-                Features may change over time. We can suspend access for misuse or violations.
-              </p>
-              <p>
-                The service is provided as-is, and we aim for reliability but cannot guarantee
-                uninterrupted availability.
-              </p>
-            </>
+            <TermsOfServiceDocumentBody isDarkMode={isDarkMode} crossLinkTarget="_blank" />
           )}
         </div>
-        <div className="ui-shell-footer !pt-3">
+        <div className={`ui-shell-footer shrink-0 ${isDarkMode ? "!border-t-white/10" : "!border-t-slate-100"} !pt-3`}>
           <button
             type="button"
             onClick={onClose}
