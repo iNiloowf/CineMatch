@@ -35,7 +35,6 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
-
+    <!-- INTERNET is a normal permission (no runtime prompt). Copy permission_internet_description for Play Data safety. -->
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

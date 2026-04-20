@@ -21,10 +21,12 @@ These are the usual fixes before the first **production** upload:
 
 | Check | Current / action |
 |--------|-------------------|
-| **`versionCode` / `versionName`** | In `android/app/build.gradle`, `versionCode` must **increase by at least 1** for every Play upload (`versionName` is user-visible, e.g. `1.0.1`). |
+| **`versionCode` / `versionName`** | In `android/app/build.gradle`, bump **`versionCode`** for every Play upload (`versionName` is user-visible). Repo ships **`versionCode` 2** / **`versionName` `1.0.1`** as a store-readiness baseline — increase both as you release. |
 | **Target / compile SDK** | `targetSdkVersion` / `compileSdkVersion` are **36** (`android/variables.gradle`) — keep aligned with Play requirements as Google updates policy. |
 | **Min SDK** | **24** — acceptable; document if you ever raise it. |
-| **Permissions** | Only `INTERNET` in `AndroidManifest.xml` — minimal; if you add Capacitor plugins (camera, notifications, etc.), declare only what you use and fill **Data safety** accordingly. |
+| **Permissions** | Only `INTERNET` in `AndroidManifest.xml` — minimal. Use `strings.xml` → **`permission_internet_description`** when filling **Data safety** (network / API access). If you add Capacitor plugins (camera, notifications, etc.), declare only what you use. |
+| **Store listing URLs in-app** | `android/app/src/main/res/values/strings.xml` defines **`privacy_policy_url`** and **`terms_of_service_url`** (`https://cinematch.ca/privacy`, `https://cinematch.ca/terms`) — paste the same HTTPS URLs in Play Console. |
+| **Icons & splash** | Adaptive launcher icons under `res/mipmap-*`; cold start uses **`Theme.SplashScreen`** (`styles.xml`), **`@drawable/splash`**, and `SplashScreen.installSplashScreen` in `MainActivity` (Android 12+ splash + branded background). |
 | **Release build** | Generate a **release** `.aab` (Android App Bundle), not a debug APK, for new listings. Debug builds are not for Play. |
 | **ProGuard / R8** | Release has `minifyEnabled false` today — fine for launch; revisit if you add heavy native deps or need obfuscation. |
 

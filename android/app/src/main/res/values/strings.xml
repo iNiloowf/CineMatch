@@ -4,4 +4,9 @@
     <string name="title_activity_main">CineMatch</string>
     <string name="package_name">ca.cinematch.app</string>
     <string name="custom_url_scheme">ca.cinematch.app</string>
+    <!-- Production site — use the same HTTPS URLs in Play Console (App content → Privacy policy). -->
+    <string name="privacy_policy_url" translatable="false">https://cinematch.ca/privacy</string>
+    <string name="terms_of_service_url" translatable="false">https://cinematch.ca/terms</string>
+    <!-- Normal permission (no runtime prompt) — document for Play Data safety & in-app “why” copy if needed -->
+    <string name="permission_internet_description">Network access is required to sign in, sync your profile and picks, and load movie information from CineMatch.</string>
 </resources>

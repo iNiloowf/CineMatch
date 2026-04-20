@@ -11,6 +11,7 @@
 ### Completed (tick)
 
 - [x] Next.js **`middleware` → `proxy`** — `src/proxy.ts` with `export function proxy` (admin entry rewrite, `x-request-id`, stale `sb-*` cookie cleanup); deprecated `src/middleware.ts` removed per [Next.js 16 guidance](https://nextjs.org/docs/messages/middleware-to-proxy).
+- [x] **Play Store / Capacitor baseline** — Adaptive launcher icons retained; **`versionCode` 2** / **`versionName` `1.0.1`** in `android/app/build.gradle`; cold-start **splash** (`Theme.SplashScreen`, `@drawable/splash`, `SplashScreen.installSplashScreen` in `MainActivity`); `colors.xml` + `splash_background`; **`strings.xml`**: `privacy_policy_url`, `terms_of_service_url`, `permission_internet_description` for Console/Data safety; removed duplicate `splash.png` vs `splash.xml`; details in `docs/GOOGLE_PLAY_PUBLISHING.md`.
 
 ---
 
@@ -36,15 +37,14 @@
 ### Platform & release
 
 9. [ ] **Android smoke** — Per meaningful release: `npm run cap:sync`, install, Discover / Picks / modals / safe areas (see `docs/MANUAL_QA.md`).
-10. [ ] **Play Store / Capacitor** — Icons, splash, versionCode, user-facing permission strings, store listing URLs (privacy/terms).
 
 ### Optional product
 
-11. [ ] **Analytics / cookies** — Only if you add measurement; align with Privacy/Terms and regional consent rules.
-12. [ ] **PWA / install** — Revisit installability and offline shell if web install matters more than the native app.
+10. [ ] **Analytics / cookies** — Only if you add measurement; align with Privacy/Terms and regional consent rules.
+11. [ ] **PWA / install** — Revisit installability and offline shell if web install matters more than the native app.
 
 ---
 
 _Maintainer: English only. Git: only commit/push this file if you ask._
 
-_Last updated: Apr 2026 — `middleware.ts` migrated to `src/proxy.ts` (Next.js 16); item 11 ticked via Summary + removal from open list._
+_Last updated: Apr 2026 — Play Store / Capacitor checklist completed (tick); open tasks renumbered._
