@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { PicksIconShare, PicksIconTrash } from "@/components/icons/picks-row-icons";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
 import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
@@ -155,21 +156,13 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   event.stopPropagation();
                   void onShare(movie.id);
                 }}
-                className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+                className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
                   isDarkMode
                     ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
                     : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
                 }`}
               >
-                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
-                  <path
-                    d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <PicksIconShare className="h-4 w-4 shrink-0 opacity-95" />
                 Share
               </button>
               {onUnwatch ? (
@@ -204,27 +197,12 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 onMarkWatched(movie.id);
               }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[8.5rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[8.5rem] sm:flex-none ${
                 isDarkMode
                   ? "border-violet-400/35 bg-violet-500/18 text-violet-100 hover:bg-violet-500/28"
                   : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
-                <path
-                  d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.65"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M2.5 10s2.5-4 7.5-4 7.5 4 7.5 4-2.5 4-7.5 4-7.5-4-7.5-4Z"
-                  stroke="currentColor"
-                  strokeWidth="1.65"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
               Mark as watched
             </button>
             <button
@@ -234,21 +212,13 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                 event.stopPropagation();
                 void onShare(movie.id);
               }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
                 isDarkMode
                   ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
                   : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
-                <path
-                  d="M12.5 6.5 7.5 9.25m5 1.5-5 2.75M15 5.25a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM8.5 10a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0ZM15 14.75a1.75 1.75 0 1 1-3.5 0 1.75 1.75 0 0 1 3.5 0Z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <PicksIconShare className="h-4 w-4 shrink-0 opacity-95" />
               Share
             </button>
             <button
@@ -265,15 +235,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
               }`}
             >
-              <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5 shrink-0">
-                <path
-                  d="M5.5 6.5h9m-7.5 0V5.75A1.75 1.75 0 0 1 8.75 4h2.5A1.75 1.75 0 0 1 13 5.75v.75m-6 0-.5 8A1.75 1.75 0 0 0 8.25 16h3.5a1.75 1.75 0 0 0 1.75-1.5l.5-8m-5.5 3v3m3-3v3"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <PicksIconTrash className="h-4 w-4 shrink-0 opacity-95" />
             </button>
           </div>
         </div>
