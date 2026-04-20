@@ -6,6 +6,7 @@ import { AchievementBadgesShowcase } from "@/components/achievement-badges-showc
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
+import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
@@ -170,17 +171,13 @@ export default function ProfilePage() {
 
   if (!isReady) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-4">
-        <div
-          className={`h-10 w-10 animate-spin rounded-full border-2 border-t-transparent ${
-            isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-          }`}
-          aria-hidden
-        />
-        <p className={`text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-          Loading your profile…
-        </p>
-      </div>
+      <AppRouteLoading
+        ariaLabel="Loading profile"
+        message="Loading your profile…"
+        isDarkMode={isDarkMode}
+        visual="spinner"
+        frameClassName="flex min-h-[50vh] w-full flex-1 flex-col items-center justify-center px-4 py-4"
+      />
     );
   }
 

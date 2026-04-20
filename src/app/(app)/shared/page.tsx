@@ -6,6 +6,7 @@ import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { PosterBackdrop } from "@/components/poster-backdrop";
+import { AppRouteEmptyCard } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import type { SharedMovieView } from "@/lib/types";
@@ -118,14 +119,11 @@ export default function SharedWatchlistPage() {
 
         <div className="shared-ui-copy space-y-4 sm:space-y-5">
         {sharedMovieGroups.length === 0 ? (
-          <SurfaceCard className="space-y-2 text-center">
-            <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              No linked people yet
-            </p>
-            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-              Link with someone and their name will show up here right away.
-            </p>
-          </SurfaceCard>
+          <AppRouteEmptyCard
+            title="No linked people yet"
+            description="Link with someone and their name will show up here right away."
+            isDarkMode={isDarkMode}
+          />
         ) : null}
 
         <div className="space-y-4 sm:space-y-5">

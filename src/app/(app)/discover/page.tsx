@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import { DiscoverOnboardingNudges } from "@/components/discover-onboarding-nudges";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
+import { AppRouteNetworkStatus } from "@/components/app-route-status";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
 import { DiscoverCardSkeleton, SearchResultsSkeletonList } from "@/components/ui-skeleton";
@@ -1631,7 +1632,7 @@ function DiscoverPageContent({
             </div>
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
-          <NetworkStatusBlock
+          <AppRouteNetworkStatus
             variant="empty"
             isDarkMode={isDarkMode}
             title="No titles match these filters"
@@ -1650,7 +1651,7 @@ function DiscoverPageContent({
             }}
           />
         ) : (
-          <NetworkStatusBlock
+          <AppRouteNetworkStatus
             variant="empty"
             isDarkMode={isDarkMode}
             title="You’ve gone through every title for now"

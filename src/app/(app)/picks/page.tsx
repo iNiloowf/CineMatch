@@ -9,6 +9,7 @@ import { matchPercentForMovie } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
 import { PicksMovieRow } from "@/components/picks-movie-row";
 import { PosterBackdrop } from "@/components/poster-backdrop";
+import { AppRouteEmptyCard } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import {
   shouldVirtualizeList,
@@ -1292,28 +1293,15 @@ export default function PicksPage() {
         ) : null}
 
         {acceptedMovies.length === 0 ? (
-          <SurfaceCard className="fade-up-enter space-y-3 text-center" style={{ animationDelay: "160ms" }}>
-            <p
-              className={`text-lg font-semibold ${
-                isDarkMode ? "text-white" : "text-slate-900"
-              }`}
-            >
-              No picks yet
-            </p>
-            <p
-              className={`text-sm leading-6 ${
-                isDarkMode ? "text-slate-300" : "text-slate-500"
-              }`}
-            >
-              Start in Discover and accept the movies that feel right.
-            </p>
-            <Link
-              href="/discover"
-              className="ui-btn ui-btn-primary"
-            >
-              Go to Discover
-            </Link>
-          </SurfaceCard>
+          <AppRouteEmptyCard
+            title="No picks yet"
+            description="Start in Discover and accept the movies that feel right."
+            isDarkMode={isDarkMode}
+            tone="comfortable"
+            className="fade-up-enter space-y-3 text-center"
+            style={{ animationDelay: "160ms" }}
+            primaryAction={{ label: "Go to Discover", href: "/discover" }}
+          />
         ) : null}
       </div>
 
