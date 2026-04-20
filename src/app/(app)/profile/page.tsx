@@ -1324,7 +1324,6 @@ export default function ProfilePage() {
                 value: profileWatchedTotal,
                 label: "Watched",
                 href: "/picks" as const,
-                hint: "Solo + with friends",
               },
             ] as const
           ).map((stat, index) => (
@@ -1344,15 +1343,6 @@ export default function ProfilePage() {
               >
                 {stat.label}
               </p>
-              {"hint" in stat && stat.hint ? (
-                <p
-                  className={`mt-0.5 px-0.5 text-[9px] font-medium leading-tight sm:text-[10px] ${
-                    isDarkMode ? "text-slate-500" : "text-slate-500"
-                  }`}
-                >
-                  {stat.hint}
-                </p>
-              ) : null}
             </Link>
           ))}
           </div>
