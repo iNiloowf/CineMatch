@@ -927,7 +927,7 @@ export default function SettingsPage() {
           />
           <SettingToggle
             label="Autoplay trailers"
-            description="When you tap Watch trailer (Discover card, Picks details, or similar), the YouTube player starts automatically if the browser allows it—usually muted until you unmute. This does not affect the Discover feed itself."
+            description="Starts playback when you open a trailer (often muted first; browser rules apply)."
             checked={settings.autoplayTrailers}
             onChange={(checked) => updateSettings({ autoplayTrailers: checked })}
           />
