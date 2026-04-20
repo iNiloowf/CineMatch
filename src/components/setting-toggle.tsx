@@ -23,11 +23,11 @@ export function SettingToggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`flex items-center justify-between gap-5 rounded-[24px] px-4 py-4 ${
+      className={`flex w-full min-w-0 items-start justify-between gap-4 rounded-[24px] px-4 py-4 text-left ${
         isDarkMode ? "bg-white/6" : "bg-slate-50/80 ring-1 ring-slate-200/70"
       }`}
     >
-      <div className="min-w-0 flex-1 space-y-1 text-left">
+      <div className="min-w-0 flex-1 space-y-1">
         <p
           className={`text-sm font-semibold ${
             isDarkMode ? "text-slate-100" : "text-slate-800"
@@ -44,7 +44,7 @@ export function SettingToggle({
         </p>
       </div>
       <span
-        className={`relative inline-flex h-8 w-14 shrink-0 rounded-full transition ${
+        className={`relative mt-0.5 inline-flex h-8 w-14 shrink-0 rounded-full transition ${
           checked ? "bg-violet-600" : isDarkMode ? "bg-slate-500 ring-1 ring-white/10" : "bg-slate-300"
         }`}
       >

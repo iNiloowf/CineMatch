@@ -411,7 +411,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
@@ -949,7 +949,7 @@ export default function SettingsPage() {
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "110ms" }}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
-          className={`rounded-[18px] border px-4 py-4 ${
+          className={`w-full min-w-0 rounded-[18px] border px-4 py-4 ${
             isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"
           }`}
         >
@@ -1169,15 +1169,14 @@ export default function SettingsPage() {
               </span>
               <span className="mt-1 block">Redeem partner gift code</span>
             </button>
-
-            <SettingToggle
-              label="Admin mode (simulate Pro purchase)"
-              description="For testing flows only. Turning this on behaves like an active Pro subscription."
-              checked={adminSubscriptionPreviewModeEnabled}
-              onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
-            />
           </div>
         </div>
+        <SettingToggle
+          label="Admin mode (simulate Pro purchase)"
+          description="For testing flows only. Turning this on behaves like an active Pro subscription."
+          checked={adminSubscriptionPreviewModeEnabled}
+          onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
+        />
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "120ms" }}>
