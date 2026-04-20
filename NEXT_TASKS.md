@@ -6,7 +6,7 @@
 
 **Apr 2026 — `main` is up to date with:** error boundaries, ProtectedScreen, admin + `processLock`, offline banner + sync retry on reconnect, Vitest + GitHub Actions CI, skip link → `#main-content`, Zod login/signup, `/auth/callback` safe-area + Try again, trailer **Escape** to close, landing Privacy/Terms, ESLint ignoring `android/**`, **Picks list virtualization** (long Queue/Watched), **modal focus-trap + nested z-index**, **`x-request-id` on API responses**, **`docs/MANUAL_QA.md`**, root **`.gitignore`** for Android build dirs, **partial `app-state` split** (`auth-session-storage`).
 
-**Still open (optional / follow-up):** further split of `app-state` (sync, discover); virtualize Shared / Discover search if needed; optional Sentry install; sheet modals audit if gaps remain.
+**Still open:** see **Next tasks** below — architecture splits, broader list virtualization, automated tests beyond unit smoke, native/PWA polish, and optional i18n/legal/analytics.
 
 ---
 
@@ -36,10 +36,33 @@
 
 ## Next tasks (not done yet — `[ ]`)
 
-1. [ ] **Finish `app-state` split** — Extract sync + discover into dedicated modules/hooks (auth slice already extracted).
-2. [ ] **Long lists (remaining)** — Virtualize Shared / Discover search if lists grow large enough to matter.
-3. [ ] **Sheets / overlays audit** — Confirm focus + stacking for bottom sheets / menus if any UX gaps vs modals.
-4. [ ] **Optional Sentry** — Run `@sentry/wizard` and set `NEXT_PUBLIC_SENTRY_DSN` when you want client/server error reporting.
+### Architecture & data
+
+1. [ ] **Finish `app-state` split** — Extract sync + discover into dedicated modules/hooks (auth lives in `auth-session-storage` already).
+2. [ ] **Shared filter / search helpers** — Deduplicate client + server movie/search logic where mock and TMDB paths diverge.
+
+### UX & performance
+
+3. [ ] **Long lists (remaining)** — Virtualize **Shared** and **Discover** search results when row counts routinely get large (same pattern as Picks).
+4. [ ] **Sheets / overlays audit** — Focus order + stacking for bottom sheets, popovers, and menus vs modal stack (`globals.css` z-index scale).
+5. [ ] **Images & perf budget** — Audit poster/hero loading (`next/image` where applicable), CLS, and run **`npm run analyze`** after large UI changes.
+
+### Quality & operations
+
+6. [ ] **Automated tests beyond smoke** — Integration or E2E for: login → discover swipe → undo; invite create/accept; account-sync happy path (tooling: Playwright or Vitest + MSW, your choice).
+7. [ ] **Optional Sentry** — Run `@sentry/wizard` and set `NEXT_PUBLIC_SENTRY_DSN` for production error grouping (builds on `instrumentation.ts` stub).
+8. [ ] **A11y CI gate (optional)** — `axe-core` or `@axe-core/react` in CI or pre-release script on critical routes.
+9. [ ] **Deep links & cold start** — Scripted checks for `discover?movieId=…`, invite URLs, OAuth callback on throttled network (extend `docs/MANUAL_QA.md` or automate).
+
+### Product & compliance (optional)
+
+10. [ ] **i18n / RTL** — Extract UI strings and RTL layout if you ship outside English.
+11. [ ] **PWA / install** — Revisit offline shell + cache strategy only if web install matters for users.
+12. [ ] **Legal & analytics** — Cookie/consent flow if you add non-essential cookies or trackers; keep Privacy/Terms in sync with data practices.
+
+### Native
+
+13. [ ] **Android release checklist** — `cap sync`, signing, Play Console metadata, and one device smoke per release (see `docs/MANUAL_QA.md`).
 
 ---
 
