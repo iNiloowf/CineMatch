@@ -110,8 +110,6 @@ export default function SettingsPage() {
     hasProAccess,
     linkedUsers,
     refreshAccountData,
-    adminSubscriptionPreviewModeEnabled,
-    setAdminSubscriptionPreviewMode,
     updateSettings,
   } = useAppState();
   const settings = useMemo(() => {
@@ -921,7 +919,7 @@ export default function SettingsPage() {
           />
           <SettingToggle
             label="Less motion"
-            description="Use simpler fades and fewer moving effects. The system “reduce motion” setting also applies automatically."
+            description="Fewer animations; still follows system “reduce motion” when enabled."
             checked={settings.reduceMotion}
             onChange={(checked) => updateSettings({ reduceMotion: checked })}
           />
@@ -1171,12 +1169,6 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
-        <SettingToggle
-          label="Admin mode (simulate Pro purchase)"
-          description="For testing flows only. Turning this on behaves like an active Pro subscription."
-          checked={adminSubscriptionPreviewModeEnabled}
-          onChange={(checked) => setAdminSubscriptionPreviewMode(checked)}
-        />
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "120ms" }}>

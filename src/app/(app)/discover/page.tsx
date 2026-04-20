@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SettingToggle } from "@/components/setting-toggle";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import {
   shouldVirtualizeList,
@@ -20,8 +21,11 @@ import {
   type DiscoverSessionSnapshotV1,
 } from "@/lib/discover-session";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
-import { Movie } from "@/lib/types";
+import type { Movie, ProfileSettings } from "@/lib/types";
+import { defaultSettings } from "@/lib/mock-data";
 import { useAppState } from "@/lib/app-state";
+
+const ONBOARDING_FAVORITE_GENRE_LIMIT = 5;
 
 type DiscoverPageContentProps = {
   currentUserId: string | null;
@@ -47,6 +51,8 @@ type DiscoverPageContentProps = {
     mediaPreference: "movie" | "series" | "both";
     tasteProfile: string[];
   }) => Promise<void>;
+  updateSettings: (payload: Partial<ProfileSettings>) => Promise<void>;
+  autoplayTrailers: boolean;
 };
 
 type LastSwipeRecord = {
@@ -69,6 +75,8 @@ function DiscoverPageContent({
   onboardingPreferences,
   isOnboardingComplete,
   completeOnboarding,
+  updateSettings,
+  autoplayTrailers,
 }: DiscoverPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -125,6 +133,8 @@ function DiscoverPageContent({
   const [onboardingMediaPreference, setOnboardingMediaPreference] = useState<
     "movie" | "series" | "both"
   >(onboardingPreferences.mediaPreference);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingAutoplay, setOnboardingAutoplay] = useState(autoplayTrailers);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -139,6 +149,12 @@ function DiscoverPageContent({
     setOnboardingDisliked(onboardingPreferences.dislikedGenres);
     setOnboardingMediaPreference(onboardingPreferences.mediaPreference);
   }, [onboardingPreferences]);
+
+  useEffect(() => {
+    if (!isOnboardingComplete) {
+      setOnboardingStep(0);
+    }
+  }, [isOnboardingComplete]);
 
   useEscapeToClose(isSearchOpen, () => {
     setSearchQuery("");
@@ -333,6 +349,24 @@ function DiscoverPageContent({
       ).sort((left, right) => left.localeCompare(right)),
     [discoverQueue],
   );
+
+  const onboardingDislikeGenreOptions = useMemo(
+    () => onboardingGenres.filter((genre) => !onboardingFavorites.includes(genre)),
+    [onboardingGenres, onboardingFavorites],
+  );
+
+  const toggleOnboardingFavoriteGenre = useCallback((genre: string) => {
+    setOnboardingFavorites((current) => {
+      if (current.includes(genre)) {
+        return current.filter((entry) => entry !== genre);
+      }
+      if (current.length >= ONBOARDING_FAVORITE_GENRE_LIMIT) {
+        return current;
+      }
+      setOnboardingDisliked((disliked) => disliked.filter((entry) => entry !== genre));
+      return [...current, genre];
+    });
+  }, []);
 
   const filteredQueue = useMemo(() => {
     return discoverQueue.filter((movie) => {
@@ -742,11 +776,9 @@ function DiscoverPageContent({
     void runPaste();
   };
 
-  const hasOnboardingSelection =
-    onboardingFavorites.length > 0 || onboardingDisliked.length > 0;
-
   const persistOnboarding = async (skipSelection: boolean) => {
     setIsSavingOnboarding(true);
+    await updateSettings({ autoplayTrailers: onboardingAutoplay });
     const favoriteGenres = skipSelection
       ? []
       : Array.from(
@@ -786,30 +818,81 @@ function DiscoverPageContent({
             <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header">
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-semibold">Tune your recommendations</p>
-                <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                  Pick favorite and disliked genres so Discover can prioritize what you are likely to enjoy.
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                    isDarkMode ? "text-violet-300/90" : "text-violet-600/90"
+                  }`}
+                >
+                  Step {onboardingStep + 1} of 4
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {[
+                    "Trailer playback",
+                    "Movies or series?",
+                    "Favorite genres",
+                    "Genres to skip",
+                  ][onboardingStep] ?? "Tune Discover"}
+                </p>
+                <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  {[
+                    "Choose whether trailers start automatically when you open them.",
+                    "Pick what Discover should prioritize.",
+                    `Select up to ${ONBOARDING_FAVORITE_GENRE_LIMIT} genres you want more of.`,
+                    "Tap genres you usually avoid. Favorites are hidden so they won’t clash.",
+                  ][onboardingStep] ?? ""}
                 </p>
               </div>
             </div>
             <div className="ui-shell-body !min-h-0 !overflow-y-auto !pt-3">
-              <div className="space-y-4">
+              {onboardingStep === 0 ? (
+                <SettingToggle
+                  label="Autoplay trailers"
+                  description="Starts playback when you open a trailer (often muted first; browser rules apply)."
+                  checked={onboardingAutoplay}
+                  onChange={setOnboardingAutoplay}
+                />
+              ) : null}
+              {onboardingStep === 1 ? (
                 <div>
-                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                    Favorite genres
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: "movie" as const, label: "Movies" },
+                      { id: "series" as const, label: "Series" },
+                      { id: "both" as const, label: "Both" },
+                    ].map((option) => (
+                      <button
+                        key={`ob-media-${option.id}`}
+                        type="button"
+                        onClick={() => setOnboardingMediaPreference(option.id)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                          onboardingMediaPreference === option.id
+                            ? "bg-violet-600 text-white"
+                            : isDarkMode
+                              ? "border border-white/12 bg-white/8 text-slate-200"
+                              : "border border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {onboardingStep === 2 ? (
+                <div>
+                  <p
+                    className={`mb-2 text-xs font-semibold ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    {onboardingFavorites.length}/{ONBOARDING_FAVORITE_GENRE_LIMIT} selected
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {onboardingGenres.map((genre) => (
                       <button
                         key={`ob-like-${genre}`}
                         type="button"
-                        onClick={() =>
-                          setOnboardingFavorites((current) =>
-                            current.includes(genre)
-                              ? current.filter((entry) => entry !== genre)
-                              : [...current, genre],
-                          )
-                        }
+                        onClick={() => toggleOnboardingFavoriteGenre(genre)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           onboardingFavorites.includes(genre)
                             ? "bg-violet-600 text-white"
@@ -823,12 +906,11 @@ function DiscoverPageContent({
                     ))}
                   </div>
                 </div>
+              ) : null}
+              {onboardingStep === 3 ? (
                 <div>
-                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                    Disliked genres
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {onboardingGenres.map((genre) => (
+                  <div className="flex flex-wrap gap-2">
+                    {onboardingDislikeGenreOptions.map((genre) => (
                       <button
                         key={`ob-dislike-${genre}`}
                         type="button"
@@ -851,61 +933,57 @@ function DiscoverPageContent({
                       </button>
                     ))}
                   </div>
+                  {onboardingDislikeGenreOptions.length === 0 ? (
+                    <p className={`mt-3 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      No other genres left to exclude — you already favor all available genres.
+                    </p>
+                  ) : null}
                 </div>
-                <div>
-                  <p className={`text-sm font-semibold ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                    Prefer to discover
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {[
-                      { id: "both", label: "Both" },
-                      { id: "movie", label: "Movies" },
-                      { id: "series", label: "Series" },
-                    ].map((option) => (
-                      <button
-                        key={`ob-media-${option.id}`}
-                        type="button"
-                        onClick={() =>
-                          setOnboardingMediaPreference(
-                            option.id as "movie" | "series" | "both",
-                          )
-                        }
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          onboardingMediaPreference === option.id
-                            ? "bg-violet-600 text-white"
-                            : isDarkMode
-                              ? "border border-white/12 bg-white/8 text-slate-200"
-                              : "border border-slate-200 bg-white text-slate-700"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              ) : null}
             </div>
             <div className="ui-shell-footer">
-              <button
-                type="button"
-                disabled={isSavingOnboarding}
-                onClick={() => {
-                  void persistOnboarding(true);
-                }}
-                className="ui-btn ui-btn-secondary min-w-0 flex-1"
-              >
-                Skip
-              </button>
-              <button
-                type="button"
-                disabled={isSavingOnboarding || !hasOnboardingSelection}
-                onClick={() => {
-                  void persistOnboarding(false);
-                }}
-                className="ui-btn ui-btn-primary min-w-0 flex-1"
-              >
-                {isSavingOnboarding ? "Saving..." : "Start Discovering"}
-              </button>
+              {onboardingStep === 0 ? (
+                <button
+                  type="button"
+                  disabled={isSavingOnboarding}
+                  onClick={() => {
+                    void persistOnboarding(true);
+                  }}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                >
+                  Skip setup
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isSavingOnboarding}
+                  onClick={() => setOnboardingStep((step) => Math.max(0, step - 1))}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                >
+                  Back
+                </button>
+              )}
+              {onboardingStep < 3 ? (
+                <button
+                  type="button"
+                  disabled={isSavingOnboarding}
+                  onClick={() => setOnboardingStep((step) => Math.min(3, step + 1))}
+                  className="ui-btn ui-btn-primary min-w-0 flex-1"
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isSavingOnboarding}
+                  onClick={() => {
+                    void persistOnboarding(false);
+                  }}
+                  className="ui-btn ui-btn-primary min-w-0 flex-1"
+                >
+                  {isSavingOnboarding ? "Saving..." : "Start Discovering"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1745,6 +1823,7 @@ function DiscoverPageContent({
 export default function DiscoverPage() {
   const {
     currentUserId,
+    data,
     discoverQueue,
     discoverSessionKey,
     registerMovies,
@@ -1757,6 +1836,13 @@ export default function DiscoverPage() {
     isOnboardingComplete,
     completeOnboarding,
   } = useAppState();
+
+  const profileSettings = useMemo(() => {
+    if (!currentUserId) {
+      return defaultSettings;
+    }
+    return { ...defaultSettings, ...data.settings[currentUserId] };
+  }, [currentUserId, data.settings]);
 
   const toggleDarkMode = async () => {
     await updateSettings({ darkMode: !isDarkMode });
@@ -1828,6 +1914,8 @@ export default function DiscoverPage() {
       onboardingPreferences={onboardingPreferences}
       isOnboardingComplete={isOnboardingComplete}
       completeOnboarding={completeOnboarding}
+      updateSettings={updateSettings}
+      autoplayTrailers={profileSettings.autoplayTrailers}
     />
   );
 }
