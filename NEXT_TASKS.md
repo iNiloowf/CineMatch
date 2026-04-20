@@ -6,7 +6,7 @@
 
 **Apr 2026 — `main` is up to date with:** error boundaries, ProtectedScreen, admin + `processLock`, offline banner + sync retry on reconnect, Vitest + GitHub Actions CI, skip link → `#main-content`, Zod login/signup, `/auth/callback` safe-area + Try again, trailer **Escape** to close, landing Privacy/Terms, ESLint ignoring `android/**`, **Picks list virtualization** (long Queue/Watched), **modal focus-trap + nested z-index**, **`x-request-id` on API responses**, **`docs/MANUAL_QA.md`**, root **`.gitignore`** for Android build dirs, **partial `app-state` split** (`auth-session-storage`).
 
-**Still open:** see **Next tasks** below — architecture splits, broader list virtualization, automated tests beyond unit smoke, native/PWA polish, and optional legal/analytics. **Product language:** English-only UI; no localization or RTL work is planned unless requirements change.
+**Still open:** see **Next tasks** — UI polish, UX clarity, and technical hardening (English-only product; no localization backlog).
 
 ---
 
@@ -37,32 +37,18 @@
 
 ## Next tasks (not done yet — `[ ]`)
 
-### Architecture & data
-
-1. [ ] **Finish `app-state` split** — Extract sync + discover into dedicated modules/hooks (auth lives in `auth-session-storage` already).
-2. [ ] **Shared filter / search helpers** — Deduplicate client + server movie/search logic where mock and TMDB paths diverge.
-
-### UX & performance
-
-3. [ ] **Long lists (remaining)** — Virtualize **Shared** and **Discover** search results when row counts routinely get large (same pattern as Picks).
-4. [ ] **Sheets / overlays audit** — Focus order + stacking for bottom sheets, popovers, and menus vs modal stack (`globals.css` z-index scale).
-5. [ ] **Images & perf budget** — Audit poster/hero loading (`next/image` where applicable), CLS, and run **`npm run analyze`** after large UI changes.
-
-### Quality & operations
-
-6. [ ] **Automated tests beyond smoke** — Integration or E2E for: login → discover swipe → undo; invite create/accept; account-sync happy path (tooling: Playwright or Vitest + MSW, your choice).
-7. [ ] **Optional Sentry** — Run `@sentry/wizard` and set `NEXT_PUBLIC_SENTRY_DSN` for production error grouping (builds on `instrumentation.ts` stub).
-8. [ ] **A11y CI gate (optional)** — `axe-core` or `@axe-core/react` in CI or pre-release script on critical routes.
-9. [ ] **Deep links & cold start** — Scripted checks for `discover?movieId=…`, invite URLs, OAuth callback on throttled network (extend `docs/MANUAL_QA.md` or automate).
-
-### Product & compliance (optional)
-
-10. [ ] **PWA / install** — Revisit offline shell + cache strategy only if web install matters for users.
-11. [ ] **Legal & analytics** — Cookie/consent flow if you add non-essential cookies or trackers; keep Privacy/Terms in sync with data practices.
-
-### Native
-
-12. [ ] **Android release checklist** — `cap sync`, signing, Play Console metadata, and one device smoke per release (see `docs/MANUAL_QA.md`).
+1. [ ] **Finish splitting `app-state.tsx`** — Move sync and discover logic into focused hooks/modules so screens re-render less and the shell is easier to reason about and test.
+2. [ ] **Unified loading / empty / error patterns** — Same visual language for spinners, “nothing here yet,” and retry actions across Discover, Picks, Shared, and profile-adjacent flows so the app never feels accidental or blank.
+3. [ ] **Virtualize long lists outside Picks** — Apply the same virtual list approach to **Shared** and **Discover** search when lists are large enough to scroll-jank on mid-range phones.
+4. [ ] **Sheet and popover pass** — Verify focus trap, Escape, and tap-outside behavior for bottom sheets, menus, and toolbars so nothing feels “stuck” under overlays.
+5. [ ] **Images and layout stability** — Use `next/image` (or consistent dimensions) for posters and heroes where it helps; reduce layout shift (CLS) on route and modal transitions.
+6. [ ] **Micro-feedback consistency** — Align success and error toasts, button disabled states, and “saved / syncing” indicators so every action has clear immediate feedback.
+7. [ ] **Small-screen and thumb reach** — Audit ~360px width: primary actions reachable, no clipped chips, safe-area respected on notched devices (especially modals and bottom nav).
+8. [ ] **Copy and recovery UX** — Short, specific error strings for network, sync, and auth failures; always pair errors with a **Retry** or **Back** path where it makes sense.
+9. [ ] **Bundle and route weight** — Run **`npm run analyze`** periodically; lazy-load heavy modals and admin-only chunks so first paint on Discover/Picks stays snappy.
+10. [ ] **Automated regression tests** — Add integration or E2E coverage for login → swipe → undo, invite flow, and account sync so refactors don’t break core journeys.
+11. [ ] **Production errors (optional)** — Wire **Sentry** via the official wizard when you have real traffic; keep **`x-request-id`** in mind when debugging API issues.
+12. [ ] **Android smoke path** — After web changes, **`cap sync`**, install on a real device, and verify Discover, Picks, modals, and safe areas once per meaningful release.
 
 ---
 
