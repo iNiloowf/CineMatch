@@ -1,27 +1,16 @@
 # CineMatch — Improvement Checklist
 
-_Last reviewed: Apr 2026 — major UI passes on core routes; still no `error.tsx`, no API Zod, no CI tests, and admin credentials are currently hardcoded._
+_Last reviewed: Apr 2026 — **historical** route-by-route UI notes. **Current forward backlog:** [`NEXT_TASKS.md`](./NEXT_TASKS.md)._
 
-## How to improve the app (quick guide)
+**Baseline now shipped:** `error.tsx` / `global-error.tsx`, Zod on API routes, Vitest + CI, offline banner + sync retry, skip link, admin APIs via `requireServerAdmin`, `x-request-id`, Privacy/Terms, Picks virtualization, discover-quality/queue modules, shared `AppRoute*` loading/empty UI.
 
-1. **Security + stability first:** remove hardcoded admin credentials, finish route-guard polish, add `error.tsx`, validate API inputs (Zod), then tighten Supabase RLS/auth checks — fewer surprise failures in production.
-2. **Feel second:** dark-mode parity on every route, offline banner, less empty `return null` while data resolves — users should always see *something* intentional.
-3. **Speed to ship:** split the giant `app-state.tsx`, add a minimal test + CI gate so refactors don’t regress login/swipe/invite flows.
+## How to improve next (short guide)
 
----
+1. **Architecture:** extract remaining **account sync** from `app-state.tsx` (see `NEXT_TASKS.md`).
+2. **Scale:** virtualize **Discover search** rows; optional Shared; posters / CLS.
+3. **Ship:** Android smoke, store listing, optional Sentry, broader tests.
 
-## Next steps to ship (bring it to life)
-
-_Order: security + stability → reliability → tests → real backend → polish._
-
-1. **Production hardening** — Add **`error.tsx`** / **`global-error.tsx`** so runtime errors never white-screen. Add **Zod (or similar)** on `src/app/api/*` with consistent error bodies. Keep Supabase hardening (RLS + ownership + rate limits + safe avatar storage) as baseline.
-2. **Admin security fix (urgent)** — Remove hardcoded admin credentials from **`src/app/admin/page.tsx`** and **`src/app/api/admin/dashboard/route.ts`**. Move secrets to env vars, require server-side role/allowlist verification, and avoid exposing admin auth logic in the client bundle.
-3. **Reliability & trust** — **`ProtectedScreen`**: replace bare **`return null`** with a short “Redirecting…” / spinner so the shell never flashes empty. **Offline**: listen to **`online` / `offline`**, show a dismissible banner; optionally retry sync / failed actions when back online.
-4. **Tests + CI** — Introduce **`npm test`** (start with integration: login, invite, swipe) and a **GitHub Action** running **lint + typecheck + test** so refactors stay safe.
-5. **Product “life”** — Wire critical reads/writes to **Supabase** (trim mock-only paths when you no longer need them). Add **client error reporting** (e.g. Sentry) + **correlation ids** on API errors when you have real users. Add **privacy / terms** if you store PII or use analytics.
-6. **Polish backlog** — **`/auth/callback`**: branded loading + explicit error + retry / back to login. **Skip link** to main content in **`AppShell`**. **Picks** nested modals: focus trap + **Escape** order audit. **Long lists**: virtualize Picks / Shared / Discover search if libraries routinely exceed ~50 rows.
-
-_Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com)** → account / **Dashboard** → **Usage** (and in-app **Settings**, search **usage**, if your build shows a usage bar).
+_Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com)** → account / **Dashboard** → **Usage**.
 
 ---
 
@@ -44,7 +33,7 @@ _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com
 ## Priority — product & stability
 
 - [x] Loading / error / empty for all network actions (search, trailer, sync, invite) + retry CTA.
-- [x] Route guards on authenticated app routes: `(app)` layout wraps **`ProtectedScreen`** — redirect to `/` when logged out after `isReady`; **DiscoverCardSkeleton** + copy while bootstrapping/syncing; **NetworkStatusBlock** on sync failure. _Polish:_ `return null` when `!currentUserId` can mean one frame of empty chrome before the client redirect runs.
+- [x] Route guards on authenticated app routes: `(app)` layout wraps **`ProtectedScreen`** — redirect to `/` when logged out after `isReady`; **AppRouteLoading** while bootstrapping/syncing; **NetworkStatusBlock** on sync failure; spinner + “Redirecting to sign in…” when logging out.
 - [x] Split `app-state` into domain hooks; replace 7s polling with focus/visibility + events + manual refresh. _(Sync-focused hooks in `src/lib/hooks/`; core state still centralized in `app-state.tsx`.)_
 
 ## UI & UX (condensed)
@@ -59,10 +48,10 @@ _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com
 ## Engineering
 
 - [x] Perf: memoized list rows, lazy trailer modals, TMDB poster sizing helpers, stabler callbacks on Discover/Picks; **`npm run analyze`** (bundle analyzer) for large changes.
-- [ ] API: Zod on `src/app/api/*`, dedupe/cache search + trailer, shared filter utils client+server, centralized errors/logging. _(No Zod in repo yet.)_
+- [x] API: Zod on mutating/query routes via shared helpers; shared discover filter in `discover-quality.ts` (client + `GET /api/movies`); centralized JSON errors (`api-response`).
 - [x] Security baseline: Supabase session storage + server JWT verification (`docs/security-supabase-session.md`), bearer + ownership on mock mutating routes + Supabase-backed APIs, rate limits (invite create/accept, swipe POST/DELETE, account-sync GET), `security_audit_log` for invite/swipe actions, schema RLS + `profile-photos` storage (see schema / same doc).
-- [ ] Security hardening follow-up: remove hardcoded admin credentials and enforce server-side admin authorization for `/admin` dashboard access.
-- [ ] Tests & CI: unit (discover utils), integration (auth/sync), e2e (login, swipe/undo, invite, shared toggles), visual smoke dark/light, CI gates (typecheck, lint, test). _(Scripts today: `npm run build`, `npm run lint` — no `test` script / CI workflow in tree.)_
+- [x] Admin dashboard: server routes use `requireServerAdmin` (env allowlist + optional `app_metadata.role`); no password gate in client bundle.
+- [x] Tests & CI: `npm test` (Vitest), `.github/workflows/ci.yml` (lint + tsc + test). _Follow-up:_ more unit/integration coverage (`NEXT_TASKS.md`).
 
 ## Native / distribution
 
@@ -70,51 +59,19 @@ _Developer tooling — Cursor plan usage:_ see **[cursor.com](https://cursor.com
 
 ---
 
-## Backlog — from latest app review (add/improve in the app)
+## Optional polish (not tracked in detail here)
 
-_Use these as the next tickets; none replace the Engineering section above — they extend it with UI/product polish._
+_Use [`NEXT_TASKS.md`](./NEXT_TASKS.md) for the main backlog. Ideas below are **nice-to-have**._
 
-### Stability & shell
+- [ ] **Landing copy:** optional extra “why sign in” line on `/`.
+- [ ] **Settings:** tighter grouping of toggles by theme (partially done).
+- [ ] **i18n:** only if you leave English-only; product is English today.
+- [ ] **Cookie consent / analytics:** if you add non-essential cookies or third-party analytics.
+- [ ] **PWA install / offline shell:** if web install matters more than the Capacitor app.
 
-- [ ] **`ProtectedScreen`:** when `!currentUserId` after `isReady`, show a tiny “Signing you out…” / spinner instead of **`return null`** so the shell never flashes empty before `router.replace("/")`.
-- [ ] **Next.js errors:** add **`error.tsx`** (and optionally **`global-error.tsx`**) under `app/` and/or `(app)/` with reset + “Reload” so runtime errors don’t white-screen.
-- [ ] **Offline:** listen to `online` / `offline`, show a dismissible banner; optionally queue or retry failed swipes / sync when back online.
-- [ ] **Admin auth:** replace static admin credential checks with server-managed secrets + role check; keep credentials out of client code and rotate existing values.
+## Per-screen UI (archive)
 
-### UX & visual consistency
+_Historical route passes; most items are shipped. Discover, Connect/linked, Picks, Shared, Profile, Settings, landing, and signup were brought to the current visual system._
 
-- [ ] **Dark mode sweep:** **Profile** (residual), **`/auth/callback`**, and any remaining **`return null`** while `currentUser` resolves — align muted text, chips, and surfaces with Discover/linked quality. _( **`/signup`** aligned with landing.)_
-- [x] **Settings achievements** (and similar chips on **Picks**/stats): ensure chip/badge colors read well in **dark** theme (avoid light-only `bg-emerald-100` / `bg-violet-100` where it clashes).
-- [ ] **Skip link:** “Skip to main content” for keyboard users, targeting the scroll container in **`AppShell`**.
-- [ ] **i18n (optional):** if you ship beyond English, extract strings + RTL; today the UI is English-only.
-
-### Per-screen UI — what to improve next
-
-_Use this as a route-by-route “UI pass” checklist (contrast, hierarchy, empty/loading/error, touch targets, dark parity)._
-
-- [x] **`/` (login / landing):** dark parity on hero, form, demo card, and errors; primary gradient CTA vs outlined secondary **Create an account**; client-side field errors + `role="alert"` server banner; ambient blob motion + staggered panel enter + CTA shine loop (**`data-reduce-motion`** / OS reduce disables heavy motion). _Still optional:_ extra “why sign in” marketing line.
-- [x] **`/signup`:** same as login for theme + errors; show password rules before submit; success state before redirect; align spacing with `/` so the flow feels one system.
-- [ ] **`/auth/callback`:** never a blank screen — branded spinner + short copy (“Finishing sign-in…”); explicit error panel with **Retry** / **Back to login**; respect safe area on mobile.
-- [x] **`/discover`:** hero readability (stronger scrim, title weight, genre + year + runtime chips); toolbar microcopy + **`aria-describedby`** + visible **Filter** label; stat strip + search rows use shared chip grammar; undo toast uses **safe-area + nav-aware** bottom offset; skeleton mirrors card layout + **dissolve-in**; hero + toolbar enter motion (**reduce-motion** safe).
-- [x] **`/linked` + `/connect`:** Friends hub on **`/linked`** (accent row, **Active** vs **Pending** badges w/ dark tints, shared-pick summary); empty state → **Go to Connect**; invites + paste + create link on **`/connect`** w/ animated shell; **max 3** friends; new invites use **`/connect?invite=`** (old **`/linked?invite=`** redirects).
-- [x] **`/picks`:** stat cards: add micro-labels (“Saved” / “Also shared”) if numbers alone confuse; row density vs tap targets; modals: scroll affordance + sticky primary actions; trailer loading state on slow networks.
-- [x] **`/shared`:** accordion header vs body contrast; toggle pills readable in dark (unchecked state); long descriptions: “More” / expand without losing context; mutual-match badges consistent with Discover/Picks chip style.
-- [x] **`/profile`:** save states (**Saving…** / top **Saved** or **error** toast + dismiss); **square crop preview** for chosen photo + hint; **Remove profile photo** in a rose **destructive** panel; **Cancel** on edit; **`isReady`** loading shell; dark parity on stats, snapshot, inputs, quick links, edit toggle; light motion (`discover-toolbar-enter`, `expand-soft`, hero ring).
-- [x] **`/settings`:** group toggles by theme (Appearance / Notifications / Privacy); achievements: optional detail tap (why unlocked / locked / progress); About + Log out in a separated **Account actions** panel. Friend profile **`/friends/[userId]`** (avatar on **`/linked`** + Shared) shows their achievements and saved picks with **Add to mine**.
-
-### Architecture & data
-
-- [ ] **Decompose `app-state.tsx`:** extract auth/session, discover queue rotation, and account sync into dedicated modules or contexts to shrink the provider and simplify testing.
-- [ ] **Client forms:** Zod (or similar) on **login / signup** before submit — pairs with the API Zod engineering item.
-- [ ] **Long lists:** virtualize **Picks** / **Shared** / **Discover search** rows if lists regularly exceed ~50 items (e.g. `@tanstack/react-virtual`).
-
-### QA & product
-
-- [ ] **Deep links & cold start:** exercise `discover?movieId=…`, invite accept, OAuth **callback** on slow 3G / airplane toggle.
-- [ ] **Nested modals:** **Picks** (details + trailer) — focus trap / Escape order audit so focus never escapes the topmost layer.
-- [ ] **Observability (optional):** client error reporting (e.g. Sentry) + correlation ids on API errors for production debugging.
-
-### Compliance & growth (optional)
-
-- [ ] **Legal:** privacy / terms links if you store PII or use analytics; cookie consent if you add non-essential cookies.
-- [ ] **PWA (optional):** installability, offline shell, cache strategy for static assets — only if web install matters for your users.
+- [x] **`/`**, **`/signup`**, **`/auth/callback`**, **`/discover`**, **`/linked`**, **`/connect`**, **`/picks`**, **`/shared`**, **`/profile`**, **`/settings`**, **`/friends/[userId]`** — contrast, loading/error, dark parity, motion, and touch targets (see sections above for detail).
+- [x] **Settings achievements** (and similar chips on **Picks**/stats): chip/badge colors tuned for dark theme where needed.
