@@ -85,7 +85,30 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
   }
 
   if (!currentUserId) {
-    return null;
+    return (
+      <div className="flex flex-1 items-center justify-center p-4">
+        <div
+          className="mx-auto flex w-full max-w-md flex-col items-center gap-4"
+          role="status"
+          aria-live="polite"
+          aria-label="Redirecting to sign in"
+        >
+          <div
+            className={`h-10 w-10 shrink-0 animate-spin rounded-full border-2 border-t-transparent ${
+              isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
+            }`}
+            aria-hidden
+          />
+          <p
+            className={`text-center text-sm font-medium ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
+            Redirecting to sign in…
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;
