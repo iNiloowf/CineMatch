@@ -22,6 +22,12 @@ import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import {
+  clearStoredAuthSession,
+  getStoredAuthSession,
+  persistStoredAuthSession,
+  type StoredAuthSession,
+} from "@/lib/auth-session-storage";
+import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
@@ -46,9 +52,7 @@ const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
-const AUTH_SESSION_STORAGE_KEY = "cinematch-auth-session";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
-const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
 const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
@@ -164,15 +168,6 @@ const DEFAULT_SETTINGS_ROW_BASE = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 let settingsSupportsReduceMotion: boolean | null = null;
-
-type StoredAuthSession = {
-  userId: string;
-  email?: string | null;
-  accessToken: string;
-  refreshToken: string;
-  savedAt: number;
-  expiresAt: number;
-};
 
 type AccountSyncPayload = {
   profile: ProfileRow | null;
@@ -535,99 +530,6 @@ function persistOnboardingPreferences(
   } catch {
     // Ignore storage failures.
   }
-}
-
-function getStoredAuthSession() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<StoredAuthSession>;
-
-    if (
-      typeof parsed.userId !== "string" ||
-      typeof parsed.accessToken !== "string" ||
-      typeof parsed.refreshToken !== "string"
-    ) {
-      clearStoredAuthSession();
-      return null;
-    }
-
-    const savedAt =
-      typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now();
-    const expiresAt =
-      typeof parsed.expiresAt === "number"
-        ? parsed.expiresAt
-        : savedAt + AUTH_SESSION_TTL_MS;
-
-    if (expiresAt <= Date.now()) {
-      clearStoredAuthSession();
-      return null;
-    }
-
-    const normalizedSession: StoredAuthSession = {
-      userId: parsed.userId,
-      email: typeof parsed.email === "string" ? parsed.email : null,
-      accessToken: parsed.accessToken,
-      refreshToken: parsed.refreshToken,
-      savedAt,
-      expiresAt,
-    };
-
-    if (
-      parsed.savedAt !== normalizedSession.savedAt ||
-      parsed.expiresAt !== normalizedSession.expiresAt
-    ) {
-      persistStoredAuthSession(normalizedSession);
-    }
-
-    return normalizedSession;
-  } catch {
-    clearStoredAuthSession();
-    return null;
-  }
-}
-
-function persistStoredAuthSession(
-  session: Omit<StoredAuthSession, "savedAt" | "expiresAt"> &
-    Partial<Pick<StoredAuthSession, "savedAt" | "expiresAt">>,
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    const savedAt =
-      typeof session.savedAt === "number" ? session.savedAt : Date.now();
-    const normalizedSession: StoredAuthSession = {
-      ...session,
-      savedAt,
-      expiresAt:
-        typeof session.expiresAt === "number"
-          ? session.expiresAt
-          : savedAt + AUTH_SESSION_TTL_MS,
-    };
-    window.localStorage.setItem(
-      AUTH_SESSION_STORAGE_KEY,
-      JSON.stringify(normalizedSession),
-    );
-  } catch {
-    // Ignore storage failures.
-  }
-}
-
-function clearStoredAuthSession() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
 }
 
 function getAccountCacheKey(userId: string) {
