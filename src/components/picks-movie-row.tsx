@@ -254,11 +254,12 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             <button
               type="button"
               aria-label={`Remove ${movie.title} from your picks`}
+              title="Remove from picks"
               onClick={(event) => {
                 event.stopPropagation();
                 onRequestRemove(movie.id);
               }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1 rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
+              className={`picks-row-action inline-flex h-9 min-h-9 w-9 shrink-0 touch-manipulation items-center justify-center rounded-[12px] border transition active:scale-[0.98] ${
                 isDarkMode
                   ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
                   : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
@@ -273,7 +274,6 @@ export const PicksMovieRow = memo(function PicksMovieRow({
                   strokeLinejoin="round"
                 />
               </svg>
-              Remove
             </button>
           </div>
         </div>
