@@ -9,12 +9,13 @@ import {
   isResendTestModeEnabled,
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { signupPasswordFieldSchema } from "@/lib/auth-form-schemas";
 import { z } from "zod";
 
 const sendSignupEmailBodySchema = z.object({
   name: z.string().trim().min(1, "Please fill in your name first."),
   email: z.string().trim().email("Please enter a valid email address."),
-  password: z.string().min(1, "Please fill in your password first."),
+  password: signupPasswordFieldSchema,
 });
 
 function getAppUrl(request: NextRequest) {

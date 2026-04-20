@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
-import { MIN_AUTH_PASSWORD_LEN, signupFormSchema } from "@/lib/auth-form-schemas";
+import {
+  MIN_SIGNUP_PASSWORD_LEN,
+  signupFormSchema,
+} from "@/lib/auth-form-schemas";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 type FieldErrors = {
@@ -357,8 +360,9 @@ export default function SignUpPage() {
                     Password rules
                   </p>
                   <ul className="mt-1.5 list-inside list-disc space-y-0.5">
-                    <li>At least {MIN_AUTH_PASSWORD_LEN} characters (required).</li>
-                    <li>Mix letters and numbers when you can — harder to guess.</li>
+                    <li>At least {MIN_SIGNUP_PASSWORD_LEN} characters.</li>
+                    <li>At least one special character (! @ # $ % etc.).</li>
+                    <li>Mix letters and numbers — harder to guess.</li>
                     <li>Avoid your name or email in the password.</li>
                   </ul>
                 </div>
@@ -378,10 +382,11 @@ export default function SignUpPage() {
                     if (!password) {
                       return;
                     }
-                    if (password.length < MIN_AUTH_PASSWORD_LEN) {
+                    const parsed = signupFormSchema.shape.password.safeParse(password);
+                    if (!parsed.success) {
                       setFieldErrors((prev) => ({
                         ...prev,
-                        password: `Use at least ${MIN_AUTH_PASSWORD_LEN} characters.`,
+                        password: parsed.error.flatten().formErrors[0] ?? "Invalid password.",
                       }));
                     }
                   }}

@@ -49,6 +49,75 @@ Each row: **what** → **note** (why it matters / where in repo).
 
 ---
 
+## D. Product backlog (user-requested — Apr 2026)
+
+Captured from planning notes. **Not all implemented**; treat as a prioritized queue.
+
+### Auth & onboarding
+
+| Item | Note |
+|------|------|
+| Stronger signup password | **Done in code:** min 8 chars + at least one special character (`signupPasswordFieldSchema`); `/api` signup + send-signup-email aligned. |
+| Email confirmation UX | Dedicated post-signup / “confirm your email” screen (Supabase); polish copy. |
+| Onboarding: “tune your voice” | Max **5** favorite genres; dislikes step (exclude picks from favorites); tidy genre UI; ask **movie vs series vs both**. |
+| Autoplay preference | First-run prompt (on/off); persist; verify Settings autoplay matches backend. |
+
+### Discover & Picks
+
+| Item | Note |
+|------|------|
+| Tab / film desync | Fix state when switching tabs so the wrong film doesn’t show. |
+| Bottom nav + animation | Fix gap / layout between deck animation and bottom navbar. |
+| Undo affordance | Smaller undo on card; less “tip” chrome. |
+| Picks loading order | Queue ↔ Watched: load rows **top-to-bottom** consistently. |
+| Picks insights | Rework insight/suggest/match using **linked genres + dislikes**. |
+
+### Shared & Connect
+
+| Item | Note |
+|------|------|
+| Empty Shared | **Connect** CTA when empty. |
+| Invite copy | Preface: “**Name** sent you a CineMatch connect link” before save/share. |
+| Shared detail density | Less metadata by default; full detail on demand. |
+| Friend profile | Move **achievements** lower. |
+| Copy link + paste | **Copy my link**; **Paste link** → modal; dark-mode styling on trigger. |
+
+### Settings & profile
+
+| Item | Note |
+|------|------|
+| Less motion | Broken for some — audit `reduce_motion`, `data-reduce-motion`, CSS. |
+| Settings toggles | Fix alignment / hit targets. |
+| Settings titles | More space above cards (titles too tight). |
+| Notifications | Button does nothing — implement or hide. |
+| Legal | Move **Privacy / Terms** to **bottom** of Settings. |
+| Profile layout | Bigger profile block; above settings; **Edit** as **icon** top-left (remove big button). |
+| Theme previews | Dark mode: themes look too similar — stronger previews. |
+| Theme apply | No app restart needed after theme change. |
+| Connect on profile | Add **Connect** entry on profile card. |
+
+### Discover menu & polish
+
+| Item | Note |
+|------|------|
+| Discover `…` menu | Add **Sign out**. |
+| Popups | Improve modal/sheet animations. |
+
+### Tickets & admin
+
+| Item | Note |
+|------|------|
+| User tickets | User-facing tickets + **admin replies** in one place. |
+
+### Media & visuals
+
+| Item | Note |
+|------|------|
+| Photo removal | Clear copy on what metadata/avatar removal does. |
+| Blur in dark mode | Fix backdrop blur / glass. |
+
+---
+
 _Maintainer: English only. Git: only commit/push this file if you ask._
 
-_Last updated: Apr 2026 — table layout for scan-friendly notes._
+_Last updated: Apr 2026 — section D backlog; signup password rules tightened._

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { signupPasswordFieldSchema } from "@/lib/auth-form-schemas";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { signupUser } from "@/server/mock-db";
@@ -7,7 +8,7 @@ import { z } from "zod";
 const signupBodySchema = z.object({
   name: z.string().trim().min(1),
   email: z.string().trim().email(),
-  password: z.string().min(1),
+  password: signupPasswordFieldSchema,
 });
 
 export async function POST(request: NextRequest) {
