@@ -1,4 +1,4 @@
-<!-- Agents: keep this file in English. Do not commit or push this file unless the user explicitly asks. -->
+<!-- Agents: keep this file in English. Do not commit/push this file unless the user explicitly asks. -->
 
 # Your next tasks — CineMatch
 
@@ -14,6 +14,10 @@
 - [x] **Route loading / empty / error** — `src/components/app-route-status.tsx` (`AppRouteLoading`, `AppRouteEmptyCard`, `AppRouteNetworkStatus`) wired on ProtectedScreen, Profile, Shared, Picks, Discover empty states.
 - [x] Next.js **`middleware` → `proxy`** — `src/proxy.ts` (`export function proxy`: admin rewrite, `x-request-id`, stale `sb-*` cookies); see [Next.js 16 guidance](https://nextjs.org/docs/messages/middleware-to-proxy).
 - [x] **Play Store / Capacitor baseline** — `versionCode` 2 / `versionName` 1.0.1; splash (`Theme.SplashScreen`, `splash.xml`, `SplashScreen.installSplashScreen`); `strings.xml` privacy/terms URLs + `permission_internet_description`; `docs/GOOGLE_PLAY_PUBLISHING.md`.
+- [x] **Virtualize Discover search** — `VirtualScrollList` when `sortedSearchResults.length` ≥ 24 (`discover/page.tsx`); short lists stay a plain map.
+- [x] **Virtualize Shared partner movies** — `SharedPartnerMovieCard` in `src/components/shared-partner-movie-card.tsx`; `VirtualScrollList` when a partner’s movie list ≥ 24; otherwise unchanged map.
+- [x] **Images & CLS (TMDB)** — `next.config.ts` `images.remotePatterns` for `image.tmdb.org`; `PosterBackdrop` uses `next/image` for TMDB URLs, `<img>` fallback for other hosts.
+- [x] **Discover sheets audit** — Search + genre filter: `useEscapeToClose` already; added **tap outside** on overlay to close, `stopPropagation` on sheet, `role="dialog"`, `aria-modal`, `aria-labelledby` for titles.
 
 ---
 
@@ -23,30 +27,23 @@
 
 1. [ ] **Shrink `app-state.tsx` (sync path)** — Extract account-sync browser fetch, settings row reads/writes, and chunked Supabase hydration into `src/lib/hooks/` or `src/lib/account-sync/`.
 
-### Performance & UX
-
-2. [ ] **Virtualize Discover search results** — Replace full `sortedSearchResults.map` in `discover/page.tsx` with `VirtualScrollList` when over threshold (same pattern as Picks).
-3. [ ] **Virtualize Shared (optional)** — If lists grow very large, virtualize inner rows; Picks already virtualized.
-4. [ ] **Images & CLS** — `next/image` or fixed aspect-ratio shells for posters/heroes.
-5. [ ] **Sheets / menus audit** — Escape, focus, tap-outside vs `--z-sheet` / `--z-modal`.
-
 ### Quality & operations
 
-6. [ ] **Broader test coverage** — Unit tests for `discover-quality` / `discover-queue`; optional Playwright or Vitest + MSW for core flows.
-7. [ ] **Optional Sentry** — `@sentry/wizard` + `NEXT_PUBLIC_SENTRY_DSN`; `instrumentation.ts` stub exists.
-8. [ ] **Bundle checks** — `npm run analyze` after large UI/deps changes.
+2. [ ] **Broader test coverage** — Unit tests for `discover-quality` / `discover-queue`; optional Playwright or Vitest + MSW for core flows.
+3. [ ] **Optional Sentry** — `@sentry/wizard` + `NEXT_PUBLIC_SENTRY_DSN`; `instrumentation.ts` stub exists.
+4. [ ] **Bundle checks** — `npm run analyze` after large UI/deps changes.
 
 ### Platform & release
 
-9. [ ] **Android smoke** — `cap:sync`, device install, core flows + safe areas (`docs/MANUAL_QA.md`).
+5. [ ] **Android smoke** — `cap:sync`, device install, core flows + safe areas (`docs/MANUAL_QA.md`).
 
 ### Optional product
 
-10. [ ] **Analytics / cookies** — If you add measurement; align with Privacy/Terms and consent rules.
-11. [ ] **PWA / install** — If web install matters more than the native app.
+6. [ ] **Analytics / cookies** — If you add measurement; align with Privacy/Terms and consent rules.
+7. [ ] **PWA / install** — If web install matters more than the native app.
 
 ---
 
 _Maintainer: English only. Git: only commit/push this file if you ask._
 
-_Last updated: Apr 2026 — Completed section synced with shipped work (Discover modules, route UI, proxy, Play baseline)._
+_Last updated: Apr 2026 — Tasks 2–5 (virtualize Discover/Shared, TMDB images, sheet backdrop) marked complete._
