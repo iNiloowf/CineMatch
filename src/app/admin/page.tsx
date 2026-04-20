@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type DashboardStats = {
@@ -60,13 +61,11 @@ type DashboardPayload = {
 type AdminTab = "overview" | "tickets" | "users" | "swipes" | "subscriptions";
 type TicketManageStatus = "open" | "under_review" | "closed";
 
+type AdminGate = "booting" | "sign_in" | "forbidden" | "ready";
+
 export default function AdminDesktopPage() {
   const isDarkMode = true;
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [adminGate, setAdminGate] = useState<AdminGate>("booting");
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [dashboardError, setDashboardError] = useState("");
@@ -128,6 +127,47 @@ export default function AdminDesktopPage() {
     },
     [getAdminAccessToken],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setDashboardError("Authentication client is not available.");
+        setAdminGate("forbidden");
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) {
+        return;
+      }
+
+      if (!session) {
+        setAdminGate("sign_in");
+        return;
+      }
+
+      const ok = await loadDashboard();
+      if (cancelled) {
+        return;
+      }
+
+      if (ok) {
+        setAdminGate("ready");
+        setActiveTab("overview");
+      } else {
+        setAdminGate("forbidden");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadDashboard]);
 
   useEffect(() => {
     if (!selectedTicket || !dashboard) {
@@ -316,56 +356,29 @@ export default function AdminDesktopPage() {
     [getAdminAccessToken],
   );
 
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setErrorMessage("");
-    setDashboardError("");
-
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password.trim()) {
-      setErrorMessage("Please enter admin email and password.");
-      return;
-    }
-
-    setIsLoggingIn(true);
-
+  const handleLogout = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setIsLoggingIn(false);
-      setErrorMessage("Authentication client is not available.");
-      return;
-    }
-
-    const signInResult = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
-    if (signInResult.error) {
-      setIsLoggingIn(false);
-      setErrorMessage(signInResult.error.message || "Admin login failed.");
-      return;
-    }
-
-    const didLoad = await loadDashboard();
-    setIsLoggingIn(false);
-    if (!didLoad) {
-      setErrorMessage("Admin dashboard could not be loaded.");
-      return;
-    }
-
-    setIsAuthenticated(true);
-    setActiveTab("overview");
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+    await supabase?.auth.signOut();
     setDashboard(null);
     setDashboardError("");
-    setErrorMessage("");
     setSelectedTicket(null);
     setIsTicketActionLoading(false);
     setTicketActionFeedback("");
-  };
+    setSubscriptionActionState(null);
+    setAdminGate("sign_in");
+  }, []);
+
+  const handleRetryAccess = useCallback(async () => {
+    setDashboardError("");
+    setAdminGate("booting");
+    const ok = await loadDashboard();
+    if (ok) {
+      setAdminGate("ready");
+      setActiveTab("overview");
+    } else {
+      setAdminGate("forbidden");
+    }
+  }, [loadDashboard]);
 
   const dashboardStats = dashboard?.stats;
   const userRows = dashboard?.userRows ?? [];
@@ -403,69 +416,82 @@ export default function AdminDesktopPage() {
     : "border-white/70 bg-white/75 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,23,42,0.14)]";
   const softText = isDarkMode ? "text-slate-300" : "text-slate-600";
 
-  if (!isAuthenticated) {
+  if (adminGate !== "ready") {
     return (
       <main className={shell}>
         <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-10">
-          <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
-            <h1 className="text-2xl font-bold">Admin Desktop</h1>
-            <p className={`mt-2 text-sm ${softText}`}>
-              Sign in with your admin account to view support and operational data.
-            </p>
-            <form className="mt-6 space-y-4" onSubmit={handleLogin}>
-              <label className="block space-y-2">
-                <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${softText}`}>
-                  Admin email
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="username"
-                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-500"
-                      : "border-slate-200 bg-white text-slate-900"
-                  }`}
-                  placeholder="admin@cinematch.app"
-                />
-              </label>
-              <label className="block space-y-2">
-                <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${softText}`}>
-                  Password
-                </span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="current-password"
-                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
-                    isDarkMode
-                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-500"
-                      : "border-slate-200 bg-white text-slate-900"
-                  }`}
-                  placeholder="Enter your password"
-                />
-              </label>
-              {errorMessage ? (
-                <p className={isDarkMode ? "text-sm text-rose-300" : "text-sm text-rose-700"}>
-                  {errorMessage}
-                </p>
-              ) : null}
+          {adminGate === "booting" ? (
+            <section
+              className={`w-full rounded-[30px] border p-8 text-center ${glassPanel}`}
+              role="status"
+              aria-live="polite"
+              aria-label="Checking session"
+            >
+              <div
+                className={`mx-auto h-10 w-10 animate-spin rounded-full border-2 border-t-transparent ${
+                  isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
+                }`}
+                aria-hidden
+              />
+              <p className={`mt-4 text-sm font-medium ${softText}`}>Checking your session…</p>
+            </section>
+          ) : null}
+
+          {adminGate === "sign_in" ? (
+            <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
+              <h1 className="text-2xl font-bold">Admin Desktop</h1>
+              <p className={`mt-2 text-sm ${softText}`}>
+                Sign in with your normal CineMatch account on the main app. Your user must be allowlisted for admin
+                on the server (<span className="font-mono text-xs">ADMIN_EMAILS</span> /{" "}
+                <span className="font-mono text-xs">ADMIN_USER_IDS</span> or Supabase{" "}
+                <span className="font-mono text-xs">app_metadata.role=admin</span>). Then open this URL again.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link href="/" className="ui-btn ui-btn-primary w-full text-center sm:w-auto">
+                  Open CineMatch sign in
+                </Link>
+              </div>
+            </section>
+          ) : null}
+
+          {adminGate === "forbidden" ? (
+            <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
+              <h1 className="text-2xl font-bold">Admin access denied</h1>
+              <p className={`mt-2 text-sm ${softText}`}>
+                You are signed in, but this session is not authorized for the admin dashboard.
+              </p>
               {dashboardError ? (
-                <p className={isDarkMode ? "text-sm text-rose-300" : "text-sm text-rose-700"}>
+                <p
+                  className={`mt-4 rounded-[14px] border px-3 py-2 text-sm ${
+                    isDarkMode
+                      ? "border-rose-500/35 bg-rose-500/10 text-rose-200"
+                      : "border-rose-200 bg-rose-50 text-rose-700"
+                  }`}
+                >
                   {dashboardError}
                 </p>
               ) : null}
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="ui-btn ui-btn-primary w-full disabled:opacity-60"
-              >
-                {isLoggingIn ? "Signing in..." : "Open admin dashboard"}
-              </button>
-            </form>
-          </section>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary w-full sm:w-auto"
+                  onClick={() => void handleRetryAccess()}
+                >
+                  Try again
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary w-full sm:w-auto"
+                  onClick={() => void handleLogout()}
+                >
+                  Sign out
+                </button>
+                <Link href="/" className="ui-btn ui-btn-primary w-full text-center sm:w-auto">
+                  Home
+                </Link>
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
     );
@@ -656,7 +682,11 @@ export default function AdminDesktopPage() {
               >
                 {isLoadingDashboard ? "Refreshing..." : "Refresh"}
               </button>
-              <button type="button" onClick={handleLogout} className="ui-btn ui-btn-secondary">
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="ui-btn ui-btn-secondary"
+              >
                 Log out
               </button>
             </div>
