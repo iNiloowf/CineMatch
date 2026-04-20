@@ -13,6 +13,7 @@ type FieldErrors = {
   name?: string;
   email?: string;
   password?: string;
+  acceptedLegal?: string;
 };
 
 function AuthLandingBlobs({ isDarkMode }: { isDarkMode: boolean }) {
@@ -42,6 +43,7 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [authError, setAuthError] = useState("");
   const [success, setSuccess] = useState("");
@@ -161,13 +163,14 @@ export default function SignUpPage() {
     setAuthError("");
     setSuccess("");
 
-    const parsed = signupFormSchema.safeParse({ name, email, password });
+    const parsed = signupFormSchema.safeParse({ name, email, password, acceptedLegal });
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
       setFieldErrors({
         name: flat.name?.[0],
         email: flat.email?.[0],
         password: flat.password?.[0],
+        acceptedLegal: flat.acceptedLegal?.[0],
       });
       return;
     }
@@ -384,6 +387,62 @@ export default function SignUpPage() {
                   }}
                 />
                 {fieldErrors.password ? fieldHint(fieldErrors.password) : null}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex gap-3">
+                  <input
+                    id="signup-accept-legal"
+                    name="acceptedLegal"
+                    type="checkbox"
+                    checked={acceptedLegal}
+                    onChange={(event) => {
+                      setAcceptedLegal(event.target.checked);
+                      setFieldErrors((prev) => ({ ...prev, acceptedLegal: undefined }));
+                      setAuthError("");
+                    }}
+                    className={`mt-0.5 h-[18px] w-[18px] shrink-0 rounded border accent-violet-600 ${
+                      isDarkMode
+                        ? "border-white/25 bg-white/10"
+                        : "border-slate-300 bg-white"
+                    } ${fieldErrors.acceptedLegal ? "border-rose-400 ring-2 ring-rose-500/25" : ""}`}
+                    aria-invalid={Boolean(fieldErrors.acceptedLegal) || undefined}
+                    aria-describedby={fieldErrors.acceptedLegal ? "signup-accept-legal-error" : undefined}
+                  />
+                  <label
+                    htmlFor="signup-accept-legal"
+                    className={`text-sm leading-snug ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}
+                  >
+                    I agree to CineMatch&apos;s{" "}
+                    <Link
+                      href="/terms"
+                      className={`font-semibold underline-offset-2 hover:underline ${
+                        isDarkMode ? "text-violet-300" : "text-violet-700"
+                      }`}
+                    >
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/privacy"
+                      className={`font-semibold underline-offset-2 hover:underline ${
+                        isDarkMode ? "text-violet-300" : "text-violet-700"
+                      }`}
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </label>
+                </div>
+                {fieldErrors.acceptedLegal ? (
+                  <p
+                    id="signup-accept-legal-error"
+                    className={`text-xs font-medium leading-snug ${isDarkMode ? "text-rose-300" : "text-rose-600"}`}
+                    role="alert"
+                  >
+                    {fieldErrors.acceptedLegal}
+                  </p>
+                ) : null}
               </div>
 
               {authError ? errorBanner(authError) : null}

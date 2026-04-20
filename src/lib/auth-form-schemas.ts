@@ -28,4 +28,7 @@ export const signupFormSchema = z.object({
     .string()
     .min(1, "Choose a password.")
     .min(MIN_AUTH_PASSWORD_LEN, `Use at least ${MIN_AUTH_PASSWORD_LEN} characters.`),
+  acceptedLegal: z.boolean().refine((value) => value === true, {
+    message: "You must agree to the Terms of Service and Privacy Policy to create an account.",
+  }),
 });
