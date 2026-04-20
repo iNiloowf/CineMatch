@@ -3,6 +3,7 @@
 import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
 import { MatchToast } from "@/components/match-toast";
+import { OfflineBanner } from "@/components/offline-banner";
 import { useAppState } from "@/lib/app-state";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex min-h-0 flex-1 flex-col">
+          <OfflineBanner />
           <div
             data-app-scroll-container="true"
             className="flex-1 overflow-y-auto overscroll-contain pb-[var(--discover-stack-gap)]"
