@@ -6,10 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SurfaceCard } from "@/components/surface-card";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
+function parseHashParams(hash: string): URLSearchParams {
+  const normalized = hash.startsWith("#") ? hash.slice(1) : hash;
+  return new URLSearchParams(normalized);
+}
+
 export function AuthCallbackClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [message, setMessage] = useState("Finishing your sign-in...");
+  const [phase, setPhase] = useState<"working" | "success" | "error">("working");
+  const [message, setMessage] = useState("Confirming your email…");
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const supabase = getSupabaseBrowserClient();
@@ -21,22 +27,40 @@ export function AuthCallbackClient() {
       return;
     }
 
-    const next = searchParams.get("next") || "/discover";
-    const code = searchParams.get("code");
-    const tokenHash = searchParams.get("token_hash");
-    const type = searchParams.get("type");
-
     if (urlError) {
+      setPhase("error");
       return;
     }
 
+    const next = searchParams.get("next") || "/discover";
+
     void (async () => {
       try {
+        await new Promise((resolve) => setTimeout(resolve, 280));
+
+        const { data: existingSession } = await supabase.auth.getSession();
+        if (existingSession.session) {
+          setMessage("Your email is verified. You can use CineMatch with this account.");
+          setPhase("success");
+          window.setTimeout(() => {
+            router.replace(next);
+          }, 2200);
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
+        const type = url.searchParams.get("type");
+        const hashParams = parseHashParams(window.location.hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+
         if (code) {
           const result = await supabase.auth.exchangeCodeForSession(code);
-
           if (result.error) {
             setError(result.error.message);
+            setPhase("error");
             return;
           }
         } else if (tokenHash && type) {
@@ -50,23 +74,44 @@ export function AuthCallbackClient() {
               | "email_change"
               | "email",
           });
-
           if (result.error) {
             setError(result.error.message);
+            setPhase("error");
+            return;
+          }
+        } else if (accessToken && refreshToken) {
+          const result = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (result.error) {
+            setError(result.error.message);
+            setPhase("error");
+            return;
+          }
+        } else {
+          const { data: retrySession } = await supabase.auth.getSession();
+          if (!retrySession.session) {
+            setError(
+              "This confirmation link is missing or expired. Request a new confirmation email from the sign-up page, or sign in if you already confirmed.",
+            );
+            setPhase("error");
             return;
           }
         }
 
-        setMessage("Your email is confirmed. Taking you back into CineMatch...");
+        setMessage("Your email is verified. You can use CineMatch with this account.");
+        setPhase("success");
         window.setTimeout(() => {
           router.replace(next);
-        }, 900);
+        }, 2200);
       } catch (callbackError) {
         setError(
           callbackError instanceof Error
             ? callbackError.message
             : "We couldn’t finish the email confirmation.",
         );
+        setPhase("error");
       }
     })();
   }, [attempt, router, searchParams, supabase, urlError]);
@@ -107,7 +152,7 @@ export function AuthCallbackClient() {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-violet-500">
             CineMatch
           </p>
-          {error || urlError ? (
+          {phase === "error" || urlError ? (
             <>
               <h1 className="text-2xl font-semibold text-slate-900">
                 We hit a small issue
@@ -125,7 +170,8 @@ export function AuthCallbackClient() {
                     className="inline-flex w-full items-center justify-center rounded-[20px] bg-violet-600 px-4 py-3 text-sm font-semibold text-white sm:w-auto"
                     onClick={() => {
                       setError("");
-                      setMessage("Finishing your sign-in...");
+                      setMessage("Confirming your email…");
+                      setPhase("working");
                       setAttempt((value) => value + 1);
                     }}
                   >
@@ -140,11 +186,15 @@ export function AuthCallbackClient() {
                 </Link>
               </div>
             </>
+          ) : phase === "success" ? (
+            <>
+              <h1 className="text-2xl font-semibold text-slate-900">Email verified</h1>
+              <p className="text-sm leading-7 text-slate-600">{message}</p>
+              <p className="text-xs text-slate-400">Redirecting you…</p>
+            </>
           ) : (
             <>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                Email confirmed
-              </h1>
+              <h1 className="text-2xl font-semibold text-slate-900">Confirming…</h1>
               <p className="text-sm leading-7 text-slate-500">{message}</p>
             </>
           )}

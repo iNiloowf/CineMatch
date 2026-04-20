@@ -54,6 +54,8 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  /** After the first confirmation email is sent (Supabase), we show the check-inbox + resend UI instead of the full form. */
+  const [awaitingEmailConfirmation, setAwaitingEmailConfirmation] = useState(false);
   const skipLoggedInRedirectRef = useRef(false);
 
   useEffect(() => {
@@ -159,6 +161,7 @@ export default function SignUpPage() {
       payload.message ??
         "Your confirmation email is on the way. Open it to finish creating your account.",
     );
+    setAwaitingEmailConfirmation(true);
     setResendCooldown(payload.retryAfterSeconds ?? 60);
     return true;
   }
@@ -273,16 +276,110 @@ export default function SignUpPage() {
           </div>
 
           <SurfaceCard className="auth-landing-stagger auth-landing-stagger--2 space-y-8 !p-6 sm:!p-7">
-            <div className="space-y-2">
-              <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign up</p>
-              <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                {isSupabaseConfigured()
-                  ? "We will email you a confirmation link to finish setup."
-                  : "Your account is stored in this browser only until Supabase is configured for hosted auth."}
-              </p>
-            </div>
+            {awaitingEmailConfirmation && isSupabaseConfigured() ? (
+              <div className="space-y-6">
+                <div className="space-y-2 text-center sm:text-left">
+                  <p
+                    className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                      isDarkMode ? "text-violet-300" : "text-violet-600"
+                    }`}
+                  >
+                    Check your email
+                  </p>
+                  <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    Confirm your address
+                  </p>
+                  <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                    We sent a link to <span className="font-semibold text-inherit">{email.trim() || "your inbox"}</span>.
+                    Open it on this device to activate your account. The link expires after a while—use resend if you
+                    need a new one.
+                  </p>
+                </div>
 
-            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                {success ? successBanner(success) : null}
+                {authError ? errorBanner(authError) : null}
+
+                <div
+                  className={`rounded-[22px] border px-4 py-4 ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/[0.06]"
+                      : "border-violet-100/90 bg-[linear-gradient(180deg,#faf7ff_0%,#f8fafc_100%)]"
+                  }`}
+                >
+                  <p
+                    className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+                      isDarkMode ? "text-violet-300" : "text-violet-600"
+                    }`}
+                  >
+                    Didn&apos;t get the email?
+                  </p>
+                  <p className={`mt-2 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                    {resendCooldown > 0
+                      ? `You can send another message in ${resendCooldown} seconds.`
+                      : "You can resend the confirmation email now."}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0 || isSubmitting}
+                    onClick={async () => {
+                      setIsSubmitting(true);
+                      await sendSignupEmail();
+                      setIsSubmitting(false);
+                    }}
+                    className={`mt-4 w-full rounded-[18px] border px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isDarkMode
+                        ? "border-violet-400/35 bg-violet-500/15 text-violet-100 hover:bg-violet-500/22"
+                        : "border-violet-200 bg-white text-violet-800 hover:bg-violet-50"
+                    }`}
+                  >
+                    {isSubmitting
+                      ? "Sending…"
+                      : resendCooldown > 0
+                        ? `Resend available in ${resendCooldown}s`
+                        : "Resend confirmation email"}
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAwaitingEmailConfirmation(false);
+                      setSuccess("");
+                      setAuthError("");
+                    }}
+                    className={`w-full rounded-[22px] border-2 px-4 py-3.5 text-sm font-semibold transition ${
+                      isDarkMode
+                        ? "border-white/18 bg-white/5 text-slate-200 hover:bg-white/10"
+                        : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                    }`}
+                  >
+                    Use a different email
+                  </button>
+                  <Link
+                    href="/"
+                    className={`block w-full rounded-[22px] border-2 px-4 py-3.5 text-center text-sm font-semibold transition ${
+                      isDarkMode
+                        ? "border-violet-400/35 bg-white/5 text-violet-100 hover:border-violet-300/50 hover:bg-violet-500/12"
+                        : "border-violet-300/90 bg-white/70 text-violet-800 hover:border-violet-400 hover:bg-violet-50"
+                    }`}
+                  >
+                    Already confirmed? Sign in
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <p className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Sign up</p>
+                  <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                    {isSupabaseConfigured()
+                      ? "We will email you a confirmation link to finish setup."
+                      : "Your account is stored in this browser only until Supabase is configured for hosted auth."}
+                  </p>
+                </div>
+
+                <form className="space-y-5" onSubmit={handleSubmit} noValidate>
               <div className="space-y-1.5">
                 <label
                   htmlFor="signup-name"
@@ -490,65 +587,8 @@ export default function SignUpPage() {
                 </Link>
               </div>
             </form>
-
-            {success && isSupabaseConfigured() ? (
-              <div
-                className={`rounded-[24px] border px-4 py-4 ${
-                  isDarkMode
-                    ? "border-white/12 bg-white/[0.06] shadow-[0_14px_30px_rgba(0,0,0,0.2)]"
-                    : "border-violet-100/90 bg-[linear-gradient(180deg,#faf7ff_0%,#f8fafc_100%)] shadow-[0_14px_30px_rgba(124,58,237,0.08)]"
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      Need the email again?
-                    </p>
-                    <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-                      You can resend the confirmation email if it has not arrived yet.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div
-                      className={`rounded-[18px] px-4 py-3 text-sm ${
-                        isDarkMode ? "border border-white/10 bg-black/20" : "border border-slate-200/80 bg-white"
-                      }`}
-                    >
-                      <p
-                        className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-                          isDarkMode ? "text-violet-300" : "text-violet-600"
-                        }`}
-                      >
-                        Status
-                      </p>
-                      <p className={`mt-1 font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
-                        {resendCooldown > 0
-                          ? `You can request another email in ${resendCooldown} seconds.`
-                          : "You can request another email now."}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={resendCooldown > 0 || isSubmitting}
-                      onClick={async () => {
-                        setIsSubmitting(true);
-                        await sendSignupEmail();
-                        setIsSubmitting(false);
-                      }}
-                      className={`w-full shrink-0 rounded-[18px] border px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${
-                        isDarkMode
-                          ? "border-violet-400/35 bg-violet-500/15 text-violet-100 hover:bg-violet-500/22"
-                          : "border-violet-200 bg-white text-violet-800 hover:bg-violet-50"
-                      }`}
-                    >
-                      {resendCooldown > 0 ? `Try again in ${resendCooldown}s` : "Resend email"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+              </>
+            )}
           </SurfaceCard>
         </div>
         <LegalPolicyModal
