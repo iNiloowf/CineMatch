@@ -1,5 +1,6 @@
 "use client";
 
+import { processLock } from "@supabase/auth-js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -82,6 +83,12 @@ export function getSupabaseBrowserClient() {
         detectSessionInUrl: true,
         flowType: "pkce",
         storageKey: AUTH_STORAGE_KEY,
+        /**
+         * Use in-process locks instead of the Web Locks API (`navigator.locks`).
+         * The default navigator lock can throw "stolen lock" errors when multiple
+         * tabs or Strict Mode compete for the same lock name.
+         */
+        lock: processLock,
       },
       },
     );
