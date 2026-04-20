@@ -323,17 +323,18 @@ export default function SignInPage() {
                 isDarkMode ? "text-white" : "text-slate-900"
               }`}
             >
-              Offline / local mode
+              Supabase not configured
             </p>
             <p
               className={`text-sm leading-6 ${
                 isDarkMode ? "text-slate-300" : "text-slate-600"
               }`}
             >
-              Supabase is not configured. Add your project keys to enable hosted sign-in, or set{" "}
-              <span className="font-mono text-[0.8125rem]">NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD</span>{" "}
-              in <span className="font-mono text-[0.8125rem]">.env.local</span> and sign in with a
-              seeded in-memory demo email using that password (never commit real secrets).
+              Add <span className="font-mono text-[0.8125rem]">NEXT_PUBLIC_SUPABASE_URL</span> and{" "}
+              <span className="font-mono text-[0.8125rem]">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</span>{" "}
+              to your <span className="font-mono text-[0.8125rem]">.env.local</span> for hosted
+              sign-in. Without them, only accounts created on this device in the same browser session
+              can sign in locally.
             </p>
           </SurfaceCard>
         ) : null}

@@ -1,8 +1,8 @@
 import type { AuthUser } from "@/lib/types";
 
 /**
- * Offline / in-memory demo users omit `password`; sign-in then requires
- * `NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD` (set locally, never committed).
+ * Offline / in-memory users may omit `password`; optional env
+ * `NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD` can unlock legacy seeded accounts (local dev only).
  * Users created via offline signup keep a per-account `password`.
  */
 export function verifyOfflineDemoPassword(user: AuthUser, password: string): boolean {

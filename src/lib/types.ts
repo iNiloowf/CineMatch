@@ -35,7 +35,7 @@ export type ProProfileStyle =
   | "rainbow";
 
 export type AuthUser = User & {
-  /** Set for accounts created in offline signup; otherwise use env shared demo password. */
+  /** Set for accounts created in offline signup; optional env shared password for legacy seeded users. */
   password?: string;
 };
 

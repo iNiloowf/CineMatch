@@ -295,7 +295,7 @@ export default function SignUpPage() {
               <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 {isSupabaseConfigured()
                   ? "We will email you a confirmation link to finish setup."
-                  : "Use a real email style address for the demo — your profile starts right away."}
+                  : "Your account is stored in this browser only until Supabase is configured for hosted auth."}
               </p>
             </div>
 

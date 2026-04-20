@@ -2347,8 +2347,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (!match) {
       return {
         ok: false,
-        message:
-          "We couldn’t find a matching account. For offline demo, set NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD in .env.local and use that password with a seeded demo email.",
+        message: "Invalid email or password.",
       };
     }
 
