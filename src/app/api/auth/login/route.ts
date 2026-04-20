@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { loginUser } from "@/server/mock-db";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return apiJsonError(
         401,
         error?.message ?? "Invalid email or password.",
-        { code: API_ERROR_CODES.UNAUTHORIZED },
+        { code: API_ERROR_CODES.UNAUTHORIZED, request },
       );
     }
 
@@ -75,16 +75,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      user: data.user,
-      session: {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at,
-        expires_in: data.session.expires_in,
-        token_type: data.session.token_type,
+    return apiJsonOk(
+      {
+        user: data.user,
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+          expires_in: data.session.expires_in,
+          token_type: data.session.token_type,
+        },
       },
-    });
+      request,
+    );
   }
 
   const user = loginUser(body.email, body.password);
@@ -92,8 +95,9 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return apiJsonError(401, "Invalid email or password.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
-  return NextResponse.json({ user });
+  return apiJsonOk({ user }, request);
 }

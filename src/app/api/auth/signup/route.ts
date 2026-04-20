@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { signupUser } from "@/server/mock-db";
 import { z } from "zod";
@@ -21,8 +21,9 @@ export async function POST(request: NextRequest) {
   if ("error" in result) {
     return apiJsonError(409, result.error ?? "Signup failed.", {
       code: API_ERROR_CODES.CONFLICT,
+      request,
     });
   }
 
-  return NextResponse.json(result, { status: 201 });
+  return apiJsonOk(result, request, { status: 201 });
 }

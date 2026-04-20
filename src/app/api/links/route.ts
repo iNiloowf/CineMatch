@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody, parseSearchParams } from "@/server/api-validation";
 import { getDatabase, linkUsers } from "@/server/mock-db";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -31,14 +32,17 @@ export async function GET(request: NextRequest) {
   const database = getDatabase();
 
   if (userId && userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN });
+    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
   }
 
   const effectiveUserId = userId ?? auth.userId;
 
-  return NextResponse.json({
-    links: database.links.filter((link) => link.users.includes(effectiveUserId)),
-  });
+  return apiJsonOk(
+    {
+      links: database.links.filter((link) => link.users.includes(effectiveUserId)),
+    },
+    request,
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -47,6 +51,7 @@ export async function POST(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -57,9 +62,9 @@ export async function POST(request: NextRequest) {
   const body = parsedBody.data;
 
   if (!body.userId || body.userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN });
+    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
   }
 
   const link = linkUsers(body.userId, body.targetUserId);
-  return NextResponse.json({ link }, { status: 201 });
+  return apiJsonOk({ link }, request, { status: 201 });
 }

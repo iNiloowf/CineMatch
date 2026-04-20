@@ -14,6 +14,28 @@ function getProjectRef() {
   }
 }
 
+/** Propagate or mint `x-request-id` for API / log correlation. */
+function withRequestId(request: NextRequest) {
+  const id = request.headers.get("x-request-id") ?? crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", id);
+  return { id, requestHeaders };
+}
+
+function nextWithRequestId(request: NextRequest) {
+  const { id, requestHeaders } = withRequestId(request);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("x-request-id", id);
+  return response;
+}
+
+function rewriteWithRequestId(request: NextRequest, url: URL) {
+  const { id, requestHeaders } = withRequestId(request);
+  const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+  response.headers.set("x-request-id", id);
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -21,7 +43,7 @@ export function middleware(request: NextRequest) {
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = "/admin";
     rewriteUrl.searchParams.set(ADMIN_ENTRY_TOKEN_PARAM, "1");
-    return NextResponse.rewrite(rewriteUrl);
+    return rewriteWithRequestId(request, rewriteUrl);
   }
 
   if (pathname === "/admin" || pathname === "/admin/") {
@@ -32,14 +54,14 @@ export function middleware(request: NextRequest) {
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.pathname = BLOCKED_ADMIN_FALLBACK_PATH;
       rewriteUrl.search = "";
-      return NextResponse.rewrite(rewriteUrl);
+      return rewriteWithRequestId(request, rewriteUrl);
     }
   }
 
   const projectRef = getProjectRef();
 
   if (!projectRef) {
-    return NextResponse.next();
+    return nextWithRequestId(request);
   }
 
   const staleCookieNames = request.cookies
@@ -48,10 +70,12 @@ export function middleware(request: NextRequest) {
     .filter((name) => name.startsWith(`sb-${projectRef}-`));
 
   if (staleCookieNames.length === 0) {
-    return NextResponse.next();
+    return nextWithRequestId(request);
   }
 
-  const response = NextResponse.next();
+  const { id, requestHeaders } = withRequestId(request);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("x-request-id", id);
   const hostname = request.nextUrl.hostname;
   const hostParts = hostname.split(".");
   const rootDomain =

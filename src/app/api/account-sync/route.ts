@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { checkRateLimit } from "@/server/rate-limit";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
@@ -220,6 +220,7 @@ export async function GET(request: NextRequest) {
   if (!authToken) {
     return apiJsonError(401, "You need to be logged in to sync account data.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -236,6 +237,7 @@ export async function GET(request: NextRequest) {
       {
         code: API_ERROR_CODES.RATE_LIMITED,
         headers: { "Retry-After": String(syncRate.retryAfterSec) },
+        request,
       },
     );
   }
@@ -246,7 +248,7 @@ export async function GET(request: NextRequest) {
     return apiJsonError(
       500,
       "Account sync is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -327,14 +329,17 @@ export async function GET(request: NextRequest) {
     ),
   );
 
-  return NextResponse.json({
-    profile: (profileResult.data ?? null) as ProfileRow | null,
-    settings: settingsResult.data,
-    links: linkRows,
-    invites: (invitesResult.data ?? []) as InviteRow[],
-    partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],
-    swipes: swipeRows,
-    sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
-    movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
-  });
+  return apiJsonOk(
+    {
+      profile: (profileResult.data ?? null) as ProfileRow | null,
+      settings: settingsResult.data,
+      links: linkRows,
+      invites: (invitesResult.data ?? []) as InviteRow[],
+      partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],
+      swipes: swipeRows,
+      sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
+      movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
+    },
+    request,
+  );
 }

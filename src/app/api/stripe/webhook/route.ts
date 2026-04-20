@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import type Stripe from "stripe";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { getStripeServerClient, getStripeWebhookSecret } from "@/server/stripe";
 
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
   if (!stripe || !webhookSecret || !supabaseAdmin) {
     return apiJsonError(503, "Stripe webhook is not configured on the server.", {
       code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+      request,
     });
   }
 
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
   if (!signature) {
     return apiJsonError(400, "Missing stripe-signature header.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       400,
       error instanceof Error ? error.message : "Invalid webhook signature.",
-      { code: API_ERROR_CODES.BAD_REQUEST },
+      { code: API_ERROR_CODES.BAD_REQUEST, request },
     );
   }
 
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     const intentToken = session.client_reference_id;
 
     if (!intentToken) {
-      return NextResponse.json({ ok: true, ignored: "missing_client_reference_id" });
+      return apiJsonOk({ ok: true, ignored: "missing_client_reference_id" }, request);
     }
 
     const checkoutIntentResult = await supabaseAdmin
@@ -67,17 +69,17 @@ export async function POST(request: NextRequest) {
       return apiJsonError(
         500,
         checkoutIntentResult.error.message ?? "Could not load checkout intent.",
-        { code: API_ERROR_CODES.INTERNAL },
+        { code: API_ERROR_CODES.INTERNAL, request },
       );
     }
 
     const checkoutIntent = (checkoutIntentResult.data ?? null) as CheckoutIntentRow | null;
     if (!checkoutIntent) {
-      return NextResponse.json({ ok: true, ignored: "intent_not_found" });
+      return apiJsonOk({ ok: true, ignored: "intent_not_found" }, request);
     }
 
     if (checkoutIntent.status === "completed") {
-      return NextResponse.json({ ok: true, alreadyProcessed: true });
+      return apiJsonOk({ ok: true, alreadyProcessed: true }, request);
     }
 
     const now = new Date().toISOString();
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
         500,
         purchaserSettingsResult.error.message ??
           "Could not activate purchaser subscription tier.",
-        { code: API_ERROR_CODES.INTERNAL },
+        { code: API_ERROR_CODES.INTERNAL, request },
       );
     }
 
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
         return apiJsonError(
           500,
           createGiftCodeResult.error.message ?? "Could not create gift code.",
-          { code: API_ERROR_CODES.INTERNAL },
+          { code: API_ERROR_CODES.INTERNAL, request },
         );
       }
     }
@@ -138,7 +140,7 @@ export async function POST(request: NextRequest) {
       return apiJsonError(
         500,
         markCompletedResult.error.message ?? "Could not mark checkout as completed.",
-        { code: API_ERROR_CODES.INTERNAL },
+        { code: API_ERROR_CODES.INTERNAL, request },
       );
     }
   }
@@ -158,5 +160,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return apiJsonOk({ ok: true }, request);
 }

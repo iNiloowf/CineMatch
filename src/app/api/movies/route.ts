@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { Movie } from "@/lib/types";
+import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
 import { isTmdbConfigured, searchTmdbMedia } from "@/server/tmdb";
@@ -69,17 +70,23 @@ export async function GET(request: NextRequest) {
       mergedMovies.find((movie) => movie.id === movieId) ??
       null;
 
-    return NextResponse.json({
-      movie: exactMovie,
-      source: isTmdbConfigured() ? "tmdb+mock" : "mock",
-    });
+    return apiJsonOk(
+      {
+        movie: exactMovie,
+        source: isTmdbConfigured() ? "tmdb+mock" : "mock",
+      },
+      request,
+    );
   }
 
   if (!userId) {
-    return NextResponse.json({
-      movies: filteredMovies,
-      source: isTmdbConfigured() ? "tmdb+mock" : "mock",
-    });
+    return apiJsonOk(
+      {
+        movies: filteredMovies,
+        source: isTmdbConfigured() ? "tmdb+mock" : "mock",
+      },
+      request,
+    );
   }
 
   const now = Date.now();
@@ -104,8 +111,11 @@ export async function GET(request: NextRequest) {
       .map((entry) => entry.movieId),
   );
 
-  return NextResponse.json({
-    movies: filteredMovies.filter((movie) => !hiddenMovies.has(movie.id)),
-    source: isTmdbConfigured() ? "tmdb+mock" : "mock",
-  });
+  return apiJsonOk(
+    {
+      movies: filteredMovies.filter((movie) => !hiddenMovies.has(movie.id)),
+      source: isTmdbConfigured() ? "tmdb+mock" : "mock",
+    },
+    request,
+  );
 }

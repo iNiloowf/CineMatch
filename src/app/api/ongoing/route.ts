@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
+import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { getSharedWatchlist } from "@/server/mock-db";
 
@@ -18,5 +19,5 @@ export async function GET(request: NextRequest) {
     (entry) => entry.progress > 0 && entry.progress < 100 && !entry.watched,
   );
 
-  return NextResponse.json({ ongoing });
+  return apiJsonOk({ ongoing }, request);
 }

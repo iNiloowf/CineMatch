@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
   if (!authToken) {
     return apiJsonError(401, "You need to be logged in first.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(429, "Too many invite accept attempts. Try again later.", {
       code: API_ERROR_CODES.RATE_LIMITED,
       headers: { "Retry-After": String(rate.retryAfterSec) },
+      request,
     });
   }
 
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       "Invite connections are not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -81,18 +83,21 @@ export async function POST(request: NextRequest) {
   if (!invite) {
     return apiJsonError(404, "This invite link is invalid.", {
       code: API_ERROR_CODES.NOT_FOUND,
+      request,
     });
   }
 
   if (invite.inviter_id === currentUserId) {
     return apiJsonError(400, "You can’t use your own invite link.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
   if (invite.used_at) {
     return apiJsonError(400, "This invite link has already been used.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -107,6 +112,7 @@ export async function POST(request: NextRequest) {
   if (existingLinkResult.data) {
     return apiJsonError(400, "You’re already connected with this person.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -132,7 +138,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       linkResult.error?.message ?? "We couldn’t connect these accounts yet.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -158,12 +164,15 @@ export async function POST(request: NextRequest) {
     .eq("id", invite.inviter_id)
     .maybeSingle();
 
-  return NextResponse.json({
-    link: linkResult.data,
-    partnerProfile: inviterProfileResult.data ?? null,
-    invite: {
-      ...invite,
-      used_at: new Date().toISOString(),
+  return apiJsonOk(
+    {
+      link: linkResult.data,
+      partnerProfile: inviterProfileResult.data ?? null,
+      invite: {
+        ...invite,
+        used_at: new Date().toISOString(),
+      },
     },
-  });
+    request,
+  );
 }

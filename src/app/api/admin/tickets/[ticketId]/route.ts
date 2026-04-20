@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { parseJsonBody } from "@/server/api-validation";
@@ -67,6 +67,7 @@ export async function PATCH(
     return apiJsonError(429, "Too many admin ticket requests. Try again shortly.", {
       code: API_ERROR_CODES.RATE_LIMITED,
       headers: { "Retry-After": String(adminRate.retryAfterSec) },
+      request,
     });
   }
 
@@ -85,6 +86,7 @@ export async function PATCH(
   if (!ticketId) {
     return apiJsonError(400, "Ticket id is required.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -105,13 +107,14 @@ export async function PATCH(
     return apiJsonError(
       500,
       updateResult.error.message ?? "Ticket status could not be updated.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
   if (!updateResult.data) {
     return apiJsonError(404, "Ticket was not found.", {
       code: API_ERROR_CODES.NOT_FOUND,
+      request,
     });
   }
 
@@ -126,11 +129,14 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json({
-    ok: true,
-    ticketId: updateResult.data.id,
-    status: updateResult.data.status,
-  });
+  return apiJsonOk(
+    {
+      ok: true,
+      ticketId: updateResult.data.id,
+      status: updateResult.data.status,
+    },
+    request,
+  );
 }
 
 export async function DELETE(
@@ -148,6 +154,7 @@ export async function DELETE(
     return apiJsonError(429, "Too many admin ticket requests. Try again shortly.", {
       code: API_ERROR_CODES.RATE_LIMITED,
       headers: { "Retry-After": String(adminRate.retryAfterSec) },
+      request,
     });
   }
 
@@ -160,6 +167,7 @@ export async function DELETE(
   if (!ticketId) {
     return apiJsonError(400, "Ticket id is required.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -177,13 +185,14 @@ export async function DELETE(
     return apiJsonError(
       500,
       deleteResult.error.message ?? "Ticket could not be deleted.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
   if (!deleteResult.data) {
     return apiJsonError(404, "Ticket was not found.", {
       code: API_ERROR_CODES.NOT_FOUND,
+      request,
     });
   }
 
@@ -196,5 +205,5 @@ export async function DELETE(
     },
   });
 
-  return NextResponse.json({ ok: true, ticketId: deleteResult.data.id });
+  return apiJsonOk({ ok: true, ticketId: deleteResult.data.id }, request);
 }

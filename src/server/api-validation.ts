@@ -33,6 +33,7 @@ export async function parseJsonBody<TSchema extends z.ZodTypeAny>(
       ok: false,
       response: apiJsonError(400, "Invalid JSON body.", {
         code: API_ERROR_CODES.INVALID_JSON,
+        request,
       }),
     };
   }
@@ -49,6 +50,7 @@ export async function parseJsonBody<TSchema extends z.ZodTypeAny>(
       response: apiJsonError(400, "Invalid request body.", {
         code: API_ERROR_CODES.VALIDATION_ERROR,
         details,
+        request,
       }),
     };
   }
@@ -73,6 +75,7 @@ export function parseSearchParams<TSchema extends z.ZodTypeAny>(
       response: apiJsonError(400, "Invalid query parameters.", {
         code: API_ERROR_CODES.VALIDATION_ERROR,
         details,
+        request,
       }),
     };
   }

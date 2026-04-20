@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       "Email sending is not configured yet. Add your Supabase service role key and Resend settings first.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       {
         code: API_ERROR_CODES.RATE_LIMITED,
         extra: { retryAfterSeconds: cooldown.retryAfterSeconds },
+        request,
       },
     );
   }
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       400,
       error?.message ?? "We couldn’t prepare your confirmation email right now.",
-      { code: API_ERROR_CODES.BAD_REQUEST },
+      { code: API_ERROR_CODES.BAD_REQUEST, request },
     );
   }
 
@@ -111,13 +112,17 @@ export async function POST(request: NextRequest) {
   if (emailError) {
     return apiJsonError(502, "The confirmation email could not be sent right now.", {
       code: API_ERROR_CODES.BAD_GATEWAY,
+      request,
     });
   }
 
-  return NextResponse.json({
-    message: resendTestMode
-      ? `Testing mode is on. Your confirmation email was sent to ${emailTarget} instead of ${email}.`
-      : "Your confirmation email is on the way. Open it to finish creating your account.",
-    retryAfterSeconds: cooldown.retryAfterSeconds,
-  });
+  return apiJsonOk(
+    {
+      message: resendTestMode
+        ? `Testing mode is on. Your confirmation email was sent to ${emailTarget} instead of ${email}.`
+        : "Your confirmation email is on the way. Open it to finish creating your account.",
+      retryAfterSeconds: cooldown.retryAfterSeconds,
+    },
+    request,
+  );
 }

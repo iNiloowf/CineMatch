@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         : API_ERROR_CODES.INTERNAL;
     return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
       code,
+      request,
     });
   }
 
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
   if (movieResult.error) {
     return apiJsonError(500, movieResult.error.message, {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       swipeResult.error?.message ?? "The swipe could not be saved.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -150,9 +152,12 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({
-    swipe: swipeResult.data,
-  });
+  return apiJsonOk(
+    {
+      swipe: swipeResult.data,
+    },
+    request,
+  );
 }
 
 export async function DELETE(request: NextRequest) {
@@ -165,6 +170,7 @@ export async function DELETE(request: NextRequest) {
         : API_ERROR_CODES.INTERNAL;
     return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
       code,
+      request,
     });
   }
 
@@ -180,6 +186,7 @@ export async function DELETE(request: NextRequest) {
     return apiJsonError(429, "Too many undo requests. Try again shortly.", {
       code: API_ERROR_CODES.RATE_LIMITED,
       headers: { "Retry-After": String(undoRate.retryAfterSec) },
+      request,
     });
   }
 
@@ -198,6 +205,7 @@ export async function DELETE(request: NextRequest) {
   if (deleteResult.error) {
     return apiJsonError(500, deleteResult.error.message, {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 
@@ -208,5 +216,5 @@ export async function DELETE(request: NextRequest) {
     metadata: { movieId },
   });
 
-  return NextResponse.json({ ok: true });
+  return apiJsonOk({ ok: true }, request);
 }

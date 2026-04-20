@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 /** Machine-readable codes for API clients; human text stays in `error`. */
@@ -35,6 +36,26 @@ const DEFAULT_CODE_BY_STATUS: Partial<Record<number, ApiErrorCode>> = {
  * JSON error payload: `{ error, code, details? }` plus optional `extra` fields
  * (e.g. `retryAfterSeconds`) for backward compatibility with existing clients.
  */
+function mergeRequestIdHeader(headers: Headers, request?: NextRequest) {
+  const id = request?.headers.get("x-request-id");
+  if (id) {
+    headers.set("x-request-id", id);
+  }
+}
+
+/** Attach `x-request-id` from the incoming request (e.g. raw `NextResponse.json` bodies). */
+export function echoRequestId(response: NextResponse, request: NextRequest): NextResponse {
+  mergeRequestIdHeader(response.headers, request);
+  return response;
+}
+
+/** JSON success with optional `x-request-id` echo for log correlation. */
+export function apiJsonOk<T>(data: T, request: NextRequest, init?: ResponseInit): NextResponse {
+  const headers = new Headers(init?.headers);
+  mergeRequestIdHeader(headers, request);
+  return NextResponse.json(data, { ...init, headers });
+}
+
 export function apiJsonError(
   status: number,
   message: string,
@@ -43,6 +64,7 @@ export function apiJsonError(
     details?: unknown;
     headers?: HeadersInit;
     extra?: Record<string, unknown>;
+    request?: NextRequest;
   },
 ): NextResponse {
   const code =
@@ -60,8 +82,11 @@ export function apiJsonError(
     body.details = options.details;
   }
 
+  const headers = new Headers(options?.headers);
+  mergeRequestIdHeader(headers, options?.request);
+
   return NextResponse.json(body, {
     status,
-    headers: options?.headers,
+    headers,
   });
 }

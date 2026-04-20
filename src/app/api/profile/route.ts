@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody, parseSearchParams } from "@/server/api-validation";
 import { getDatabase, updateProfile } from "@/server/mock-db";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -31,19 +32,22 @@ export async function GET(request: NextRequest) {
   const userId = parsedQuery.data.userId;
 
   if (userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN });
+    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
   }
 
   const database = getDatabase();
   const user = database.users.find((entry) => entry.id === userId);
 
   if (!user) {
-    return apiJsonError(404, "User not found.", { code: API_ERROR_CODES.NOT_FOUND });
+    return apiJsonError(404, "User not found.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+      request,
+    });
   }
 
   const safeUser = { ...user };
   Reflect.deleteProperty(safeUser, "password");
-  return NextResponse.json({ profile: safeUser });
+  return apiJsonOk({ profile: safeUser }, request);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -52,6 +56,7 @@ export async function PATCH(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -62,14 +67,17 @@ export async function PATCH(request: NextRequest) {
   const body = parsedBody.data;
 
   if (!body.userId || body.userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN });
+    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
   }
 
   const user = updateProfile(body.userId, { bio: body.bio, city: body.city });
 
   if (!user) {
-    return apiJsonError(404, "User not found.", { code: API_ERROR_CODES.NOT_FOUND });
+    return apiJsonError(404, "User not found.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+      request,
+    });
   }
 
-  return NextResponse.json({ profile: user });
+  return apiJsonOk({ profile: user }, request);
 }

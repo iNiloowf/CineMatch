@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { logSecurityAudit } from "@/server/security-audit";
@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(429, "Too many admin requests. Try again shortly.", {
       code: API_ERROR_CODES.RATE_LIMITED,
       headers: { "Retry-After": String(adminRate.retryAfterSec) },
+      request,
     });
   }
 
@@ -228,6 +229,7 @@ export async function POST(request: NextRequest) {
     } else {
       return apiJsonError(500, settingsError?.message ?? "Server error.", {
         code: API_ERROR_CODES.INTERNAL,
+        request,
       });
     }
   } else {
@@ -251,6 +253,7 @@ export async function POST(request: NextRequest) {
   if (firstError) {
     return apiJsonError(500, firstError.message, {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 
@@ -284,6 +287,7 @@ export async function POST(request: NextRequest) {
     } else {
       return apiJsonError(500, ticketsError.message ?? "Unknown error.", {
         code: API_ERROR_CODES.INTERNAL,
+        request,
       });
     }
   } else {
@@ -300,6 +304,7 @@ export async function POST(request: NextRequest) {
   if (movieTitlesResult.error) {
     return apiJsonError(500, movieTitlesResult.error.message, {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 
@@ -365,39 +370,42 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({
-    stats: {
-      users: usersCountResult.count ?? 0,
-      movies: moviesCountResult.count ?? 0,
-      swipes: swipesCountResult.count ?? 0,
-      acceptedSwipes: acceptedSwipesCountResult.count ?? 0,
-      rejectedSwipes: rejectedSwipesCountResult.count ?? 0,
-      acceptedLinks: acceptedLinksCountResult.count ?? 0,
-      pendingLinks: pendingLinksCountResult.count ?? 0,
-      watchedEntries: watchedEntriesCountResult.count ?? 0,
-      openTickets: openTicketsCount,
-      proUsers,
+  return apiJsonOk(
+    {
+      stats: {
+        users: usersCountResult.count ?? 0,
+        movies: moviesCountResult.count ?? 0,
+        swipes: swipesCountResult.count ?? 0,
+        acceptedSwipes: acceptedSwipesCountResult.count ?? 0,
+        rejectedSwipes: rejectedSwipesCountResult.count ?? 0,
+        acceptedLinks: acceptedLinksCountResult.count ?? 0,
+        pendingLinks: pendingLinksCountResult.count ?? 0,
+        watchedEntries: watchedEntriesCountResult.count ?? 0,
+        openTickets: openTicketsCount,
+        proUsers,
+      },
+      ticketsUnavailable,
+      userRows,
+      recentSwipes: recentSwipes.map((swipe) => ({
+        userId: swipe.user_id,
+        userName: profileById.get(swipe.user_id)?.full_name ?? swipe.user_id,
+        movieId: swipe.movie_id,
+        movieTitle: movieById.get(swipe.movie_id)?.title ?? swipe.movie_id,
+        decision: swipe.decision,
+        createdAt: swipe.created_at,
+      })),
+      tickets: recentTickets.map((ticket) => ({
+        id: ticket.id,
+        userId: ticket.user_id,
+        userName: profileById.get(ticket.user_id)?.full_name ?? ticket.user_id,
+        userEmail: profileById.get(ticket.user_id)?.email ?? "",
+        subject: ticket.subject,
+        message: ticket.message,
+        priority: ticket.priority,
+        status: ticket.status,
+        createdAt: ticket.created_at,
+      })),
     },
-    ticketsUnavailable,
-    userRows,
-    recentSwipes: recentSwipes.map((swipe) => ({
-      userId: swipe.user_id,
-      userName: profileById.get(swipe.user_id)?.full_name ?? swipe.user_id,
-      movieId: swipe.movie_id,
-      movieTitle: movieById.get(swipe.movie_id)?.title ?? swipe.movie_id,
-      decision: swipe.decision,
-      createdAt: swipe.created_at,
-    })),
-    tickets: recentTickets.map((ticket) => ({
-      id: ticket.id,
-      userId: ticket.user_id,
-      userName: profileById.get(ticket.user_id)?.full_name ?? ticket.user_id,
-      userEmail: profileById.get(ticket.user_id)?.email ?? "",
-      subject: ticket.subject,
-      message: ticket.message,
-      priority: ticket.priority,
-      status: ticket.status,
-      createdAt: ticket.created_at,
-    })),
-  });
+    request,
+  );
 }

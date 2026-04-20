@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       "Magic link email is not configured yet. Add your Supabase service role key and Resend settings first.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       {
         code: API_ERROR_CODES.RATE_LIMITED,
         extra: { retryAfterSeconds: cooldown.retryAfterSeconds },
+        request,
       },
     );
   }
@@ -62,11 +63,14 @@ export async function POST(request: NextRequest) {
   });
 
   if (error || !data.properties.action_link) {
-    return NextResponse.json({
-      message:
-        "If this email belongs to an account, a magic link is on the way.",
-      retryAfterSeconds: cooldown.retryAfterSeconds,
-    });
+    return apiJsonOk(
+      {
+        message:
+          "If this email belongs to an account, a magic link is on the way.",
+        retryAfterSeconds: cooldown.retryAfterSeconds,
+      },
+      request,
+    );
   }
 
   const magicLink = data.properties.action_link;
@@ -98,13 +102,17 @@ export async function POST(request: NextRequest) {
   if (emailError) {
     return apiJsonError(502, "The magic link email could not be sent right now.", {
       code: API_ERROR_CODES.BAD_GATEWAY,
+      request,
     });
   }
 
-  return NextResponse.json({
-    message: resendTestMode
-      ? `Testing mode is on. Your magic link email was sent to ${emailTarget} instead of ${email}.`
-      : "A magic link is on the way. Check your inbox and spam folder.",
-    retryAfterSeconds: cooldown.retryAfterSeconds,
-  });
+  return apiJsonOk(
+    {
+      message: resendTestMode
+        ? `Testing mode is on. Your magic link email was sent to ${emailTarget} instead of ${email}.`
+        : "A magic link is on the way. Check your inbox and spam folder.",
+      retryAfterSeconds: cooldown.retryAfterSeconds,
+    },
+    request,
+  );
 }

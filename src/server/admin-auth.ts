@@ -67,6 +67,7 @@ export async function requireServerAdmin(
       ok: false,
       response: apiJsonError(401, "You must be signed in to use admin endpoints.", {
         code: API_ERROR_CODES.UNAUTHORIZED,
+        request,
       }),
     };
   }
@@ -78,7 +79,7 @@ export async function requireServerAdmin(
       response: apiJsonError(
         500,
         "Admin endpoints are not configured on the server yet.",
-        { code: API_ERROR_CODES.INTERNAL },
+        { code: API_ERROR_CODES.INTERNAL, request },
       ),
     };
   }
@@ -89,6 +90,7 @@ export async function requireServerAdmin(
       ok: false,
       response: apiJsonError(401, "Admin session could not be verified.", {
         code: API_ERROR_CODES.UNAUTHORIZED,
+        request,
       }),
     };
   }
@@ -113,7 +115,7 @@ export async function requireServerAdmin(
       response: apiJsonError(
         403,
         "Your account does not have admin access. Set ADMIN_EMAILS / ADMIN_USER_IDS (or Supabase app_metadata.role=admin) on the server and restart.",
-        { code: API_ERROR_CODES.FORBIDDEN },
+        { code: API_ERROR_CODES.FORBIDDEN, request },
       ),
     };
   }

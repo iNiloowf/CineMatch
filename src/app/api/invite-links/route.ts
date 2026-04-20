@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
   if (!authToken) {
     return apiJsonError(401, "You need to be logged in to create an invite link.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
       {
         code: API_ERROR_CODES.RATE_LIMITED,
         headers: { "Retry-After": String(rate.retryAfterSec) },
+        request,
       },
     );
   }
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       "Invite creation is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
       400,
       insertResult.error?.message ??
         "We couldn’t save this invite link right now.",
-      { code: API_ERROR_CODES.BAD_REQUEST },
+      { code: API_ERROR_CODES.BAD_REQUEST, request },
     );
   }
 
@@ -90,8 +92,11 @@ export async function POST(request: NextRequest) {
     metadata: { inviteId: insertResult.data.id },
   });
 
-  return NextResponse.json({
-    invite: insertResult.data,
-    url: `${getAppUrl(request)}/connect?invite=${token}`,
-  });
+  return apiJsonOk(
+    {
+      invite: insertResult.data,
+      url: `${getAppUrl(request)}/connect?invite=${token}`,
+    },
+    request,
+  );
 }

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { fetchTmdbTrailerEmbedUrl } from "@/server/tmdb";
 
@@ -21,13 +21,15 @@ export async function GET(request: NextRequest) {
     if (!trailerUrl) {
       return apiJsonError(404, "No trailer is available for this title yet.", {
         code: API_ERROR_CODES.NOT_FOUND,
+        request,
       });
     }
 
-    return NextResponse.json({ trailerUrl });
+    return apiJsonOk({ trailerUrl }, request);
   } catch {
     return apiJsonError(500, "We couldn’t load the trailer right now.", {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 }

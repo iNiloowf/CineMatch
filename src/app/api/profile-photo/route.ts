@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { NextRequest } from "next/server";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   if (!admin) {
     return apiJsonError(503, "Photo upload service is not configured.", {
       code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+      request,
     });
   }
 
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return apiJsonError(400, "Invalid upload payload.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -38,12 +41,14 @@ export async function POST(request: NextRequest) {
   if (!file) {
     return apiJsonError(400, "No photo was provided.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
   if (!file.type.startsWith("image/")) {
     return apiJsonError(400, "Only image uploads are allowed.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       413,
       "Photo is too large. Please choose a smaller image.",
-      { code: API_ERROR_CODES.PAYLOAD_TOO_LARGE },
+      { code: API_ERROR_CODES.PAYLOAD_TOO_LARGE, request },
     );
   }
 
@@ -71,7 +76,7 @@ export async function POST(request: NextRequest) {
     return apiJsonError(
       500,
       uploadResult.error.message || "Photo upload failed.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
@@ -84,9 +89,9 @@ export async function POST(request: NextRequest) {
   if (!imageUrl) {
     return apiJsonError(500, "Could not resolve uploaded photo URL.", {
       code: API_ERROR_CODES.INTERNAL,
+      request,
     });
   }
 
-  return NextResponse.json({ imageUrl });
+  return apiJsonOk({ imageUrl }, request);
 }
-

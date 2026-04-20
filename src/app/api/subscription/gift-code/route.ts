@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   if (!auth) {
     return apiJsonError(401, "You need to be logged in first.", {
       code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
     });
   }
 
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
   if (!supabaseAdmin) {
     return apiJsonError(503, "Billing is not configured on the server yet.", {
       code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+      request,
     });
   }
 
@@ -55,31 +57,34 @@ export async function GET(request: NextRequest) {
     return apiJsonError(
       500,
       giftCodeResult.error.message ?? "Could not load gift code.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
   const giftCode = (giftCodeResult.data ?? null) as GiftCodeRow | null;
   if (!giftCode) {
-    return NextResponse.json({ giftCode: null });
+    return apiJsonOk({ giftCode: null }, request);
   }
 
   const isExpired = new Date(giftCode.expires_at).getTime() <= Date.now();
   const isActive = giftCode.status === "active" && !isExpired;
 
   if (activeOnly && !isActive) {
-    return NextResponse.json({ giftCode: null });
+    return apiJsonOk({ giftCode: null }, request);
   }
 
-  return NextResponse.json({
-    giftCode: {
-      id: giftCode.id,
-      code: giftCode.code,
-      status: isExpired && giftCode.status === "active" ? "expired" : giftCode.status,
-      expiresAt: giftCode.expires_at,
-      intendedPartnerUserId: giftCode.intended_partner_user_id,
-      redeemedAt: giftCode.redeemed_at,
-      createdAt: giftCode.created_at,
+  return apiJsonOk(
+    {
+      giftCode: {
+        id: giftCode.id,
+        code: giftCode.code,
+        status: isExpired && giftCode.status === "active" ? "expired" : giftCode.status,
+        expiresAt: giftCode.expires_at,
+        intendedPartnerUserId: giftCode.intended_partner_user_id,
+        redeemedAt: giftCode.redeemed_at,
+        createdAt: giftCode.created_at,
+      },
     },
-  });
+    request,
+  );
 }

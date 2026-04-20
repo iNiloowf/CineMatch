@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
-import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { requireServerAdmin } from "@/server/admin-auth";
 
@@ -60,6 +60,7 @@ export async function PATCH(
   if (!userId) {
     return apiJsonError(400, "User id is required.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -79,6 +80,7 @@ export async function PATCH(
   if (Object.keys(updates).length === 0) {
     return apiJsonError(400, "Provide at least one subscription update field.", {
       code: API_ERROR_CODES.BAD_REQUEST,
+      request,
     });
   }
 
@@ -102,7 +104,7 @@ export async function PATCH(
           500,
           authUserResult.error.message ??
             "Subscription columns are missing and auth metadata fallback failed.",
-          { code: API_ERROR_CODES.INTERNAL },
+          { code: API_ERROR_CODES.INTERNAL, request },
         );
       }
 
@@ -125,19 +127,19 @@ export async function PATCH(
           500,
           metadataUpdateResult.error.message ??
             "Could not persist subscription fallback metadata.",
-          { code: API_ERROR_CODES.INTERNAL },
+          { code: API_ERROR_CODES.INTERNAL, request },
         );
       }
 
-      return NextResponse.json({ ok: true, usedFallback: "auth_metadata" });
+      return apiJsonOk({ ok: true, usedFallback: "auth_metadata" }, request);
     }
 
     return apiJsonError(
       500,
       updateResult.error.message ?? "Subscription update failed.",
-      { code: API_ERROR_CODES.INTERNAL },
+      { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return apiJsonOk({ ok: true }, request);
 }
