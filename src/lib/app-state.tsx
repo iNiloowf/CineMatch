@@ -950,7 +950,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         currentUserId != null &&
         data.settings[currentUserId]?.reduceMotion === true;
       const shouldReduce = Boolean(fromUser || media.matches);
-      document.documentElement.toggleAttribute("data-reduce-motion", shouldReduce);
+      // CSS uses `html[data-reduce-motion="true"]` — toggleAttribute() does not set ="true".
+      if (shouldReduce) {
+        document.documentElement.setAttribute("data-reduce-motion", "true");
+      } else {
+        document.documentElement.removeAttribute("data-reduce-motion");
+      }
     };
 
     syncReduceMotion();

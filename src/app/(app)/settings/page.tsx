@@ -10,6 +10,7 @@ import { getAchievementBadgeMeta } from "@/lib/achievement-badge-meta";
 import type { Achievement } from "@/lib/types";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
+import { defaultSettings } from "@/lib/mock-data";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -113,7 +114,12 @@ export default function SettingsPage() {
     setAdminSubscriptionPreviewMode,
     updateSettings,
   } = useAppState();
-  const settings = currentUserId ? data.settings[currentUserId] : null;
+  const settings = useMemo(() => {
+    if (!currentUserId) {
+      return defaultSettings;
+    }
+    return { ...defaultSettings, ...data.settings[currentUserId] };
+  }, [currentUserId, data.settings]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketMessage, setTicketMessage] = useState("");
   const [ticketPriority, setTicketPriority] = useState<"low" | "normal" | "high">("normal");
@@ -403,10 +409,6 @@ export default function SettingsPage() {
       );
     }
   };
-
-  if (!settings) {
-    return null;
-  }
 
   return (
     <div className="space-y-5">
