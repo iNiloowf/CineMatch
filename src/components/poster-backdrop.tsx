@@ -1,10 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import {
   type PosterDisplayProfile,
   posterSizesAttr,
   resolvePosterUrl,
 } from "@/lib/poster-image";
+
+const TMDB_HOST = "image.tmdb.org";
 
 type PosterBackdropProps = {
   imageUrl: string | undefined;
@@ -17,6 +20,7 @@ type PosterBackdropProps = {
 /**
  * Lazy/async poster layer (TMDB width chosen by profile). Renders nothing when URL missing.
  * Parent should be `relative overflow-hidden`; stack gradients above this node.
+ * TMDB URLs use `next/image` for stable layout; other URLs fall back to `<img>`.
  */
 export function PosterBackdrop({
   imageUrl,
@@ -31,13 +35,30 @@ export function PosterBackdrop({
 
   const eager = profile === "hero";
   const fitClass = objectFit === "contain" ? "object-contain" : "object-cover";
+  const sizes = posterSizesAttr(profile);
+  const isTmdb = src.includes(TMDB_HOST);
+
+  if (isTmdb) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        aria-hidden
+        fill
+        sizes={sizes}
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : "low"}
+        className={`pointer-events-none ${fitClass} ${className}`}
+      />
+    );
+  }
 
   return (
     <img
       src={src}
       alt=""
       aria-hidden
-      sizes={posterSizesAttr(profile)}
+      sizes={sizes}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={eager ? "high" : "low"}
