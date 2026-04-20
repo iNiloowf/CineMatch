@@ -86,6 +86,8 @@
   --z-banner: 145;
   --z-modal-backdrop: 450;
   --z-modal: 500;
+  /* Stacked modal (e.g. trailer over movie details) — must sit above --z-modal */
+  --z-modal-nested: 560;
 
   --color-surface-glass: rgba(255, 255, 255, 0.78);
   --color-surface-muted: #f1f5f9;

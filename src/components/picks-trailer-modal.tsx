@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type PicksTrailerModalProps = {
   title: string;
@@ -10,6 +11,8 @@ type PicksTrailerModalProps = {
   trailerError: string | null;
   onClose: () => void;
   onRetry: () => void;
+  /** When true, render above a parent modal (e.g. movie details). */
+  variant?: "default" | "nested";
 };
 
 export function PicksTrailerModal({
@@ -20,8 +23,11 @@ export function PicksTrailerModal({
   trailerError,
   onClose,
   onRetry,
+  variant = "default",
 }: PicksTrailerModalProps) {
   const [playerReady, setPlayerReady] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, panelRef);
 
   useEffect(() => {
     setPlayerReady(false);
@@ -48,12 +54,19 @@ export function PicksTrailerModal({
   const showFetchState = isLoadingTrailer && !trailerUrl;
   const showPlayerLoading = Boolean(trailerUrl) && !playerReady && !trailerError;
 
+  const zClass =
+    variant === "nested" ? "z-[var(--z-modal-nested)]" : "z-[var(--z-modal)]";
+
   return (
     <div
-      className="ui-overlay z-[var(--z-modal)] bg-slate-950/38 backdrop-blur-[2px]"
+      className={`ui-overlay ${zClass} bg-slate-950/38 backdrop-blur-[2px]`}
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="picks-trailer-modal-title"
         onClick={(event) => event.stopPropagation()}
         className={`details-modal-shell ui-shell ui-shell--dialog-lg flex max-h-[min(92dvh,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-[28px] border shadow-[0_16px_48px_rgba(15,23,42,0.2)] ${
           isDarkMode ? "border-white/10 bg-slate-950/96" : "border-white/75 bg-white/96"
@@ -62,6 +75,7 @@ export function PicksTrailerModal({
         <span className="ui-modal-accent-bar" aria-hidden />
         <div className="ui-shell-header !border-b-black/6 !py-3 shrink-0">
           <p
+            id="picks-trailer-modal-title"
             className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${
               isDarkMode ? "text-slate-300" : "text-slate-600"
             }`}

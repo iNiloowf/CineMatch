@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { computeMovieMatchPercent } from "@/lib/match-score";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { useAppState } from "@/lib/app-state";
 import type { Movie } from "@/lib/types";
 
@@ -39,7 +40,9 @@ export function MovieDetailsModal({
   footer,
 }: MovieDetailsModalProps) {
   const { acceptedMovies, onboardingPreferences } = useAppState();
+  const detailsPanelRef = useRef<HTMLDivElement>(null);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
+  useFocusTrap(Boolean(movie) && !isTrailerVisible, detailsPanelRef);
   const acceptedGenres = useMemo(() => {
     const set = new Set<string>();
     for (const acceptedMovie of acceptedMovies) {
@@ -147,8 +150,11 @@ export function MovieDetailsModal({
         }}
       />
       <div
+        ref={detailsPanelRef}
         role="dialog"
         aria-modal="true"
+        aria-hidden={isTrailerVisible}
+        inert={isTrailerVisible ? true : undefined}
         aria-labelledby="movie-details-modal-title"
         className={`details-modal-shell ui-shell pointer-events-auto absolute inset-x-0 bottom-0 top-0 z-10 mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-lg flex-col shadow-[0_24px_80px_rgba(15,23,42,0.2)] ${
           isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
@@ -326,6 +332,7 @@ export function MovieDetailsModal({
           trailerUrl={trailerUrl}
           isLoadingTrailer={isLoadingTrailer}
           trailerError={trailerError}
+          variant="nested"
           onClose={() => setIsTrailerVisible(false)}
           onRetry={() => void fetchTrailerForMovie()}
         />

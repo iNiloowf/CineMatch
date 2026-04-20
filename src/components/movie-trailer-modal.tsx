@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import type { Movie } from "@/lib/types";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export type MovieTrailerModalProps = {
   movie: Movie;
@@ -29,12 +31,19 @@ export function MovieTrailerModal({
   onAccept,
   onReject,
 }: MovieTrailerModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, panelRef);
+
   return (
     <div
       className="ui-overlay z-[var(--z-modal)] bg-slate-950/40 backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="movie-trailer-modal-title"
         onClick={(event) => event.stopPropagation()}
         className={`details-modal-shell ui-shell ui-shell--dialog-lg overflow-hidden rounded-[28px] border shadow-[0_16px_48px_rgba(15,23,42,0.2)] ${
           isDarkMode ? "border-white/10 bg-slate-950/96" : "border-white/75 bg-white/96"
@@ -43,6 +52,7 @@ export function MovieTrailerModal({
         <span className="ui-modal-accent-bar" aria-hidden />
         <div className="ui-shell-header !border-b-black/6 !py-3">
           <p
+            id="movie-trailer-modal-title"
             className={`min-w-0 flex-1 truncate text-[11px] font-medium tracking-[0.01em] ${
               isDarkMode ? "text-slate-300" : "text-slate-600"
             }`}
