@@ -1154,16 +1154,26 @@ function DiscoverPageContent({
 
       {isSearchOpen ? (
         <div
+          role="presentation"
           className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] backdrop-blur-2xl ${
             isDarkMode ? "bg-slate-950/88" : "bg-slate-950/48"
           }`}
+          onClick={() => {
+            setSearchQuery("");
+            setSearchResults([]);
+            setIsSearchSheetOpen(false);
+          }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discover-search-sheet-title"
             className={`ui-shell ui-shell--fullscreen ui-shell--dialog-md mx-auto flex flex-col overflow-hidden border ${
               isDarkMode
                 ? "border-white/10 bg-slate-950"
                 : "border-slate-200/80 bg-white"
             }`}
+            onClick={(event) => event.stopPropagation()}
           >
             <span className="ui-modal-accent-bar" aria-hidden />
             <div
@@ -1173,6 +1183,7 @@ function DiscoverPageContent({
             >
               <div className="min-w-0 flex-1">
                 <h2
+                  id="discover-search-sheet-title"
                   className={`text-lg font-semibold ${
                     isDarkMode ? "text-white" : "text-slate-900"
                   }`}
@@ -1422,18 +1433,27 @@ function DiscoverPageContent({
       ) : null}
 
       {isFilterOpen ? (
-        <div className="ui-overlay ui-overlay--bottom z-[var(--z-sheet)] bg-slate-950/35 backdrop-blur-sm">
+        <div
+          role="presentation"
+          className="ui-overlay ui-overlay--bottom z-[var(--z-sheet)] bg-slate-950/35 backdrop-blur-sm"
+          onClick={() => setIsFilterOpen(false)}
+        >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discover-filter-sheet-title"
             className={`ui-shell ui-shell--bottom expand-soft w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
             }`}
+            onClick={(event) => event.stopPropagation()}
           >
             <span className="ui-modal-accent-bar" aria-hidden />
             <div className="ui-shell-header">
               <div className="min-w-0 flex-1">
                 <p
+                  id="discover-filter-sheet-title"
                   className={`text-lg font-semibold ${
                     isDarkMode ? "text-white" : "text-slate-900"
                   }`}
