@@ -879,6 +879,56 @@ export default function PicksPage() {
           />
         </div>
 
+        {acceptedMovies.length > 0 ? (
+          <div
+            className={`fade-up-enter flex rounded-[14px] p-1 ${
+              isDarkMode
+                ? "bg-white/[0.06] ring-1 ring-white/10"
+                : "bg-slate-100 ring-1 ring-slate-200/90"
+            }`}
+            role="tablist"
+            aria-label="Picks lists"
+            style={{ animationDelay: "24ms" }}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={picksListTab === "queue"}
+              onClick={() => setPicksListTab("queue")}
+              className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
+                picksListTab === "queue"
+                  ? isDarkMode
+                    ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
+                    : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
+                  : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              To watch
+              <span className="ml-1 tabular-nums font-semibold opacity-80">({queueCount})</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={picksListTab === "watched"}
+              onClick={() => setPicksListTab("watched")}
+              className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
+                picksListTab === "watched"
+                  ? isDarkMode
+                    ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
+                    : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
+                  : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Watched
+              <span className="ml-1 tabular-nums font-semibold opacity-80">({watchedCount})</span>
+            </button>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
@@ -1129,53 +1179,6 @@ export default function PicksPage() {
 
         {acceptedMovies.length > 0 ? (
           <div className="space-y-3">
-            <div
-              className={`flex rounded-[14px] p-1 ${
-                isDarkMode
-                  ? "bg-white/[0.06] ring-1 ring-white/10"
-                  : "bg-slate-100 ring-1 ring-slate-200/90"
-              }`}
-              role="tablist"
-              aria-label="Picks lists"
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={picksListTab === "queue"}
-                onClick={() => setPicksListTab("queue")}
-                className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
-                  picksListTab === "queue"
-                    ? isDarkMode
-                      ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
-                      : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
-                    : isDarkMode
-                      ? "text-slate-400 hover:text-slate-200"
-                      : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                To watch
-                <span className="ml-1 tabular-nums font-semibold opacity-80">({queueCount})</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={picksListTab === "watched"}
-                onClick={() => setPicksListTab("watched")}
-                className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
-                  picksListTab === "watched"
-                    ? isDarkMode
-                      ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
-                      : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
-                    : isDarkMode
-                      ? "text-slate-400 hover:text-slate-200"
-                      : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Watched
-                <span className="ml-1 tabular-nums font-semibold opacity-80">({watchedCount})</span>
-              </button>
-            </div>
-
             <div className="space-y-3 sm:space-y-3.5">
               {picksListTab === "queue" ? (
                 queueMovies.length > 0 ? (

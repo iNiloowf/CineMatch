@@ -1649,6 +1649,16 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
     0 12px 24px rgba(109, 40, 217, 0.28) !important;
 }
 
+/* Sliding pill under icons — active tab background comes from the pill, not the link */
+[data-bottom-nav-panel="true"][data-bottom-nav-pill="true"] [data-bottom-nav-link="true"][data-active="true"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.theme-dark [data-bottom-nav-panel="true"][data-bottom-nav-pill="true"] [data-bottom-nav-link="true"][data-active="true"] [data-bottom-nav-icon="true"] {
+  color: #ffffff !important;
+}
+
 .theme-dark .text-slate-900 {
   color: #f8fafc !important;
 }
