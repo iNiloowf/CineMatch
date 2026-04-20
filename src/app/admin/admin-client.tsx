@@ -80,10 +80,27 @@ export default function AdminDesktopPage() {
     isError: boolean;
   } | null>(null);
   const [subscriptionSavingUserId, setSubscriptionSavingUserId] = useState<string | null>(null);
+  const [currentAdminUserId, setCurrentAdminUserId] = useState<string | null>(null);
+  const [userPendingDelete, setUserPendingDelete] = useState<DashboardUserRow | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [userDeleteError, setUserDeleteError] = useState("");
   const adminGateRef = useRef<AdminGate>("booting");
 
   useEffect(() => {
     adminGateRef.current = adminGate;
+  }, [adminGate]);
+
+  useEffect(() => {
+    if (adminGate !== "ready") {
+      return;
+    }
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return;
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      setCurrentAdminUserId(data.session?.user?.id ?? null);
+    });
   }, [adminGate]);
 
   const getAdminAccessToken = useCallback(async () => {
@@ -416,8 +433,47 @@ export default function AdminDesktopPage() {
     setIsTicketActionLoading(false);
     setTicketActionFeedback("");
     setSubscriptionActionState(null);
+    setUserPendingDelete(null);
+    setUserDeleteError("");
+    setCurrentAdminUserId(null);
     setAdminGate("sign_in");
   }, []);
+
+  const handleConfirmDeleteUser = useCallback(async () => {
+    if (!userPendingDelete) {
+      return;
+    }
+
+    if (userPendingDelete.id === currentAdminUserId) {
+      setUserDeleteError("You cannot delete your own account.");
+      return;
+    }
+
+    setIsDeletingUser(true);
+    setUserDeleteError("");
+
+    try {
+      const accessToken = await getAdminAccessToken();
+      const response = await fetch(`/api/admin/users/${encodeURIComponent(userPendingDelete.id)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const body = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(body.error ?? "User could not be deleted.");
+      }
+
+      setUserPendingDelete(null);
+      await loadDashboard();
+    } catch (error) {
+      setUserDeleteError(error instanceof Error ? error.message : "User could not be deleted.");
+    } finally {
+      setIsDeletingUser(false);
+    }
+  }, [userPendingDelete, currentAdminUserId, getAdminAccessToken, loadDashboard]);
 
   const handleRetryAccess = useCallback(async () => {
     setDashboardError("");
@@ -738,6 +794,74 @@ export default function AdminDesktopPage() {
           </div>
         ) : null}
 
+        {userPendingDelete ? (
+          <div className="ui-overlay z-[calc(var(--z-modal-backdrop)+1)] bg-slate-950/55 backdrop-blur-md">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => {
+                if (!isDeletingUser) {
+                  setUserPendingDelete(null);
+                  setUserDeleteError("");
+                }
+              }}
+              className="absolute inset-0 cursor-default bg-transparent"
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="admin-delete-user-title"
+              className={`relative z-10 mx-auto w-[min(92vw,440px)] overflow-hidden rounded-[24px] border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] ${
+                isDarkMode
+                  ? "border-rose-500/25 bg-slate-950 text-slate-100"
+                  : "border-rose-200/90 bg-white text-slate-900"
+              }`}
+            >
+              <h2 id="admin-delete-user-title" className="text-lg font-bold text-rose-300">
+                Delete user permanently?
+              </h2>
+              <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
+                This removes the Supabase Auth account{" "}
+                <strong className={isDarkMode ? "text-white" : "text-slate-900"}>{userPendingDelete.email}</strong> (
+                {userPendingDelete.name}). Profile, settings, swipes, links, invites, and related rows are removed via
+                database cascades. Profile photos in storage are deleted first. This cannot be undone.
+              </p>
+              {userDeleteError ? (
+                <p
+                  className={`mt-3 rounded-[12px] border px-3 py-2 text-sm ${
+                    isDarkMode
+                      ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
+                      : "border-rose-200 bg-rose-50 text-rose-800"
+                  }`}
+                >
+                  {userDeleteError}
+                </p>
+              ) : null}
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  disabled={isDeletingUser}
+                  onClick={() => {
+                    setUserPendingDelete(null);
+                    setUserDeleteError("");
+                  }}
+                  className="ui-btn ui-btn-secondary w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingUser || userPendingDelete.id === currentAdminUserId}
+                  onClick={() => void handleConfirmDeleteUser()}
+                  className="ui-btn ui-btn-danger w-full sm:w-auto disabled:opacity-50"
+                >
+                  {isDeletingUser ? "Deleting…" : "Delete user"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         <div className={`mb-6 rounded-[30px] border p-5 sm:p-6 ${glassPanel}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -959,6 +1083,9 @@ export default function AdminDesktopPage() {
               }`}
             >
               <h2 className="text-lg font-semibold">Users</h2>
+              <p className={`mt-1 text-xs ${softText}`}>
+                Delete removes the auth user; linked data is cleaned up by database cascades.
+              </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
@@ -970,6 +1097,7 @@ export default function AdminDesktopPage() {
                     <th className="px-4 py-2 text-right font-semibold">Rejected</th>
                     <th className="px-4 py-2 text-right font-semibold">Links</th>
                     <th className="px-4 py-2 text-left font-semibold">Plan</th>
+                    <th className="px-4 py-2 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -985,11 +1113,24 @@ export default function AdminDesktopPage() {
                           {row.effectiveSubscriptionTier.toUpperCase()}
                         </span>
                       </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          type="button"
+                          disabled={row.id === currentAdminUserId || isDeletingUser}
+                          onClick={() => {
+                            setUserDeleteError("");
+                            setUserPendingDelete(row);
+                          }}
+                          className="text-xs font-semibold text-rose-400 hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {userRows.length === 0 ? (
                     <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={6} className="px-4 py-4 text-center">
+                      <td colSpan={7} className="px-4 py-4 text-center">
                         No users found in database.
                       </td>
                     </tr>
