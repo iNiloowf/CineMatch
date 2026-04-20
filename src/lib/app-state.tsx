@@ -1633,7 +1633,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         const sessionUser = session?.user;
 
         if (!sessionUser) {
@@ -1666,12 +1666,37 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
+        if (event === "TOKEN_REFRESHED") {
+          return;
+        }
+
         const activeSessionUser = sessionUser;
 
         const fullName =
           (activeSessionUser.user_metadata.full_name as string | undefined) ??
           activeSessionUser.email?.split("@")[0] ??
           "CineMatch User";
+
+        if (event === "USER_UPDATED") {
+          setData((current) =>
+            ensureLocalUser(current, {
+              id: activeSessionUser.id,
+              name: fullName,
+              email: activeSessionUser.email ?? "",
+              avatarImageUrl:
+                (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
+                undefined,
+            }),
+          );
+          setCurrentUserId(activeSessionUser.id);
+          setPreferredDarkMode(
+            getStoredUserTheme(activeSessionUser.id) ?? getGlobalStoredTheme(),
+          );
+          setAccountRefreshKey((current) => current + 1);
+          return;
+        }
+
+        const skipDiscoverReshuffle = event === "INITIAL_SESSION";
 
         setData((current) =>
           ensureLocalUser(current, {
@@ -1684,11 +1709,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           }),
         );
         setCurrentUserId(activeSessionUser.id);
-        refreshDiscoverShuffle(activeSessionUser.id);
+        if (!skipDiscoverReshuffle) {
+          refreshDiscoverShuffle(activeSessionUser.id);
+        }
         setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
-          getStoredUserTheme(activeSessionUser.id) ??
-            getGlobalStoredTheme(),
+          getStoredUserTheme(activeSessionUser.id) ?? getGlobalStoredTheme(),
         );
         setIsReady(true);
       },
