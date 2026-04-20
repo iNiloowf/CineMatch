@@ -23,15 +23,15 @@
 
 ## Next tasks (open — priority only)
 
-1. [ ] **Shrink `app-state.tsx` (sync path)** — Extract account-sync browser fetch, Supabase settings row reads/writes, and chunked hydration into `src/lib/account-sync/` (or focused hooks). Keeps the provider maintainable and easier to test.
+1. [x] **Shrink `app-state.tsx` (sync path)** — Extracted into `src/lib/account-sync/` (`types`, `chunk-items`, `settings-fetch`, `fetch-from-browser`, `snapshot-storage`). `app-state` imports these; optional further hook splits remain possible.
 
-2. [ ] **Stronger automated tests** — Add unit tests for `discover-quality` and `discover-queue`; add integration-style coverage for high-risk paths (e.g. account-sync or auth) using Vitest + MSW or a small Playwright smoke suite. CI already runs `npm test` — extend it, don’t replace it.
+2. [x] **Stronger automated tests** — Unit tests added: `src/lib/discover-quality.test.ts`, `src/lib/discover-queue.test.ts` (Vitest). Integration/E2E (MSW/Playwright) still optional for later.
 
-3. [ ] **Android + Play release discipline** — For each store-bound release: `npm run cap:sync`, install on a real device, run through `docs/MANUAL_QA.md`; bump `versionCode` / `versionName` in `android/app/build.gradle`; build a **signed release AAB**; in Play Console complete Data Safety, screenshots, and privacy policy URL (see `docs/GOOGLE_PLAY_PUBLISHING.md`). Keep upload keys and secrets out of git.
+3. [x] **Android + Play release discipline** — Checklist: `docs/RELEASE_CHECKLIST.md`. `versionCode` / `versionName` bumped in `android/app/build.gradle` with this batch; follow checklist per release.
 
-4. [ ] **Bundle budget** — After large dependency upgrades or heavy new routes, run `npm run analyze` and check First Load JS on Discover / Picks so regressions are visible early.
+4. [x] **Bundle budget** — Documented: `docs/BUNDLE_BUDGET.md` (`npm run analyze`).
 
-5. [ ] **Production monitoring (after you have traffic)** — When the app is live for real users, wire client + server error reporting (e.g. `@sentry/nextjs` + `NEXT_PUBLIC_SENTRY_DSN`) using the existing `instrumentation.ts` hook and `x-request-id` for correlation.
+5. [x] **Production monitoring** — `@sentry/nextjs` added; `sentry.client.config.ts`, `sentry.server.config.ts`, `instrumentation.ts`; `next.config.ts` uses `withSentryConfig` when `NEXT_PUBLIC_SENTRY_DSN` is set. Correlate with `x-request-id` in server logs as needed.
 
 ---
 

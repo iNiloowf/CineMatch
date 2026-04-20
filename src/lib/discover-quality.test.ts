@@ -1,0 +1,54 @@
+import { describe, expect, it } from "vitest";
+import {
+  getRuntimeMinutes,
+  MIN_DISCOVER_RATING,
+  MIN_DISCOVER_RUNTIME_MINUTES,
+  passesDiscoverQualityThreshold,
+} from "@/lib/discover-quality";
+import type { Movie } from "@/lib/types";
+
+function movie(over: Partial<Movie> & Pick<Movie, "id">): Movie {
+  return {
+    id: over.id,
+    title: over.title ?? "T",
+    mediaType: over.mediaType ?? "movie",
+    year: over.year ?? 2020,
+    runtime: over.runtime ?? "90 min",
+    rating: over.rating ?? 7,
+    genre: over.genre ?? ["Drama"],
+    description: over.description ?? "",
+    poster: over.poster ?? { eyebrow: "", accentFrom: "#000", accentTo: "#111" },
+  };
+}
+
+describe("discover-quality", () => {
+  it("getRuntimeMinutes parses h and m", () => {
+    expect(getRuntimeMinutes("2h 15m")).toBe(135);
+    expect(getRuntimeMinutes("45m")).toBe(45);
+    expect(getRuntimeMinutes("N/A")).toBeNull();
+    expect(getRuntimeMinutes("")).toBeNull();
+  });
+
+  it("passesDiscoverQualityThreshold rejects low rating", () => {
+    const m = movie({ id: "a", rating: MIN_DISCOVER_RATING - 0.5 });
+    expect(passesDiscoverQualityThreshold(m)).toBe(false);
+  });
+
+  it("passesDiscoverQualityThreshold rejects short runtime", () => {
+    const m = movie({
+      id: "b",
+      rating: MIN_DISCOVER_RATING,
+      runtime: `${MIN_DISCOVER_RUNTIME_MINUTES - 1}m`,
+    });
+    expect(passesDiscoverQualityThreshold(m)).toBe(false);
+  });
+
+  it("passesDiscoverQualityThreshold accepts solid movie", () => {
+    const m = movie({
+      id: "c",
+      rating: MIN_DISCOVER_RATING,
+      runtime: `${MIN_DISCOVER_RUNTIME_MINUTES} min`,
+    });
+    expect(passesDiscoverQualityThreshold(m)).toBe(true);
+  });
+});

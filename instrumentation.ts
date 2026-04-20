@@ -1,8 +1,9 @@
 /**
- * Next.js instrumentation hook. Enable Sentry with:
- * `npx @sentry/wizard@latest -i nextjs` and set `NEXT_PUBLIC_SENTRY_DSN`.
- * The wizard wires this file and `next.config` automatically.
+ * Next.js instrumentation. Sentry loads when `NEXT_PUBLIC_SENTRY_DSN` is set.
+ * Correlate with `x-request-id` in your own logs; optional `SENTRY_ORG` / `SENTRY_PROJECT` for source maps via CI.
  */
 export async function register() {
-  // Intentionally empty — add Sentry via the official wizard when needed.
+  if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    await import("./sentry.server.config");
+  }
 }

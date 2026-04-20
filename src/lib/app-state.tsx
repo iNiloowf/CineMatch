@@ -31,6 +31,22 @@ import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
+import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
+import {
+  getStoredAccountSnapshot,
+  persistAccountSnapshot,
+} from "@/lib/account-sync/snapshot-storage";
+import type {
+  AccountSyncPayload,
+  InviteRow,
+  LinkRow,
+  MovieRow,
+  ProfileRow,
+  SettingsRow,
+  SharedWatchRow,
+  SwipeRow,
+} from "@/lib/account-sync/types";
 import {
   Achievement,
   AppData,
@@ -51,7 +67,6 @@ const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
-const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 
@@ -83,102 +98,10 @@ type InviteLinkResult =
   | { ok: true; url: string }
   | { ok: false; message: string };
 
-type ProfileRow = {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_text: string;
-  avatar_image_url?: string | null;
-  bio: string;
-  city: string;
-  profile_style?: ProProfileStyle | null;
-};
-
-type SettingsRow = {
-  user_id: string;
-  dark_mode: boolean;
-  notifications: boolean;
-  autoplay_trailers: boolean;
-  hide_spoilers: boolean;
-  cellular_sync: boolean;
-  reduce_motion?: boolean | null;
-  subscription_tier?: "free" | "pro" | null;
-  admin_mode_simulate_pro?: boolean | null;
-};
-
-type SwipeRow = {
-  user_id: string;
-  movie_id: string;
-  decision: SwipeDecision;
-  created_at: string;
-};
-
-type LinkRow = {
-  id: string;
-  requester_id: string;
-  target_id: string;
-  status: "accepted" | "pending";
-  created_at: string;
-};
-
-type InviteRow = {
-  id: string;
-  inviter_id: string;
-  token: string;
-  created_at: string;
-  used_at: string | null;
-};
-
-type SharedWatchRow = {
-  id: string;
-  linked_user_id: string;
-  movie_id: string;
-  watched: boolean;
-  updated_at: string;
-};
-
-type MovieRow = {
-  id: string;
-  title: string;
-  release_year: number;
-  runtime: string;
-  rating: number;
-  genres: string[];
-  description: string;
-  poster_eyebrow: string;
-  poster_image_url?: string | null;
-  accent_from: string;
-  accent_to: string;
-  trailer_url?: string | null;
-};
-
 type SupabaseErrorLike = {
   message?: string;
   code?: string;
 } | null;
-type AuthMetadataLike = Record<string, unknown> | null | undefined;
-const DEFAULT_SETTINGS_ROW_BASE = {
-  dark_mode: false,
-  notifications: true,
-  autoplay_trailers: false,
-  hide_spoilers: true,
-  cellular_sync: true,
-} as const;
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-let settingsSupportsReduceMotion: boolean | null = null;
-
-type AccountSyncPayload = {
-  profile: ProfileRow | null;
-  settings: SettingsRow | null;
-  links: LinkRow[];
-  invites: InviteRow[];
-  partnerProfiles: ProfileRow[];
-  swipes: SwipeRow[];
-  sharedWatch: SharedWatchRow[];
-  movies: MovieRow[];
-};
 
 type SubscriptionTier = "free" | "pro";
 
@@ -532,35 +455,6 @@ function persistOnboardingPreferences(
   }
 }
 
-function getAccountCacheKey(userId: string) {
-  return `${ACCOUNT_CACHE_STORAGE_PREFIX}-${userId}`;
-}
-
-function getStoredAccountSnapshot(userId: string) {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(getAccountCacheKey(userId));
-    return raw ? (JSON.parse(raw) as AccountSyncPayload) : null;
-  } catch {
-    return null;
-  }
-}
-
-function persistAccountSnapshot(userId: string, payload: AccountSyncPayload) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(getAccountCacheKey(userId), JSON.stringify(payload));
-  } catch {
-    // Ignore snapshot cache failures.
-  }
-}
-
 function getGlobalStoredTheme() {
   if (typeof window === "undefined") {
     return false;
@@ -584,180 +478,6 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
   return {
     ...current,
     movies: [...current.movies, ...newMovies],
-  };
-}
-
-function chunkItems<T>(items: T[], size: number) {
-  const chunks: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-
-  return chunks;
-}
-
-function isMissingReduceMotionColumnError(error: SupabaseErrorLike) {
-  if (!error) {
-    return false;
-  }
-
-  const normalized = (error.message ?? "").toLowerCase();
-  return (
-    error.code === "PGRST204" ||
-    (normalized.includes("reduce_motion") &&
-      (normalized.includes("column") || normalized.includes("schema cache")))
-  );
-}
-
-function isMissingOptionalSettingsColumnError(error: SupabaseErrorLike, columnName: string) {
-  if (!error) {
-    return false;
-  }
-  const normalized = (error.message ?? "").toLowerCase();
-  return (
-    error.code === "PGRST204" ||
-    (normalized.includes(columnName.toLowerCase()) &&
-      (normalized.includes("column") || normalized.includes("schema cache")))
-  );
-}
-
-function readSubscriptionTierFromMetadata(metadata: AuthMetadataLike): "free" | "pro" {
-  if (!metadata || typeof metadata !== "object") {
-    return "free";
-  }
-  const raw = metadata.subscription_tier ?? metadata.subscriptionTier;
-  return raw === "pro" ? "pro" : "free";
-}
-
-function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
-  if (!metadata || typeof metadata !== "object") {
-    return false;
-  }
-  const raw = metadata.admin_mode_simulate_pro ?? metadata.adminModeSimulatePro;
-  return raw === true;
-}
-
-async function getAuthSubscriptionFallback(
-  supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
-) {
-  const authUserResult = await supabaseClient.auth.getUser();
-  const metadata = (authUserResult.data.user?.app_metadata ?? {}) as Record<string, unknown>;
-  return {
-    subscriptionTier: readSubscriptionTierFromMetadata(metadata),
-    adminModeSimulatePro: readAdminSimulateFromMetadata(metadata),
-  };
-}
-
-async function fetchSettingsRowForSync(
-  supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
-  activeUserId: string,
-): Promise<{ data: SettingsRow | null; error: SupabaseErrorLike }> {
-  const baseSelect =
-    "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync";
-  const selectWithAllOptionalColumns = `${baseSelect}, reduce_motion, subscription_tier, admin_mode_simulate_pro`;
-  const selectWithoutSubscriptionColumns = `${baseSelect}, reduce_motion`;
-  const selectWithoutOptionalColumns = baseSelect;
-
-  const primarySelect =
-    settingsSupportsReduceMotion === false
-      ? selectWithoutSubscriptionColumns
-      : selectWithAllOptionalColumns;
-
-  const primaryResult = await supabaseClient
-    .from("settings")
-    .select(primarySelect)
-    .eq("user_id", activeUserId)
-    .maybeSingle();
-
-  if (!primaryResult.error) {
-    if (primarySelect === selectWithAllOptionalColumns) {
-      settingsSupportsReduceMotion = true;
-      if (!primaryResult.data) {
-        const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
-        return {
-          data: {
-            user_id: activeUserId,
-            ...DEFAULT_SETTINGS_ROW_BASE,
-            reduce_motion: false,
-            subscription_tier: authSubscriptionFallback.subscriptionTier,
-            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
-          } as SettingsRow,
-          error: null,
-        };
-      }
-      return {
-        data: (primaryResult.data ?? null) as SettingsRow | null,
-        error: null,
-      };
-    }
-
-    const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
-    return {
-      data: (primaryResult.data
-        ? ({
-            ...(primaryResult.data as Record<string, unknown>),
-            reduce_motion: null,
-            subscription_tier: authSubscriptionFallback.subscriptionTier,
-            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
-          } as SettingsRow)
-        : ({
-            user_id: activeUserId,
-            ...DEFAULT_SETTINGS_ROW_BASE,
-            reduce_motion: false,
-            subscription_tier: authSubscriptionFallback.subscriptionTier,
-            admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
-          } as SettingsRow)),
-      error: null,
-    };
-  }
-
-  const primaryError = primaryResult.error as SupabaseErrorLike;
-  const missingReduceMotion = isMissingReduceMotionColumnError(primaryError);
-  const missingSubscriptionTier = isMissingOptionalSettingsColumnError(
-    primaryError,
-    "subscription_tier",
-  );
-  const missingAdminSimulate = isMissingOptionalSettingsColumnError(
-    primaryError,
-    "admin_mode_simulate_pro",
-  );
-
-  if (!missingReduceMotion && !missingSubscriptionTier && !missingAdminSimulate) {
-    return { data: null, error: primaryResult.error as SupabaseErrorLike };
-  }
-
-  const fallbackSelect = missingReduceMotion
-    ? selectWithoutOptionalColumns
-    : selectWithoutSubscriptionColumns;
-  settingsSupportsReduceMotion = !missingReduceMotion;
-
-  const fallbackResult = await supabaseClient.from("settings").select(fallbackSelect).eq("user_id", activeUserId).maybeSingle();
-
-  if (fallbackResult.error) {
-    return { data: null, error: fallbackResult.error as SupabaseErrorLike };
-  }
-
-  const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);
-  return {
-    data: (fallbackResult.data
-      ? ({
-          ...(fallbackResult.data as Record<string, unknown>),
-          reduce_motion:
-            missingReduceMotion
-              ? null
-              : (fallbackResult.data as { reduce_motion?: boolean | null }).reduce_motion ?? null,
-          subscription_tier: authSubscriptionFallback.subscriptionTier,
-          admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
-        } as SettingsRow)
-      : ({
-          user_id: activeUserId,
-          ...DEFAULT_SETTINGS_ROW_BASE,
-          reduce_motion: false,
-          subscription_tier: authSubscriptionFallback.subscriptionTier,
-          admin_mode_simulate_pro: authSubscriptionFallback.adminModeSimulatePro,
-        } as SettingsRow)),
-    error: null,
   };
 }
 
@@ -1200,150 +920,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setAccountSyncError(null);
   };
 
-  const fetchAccountSyncFromBrowser = useCallback(async (
-    supabaseClient: NonNullable<ReturnType<typeof getSupabaseBrowserClient>>,
-    activeUserId: string,
-  ): Promise<AccountSyncPayload | null> => {
-    const profileResult = await supabaseClient
-      .from("profiles")
-      .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
-      .eq("id", activeUserId)
-      .maybeSingle();
-
-    if (profileResult.error) {
-      return null;
-    }
-
-    const [settingsResult, linksResult, invitesResult] = await Promise.all([
-      fetchSettingsRowForSync(supabaseClient, activeUserId),
-      supabaseClient
-        .from("linked_users")
-        .select("id, requester_id, target_id, status, created_at")
-        .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`),
-      supabaseClient
-        .from("invite_links")
-        .select("id, inviter_id, token, created_at, used_at")
-        .eq("inviter_id", activeUserId)
-        .order("created_at", { ascending: false }),
-    ]);
-
-    if (settingsResult.error || linksResult.error || invitesResult.error) {
-      return null;
-    }
-
-    const linkRows = ((linksResult.data ?? []) as LinkRow[]) ?? [];
-    const partnerIds = Array.from(
-      new Set(
-        linkRows.map((link) =>
-          link.requester_id === activeUserId ? link.target_id : link.requester_id,
-        ),
-      ),
-    );
-    const sharedLinkIds = linkRows.map((link) => link.id);
-
-    const partnerProfilesPromise =
-      partnerIds.length > 0
-        ? supabaseClient
-            .from("profiles")
-            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
-            .in("id", partnerIds)
-        : Promise.resolve({
-            data: [] as ProfileRow[],
-            error: null,
-          });
-
-    const ownSwipesPromise = supabaseClient
-      .from("swipes")
-      .select("user_id, movie_id, decision, created_at")
-      .eq("user_id", activeUserId);
-
-    const partnerAcceptedSwipesPromise =
-      partnerIds.length > 0
-        ? supabaseClient
-            .from("swipes")
-            .select("user_id, movie_id, decision, created_at")
-            .in("user_id", partnerIds)
-            .eq("decision", "accepted")
-        : Promise.resolve({
-            data: [] as SwipeRow[],
-            error: null,
-          });
-
-    const sharedWatchPromise =
-      sharedLinkIds.length > 0
-        ? supabaseClient
-            .from("shared_watchlist")
-            .select("id, linked_user_id, movie_id, watched, updated_at")
-            .in("linked_user_id", sharedLinkIds)
-        : Promise.resolve({
-            data: [] as SharedWatchRow[],
-            error: null,
-          });
-
-    const [
-      partnerProfilesResult,
-      ownSwipesResult,
-      partnerAcceptedSwipesResult,
-      sharedWatchResult,
-    ] =
-      await Promise.all([
-        partnerProfilesPromise,
-        ownSwipesPromise,
-        partnerAcceptedSwipesPromise,
-        sharedWatchPromise,
-      ]);
-
-    if (
-      partnerProfilesResult.error ||
-      ownSwipesResult.error ||
-      partnerAcceptedSwipesResult.error ||
-      sharedWatchResult.error
-    ) {
-      return null;
-    }
-
-    const swipeRows = [
-      ...((((ownSwipesResult.data ?? []) as SwipeRow[]) ?? [])),
-      ...((((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? [])),
-    ];
-    const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
-    const movieChunks = chunkItems(movieIds, 75);
-    const movieResults = await Promise.all(
-      movieChunks.map((ids) =>
-        ids.length > 0
-          ? supabaseClient
-              .from("movies")
-              .select(
-                "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
-              )
-              .in("id", ids)
-          : Promise.resolve({
-              data: [] as MovieRow[],
-              error: null,
-            }),
-      ),
-    );
-
-    if (movieResults.some((result) => result.error)) {
-      return null;
-    }
-
-    return {
-      profile: (profileResult.data ?? null) as ProfileRow | null,
-      settings: settingsResult.data ?? null,
-      links: linkRows,
-      invites: ((invitesResult.data ?? []) as InviteRow[]) ?? [],
-      partnerProfiles:
-        ((partnerProfilesResult.data ?? []) as ProfileRow[]) ?? [],
-      swipes: swipeRows,
-      sharedWatch:
-        ((sharedWatchResult.data ?? []) as SharedWatchRow[]) ?? [],
-      movies: movieResults.flatMap(
-        (result) => ((result.data ?? []) as MovieRow[]) ?? [],
-      ),
-    };
-  }, []);
-
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
@@ -1768,11 +1344,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [
-    accountRefreshKey,
-    currentUserId,
-    fetchAccountSyncFromBrowser,
-  ]);
+  }, [accountRefreshKey, currentUserId]);
 
   const currentUser =
     currentUserId
