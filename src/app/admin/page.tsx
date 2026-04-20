@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type DashboardStats = {
   users: number;
@@ -79,6 +80,11 @@ export default function AdminDesktopPage() {
     isError: boolean;
   } | null>(null);
   const [subscriptionSavingUserId, setSubscriptionSavingUserId] = useState<string | null>(null);
+  const adminGateRef = useRef<AdminGate>("booting");
+
+  useEffect(() => {
+    adminGateRef.current = adminGate;
+  }, [adminGate]);
 
   const getAdminAccessToken = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
@@ -128,46 +134,91 @@ export default function AdminDesktopPage() {
     [getAdminAccessToken],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-
-    void (async () => {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) {
-        setDashboardError("Authentication client is not available.");
-        setAdminGate("forbidden");
-        return;
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (cancelled) {
-        return;
-      }
-
+  const attemptLoadWithSession = useCallback(
+    async (session: Session | null) => {
       if (!session) {
-        setAdminGate("sign_in");
         return;
       }
-
       const ok = await loadDashboard();
-      if (cancelled) {
-        return;
-      }
-
       if (ok) {
         setAdminGate("ready");
         setActiveTab("overview");
       } else {
         setAdminGate("forbidden");
       }
-    })();
+    },
+    [loadDashboard],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase || !isSupabaseConfigured()) {
+      setDashboardError(
+        "Supabase is not configured. Admin tools require NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+      );
+      setAdminGate("forbidden");
+      return;
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (event === "INITIAL_SESSION") {
+        if (session) {
+          await attemptLoadWithSession(session);
+          return;
+        }
+        const { data } = await supabase.auth.refreshSession();
+        if (cancelled) {
+          return;
+        }
+        if (data.session) {
+          await attemptLoadWithSession(data.session);
+        } else {
+          setAdminGate("sign_in");
+        }
+        return;
+      }
+
+      if (event === "SIGNED_IN" && session) {
+        const gate = adminGateRef.current;
+        if (gate === "sign_in" || gate === "booting") {
+          await attemptLoadWithSession(session);
+        }
+      }
+    });
 
     return () => {
       cancelled = true;
+      authListener.subscription.unsubscribe();
     };
-  }, [loadDashboard]);
+  }, [attemptLoadWithSession]);
+
+  const handleRecheckSession = useCallback(async () => {
+    setDashboardError("");
+    setAdminGate("booting");
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setDashboardError("Authentication client is not available.");
+      setAdminGate("forbidden");
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session) {
+      await attemptLoadWithSession(sessionData.session);
+      return;
+    }
+    const { data: refreshData } = await supabase.auth.refreshSession();
+    if (refreshData.session) {
+      await attemptLoadWithSession(refreshData.session);
+      return;
+    }
+    setAdminGate("sign_in");
+  }, [attemptLoadWithSession]);
 
   useEffect(() => {
     if (!selectedTicket || !dashboard) {
@@ -440,16 +491,40 @@ export default function AdminDesktopPage() {
           {adminGate === "sign_in" ? (
             <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
               <h1 className="text-2xl font-bold">Admin Desktop</h1>
-              <p className={`mt-2 text-sm ${softText}`}>
-                Sign in with your normal CineMatch account on the main app. Your user must be allowlisted for admin
-                on the server (<span className="font-mono text-xs">ADMIN_EMAILS</span> /{" "}
-                <span className="font-mono text-xs">ADMIN_USER_IDS</span> or Supabase{" "}
-                <span className="font-mono text-xs">app_metadata.role=admin</span>). Then open this URL again.
+              <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
+                No Supabase session was found in this browser. The admin API only accepts a{" "}
+                <strong className="text-slate-200">cloud (Supabase) sign-in</strong> — not the offline / browser-only
+                demo login.
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <ol
+                className={`mt-4 list-inside list-decimal space-y-2 text-sm leading-relaxed ${softText}`}
+              >
+                <li>
+                  On the home page, sign in with email and password (or OAuth) so your session is stored for this
+                  domain.
+                </li>
+                <li>
+                  After you are signed in, open this admin entry URL again (the hidden path that rewrites to admin).
+                </li>
+                <li>
+                  Your user must be allowlisted on the server:{" "}
+                  <span className="font-mono text-[11px]">ADMIN_EMAILS</span>,{" "}
+                  <span className="font-mono text-[11px]">ADMIN_USER_IDS</span>, or Supabase{" "}
+                  <span className="font-mono text-[11px]">app_metadata.role=admin</span>. Redeploy after changing env
+                  vars on Vercel.
+                </li>
+              </ol>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Link href="/" className="ui-btn ui-btn-primary w-full text-center sm:w-auto">
-                  Open CineMatch sign in
+                  Open CineMatch (sign in)
                 </Link>
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary w-full sm:w-auto"
+                  onClick={() => void handleRecheckSession()}
+                >
+                  I signed in — check again
+                </button>
               </div>
             </section>
           ) : null}
