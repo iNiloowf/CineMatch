@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
+import { parseSearchParams } from "@/server/api-validation";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+
+const giftCodeQuerySchema = z.object({
+  activeOnly: z.string().optional(),
+});
 
 type GiftCodeRow = {
   id: string;
@@ -13,21 +20,26 @@ type GiftCodeRow = {
 };
 
 export async function GET(request: NextRequest) {
+  const parsedQuery = parseSearchParams(request, giftCodeQuerySchema);
+  if (!parsedQuery.ok) {
+    return parsedQuery.response;
+  }
+
   const auth = await verifyBearerFromRequest(request);
   if (!auth) {
-    return NextResponse.json({ error: "You need to be logged in first." }, { status: 401 });
+    return apiJsonError(401, "You need to be logged in first.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const supabaseAdmin = getSupabaseAdminClient();
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Billing is not configured on the server yet." },
-      { status: 503 },
-    );
+    return apiJsonError(503, "Billing is not configured on the server yet.", {
+      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+    });
   }
 
-  const searchParams = request.nextUrl.searchParams;
-  const activeOnly = searchParams.get("activeOnly") !== "false";
+  const activeOnly = parsedQuery.data.activeOnly !== "false";
 
   const giftCodeResult = await supabaseAdmin
     .from("subscription_partner_gift_codes")
@@ -40,9 +52,10 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (giftCodeResult.error) {
-    return NextResponse.json(
-      { error: giftCodeResult.error.message ?? "Could not load gift code." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      giftCodeResult.error.message ?? "Could not load gift code.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

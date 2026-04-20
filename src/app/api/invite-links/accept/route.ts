@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
@@ -32,10 +33,9 @@ export async function POST(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
-    return NextResponse.json(
-      { error: "You need to be logged in first." },
-      { status: 401 },
-    );
+    return apiJsonError(401, "You need to be logged in first.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const ip = clientIp(request);
@@ -46,21 +46,19 @@ export async function POST(request: NextRequest) {
   });
 
   if (!rate.ok) {
-    return NextResponse.json(
-      { error: "Too many invite accept attempts. Try again later." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(rate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many invite accept attempts. Try again later.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(rate.retryAfterSec) },
+    });
   }
 
   const supabaseAdmin = getSupabaseAdminClient();
 
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Invite connections are not configured on the server yet." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Invite connections are not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -81,24 +79,21 @@ export async function POST(request: NextRequest) {
   const invite = (inviteResult.data ?? null) as InviteRow | null;
 
   if (!invite) {
-    return NextResponse.json(
-      { error: "This invite link is invalid." },
-      { status: 404 },
-    );
+    return apiJsonError(404, "This invite link is invalid.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+    });
   }
 
   if (invite.inviter_id === currentUserId) {
-    return NextResponse.json(
-      { error: "You can’t use your own invite link." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "You can’t use your own invite link.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (invite.used_at) {
-    return NextResponse.json(
-      { error: "This invite link has already been used." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "This invite link has already been used.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const existingLinkResult = await supabaseAdmin
@@ -110,10 +105,9 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (existingLinkResult.data) {
-    return NextResponse.json(
-      { error: "You’re already connected with this person." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "You’re already connected with this person.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const createdAt = new Date().toISOString();
@@ -135,12 +129,10 @@ export async function POST(request: NextRequest) {
   };
 
   if (linkResult.error || !linkResult.data) {
-    return NextResponse.json(
-      {
-        error:
-          linkResult.error?.message ?? "We couldn’t connect these accounts yet.",
-      },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      linkResult.error?.message ?? "We couldn’t connect these accounts yet.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

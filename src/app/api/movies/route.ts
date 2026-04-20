@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { Movie } from "@/lib/types";
+import { parseSearchParams } from "@/server/api-validation";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
 import { isTmdbConfigured, searchTmdbMedia } from "@/server/tmdb";
+
+const moviesQuerySchema = z.object({
+  userId: z.string().optional(),
+  movieId: z.string().optional(),
+  source: z.string().optional(),
+  query: z.string().optional(),
+});
 const MIN_DISCOVER_RATING = 3;
 const MIN_DISCOVER_RUNTIME_MINUTES = 20;
 
@@ -35,11 +44,16 @@ function passesDiscoverQualityThreshold(movie: Movie) {
 }
 
 export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get("userId");
-  const movieId = request.nextUrl.searchParams.get("movieId")?.trim();
+  const parsedQuery = parseSearchParams(request, moviesQuerySchema);
+  if (!parsedQuery.ok) {
+    return parsedQuery.response;
+  }
+  const { userId: rawUserId, movieId: rawMovieId, source, query: rawQuery } =
+    parsedQuery.data;
+  const userId = rawUserId?.trim() || undefined;
+  const movieId = rawMovieId?.trim() || undefined;
   const database = getDatabase();
-  const source = request.nextUrl.searchParams.get("source");
-  const query = request.nextUrl.searchParams.get("query")?.trim() ?? "";
+  const query = rawQuery?.trim() ?? "";
   const movies =
     source === "tmdb"
       ? query

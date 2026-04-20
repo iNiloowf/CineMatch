@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
@@ -21,7 +22,9 @@ type GiftCodeRow = {
 export async function POST(request: NextRequest) {
   const auth = await verifyBearerFromRequest(request);
   if (!auth) {
-    return NextResponse.json({ error: "You need to be logged in first." }, { status: 401 });
+    return apiJsonError(401, "You need to be logged in first.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const parsedBody = await parseJsonBody(request, redeemGiftCodeSchema);
@@ -31,10 +34,9 @@ export async function POST(request: NextRequest) {
 
   const supabaseAdmin = getSupabaseAdminClient();
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Billing is not configured on the server yet." },
-      { status: 503 },
-    );
+    return apiJsonError(503, "Billing is not configured on the server yet.", {
+      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+    });
   }
 
   const normalizedCode = parsedBody.data.code.trim().toUpperCase();
@@ -47,36 +49,36 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (giftCodeResult.error) {
-    return NextResponse.json(
-      { error: giftCodeResult.error.message ?? "Could not validate this code." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      giftCodeResult.error.message ?? "Could not validate this code.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   const giftCode = (giftCodeResult.data ?? null) as GiftCodeRow | null;
   if (!giftCode) {
-    return NextResponse.json({ error: "Gift code is invalid." }, { status: 404 });
+    return apiJsonError(404, "Gift code is invalid.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+    });
   }
 
   if (giftCode.purchaser_user_id === auth.userId) {
-    return NextResponse.json(
-      { error: "You cannot redeem your own gift code." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "You cannot redeem your own gift code.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (giftCode.status !== "active") {
-    return NextResponse.json(
-      { error: "Gift code is no longer active." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Gift code is no longer active.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (giftCode.redeemed_by_user_id) {
-    return NextResponse.json(
-      { error: "Gift code is already redeemed." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Gift code is already redeemed.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (new Date(giftCode.expires_at).getTime() <= Date.now()) {
@@ -84,16 +86,19 @@ export async function POST(request: NextRequest) {
       .from("subscription_partner_gift_codes")
       .update({ status: "expired" } as never)
       .eq("id", giftCode.id);
-    return NextResponse.json({ error: "Gift code has expired." }, { status: 400 });
+    return apiJsonError(400, "Gift code has expired.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (
     giftCode.intended_partner_user_id &&
     giftCode.intended_partner_user_id !== auth.userId
   ) {
-    return NextResponse.json(
-      { error: "This code is reserved for a different partner account." },
-      { status: 403 },
+    return apiJsonError(
+      403,
+      "This code is reserved for a different partner account.",
+      { code: API_ERROR_CODES.FORBIDDEN },
     );
   }
 
@@ -107,16 +112,18 @@ export async function POST(request: NextRequest) {
     .limit(1);
 
   if (linkResult.error) {
-    return NextResponse.json(
-      { error: linkResult.error.message ?? "Could not verify linked partner relationship." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      linkResult.error.message ?? "Could not verify linked partner relationship.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   if (!linkResult.data || linkResult.data.length === 0) {
-    return NextResponse.json(
-      { error: "You must be connected with this partner before redeeming the code." },
-      { status: 403 },
+    return apiJsonError(
+      403,
+      "You must be connected with this partner before redeeming the code.",
+      { code: API_ERROR_CODES.FORBIDDEN },
     );
   }
 
@@ -132,9 +139,10 @@ export async function POST(request: NextRequest) {
   );
 
   if (settingsResult.error) {
-    return NextResponse.json(
-      { error: settingsResult.error.message ?? "Could not activate Pro on your account." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      settingsResult.error.message ?? "Could not activate Pro on your account.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -150,9 +158,10 @@ export async function POST(request: NextRequest) {
     .is("redeemed_by_user_id", null);
 
   if (markRedeemedResult.error) {
-    return NextResponse.json(
-      { error: markRedeemedResult.error.message ?? "Could not finalize gift redemption." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      markRedeemedResult.error.message ?? "Could not finalize gift redemption.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

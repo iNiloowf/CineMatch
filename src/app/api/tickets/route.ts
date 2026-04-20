@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
@@ -95,10 +96,9 @@ export async function POST(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
-    return NextResponse.json(
-      { error: "You need to be logged in to submit a ticket." },
-      { status: 401 },
-    );
+    return apiJsonError(401, "You need to be logged in to submit a ticket.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const submitRate = checkRateLimit({
@@ -108,21 +108,19 @@ export async function POST(request: NextRequest) {
   });
 
   if (!submitRate.ok) {
-    return NextResponse.json(
-      { error: "Too many ticket requests. Please try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(submitRate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many ticket requests. Please try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(submitRate.retryAfterSec) },
+    });
   }
 
   const supabaseAdmin = getSupabaseAdminClient();
 
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Ticket service is not configured on the server yet." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Ticket service is not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -151,17 +149,16 @@ export async function POST(request: NextRequest) {
 
   if (ticketResult.error || !ticketResult.data) {
     if (isMissingSupportTicketsError(ticketResult.error)) {
-      return NextResponse.json(
-        {
-          error:
-            "Support tickets are not initialized yet. Please run the latest database migration.",
-        },
-        { status: 503 },
+      return apiJsonError(
+        503,
+        "Support tickets are not initialized yet. Please run the latest database migration.",
+        { code: API_ERROR_CODES.SERVICE_UNAVAILABLE },
       );
     }
-    return NextResponse.json(
-      { error: ticketResult.error?.message ?? "Ticket could not be created." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      ticketResult.error?.message ?? "Ticket could not be created.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

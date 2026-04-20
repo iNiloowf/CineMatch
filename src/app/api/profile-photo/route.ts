@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
@@ -9,40 +10,48 @@ export async function POST(request: NextRequest) {
   const auth = await verifyBearerFromRequest(request);
 
   if (!auth) {
-    return NextResponse.json({ error: "You need to be logged in." }, { status: 401 });
+    return apiJsonError(401, "You need to be logged in.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const admin = getSupabaseAdminClient();
 
   if (!admin) {
-    return NextResponse.json(
-      { error: "Photo upload service is not configured." },
-      { status: 503 },
-    );
+    return apiJsonError(503, "Photo upload service is not configured.", {
+      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+    });
   }
 
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Invalid upload payload." }, { status: 400 });
+    return apiJsonError(400, "Invalid upload payload.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const fileEntry = formData.get("file");
   const file = fileEntry instanceof File ? fileEntry : null;
 
   if (!file) {
-    return NextResponse.json({ error: "No photo was provided." }, { status: 400 });
+    return apiJsonError(400, "No photo was provided.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
+    return apiJsonError(400, "Only image uploads are allowed.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json(
-      { error: "Photo is too large. Please choose a smaller image." },
-      { status: 413 },
+    return apiJsonError(
+      413,
+      "Photo is too large. Please choose a smaller image.",
+      { code: API_ERROR_CODES.PAYLOAD_TOO_LARGE },
     );
   }
 
@@ -59,9 +68,10 @@ export async function POST(request: NextRequest) {
     });
 
   if (uploadResult.error) {
-    return NextResponse.json(
-      { error: uploadResult.error.message || "Photo upload failed." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      uploadResult.error.message || "Photo upload failed.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -72,10 +82,9 @@ export async function POST(request: NextRequest) {
   const imageUrl = signedUrlResult.data?.signedUrl;
 
   if (!imageUrl) {
-    return NextResponse.json(
-      { error: "Could not resolve uploaded photo URL." },
-      { status: 500 },
-    );
+    return apiJsonError(500, "Could not resolve uploaded photo URL.", {
+      code: API_ERROR_CODES.INTERNAL,
+    });
   }
 
   return NextResponse.json({ imageUrl });

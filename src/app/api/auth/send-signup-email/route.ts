@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import {
@@ -41,24 +42,23 @@ export async function POST(request: NextRequest) {
   const resendTestTarget = getResendTestingTarget();
 
   if (!supabaseAdmin || !resend || !fromEmail) {
-    return NextResponse.json(
-      {
-        error:
-          "Email sending is not configured yet. Add your Supabase service role key and Resend settings first.",
-      },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Email sending is not configured yet. Add your Supabase service role key and Resend settings first.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   const cooldown = checkEmailCooldown(`signup:${email}`);
 
   if (!cooldown.allowed) {
-    return NextResponse.json(
+    return apiJsonError(
+      429,
+      `Please wait ${cooldown.retryAfterSeconds}s before sending another confirmation email.`,
       {
-        error: `Please wait ${cooldown.retryAfterSeconds}s before sending another confirmation email.`,
-        retryAfterSeconds: cooldown.retryAfterSeconds,
+        code: API_ERROR_CODES.RATE_LIMITED,
+        extra: { retryAfterSeconds: cooldown.retryAfterSeconds },
       },
-      { status: 429 },
     );
   }
 
@@ -75,13 +75,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (error || !data.properties.action_link) {
-    return NextResponse.json(
-      {
-        error:
-          error?.message ??
-          "We couldn’t prepare your confirmation email right now.",
-      },
-      { status: 400 },
+    return apiJsonError(
+      400,
+      error?.message ?? "We couldn’t prepare your confirmation email right now.",
+      { code: API_ERROR_CODES.BAD_REQUEST },
     );
   }
 
@@ -112,10 +109,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (emailError) {
-    return NextResponse.json(
-      { error: "The confirmation email could not be sent right now." },
-      { status: 502 },
-    );
+    return apiJsonError(502, "The confirmation email could not be sent right now.", {
+      code: API_ERROR_CODES.BAD_GATEWAY,
+    });
   }
 
   return NextResponse.json({

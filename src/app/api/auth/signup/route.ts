@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
   const result = signupUser(body);
 
   if ("error" in result) {
-    return apiJsonError(409, result.error ?? "Conflict.", { code: API_ERROR_CODES.CONFLICT });
+    return apiJsonError(409, result.error ?? "Signup failed.", {
+      code: API_ERROR_CODES.CONFLICT,
+    });
   }
 
   return NextResponse.json(result, { status: 201 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { requireServerAdmin } from "@/server/admin-auth";
 
@@ -57,7 +58,9 @@ export async function PATCH(
   const { userId } = await context.params;
 
   if (!userId) {
-    return NextResponse.json({ error: "User id is required." }, { status: 400 });
+    return apiJsonError(400, "User id is required.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const parsedBody = await parseJsonBody(request, updateSubscriptionSchema);
@@ -74,10 +77,9 @@ export async function PATCH(
   }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json(
-      { error: "Provide at least one subscription update field." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Provide at least one subscription update field.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const upsertPayload = {
@@ -96,13 +98,11 @@ export async function PATCH(
     ) {
       const authUserResult = await supabaseAdmin.auth.admin.getUserById(userId);
       if (authUserResult.error) {
-        return NextResponse.json(
-          {
-            error:
-              authUserResult.error.message ??
-              "Subscription columns are missing and auth metadata fallback failed.",
-          },
-          { status: 500 },
+        return apiJsonError(
+          500,
+          authUserResult.error.message ??
+            "Subscription columns are missing and auth metadata fallback failed.",
+          { code: API_ERROR_CODES.INTERNAL },
         );
       }
 
@@ -121,22 +121,21 @@ export async function PATCH(
         },
       });
       if (metadataUpdateResult.error) {
-        return NextResponse.json(
-          {
-            error:
-              metadataUpdateResult.error.message ??
-              "Could not persist subscription fallback metadata.",
-          },
-          { status: 500 },
+        return apiJsonError(
+          500,
+          metadataUpdateResult.error.message ??
+            "Could not persist subscription fallback metadata.",
+          { code: API_ERROR_CODES.INTERNAL },
         );
       }
 
       return NextResponse.json({ ok: true, usedFallback: "auth_metadata" });
     }
 
-    return NextResponse.json(
-      { error: updateResult.error.message ?? "Subscription update failed." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      updateResult.error.message ?? "Subscription update failed.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

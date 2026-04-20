@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import {
@@ -32,24 +33,23 @@ export async function POST(request: NextRequest) {
   const resendTestTarget = getResendTestingTarget();
 
   if (!supabaseAdmin || !resend || !fromEmail) {
-    return NextResponse.json(
-      {
-        error:
-          "Magic link email is not configured yet. Add your Supabase service role key and Resend settings first.",
-      },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Magic link email is not configured yet. Add your Supabase service role key and Resend settings first.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   const cooldown = checkEmailCooldown(`magic:${email}`);
 
   if (!cooldown.allowed) {
-    return NextResponse.json(
+    return apiJsonError(
+      429,
+      `Please wait ${cooldown.retryAfterSeconds}s before sending another magic link.`,
       {
-        error: `Please wait ${cooldown.retryAfterSeconds}s before sending another magic link.`,
-        retryAfterSeconds: cooldown.retryAfterSeconds,
+        code: API_ERROR_CODES.RATE_LIMITED,
+        extra: { retryAfterSeconds: cooldown.retryAfterSeconds },
       },
-      { status: 429 },
     );
   }
 
@@ -96,10 +96,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (emailError) {
-    return NextResponse.json(
-      { error: "The magic link email could not be sent right now." },
-      { status: 502 },
-    );
+    return apiJsonError(502, "The magic link email could not be sent right now.", {
+      code: API_ERROR_CODES.BAD_GATEWAY,
+    });
   }
 
   return NextResponse.json({

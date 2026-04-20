@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
     recentSwipesResult.error;
 
   if (firstError) {
-    return apiJsonError(500, firstError.message ?? "Admin dashboard query failed.", {
+    return apiJsonError(500, firstError.message, {
       code: API_ERROR_CODES.INTERNAL,
     });
   }
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
     if (isMissingSupportTicketsError(ticketsError)) {
       ticketsUnavailable = true;
     } else {
-      return apiJsonError(500, ticketsError.message ?? "Tickets query failed.", {
+      return apiJsonError(500, ticketsError.message ?? "Unknown error.", {
         code: API_ERROR_CODES.INTERNAL,
       });
     }
@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
       : { data: [] as MovieRow[], error: null };
 
   if (movieTitlesResult.error) {
-    return apiJsonError(500, movieTitlesResult.error.message ?? "Movies query failed.", {
+    return apiJsonError(500, movieTitlesResult.error.message, {
       code: API_ERROR_CODES.INTERNAL,
     });
   }

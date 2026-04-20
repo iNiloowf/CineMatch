@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
@@ -13,7 +14,9 @@ const createCheckoutIntentSchema = z.object({
 export async function POST(request: NextRequest) {
   const auth = await verifyBearerFromRequest(request);
   if (!auth) {
-    return NextResponse.json({ error: "You need to be logged in first." }, { status: 401 });
+    return apiJsonError(401, "You need to be logged in first.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const parsedBody = await parseJsonBody(request, createCheckoutIntentSchema);
@@ -23,10 +26,9 @@ export async function POST(request: NextRequest) {
 
   const supabaseAdmin = getSupabaseAdminClient();
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Billing is not configured on the server yet." },
-      { status: 503 },
-    );
+    return apiJsonError(503, "Billing is not configured on the server yet.", {
+      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+    });
   }
 
   const { planType } = parsedBody.data;
@@ -35,23 +37,22 @@ export async function POST(request: NextRequest) {
   const isPartnerPlan = planType === "pro_partner_gift";
 
   if (isPartnerPlan && !partnerUserId) {
-    return NextResponse.json(
-      { error: "Select a connected partner for this plan." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Select a connected partner for this plan.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (!isPartnerPlan && partnerUserId) {
-    return NextResponse.json(
-      { error: "Partner can only be set for partner gift plan." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Partner can only be set for partner gift plan.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   if (partnerUserId && partnerUserId === auth.userId) {
-    return NextResponse.json(
-      { error: "Partner account must be different from your own account." },
-      { status: 400 },
+    return apiJsonError(
+      400,
+      "Partner account must be different from your own account.",
+      { code: API_ERROR_CODES.BAD_REQUEST },
     );
   }
 
@@ -66,26 +67,27 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (linkResult.error) {
-      return NextResponse.json(
-        { error: linkResult.error.message ?? "Could not verify selected partner." },
-        { status: 500 },
+      return apiJsonError(
+        500,
+        linkResult.error.message ?? "Could not verify selected partner.",
+        { code: API_ERROR_CODES.INTERNAL },
       );
     }
 
     if (!linkResult.data || linkResult.data.length === 0) {
-      return NextResponse.json(
-        { error: "Selected partner is not connected with an accepted link." },
-        { status: 403 },
+      return apiJsonError(
+        403,
+        "Selected partner is not connected with an accepted link.",
+        { code: API_ERROR_CODES.FORBIDDEN },
       );
     }
   }
 
   const baseCheckoutUrl = getCheckoutUrlForPlan(planType);
   if (!baseCheckoutUrl) {
-    return NextResponse.json(
-      { error: "Checkout link is not configured for this plan." },
-      { status: 503 },
-    );
+    return apiJsonError(503, "Checkout link is not configured for this plan.", {
+      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
+    });
   }
 
   const token = crypto.randomUUID();
@@ -106,9 +108,10 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (intentInsertResult.error) {
-    return NextResponse.json(
-      { error: intentInsertResult.error.message ?? "Could not create checkout intent." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      intentInsertResult.error.message ?? "Could not create checkout intent.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -116,9 +119,10 @@ export async function POST(request: NextRequest) {
   try {
     checkoutUrl = new URL(baseCheckoutUrl);
   } catch {
-    return NextResponse.json(
-      { error: "Configured checkout URL for this plan is invalid." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Configured checkout URL for this plan is invalid.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
   checkoutUrl.searchParams.set("client_reference_id", token);

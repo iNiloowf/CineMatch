@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { loginUser } from "@/server/mock-db";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
@@ -36,9 +37,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (error || !data.user || !data.session) {
-      return NextResponse.json(
-        { error: error?.message ?? "Invalid email or password." },
-        { status: 401 },
+      return apiJsonError(
+        401,
+        error?.message ?? "Invalid email or password.",
+        { code: API_ERROR_CODES.UNAUTHORIZED },
       );
     }
 
@@ -88,10 +90,9 @@ export async function POST(request: NextRequest) {
   const user = loginUser(body.email, body.password);
 
   if (!user) {
-    return NextResponse.json(
-      { error: "Invalid email or password." },
-      { status: 401 },
-    );
+    return apiJsonError(401, "Invalid email or password.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   return NextResponse.json({ user });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
@@ -15,10 +16,9 @@ export async function POST(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
-    return NextResponse.json(
-      { error: "You need to be logged in to create an invite link." },
-      { status: 401 },
-    );
+    return apiJsonError(401, "You need to be logged in to create an invite link.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const rate = checkRateLimit({
@@ -28,10 +28,11 @@ export async function POST(request: NextRequest) {
   });
 
   if (!rate.ok) {
-    return NextResponse.json(
-      { error: "Too many invite links created. Try again later." },
+    return apiJsonError(
+      429,
+      "Too many invite links created. Try again later.",
       {
-        status: 429,
+        code: API_ERROR_CODES.RATE_LIMITED,
         headers: { "Retry-After": String(rate.retryAfterSec) },
       },
     );
@@ -40,9 +41,10 @@ export async function POST(request: NextRequest) {
   const supabaseAdmin = getSupabaseAdminClient();
 
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Invite creation is not configured on the server yet." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Invite creation is not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
@@ -73,13 +75,11 @@ export async function POST(request: NextRequest) {
   };
 
   if (insertResult.error || !insertResult.data) {
-    return NextResponse.json(
-      {
-        error:
-          insertResult.error?.message ??
-          "We couldn’t save this invite link right now.",
-      },
-      { status: 400 },
+    return apiJsonError(
+      400,
+      insertResult.error?.message ??
+        "We couldn’t save this invite link right now.",
+      { code: API_ERROR_CODES.BAD_REQUEST },
     );
   }
 

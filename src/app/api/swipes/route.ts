@@ -72,11 +72,9 @@ export async function POST(request: NextRequest) {
       authResult.status === 401
         ? API_ERROR_CODES.UNAUTHORIZED
         : API_ERROR_CODES.INTERNAL;
-    return apiJsonError(
-      authResult.status ?? 500,
-      authResult.error ?? "Request failed.",
-      { code },
-    );
+    return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
+      code,
+    });
   }
 
   const { supabaseAdmin, currentUserId } = authResult;
@@ -165,11 +163,9 @@ export async function DELETE(request: NextRequest) {
       authResult.status === 401
         ? API_ERROR_CODES.UNAUTHORIZED
         : API_ERROR_CODES.INTERNAL;
-    return apiJsonError(
-      authResult.status ?? 500,
-      authResult.error ?? "Request failed.",
-      { code },
-    );
+    return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
+      code,
+    });
   }
 
   const { supabaseAdmin, currentUserId } = authResult;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { checkRateLimit } from "@/server/rate-limit";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
@@ -217,10 +218,9 @@ export async function GET(request: NextRequest) {
   const authToken = await verifyBearerFromRequest(request);
 
   if (!authToken) {
-    return NextResponse.json(
-      { error: "You need to be logged in to sync account data." },
-      { status: 401 },
-    );
+    return apiJsonError(401, "You need to be logged in to sync account data.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+    });
   }
 
   const syncRate = checkRateLimit({
@@ -230,10 +230,11 @@ export async function GET(request: NextRequest) {
   });
 
   if (!syncRate.ok) {
-    return NextResponse.json(
-      { error: "Too many sync requests. Wait a moment and try again." },
+    return apiJsonError(
+      429,
+      "Too many sync requests. Wait a moment and try again.",
       {
-        status: 429,
+        code: API_ERROR_CODES.RATE_LIMITED,
         headers: { "Retry-After": String(syncRate.retryAfterSec) },
       },
     );
@@ -242,9 +243,10 @@ export async function GET(request: NextRequest) {
   const supabaseAdmin = getSupabaseAdminClient();
 
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Account sync is not configured on the server yet." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      "Account sync is not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 

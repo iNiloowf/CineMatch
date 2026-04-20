@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { parseJsonBody } from "@/server/api-validation";
@@ -63,13 +64,10 @@ export async function PATCH(
   });
 
   if (!adminRate.ok) {
-    return NextResponse.json(
-      { error: "Too many admin ticket requests. Try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(adminRate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many admin ticket requests. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(adminRate.retryAfterSec) },
+    });
   }
 
   const parsedBody = await parseJsonBody(request, updateTicketBodySchema);
@@ -85,10 +83,9 @@ export async function PATCH(
   const { identity } = adminAuth;
 
   if (!ticketId) {
-    return NextResponse.json(
-      { error: "Ticket id is required." },
-      { status: 400 },
-    );
+    return apiJsonError(400, "Ticket id is required.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   let effectiveStatus: SupportTicketStatus | "in_progress" = nextStatus;
@@ -105,14 +102,17 @@ export async function PATCH(
   }
 
   if (updateResult.error) {
-    return NextResponse.json(
-      { error: updateResult.error.message ?? "Ticket status could not be updated." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      updateResult.error.message ?? "Ticket status could not be updated.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   if (!updateResult.data) {
-    return NextResponse.json({ error: "Ticket was not found." }, { status: 404 });
+    return apiJsonError(404, "Ticket was not found.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+    });
   }
 
   void logSecurityAudit({
@@ -145,13 +145,10 @@ export async function DELETE(
   });
 
   if (!adminRate.ok) {
-    return NextResponse.json(
-      { error: "Too many admin ticket requests. Try again shortly." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(adminRate.retryAfterSec) },
-      },
-    );
+    return apiJsonError(429, "Too many admin ticket requests. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(adminRate.retryAfterSec) },
+    });
   }
 
   const adminAuth = await requireServerAdmin(request);
@@ -161,7 +158,9 @@ export async function DELETE(
   const { identity, supabaseAdmin } = adminAuth;
 
   if (!ticketId) {
-    return NextResponse.json({ error: "Ticket id is required." }, { status: 400 });
+    return apiJsonError(400, "Ticket id is required.", {
+      code: API_ERROR_CODES.BAD_REQUEST,
+    });
   }
 
   const deleteResult = (await supabaseAdmin
@@ -175,14 +174,17 @@ export async function DELETE(
   };
 
   if (deleteResult.error) {
-    return NextResponse.json(
-      { error: deleteResult.error.message ?? "Ticket could not be deleted." },
-      { status: 500 },
+    return apiJsonError(
+      500,
+      deleteResult.error.message ?? "Ticket could not be deleted.",
+      { code: API_ERROR_CODES.INTERNAL },
     );
   }
 
   if (!deleteResult.data) {
-    return NextResponse.json({ error: "Ticket was not found." }, { status: 404 });
+    return apiJsonError(404, "Ticket was not found.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+    });
   }
 
   void logSecurityAudit({
