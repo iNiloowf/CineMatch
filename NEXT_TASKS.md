@@ -2,28 +2,40 @@
 
 ## Summary
 
-Quick review (**Apr 2026**): **API validation** is in place (`src/server/api-response.ts`, `src/server/api-validation.ts` — Zod on JSON bodies, `parseSearchParams` for GET queries, consistent `{ error, code, details? }`). **Auth UI** no longer sells a separate “demo login”; offline vs Supabase is explained on the landing card. **Route + root error boundaries** ship on `main` (`src/app/error.tsx`, `src/app/global-error.tsx`, `src/components/error-fallback-content.tsx`).
+**Apr 2026 — current `main`:** **API validation (Zod)**, **auth copy**, **route + root error boundaries** (`error.tsx` / `global-error.tsx`), and **ProtectedScreen** redirect UI (spinner + “Redirecting to sign in…”, no empty flash) are shipped.
 
-**Focus next:** **admin** client auth cleanup, **ProtectedScreen** empty flash, **offline** banner, then **tests + CI**. Full history and per-route backlog stay in **`IMPROVEMENT_CHECKLIST.md`** (that file’s old “no API Zod” line is stale — validation shipped on `main`).
+**Next focus (full-app review):** **admin** hardening, **offline** UX, **tests + CI**, then **a11y & polish** (skip link, `/auth/callback` mobile/error paths, nested modal focus), then **engineering** (split `app-state`, client-side form validation, long-list virtualization, deep-link QA), plus optional **observability**.
 
----
-
-## Already shipped (don’t re-ticket)
-
-- [x] **API:** Zod + shared error shape on `src/app/api/**/route.ts` (`apiJsonError`, `INVALID_JSON` / `VALIDATION_ERROR`, etc.).
-- [x] **Auth copy:** No “demo login” CTA; signup/landing text describes Supabase vs browser-local accounts.
-- [x] **Errors:** `error.tsx` + `global-error.tsx` with reset, short copy, and shared fallback so uncaught errors don’t white-screen the shell.
+Older per-route backlog stays in **`IMPROVEMENT_CHECKLIST.md`** — ignore stale lines that still claim “no `error.tsx`” / “no API Zod” (those are fixed on `main`).
 
 ---
 
-## Next tasks (priority order)
+## Done (don’t re-ticket)
 
-1. **Admin `/admin` security** — Today the page still has a **client-side** email/password gate alongside server `requireServerAdmin`. Move to **session/bearer only** + env allowlists (`ADMIN_*`), no duplicate secrets in the client bundle.
-2. **`ProtectedScreen`** — When `isReady && !currentUserId`, it still **`return null`** before `router.replace("/")` → brief empty flash. Show “Redirecting to sign in…” + spinner (see `src/components/protected-screen.tsx` ~L87–89).
-3. **Offline UX** — Listen to `online` / `offline`, show a small dismissible banner; optionally retry `account-sync` or failed actions when back online.
-4. **Tests + CI** — Add `npm test` (start with auth or API smoke) + GitHub Action: `lint` + `tsc --noEmit` + `test`.
-5. **Icons / PWA** — Stable app icon: `NEXT_PUBLIC_APP_ICON_URL` or update `public/icons/` for install/splash.
-6. **Repo hygiene** — Run `git status`; commit or discard stray edits so `main` stays clean.
+- [x] **API:** Zod + shared error shape on `src/app/api/**/route.ts` (`apiJsonError`, `VALIDATION_ERROR`, …).
+- [x] **Auth copy:** No misleading “demo login” CTA; Supabase vs browser-local explained on landing.
+- [x] **Errors:** `error.tsx` + `global-error.tsx` + `error-fallback-content` (reset + short copy; no white-screen).
+- [x] **ProtectedScreen:** When `isReady && !currentUserId` — “Redirecting to sign in…” + theme-matching spinner (replaces bare `return null`).
+
+---
+
+## Next tasks (priority)
+
+1. [ ] **Admin `/admin`** — Remove client email/password gate; **session/bearer only** + env allowlists (`ADMIN_*`), no secrets in the client bundle.
+2. [ ] **Offline UX** — `online` / `offline` listener, small dismissible banner; optionally retry `account-sync` or failed actions when back online.
+3. [ ] **Tests + CI** — Add `npm test` (start with auth or API smoke) + GitHub Action: `lint` + `tsc --noEmit` + `test` (no workflow in repo yet).
+4. [ ] **Icons / PWA** — Stable icon via `NEXT_PUBLIC_APP_ICON_URL` or `public/icons/` + `manifest` for install/splash.
+5. [ ] **Repo hygiene** — Keep `git status` clean on `main` (no stray uncommitted edits).
+6. [ ] **Skip link** — “Skip to main content” in **`AppShell`** targeting the main scroll region (keyboard users).
+7. [ ] **`/auth/callback`** — Final pass: mobile **safe area**, clear error panel + **Retry** / back to login (loading exists; align edge cases with app theme).
+8. [ ] **Nested modals (Picks + trailer)** — Focus trap + **Escape** stacking so focus never escapes the top layer.
+9. [ ] **Split `app-state.tsx`** — Extract auth, account sync, discover queue into smaller modules/hooks for tests and maintenance.
+10. [ ] **Client forms** — Zod (or similar) on login/signup before submit, consistent with API validation.
+11. [ ] **Long lists** — Virtualize Picks / Shared / Discover search when libraries routinely exceed ~50 rows.
+12. [ ] **Deep QA** — Exercise `discover?movieId=…`, invite cold start, OAuth on slow/offline networks.
+13. [ ] **Observability (optional)** — Client error reporting (e.g. Sentry) + correlation ids on API errors for production debugging.
+
+**Note:** **`/privacy`** and **`/terms`** pages exist and are linked from Settings; optional: add footer links on landing/signup for discoverability.
 
 ---
 
