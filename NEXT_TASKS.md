@@ -6,7 +6,7 @@
 
 **Apr 2026 — `main` is up to date with:** error boundaries, ProtectedScreen, admin + `processLock`, offline banner + sync retry on reconnect, Vitest + GitHub Actions CI, skip link → `#main-content`, Zod login/signup, `/auth/callback` safe-area + Try again, trailer **Escape** to close, landing Privacy/Terms, ESLint ignoring `android/**`, **Picks list virtualization** (long Queue/Watched), **modal focus-trap + nested z-index**, **`x-request-id` on API responses**, **`docs/MANUAL_QA.md`**, root **`.gitignore`** for Android build dirs, **partial `app-state` split** (`auth-session-storage`).
 
-**Still open:** see **Next tasks** below — architecture splits, broader list virtualization, automated tests beyond unit smoke, native/PWA polish, and optional i18n/legal/analytics.
+**Still open:** see **Next tasks** below — architecture splits, broader list virtualization, automated tests beyond unit smoke, native/PWA polish, and optional legal/analytics. **Product language:** English-only UI; no localization or RTL work is planned unless requirements change.
 
 ---
 
@@ -31,6 +31,7 @@
 - [x] **Deep QA:** Manual checklist in `docs/MANUAL_QA.md`.
 - [x] **Observability:** `x-request-id` via middleware + JSON helpers; `instrumentation.ts` stub for optional Sentry wizard.
 - [x] **Repo hygiene:** Root `.gitignore` entries for `android/**` Gradle build outputs.
+- [x] **English-only scope:** All user-facing copy stays in English; no i18n/RTL backlog.
 
 ---
 
@@ -56,13 +57,12 @@
 
 ### Product & compliance (optional)
 
-10. [ ] **i18n / RTL** — Extract UI strings and RTL layout if you ship outside English.
-11. [ ] **PWA / install** — Revisit offline shell + cache strategy only if web install matters for users.
-12. [ ] **Legal & analytics** — Cookie/consent flow if you add non-essential cookies or trackers; keep Privacy/Terms in sync with data practices.
+10. [ ] **PWA / install** — Revisit offline shell + cache strategy only if web install matters for users.
+11. [ ] **Legal & analytics** — Cookie/consent flow if you add non-essential cookies or trackers; keep Privacy/Terms in sync with data practices.
 
 ### Native
 
-13. [ ] **Android release checklist** — `cap sync`, signing, Play Console metadata, and one device smoke per release (see `docs/MANUAL_QA.md`).
+12. [ ] **Android release checklist** — `cap sync`, signing, Play Console metadata, and one device smoke per release (see `docs/MANUAL_QA.md`).
 
 ---
 
