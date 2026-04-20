@@ -1,6 +1,7 @@
 "use client";
 
-import { AppErrorScreen } from "@/components/app-error-screen";
+import { useEffect } from "react";
+import { ErrorFallbackContent } from "@/components/error-fallback-content";
 
 export default function AppError({
   error,
@@ -9,9 +10,15 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[CineMatch] route error:", error);
+  }, [error]);
+
   return (
-    <div className="flex min-h-[80svh] w-full flex-1 flex-col items-center justify-center px-4 py-8">
-      <AppErrorScreen error={error} reset={reset} variant="embedded" />
-    </div>
+    <ErrorFallbackContent
+      onReset={reset}
+      errorDigest={error.digest}
+      errorMessage={error.message}
+    />
   );
 }
