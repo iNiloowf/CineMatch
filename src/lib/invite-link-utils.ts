@@ -1,5 +1,5 @@
-/** Max linked friend relationships (accepted + pending) per account in the UI. */
-export const MAX_LINKED_FRIENDS = 3;
+/** Max linked friend relationships (accepted + pending) per account in the UI and API. */
+export const MAX_LINKED_FRIENDS = 30;
 
 export function parseInviteTokenFromPaste(value: string) {
   const trimmed = value.trim();

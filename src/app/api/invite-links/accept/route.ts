@@ -6,6 +6,7 @@ import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { z } from "zod";
+import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
 
 type InviteRow = {
   id: string;
@@ -114,6 +115,45 @@ export async function POST(request: NextRequest) {
       code: API_ERROR_CODES.BAD_REQUEST,
       request,
     });
+  }
+
+  const countLinksForUser = async (userId: string) => {
+    const { count, error } = await supabaseAdmin
+      .from("linked_users")
+      .select("id", { count: "exact", head: true })
+      .or(`requester_id.eq.${userId},target_id.eq.${userId}`);
+    if (error) {
+      return null;
+    }
+    return count ?? 0;
+  };
+
+  const [acceptorLinkCount, inviterLinkCount] = await Promise.all([
+    countLinksForUser(currentUserId),
+    countLinksForUser(invite.inviter_id),
+  ]);
+
+  if (acceptorLinkCount === null || inviterLinkCount === null) {
+    return apiJsonError(500, "We couldn’t verify friend limits right now.", {
+      code: API_ERROR_CODES.INTERNAL,
+      request,
+    });
+  }
+
+  if (acceptorLinkCount >= MAX_LINKED_FRIENDS) {
+    return apiJsonError(
+      400,
+      `You can link up to ${MAX_LINKED_FRIENDS} friends. Remove a connection before accepting a new one.`,
+      { code: API_ERROR_CODES.BAD_REQUEST, request },
+    );
+  }
+
+  if (inviterLinkCount >= MAX_LINKED_FRIENDS) {
+    return apiJsonError(
+      400,
+      "This person already has the maximum number of friend links.",
+      { code: API_ERROR_CODES.BAD_REQUEST, request },
+    );
   }
 
   const createdAt = new Date().toISOString();

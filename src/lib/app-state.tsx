@@ -20,6 +20,7 @@ import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { buildDiscoverQueue } from "@/lib/discover-queue";
+import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
 import {
   clearStoredAuthSession,
   getStoredAuthSession,
@@ -2915,6 +2916,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (alreadyLinked) {
       return { ok: false, message: "You’re already connected with this person." };
+    }
+
+    const linkCountForUser = (userId: string) =>
+      data.links.filter((link) => link.users.includes(userId)).length;
+
+    if (linkCountForUser(currentUserId) >= MAX_LINKED_FRIENDS) {
+      return {
+        ok: false,
+        message: `You can link up to ${MAX_LINKED_FRIENDS} friends. Remove a connection before accepting a new one.`,
+      };
+    }
+
+    if (linkCountForUser(invite.inviterId) >= MAX_LINKED_FRIENDS) {
+      return {
+        ok: false,
+        message: "This person already has the maximum number of friend links.",
+      };
     }
 
     setData((current) => ({

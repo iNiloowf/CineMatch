@@ -51,6 +51,19 @@ export default function ProfilePage() {
     () => watchedPickReviews.filter((entry) => !entry.recommended),
     [watchedPickReviews],
   );
+  /** Distinct titles marked watched from Picks (solo) plus titles marked watched on Shared — overlap counted once. */
+  const profileWatchedTotal = useMemo(() => {
+    const ids = new Set<string>();
+    for (const entry of watchedPickReviews) {
+      ids.add(entry.movie.id);
+    }
+    for (const row of sharedMovies) {
+      if (row.watched) {
+        ids.add(row.movie.id);
+      }
+    }
+    return ids.size;
+  }, [watchedPickReviews, sharedMovies]);
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -1299,19 +1312,22 @@ export default function ProfilePage() {
         </form>
         {!isEditing ? (
           <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
-          {[
-            { value: acceptedMovies.length, label: "Picks", href: "/picks" },
-            {
-              value: linkedUsers.filter((user) => user.status === "accepted").length,
-              label: "Friends",
-              href: "/shared",
-            },
-            {
-              value: sharedMovies.filter((movie) => movie.watched).length,
-              label: "Watched",
-              href: "/picks",
-            },
-          ].map((stat, index) => (
+          {(
+            [
+              { value: acceptedMovies.length, label: "Picks", href: "/picks" as const },
+              {
+                value: linkedUsers.filter((user) => user.status === "accepted").length,
+                label: "Friends",
+                href: "/shared" as const,
+              },
+              {
+                value: profileWatchedTotal,
+                label: "Watched",
+                href: "/picks" as const,
+                hint: "Solo + with friends",
+              },
+            ] as const
+          ).map((stat, index) => (
             <Link
               key={stat.label}
               href={stat.href}
@@ -1328,6 +1344,15 @@ export default function ProfilePage() {
               >
                 {stat.label}
               </p>
+              {"hint" in stat && stat.hint ? (
+                <p
+                  className={`mt-0.5 px-0.5 text-[9px] font-medium leading-tight sm:text-[10px] ${
+                    isDarkMode ? "text-slate-500" : "text-slate-500"
+                  }`}
+                >
+                  {stat.hint}
+                </p>
+              ) : null}
             </Link>
           ))}
           </div>
