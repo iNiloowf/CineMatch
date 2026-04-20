@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
+import {
+  shouldVirtualizeList,
+  VirtualScrollList,
+} from "@/components/virtual-scroll-list";
 import { DiscoverOnboardingNudges } from "@/components/discover-onboarding-nudges";
 import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { AppRouteNetworkStatus } from "@/components/app-route-status";
@@ -1385,16 +1389,32 @@ function DiscoverPageContent({
               ) : null}
 
               {searchFetchState === "ready" && sortedSearchResults.length > 0 ? (
-                <div className="space-y-3">
-                  {sortedSearchResults.map((result) => (
-                    <DiscoverSearchResultRow
-                      key={result.id}
-                      result={result}
-                      isDarkMode={isDarkMode}
-                      onSelect={handleSelectSearchMovie}
-                    />
-                  ))}
-                </div>
+                shouldVirtualizeList(sortedSearchResults.length) ? (
+                  <VirtualScrollList
+                    count={sortedSearchResults.length}
+                    estimateItemSize={132}
+                    className="max-h-[min(65vh,36rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
+                  >
+                    {(index) => (
+                      <DiscoverSearchResultRow
+                        result={sortedSearchResults[index]!}
+                        isDarkMode={isDarkMode}
+                        onSelect={handleSelectSearchMovie}
+                      />
+                    )}
+                  </VirtualScrollList>
+                ) : (
+                  <div className="space-y-3">
+                    {sortedSearchResults.map((result) => (
+                      <DiscoverSearchResultRow
+                        key={result.id}
+                        result={result}
+                        isDarkMode={isDarkMode}
+                        onSelect={handleSelectSearchMovie}
+                      />
+                    ))}
+                  </div>
+                )
               ) : null}
             </div>
           </div>
