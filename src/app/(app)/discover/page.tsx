@@ -388,6 +388,41 @@ function DiscoverPageContent({
       : null;
   const movie = focusedMovie ?? filteredQueue[safeBrowseIndex];
 
+  /** Keeps the current title when possible; only jumps when it drops out of the new filter. */
+  const applyGenreFilterChange = useCallback(
+    (nextGenres: string[]) => {
+      const nextFiltered = discoverQueue.filter((m) => {
+        return (
+          nextGenres.length === 0 ||
+          nextGenres.some((g) => m.genre.includes(g))
+        );
+      });
+
+      const currentId =
+        focusedMovieId ??
+        (filteredQueue.length > 0 ? filteredQueue[safeBrowseIndex]?.id : null) ??
+        null;
+
+      let nextBrowse = 0;
+      if (nextFiltered.length > 0) {
+        if (currentId) {
+          const idx = nextFiltered.findIndex((m) => m.id === currentId);
+          nextBrowse =
+            idx >= 0
+              ? idx
+              : Math.min(safeBrowseIndex, nextFiltered.length - 1);
+        } else {
+          nextBrowse = Math.min(safeBrowseIndex, nextFiltered.length - 1);
+        }
+      }
+
+      setBrowseIndex(nextBrowse);
+      setFocusedMovieId(null);
+      setSelectedGenres(nextGenres);
+    },
+    [discoverQueue, filteredQueue, focusedMovieId, safeBrowseIndex],
+  );
+
   useEffect(() => {
     setBrowseIndex(0);
     setFocusedMovieId(null);
@@ -1365,7 +1400,7 @@ function DiscoverPageContent({
                     label: selectedGenres.length > 0 ? "Clear genre filters" : "Open genre filters",
                     onClick: () => {
                       if (selectedGenres.length > 0) {
-                        setSelectedGenres([]);
+                        applyGenreFilterChange([]);
                       }
                       setIsFilterOpen(true);
                     },
@@ -1504,18 +1539,14 @@ function DiscoverPageContent({
                       type="button"
                       onClick={() => {
                         if (genre === "All") {
-                          setBrowseIndex(0);
-                          setFocusedMovieId(null);
-                          setSelectedGenres([]);
+                          applyGenreFilterChange([]);
                           return;
                         }
 
-                        setBrowseIndex(0);
-                        setFocusedMovieId(null);
-                        setSelectedGenres((current) =>
-                          current.includes(genre)
-                            ? current.filter((entry) => entry !== genre)
-                            : [...current, genre],
+                        applyGenreFilterChange(
+                          selectedGenres.includes(genre)
+                            ? selectedGenres.filter((entry) => entry !== genre)
+                            : [...selectedGenres, genre],
                         );
                       }}
                       className={`ui-chip-btn !h-auto min-h-[2.75rem] w-full justify-center text-center text-sm leading-snug sm:min-h-[3rem] sm:text-[0.9375rem] ${
@@ -1538,9 +1569,7 @@ function DiscoverPageContent({
               <button
                 type="button"
                 onClick={() => {
-                  setBrowseIndex(0);
-                  setFocusedMovieId(null);
-                  setSelectedGenres([]);
+                  applyGenreFilterChange([]);
                 }}
                 className="ui-btn ui-btn-secondary min-w-0 flex-1"
               >
@@ -1680,9 +1709,7 @@ function DiscoverPageContent({
             secondaryAction={{
               label: "Clear genres",
               onClick: () => {
-                setBrowseIndex(0);
-                setFocusedMovieId(null);
-                setSelectedGenres([]);
+                applyGenreFilterChange([]);
               },
             }}
             tertiaryAction={{
