@@ -4,9 +4,9 @@
 
 ## Summary
 
-**Apr 2026 — `main` is up to date with:** error boundaries, ProtectedScreen, admin + `processLock`, offline banner + sync retry on reconnect, Vitest + GitHub Actions CI, skip link → `#main-content`, Zod login/signup, `/auth/callback` safe-area + Try again, trailer **Escape** to close, landing Privacy/Terms, ESLint ignoring `android/**`.
+**Apr 2026 — `main` is up to date with:** error boundaries, ProtectedScreen, admin + `processLock`, offline banner + sync retry on reconnect, Vitest + GitHub Actions CI, skip link → `#main-content`, Zod login/signup, `/auth/callback` safe-area + Try again, trailer **Escape** to close, landing Privacy/Terms, ESLint ignoring `android/**`, **Picks list virtualization** (long Queue/Watched), **modal focus-trap + nested z-index**, **`x-request-id` on API responses**, **`docs/MANUAL_QA.md`**, root **`.gitignore`** for Android build dirs, **partial `app-state` split** (`auth-session-storage`).
 
-**Still open:** split `app-state`, list virtualization, full modal focus/stacking audit (beyond trailer Escape), observability, manual deep QA.
+**Still open (optional / follow-up):** further split of `app-state` (sync, discover); virtualize Shared / Discover search if needed; optional Sentry install; sheet modals audit if gaps remain.
 
 ---
 
@@ -25,17 +25,21 @@
 - [x] **Trailer modal:** **Escape** closes (`PicksTrailerModal`).
 - [x] **Client forms (Zod):** `loginFormSchema` / `signupFormSchema` on `/` and `/signup`.
 - [x] **ESLint / CI hygiene:** Ignore `android/**`; `react-hooks/refs` + `set-state-in-effect` as **warnings** so CI stays green.
+- [x] **Split `app-state` (partial):** Auth session storage in `src/lib/auth-session-storage.ts` (sync + discover still live in `app-state.tsx`).
+- [x] **Long lists:** Virtualize **Picks** Queue + Watched at scale (`VirtualScrollList`, threshold 24).
+- [x] **Nested modals:** Focus-trap + `--z-modal-nested` for details + trailer; `inert` under nested trailer.
+- [x] **Deep QA:** Manual checklist in `docs/MANUAL_QA.md`.
+- [x] **Observability:** `x-request-id` via middleware + JSON helpers; `instrumentation.ts` stub for optional Sentry wizard.
+- [x] **Repo hygiene:** Root `.gitignore` entries for `android/**` Gradle build outputs.
 
 ---
 
 ## Next tasks (not done yet — `[ ]`)
 
-1. [ ] **Split `app-state.tsx`** — Extract auth, sync, discover into smaller modules/hooks.
-2. [ ] **Long lists** — Virtualize Picks / Shared / Discover search at scale.
-3. [ ] **Nested modals (full pass)** — Focus-trap + stacking for details + trailer + sheets (trailer **Escape** is done; audit the rest).
-4. [ ] **Deep QA** — `discover?movieId=…`, invites, OAuth on slow/offline (manual).
-5. [ ] **Observability (optional)** — Sentry + API correlation ids.
-6. [ ] **Repo hygiene** — Clean working tree; don’t commit `android/**` build outputs.
+1. [ ] **Finish `app-state` split** — Extract sync + discover into dedicated modules/hooks (auth slice already extracted).
+2. [ ] **Long lists (remaining)** — Virtualize Shared / Discover search if lists grow large enough to matter.
+3. [ ] **Sheets / overlays audit** — Confirm focus + stacking for bottom sheets / menus if any UX gaps vs modals.
+4. [ ] **Optional Sentry** — Run `@sentry/wizard` and set `NEXT_PUBLIC_SENTRY_DSN` when you want client/server error reporting.
 
 ---
 
