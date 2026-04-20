@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LegalPolicyModal } from "@/components/legal-policy-modal";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
@@ -47,6 +48,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [authError, setAuthError] = useState("");
   const [success, setSuccess] = useState("");
@@ -419,23 +421,25 @@ export default function SignUpPage() {
                     className={`text-sm leading-snug ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}
                   >
                     I agree to CineMatch&apos;s{" "}
-                    <Link
-                      href="/terms"
+                    <button
+                      type="button"
+                      onClick={() => setLegalModal("terms")}
                       className={`font-semibold underline-offset-2 hover:underline ${
                         isDarkMode ? "text-violet-300" : "text-violet-700"
                       }`}
                     >
                       Terms of Service
-                    </Link>{" "}
+                    </button>{" "}
                     and{" "}
-                    <Link
-                      href="/privacy"
+                    <button
+                      type="button"
+                      onClick={() => setLegalModal("privacy")}
                       className={`font-semibold underline-offset-2 hover:underline ${
                         isDarkMode ? "text-violet-300" : "text-violet-700"
                       }`}
                     >
                       Privacy Policy
-                    </Link>
+                    </button>
                     .
                   </label>
                 </div>
@@ -547,6 +551,11 @@ export default function SignUpPage() {
             ) : null}
           </SurfaceCard>
         </div>
+        <LegalPolicyModal
+          variant={legalModal}
+          isDarkMode={isDarkMode}
+          onClose={() => setLegalModal(null)}
+        />
       </div>
     </div>
   );
