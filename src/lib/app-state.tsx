@@ -19,8 +19,7 @@ import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
-import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
-import { computeMovieMatchPercent } from "@/lib/match-score";
+import { buildDiscoverQueue } from "@/lib/discover-queue";
 import {
   clearStoredAuthSession,
   getStoredAuthSession,
@@ -585,44 +584,6 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
     ...current,
     movies: [...current.movies, ...newMovies],
   };
-}
-
-function getRuntimeMinutes(runtimeLabel: string) {
-  if (!runtimeLabel || runtimeLabel === "N/A") {
-    return null;
-  }
-
-  const hoursMatch = runtimeLabel.match(/(\d+)h/);
-  const minutesMatch = runtimeLabel.match(/(\d+)m/);
-  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
-  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
-  const totalMinutes = hours * 60 + minutes;
-
-  return totalMinutes > 0 ? totalMinutes : null;
-}
-
-function passesDiscoverQualityThreshold(movie: Movie) {
-  if (movie.rating < 3) {
-    return false;
-  }
-
-  const runtimeMinutes = getRuntimeMinutes(movie.runtime);
-
-  if (runtimeMinutes !== null && runtimeMinutes < 20) {
-    return false;
-  }
-
-  return true;
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) | 0;
-  }
-
-  return Math.abs(hash);
 }
 
 function chunkItems<T>(items: T[], size: number) {
@@ -1870,99 +1831,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     new Map<string, number>(),
   );
 
-  const hiddenMovieIds = new Set(
-    data.swipes
-      .filter((swipe) => {
-        if (swipe.userId !== currentUserId) {
-          return false;
-        }
-
-        if (swipe.decision === "accepted") {
-          return true;
-        }
-
-        if (swipe.decision !== "rejected") {
-          return false;
-        }
-
-        const rejectedAt = new Date(swipe.createdAt).getTime();
-        return (
-          Number.isFinite(rejectedAt) &&
-          discoverVisibilityTimestamp - rejectedAt < DISCOVER_REJECT_HIDE_WINDOW_MS
-        );
-      })
-      .map((swipe) => swipe.movieId),
-  );
-
-  const sortBySessionShuffle = (movies: Movie[]) =>
-    [...movies].sort(
-      (left, right) =>
-        hashString(`${left.id}:${discoverShuffleSeed}`) -
-        hashString(`${right.id}:${discoverShuffleSeed}`),
-    );
-
-  const sortDiscoverQueue = (movies: Movie[]) =>
-    [...movies].sort((left, right) => {
-      const getDiscoverPriorityScore = (movie: Movie) => {
-        const acceptedGenreAffinity = movie.genre.reduce(
-          (score, entry) => score + (acceptedGenreCounts.get(entry.trim().toLowerCase()) ?? 0),
-          0,
-        );
-        const preferenceMatchScore = computeMovieMatchPercent(movie, {
-          acceptedGenres: acceptedGenreCounts.keys(),
-          onboarding: onboardingPreferences,
-        });
-        const mediaPreferenceBonus =
-          onboardingPreferences.mediaPreference === "both" ||
-          onboardingPreferences.mediaPreference === movie.mediaType
-            ? 5
-            : -6;
-
-        return preferenceMatchScore + acceptedGenreAffinity * 3 + mediaPreferenceBonus;
-      };
-
-      const leftScore = getDiscoverPriorityScore(left);
-      const rightScore = getDiscoverPriorityScore(right);
-
-      if (leftScore !== rightScore) {
-        return rightScore - leftScore;
-      }
-
-      return (
-        hashString(`${left.id}:${discoverShuffleSeed}`) -
-        hashString(`${right.id}:${discoverShuffleSeed}`)
-      );
-    });
-
-  const rotateDiscoverQueue = (movies: Movie[]) => {
-    if (movies.length <= 1) {
-      return movies;
-    }
-
-    const offset = discoverStartOffset % movies.length;
-
-    if (offset === 0) {
-      return movies;
-    }
-
-    return [...movies.slice(offset), ...movies.slice(0, offset)];
-  };
-
-  const discoverQueue = currentUserId
-    ? rotateDiscoverQueue(
-        sortDiscoverQueue(
-          data.movies.filter(
-            (movie) =>
-              passesDiscoverQualityThreshold(movie) &&
-              !hiddenMovieIds.has(movie.id),
-          ),
-        ),
-      )
-    : rotateDiscoverQueue(
-        sortBySessionShuffle(
-          data.movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
-        ),
-      );
+  const discoverQueue = buildDiscoverQueue({
+    movies: data.movies,
+    swipes: data.swipes,
+    currentUserId,
+    discoverShuffleSeed,
+    discoverStartOffset,
+    discoverVisibilityTimestamp,
+    onboardingPreferences,
+  });
 
   const sharedMovies: SharedMovieView[] = currentUserId
     ? data.links
