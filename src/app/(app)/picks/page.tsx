@@ -10,6 +10,10 @@ import { PageHeader } from "@/components/page-header";
 import { PicksMovieRow } from "@/components/picks-movie-row";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { SurfaceCard } from "@/components/surface-card";
+import {
+  shouldVirtualizeList,
+  VirtualScrollList,
+} from "@/components/virtual-scroll-list";
 import { useAppState } from "@/lib/app-state";
 import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
 import { computeMovieMatchPercent } from "@/lib/match-score";
@@ -1174,19 +1178,40 @@ export default function PicksPage() {
             <div className="space-y-3 sm:space-y-3.5">
               {picksListTab === "queue" ? (
                 queueMovies.length > 0 ? (
-                  queueMovies.map((movie, index) => (
-                    <PicksMovieRow
-                      key={movie.id}
-                      movie={movie}
-                      listIndex={index}
-                      matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
-                      isDarkMode={isDarkMode}
-                      onOpenDetails={openPickDetails}
-                      onShare={handleShareMovie}
-                      onMarkWatched={requestMarkWatched}
-                      onRequestRemove={requestRemovePick}
-                    />
-                  ))
+                  shouldVirtualizeList(queueMovies.length) ? (
+                    <VirtualScrollList count={queueMovies.length} estimateItemSize={118}>
+                      {(index) => {
+                        const movie = queueMovies[index]!;
+                        return (
+                          <PicksMovieRow
+                            key={movie.id}
+                            movie={movie}
+                            listIndex={index}
+                            matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
+                            isDarkMode={isDarkMode}
+                            onOpenDetails={openPickDetails}
+                            onShare={handleShareMovie}
+                            onMarkWatched={requestMarkWatched}
+                            onRequestRemove={requestRemovePick}
+                          />
+                        );
+                      }}
+                    </VirtualScrollList>
+                  ) : (
+                    queueMovies.map((movie, index) => (
+                      <PicksMovieRow
+                        key={movie.id}
+                        movie={movie}
+                        listIndex={index}
+                        matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
+                        isDarkMode={isDarkMode}
+                        onOpenDetails={openPickDetails}
+                        onShare={handleShareMovie}
+                        onMarkWatched={requestMarkWatched}
+                        onRequestRemove={requestRemovePick}
+                      />
+                    ))
+                  )
                 ) : (
                   <SurfaceCard className="space-y-2 px-4 py-5 text-center sm:px-5">
                     <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -1205,22 +1230,46 @@ export default function PicksPage() {
                   </SurfaceCard>
                 )
               ) : watchedPickReviews.length > 0 ? (
-                watchedPickReviews.map((entry, index) => (
-                  <PicksMovieRow
-                    key={`${entry.movie.id}-${entry.watchedAt}`}
-                    variant="watched"
-                    movie={entry.movie}
-                    watchedRecommended={entry.recommended}
-                    listIndex={index}
-                    matchingPartners={partnerNamesByPickId.get(entry.movie.id) ?? []}
-                    isDarkMode={isDarkMode}
-                    onOpenDetails={openPickDetails}
-                    onShare={handleShareMovie}
-                    onMarkWatched={requestMarkWatched}
-                    onRequestRemove={requestRemovePick}
-                    onUnwatch={handleUnwatch}
-                  />
-                ))
+                shouldVirtualizeList(watchedPickReviews.length) ? (
+                  <VirtualScrollList count={watchedPickReviews.length} estimateItemSize={128}>
+                    {(index) => {
+                      const entry = watchedPickReviews[index]!;
+                      return (
+                        <PicksMovieRow
+                          key={`${entry.movie.id}-${entry.watchedAt}`}
+                          variant="watched"
+                          movie={entry.movie}
+                          watchedRecommended={entry.recommended}
+                          listIndex={index}
+                          matchingPartners={partnerNamesByPickId.get(entry.movie.id) ?? []}
+                          isDarkMode={isDarkMode}
+                          onOpenDetails={openPickDetails}
+                          onShare={handleShareMovie}
+                          onMarkWatched={requestMarkWatched}
+                          onRequestRemove={requestRemovePick}
+                          onUnwatch={handleUnwatch}
+                        />
+                      );
+                    }}
+                  </VirtualScrollList>
+                ) : (
+                  watchedPickReviews.map((entry, index) => (
+                    <PicksMovieRow
+                      key={`${entry.movie.id}-${entry.watchedAt}`}
+                      variant="watched"
+                      movie={entry.movie}
+                      watchedRecommended={entry.recommended}
+                      listIndex={index}
+                      matchingPartners={partnerNamesByPickId.get(entry.movie.id) ?? []}
+                      isDarkMode={isDarkMode}
+                      onOpenDetails={openPickDetails}
+                      onShare={handleShareMovie}
+                      onMarkWatched={requestMarkWatched}
+                      onRequestRemove={requestRemovePick}
+                      onUnwatch={handleUnwatch}
+                    />
+                  ))
+                )
               ) : (
                 <SurfaceCard className="space-y-2 px-4 py-5 text-center sm:px-5">
                   <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
