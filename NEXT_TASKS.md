@@ -21,29 +21,20 @@
 
 ---
 
-## Next tasks (open)
+## Next tasks (open — priority only)
 
-### Architecture
+1. [ ] **Shrink `app-state.tsx` (sync path)** — Extract account-sync browser fetch, Supabase settings row reads/writes, and chunked hydration into `src/lib/account-sync/` (or focused hooks). Keeps the provider maintainable and easier to test.
 
-1. [ ] **Shrink `app-state.tsx` (sync path)** — Extract account-sync browser fetch, settings row reads/writes, and chunked Supabase hydration into `src/lib/hooks/` or `src/lib/account-sync/`.
+2. [ ] **Stronger automated tests** — Add unit tests for `discover-quality` and `discover-queue`; add integration-style coverage for high-risk paths (e.g. account-sync or auth) using Vitest + MSW or a small Playwright smoke suite. CI already runs `npm test` — extend it, don’t replace it.
 
-### Quality & operations
+3. [ ] **Android + Play release discipline** — For each store-bound release: `npm run cap:sync`, install on a real device, run through `docs/MANUAL_QA.md`; bump `versionCode` / `versionName` in `android/app/build.gradle`; build a **signed release AAB**; in Play Console complete Data Safety, screenshots, and privacy policy URL (see `docs/GOOGLE_PLAY_PUBLISHING.md`). Keep upload keys and secrets out of git.
 
-2. [ ] **Broader test coverage** — Unit tests for `discover-quality` / `discover-queue`; optional Playwright or Vitest + MSW for core flows.
-3. [ ] **Optional Sentry** — `@sentry/wizard` + `NEXT_PUBLIC_SENTRY_DSN`; `instrumentation.ts` stub exists.
-4. [ ] **Bundle checks** — `npm run analyze` after large UI/deps changes.
+4. [ ] **Bundle budget** — After large dependency upgrades or heavy new routes, run `npm run analyze` and check First Load JS on Discover / Picks so regressions are visible early.
 
-### Platform & release
-
-5. [ ] **Android smoke** — `cap:sync`, device install, core flows + safe areas (`docs/MANUAL_QA.md`).
-
-### Optional product
-
-6. [ ] **Analytics / cookies** — If you add measurement; align with Privacy/Terms and consent rules.
-7. [ ] **PWA / install** — If web install matters more than the native app.
+5. [ ] **Production monitoring (after you have traffic)** — When the app is live for real users, wire client + server error reporting (e.g. `@sentry/nextjs` + `NEXT_PUBLIC_SENTRY_DSN`) using the existing `instrumentation.ts` hook and `x-request-id` for correlation.
 
 ---
 
 _Maintainer: English only. Git: only commit/push this file if you ask._
 
-_Last updated: Apr 2026 — Tasks 2–5 (virtualize Discover/Shared, TMDB images, sheet backdrop) marked complete._
+_Last updated: Apr 2026 — Open list trimmed to priorities; optional analytics/PWA/Sentry-as-nice-to-have removed; release and monitoring called out explicitly._
