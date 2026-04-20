@@ -31,10 +31,10 @@ export function ErrorFallbackContent({
             CineMatch
           </p>
           <h1 className="text-xl font-semibold leading-snug text-slate-900">
-            Something went wrong
+            We couldn’t load this screen
           </h1>
           <p className="text-sm leading-relaxed text-slate-600">
-            The app hit an unexpected error. You can try again, or go back to sign in.
+            A runtime error stopped this page. Use Try again to reload, or go back to sign in.
           </p>
         </div>
 

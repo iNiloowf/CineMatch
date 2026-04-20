@@ -26,10 +26,10 @@ export function AppErrorScreen({ error, reset, variant = "embedded" }: Props) {
         role="alert"
       >
         <h1 className="text-[length:var(--font-scale-title)] font-semibold text-slate-900 theme-dark:text-slate-50">
-          Something went wrong
+          We couldn’t load this section
         </h1>
         <p className="mt-2 text-[length:var(--font-scale-body)] text-slate-600 theme-dark:text-slate-300">
-          The app hit an unexpected error. You can try again or go back to browsing.
+          A runtime error stopped this part of the app. Try again to retry, or open Discover.
         </p>
         {process.env.NODE_ENV === "development" && (
           <pre className="mt-4 max-h-32 overflow-auto rounded-lg bg-slate-100/80 p-3 text-xs text-slate-800 theme-dark:bg-slate-800/80 theme-dark:text-slate-200">

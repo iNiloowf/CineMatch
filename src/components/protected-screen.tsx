@@ -16,6 +16,7 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
     isSyncingAccountData,
     accountSyncError,
     retryAccountSync,
+    logout,
   } = useAppState();
 
   useEffect(() => {
@@ -55,6 +56,12 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
           title="Couldn’t sync your account"
           description={accountSyncError}
           onRetry={retryAccountSync}
+          secondaryAction={{
+            label: "Back to sign in",
+            onClick: () => {
+              void logout().then(() => router.replace("/"));
+            },
+          }}
         />
       </div>
     );

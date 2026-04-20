@@ -1737,7 +1737,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
 
         setAccountSyncError(
-          "We couldn’t refresh your account from the cloud after several tries.",
+          "No response from the server after several tries. Check your connection, then tap Retry.",
         );
         return;
       }
@@ -1782,7 +1782,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
 
         setAccountSyncError(
-          "We couldn’t load your profile, picks, or links from the server.",
+          "Couldn’t load your profile and picks from the server. Check Wi-Fi or mobile data, then Retry.",
         );
         return;
       }
@@ -1799,7 +1799,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     void loadSupabaseAppData().catch(() => {
       if (active) {
         setIsSyncingAccountData(false);
-        setAccountSyncError("Account sync was interrupted. Try again.");
+        setAccountSyncError("Sync stopped unexpectedly—often a weak signal. Check your connection, then Retry.");
       }
     });
 

@@ -69,7 +69,7 @@ export function OfflineBanner() {
       <button
         type="button"
         onClick={() => setDismissed(true)}
-        className={`shrink-0 rounded-lg p-1 text-sm font-medium transition hover:bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 ${
+        className={`flex size-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-sm font-medium transition hover:bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 ${
           isDarkMode ? "text-amber-100/90" : "text-amber-900/80"
         }`}
         aria-label="Dismiss offline message"

@@ -237,7 +237,7 @@ export default function ConnectPage() {
             <NetworkStatusBlock
               variant="error"
               isDarkMode={isDarkMode}
-              title="Something went wrong"
+              title="Couldn’t complete that action"
               description={actionError.message}
               onRetry={actionError.retry}
             />

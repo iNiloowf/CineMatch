@@ -127,9 +127,13 @@ export function NetworkStatusBlock({
         </p>
       ) : null}
       {(onRetry && variant !== "loading") || secondaryAction || tertiaryAction ? (
-        <div className="flex flex-col flex-wrap gap-2 sm:flex-row sm:justify-center">
+        <div className="flex w-full max-[420px]:flex-col max-[420px]:gap-2.5 sm:flex-row sm:flex-wrap sm:justify-center">
           {onRetry && variant !== "loading" ? (
-            <button type="button" onClick={onRetry} className="ui-btn ui-btn-primary">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="ui-btn ui-btn-primary min-h-[44px] max-[420px]:w-full sm:min-h-0 sm:w-auto"
+            >
               {retryLabel}
             </button>
           ) : null}
@@ -137,7 +141,7 @@ export function NetworkStatusBlock({
             <button
               type="button"
               onClick={secondaryAction.onClick}
-              className="ui-btn ui-btn-secondary"
+              className="ui-btn ui-btn-secondary min-h-[44px] max-[420px]:w-full sm:min-h-0 sm:w-auto"
             >
               {secondaryAction.label}
             </button>
@@ -146,7 +150,7 @@ export function NetworkStatusBlock({
             <button
               type="button"
               onClick={tertiaryAction.onClick}
-              className="ui-btn ui-btn-ghost"
+              className="ui-btn ui-btn-ghost min-h-[44px] max-[420px]:w-full sm:min-h-0 sm:w-auto"
             >
               {tertiaryAction.label}
             </button>

@@ -253,7 +253,9 @@ export default function ProfilePage() {
 
     if (!result.ok) {
       setSaveFeedback("error");
-      setSaveMessage(result.message ?? "Something went wrong while saving.");
+      setSaveMessage(
+        result.message ?? "Couldn’t save your profile. Check your connection and try again.",
+      );
       return;
     }
 
