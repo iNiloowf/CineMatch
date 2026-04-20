@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android / Capacitor (extra safety at repo root; see also android/.gitignore)
+android/app/build/
+android/build/
+android/.gradle/
