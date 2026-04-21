@@ -146,8 +146,8 @@ export default function SettingsPage() {
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
 
   const preferencesDivider = isDarkMode
-    ? "border-t border-white/10 pt-8 mt-2"
-    : "border-t border-slate-200/90 pt-8 mt-2";
+    ? "border-t border-white/10 pt-8 mt-6"
+    : "border-t border-slate-200/90 pt-8 mt-6";
 
   const { incomplete: achievementsInProgress } = useMemo(
     () => partitionAchievements(achievements),
@@ -409,7 +409,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-5">
+    <div className="w-full min-w-0 space-y-8">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
@@ -829,7 +829,7 @@ export default function SettingsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "40ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "40ms" }}>
         <p className={sectionEyebrow}>Appearance</p>
         <div className="space-y-4">
           <SettingToggle
@@ -853,7 +853,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "75ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "75ms" }}>
         <p className={sectionEyebrow}>Notifications</p>
         <div className="space-y-4">
           <SettingToggle
@@ -865,7 +865,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "110ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "110ms" }}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
           className={`w-full min-w-0 rounded-[18px] border px-4 py-4 ${
@@ -1092,7 +1092,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "120ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "120ms" }}>
         <p className={sectionEyebrow}>Privacy</p>
         <div className="space-y-4">
           <SettingToggle
@@ -1111,8 +1111,8 @@ export default function SettingsPage() {
       </SurfaceCard>
 
       <div className={preferencesDivider}>
-        <SurfaceCard className="fade-up-enter space-y-5" style={{ animationDelay: "140ms" }}>
-          <div className="space-y-1">
+        <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "140ms" }}>
+          <div className="space-y-1.5">
             <p className={sectionEyebrow}>Progress</p>
             <p
               className={`text-sm font-semibold ${
@@ -1148,7 +1148,7 @@ export default function SettingsPage() {
           )}
         </SurfaceCard>
 
-        <SurfaceCard className="fade-up-enter mt-4 space-y-4" style={{ animationDelay: "150ms" }}>
+        <SurfaceCard className="fade-up-enter mt-4 space-y-6" style={{ animationDelay: "150ms" }}>
           <p className={sectionEyebrow}>Legal</p>
           <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
             Review app policies and terms before using CineMatch.

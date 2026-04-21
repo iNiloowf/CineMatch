@@ -16,6 +16,9 @@
   --motion-duration-enter: 220ms;
   --motion-duration-reveal: 260ms;
   --motion-duration-modal: 300ms;
+  /** Modal / sheet / menu entrance — slightly slower for a clearer pop */
+  --motion-duration-overlay-pop: 440ms;
+  --motion-duration-menu-pop: 380ms;
   --motion-duration-discover-out: 190ms;
   --motion-duration-discover-in: 260ms;
   --motion-duration-discover-swipe-accept: 220ms;
@@ -31,6 +34,8 @@
 
   --motion-ease-standard: var(--ease-soft);
   --motion-ease-emphasized: cubic-bezier(0.2, 0.9, 0.25, 1);
+  /** Softer settle for overlays (dialogs, sheets, menus) */
+  --motion-ease-overlay-pop: cubic-bezier(0.22, 1, 0.32, 1);
   --motion-ease-shimmer: ease-in-out;
   --motion-ease-out: ease-out;
 
@@ -261,18 +266,18 @@ input[type="range"] {
 }
 
 .expand-soft {
-  animation: expandSoft var(--motion-duration-reveal) var(--motion-ease-emphasized) both;
+  animation: expandSoft var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: top center;
 }
 
 /** Bottom sheet (e.g. Discover filter) — slides up from the anchor edge */
 .expand-sheet {
-  animation: sheetSlideUp var(--motion-duration-reveal) var(--motion-ease-emphasized) both;
+  animation: sheetSlideUp var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: bottom center;
 }
 
 .details-modal-shell {
-  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  animation: detailsModalIn var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: top center;
 }
 
@@ -280,18 +285,18 @@ input[type="range"] {
 .ui-overlay > .ui-shell.ui-shell--dialog-sm,
 .ui-overlay > .ui-shell.ui-shell--dialog-md,
 .ui-overlay > .ui-shell.ui-shell--dialog-lg {
-  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  animation: detailsModalIn var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: center center;
 }
 
 /** Paste invite etc. — panel without ui-shell--dialog-md */
 .ui-popup-motion {
-  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  animation: detailsModalIn var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: center center;
 }
 
 .shared-details-modal {
-  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  animation: detailsModalIn var(--motion-duration-overlay-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: center center;
 }
 
@@ -662,7 +667,7 @@ input[type="range"] {
   box-shadow: var(--elev-menu);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  animation: menuPopoverIn var(--motion-duration-ui) var(--motion-ease-emphasized) both;
+  animation: menuPopoverIn var(--motion-duration-menu-pop) var(--motion-ease-overlay-pop) both;
   transform-origin: top right;
 }
 
@@ -1185,7 +1190,7 @@ input[type="range"] {
 @keyframes sheetSlideUp {
   from {
     opacity: 0;
-    transform: translateY(22px);
+    transform: translateY(28px);
   }
 
   to {
@@ -1197,7 +1202,7 @@ input[type="range"] {
 @keyframes menuPopoverIn {
   from {
     opacity: 0;
-    transform: scale(0.94) translateY(-6px);
+    transform: scale(0.92) translateY(-8px);
   }
 
   to {
@@ -1209,7 +1214,7 @@ input[type="range"] {
 @keyframes detailsModalIn {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.94);
+    transform: translateY(22px) scale(0.96);
   }
 
   to {
