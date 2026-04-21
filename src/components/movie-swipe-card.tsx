@@ -92,13 +92,9 @@ export function MovieSwipeCard({
       const nextValue = !currentValue;
 
       if (!nextValue) {
-        const surfaceSection = descriptionSectionRef.current?.closest("section");
-
-        if (surfaceSection instanceof HTMLElement) {
-          window.requestAnimationFrame(() => {
-            surfaceSection.scrollTo({ top: 0, behavior: "smooth" });
-          });
-        }
+        window.requestAnimationFrame(() => {
+          descriptionSectionRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+        });
       }
 
       return nextValue;
@@ -254,11 +250,6 @@ export function MovieSwipeCard({
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
           transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
-          touchAction: isDescriptionExpanded ? "pan-y" : "auto",
-          overflowY: isDescriptionExpanded ? "auto" : "visible",
-          overscrollBehaviorY: isDescriptionExpanded ? "contain" : "auto",
-          WebkitOverflowScrolling: "touch",
-          scrollbarGutter: "stable",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -485,9 +476,8 @@ export function MovieSwipeCard({
 
         <div className="mt-[var(--swipe-y-gap)] flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
-            ref={descriptionSectionRef}
-            className={`w-full rounded-[22px] px-3 py-2.5 text-left ${
-              isDescriptionExpanded ? "min-h-0 flex-1 overflow-y-auto pr-1" : "shrink-0"
+            className={`flex w-full flex-col overflow-hidden rounded-[22px] text-left ${
+              isDescriptionExpanded ? "min-h-0 flex-1" : "shrink-0"
             } ${
               isDarkMode
                 ? "bg-white/10"
@@ -495,69 +485,79 @@ export function MovieSwipeCard({
             } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
             onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
           >
-            {shouldClamp ? (
-              isDescriptionExpanded ? (
-                <>
-                  <p
-                    className={`text-[11px] leading-[1.35rem] ${
-                      isDarkMode ? "text-slate-200" : "text-slate-600"
-                    }`}
-                  >
-                    {movie.description}
-                  </p>
-                  <div className="mt-1 flex justify-end">
+            <div
+              ref={descriptionSectionRef}
+              className={`text-left ${
+                isDescriptionExpanded
+                  ? "min-h-0 max-h-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 py-2.5 [scrollbar-gutter:stable] touch-pan-y"
+                  : "px-3 py-2.5"
+              }`}
+              style={isDescriptionExpanded ? { WebkitOverflowScrolling: "touch" } : undefined}
+            >
+              {shouldClamp ? (
+                isDescriptionExpanded ? (
+                  <>
+                    <p
+                      className={`text-[11px] leading-[1.35rem] ${
+                        isDarkMode ? "text-slate-200" : "text-slate-600"
+                      }`}
+                    >
+                      {movie.description}
+                    </p>
+                    <div className="mt-1 flex justify-end">
+                      <button
+                        type="button"
+                        aria-label="Show less description"
+                        aria-expanded
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleToggleDescription();
+                        }}
+                        className={`min-h-11 rounded-lg px-1 leading-5 ${
+                          isDarkMode ? "text-violet-300" : "text-violet-600"
+                        }`}
+                        style={{ fontSize: "11px" }}
+                      >
+                        Less
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="relative min-h-0">
+                    <p
+                      className={`line-clamp-3 pr-[3.35rem] text-[11px] leading-[1.35rem] ${
+                        isDarkMode ? "text-slate-200" : "text-slate-600"
+                      }`}
+                    >
+                      {movie.description}
+                    </p>
                     <button
                       type="button"
-                      aria-label="Show less description"
-                      aria-expanded
+                      aria-label="Show full description"
+                      aria-expanded={false}
                       onClick={(event) => {
                         event.stopPropagation();
                         handleToggleDescription();
                       }}
-                      className={`min-h-11 rounded-lg px-1 leading-5 ${
+                      className={`absolute bottom-0 right-0 z-[1] inline-flex min-h-11 items-end rounded-lg px-1 leading-5 ${
                         isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                       style={{ fontSize: "11px" }}
                     >
-                      Less
+                      More
                     </button>
                   </div>
-                </>
+                )
               ) : (
-                <div className="relative min-h-0">
-                  <p
-                    className={`line-clamp-3 pr-[3.35rem] text-[11px] leading-[1.35rem] ${
-                      isDarkMode ? "text-slate-200" : "text-slate-600"
-                    }`}
-                  >
-                    {movie.description}
-                  </p>
-                  <button
-                    type="button"
-                    aria-label="Show full description"
-                    aria-expanded={false}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleToggleDescription();
-                    }}
-                    className={`absolute bottom-0 right-0 z-[1] inline-flex min-h-11 items-end rounded-lg px-1 leading-5 ${
-                      isDarkMode ? "text-violet-300" : "text-violet-600"
-                    }`}
-                    style={{ fontSize: "11px" }}
-                  >
-                    More
-                  </button>
-                </div>
-              )
-            ) : (
-              <p
-                className={`text-[11px] leading-[1.35rem] ${
-                  isDarkMode ? "text-slate-200" : "text-slate-600"
-                }`}
-              >
-                {movie.description}
-              </p>
-            )}
+                <p
+                  className={`text-[11px] leading-[1.35rem] ${
+                    isDarkMode ? "text-slate-200" : "text-slate-600"
+                  }`}
+                >
+                  {movie.description}
+                </p>
+              )}
+            </div>
           </div>
 
           {!isDescriptionExpanded ? <div className="min-h-0 w-full min-w-0 flex-1" aria-hidden /> : null}
