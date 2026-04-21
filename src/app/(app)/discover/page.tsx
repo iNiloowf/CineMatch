@@ -34,6 +34,8 @@ type DiscoverPageContentProps = {
   currentUserId: string | null;
   discoverQueue: Movie[];
   discoverSessionKey: string;
+  discoverStartOffset: number;
+  discoverVisibilityTimestamp: number;
   registerMovies: (movies: Movie[]) => void;
   swipeMovie: (movieId: string, decision: "accepted" | "rejected") => Promise<void>;
   undoSwipe: (movieId: string) => Promise<void>;
@@ -75,6 +77,8 @@ function DiscoverPageContent({
   currentUserId,
   discoverQueue,
   discoverSessionKey,
+  discoverStartOffset,
+  discoverVisibilityTimestamp,
   registerMovies,
   swipeMovie,
   undoSwipe,
@@ -520,6 +524,9 @@ function DiscoverPageContent({
         browseIndex,
         focusedMovieId,
         isSearchSheetOpen,
+        deckShuffleSeed: discoverSessionKey,
+        deckStartOffset: discoverStartOffset,
+        deckVisibilityTimestamp: discoverVisibilityTimestamp,
       };
       saveDiscoverSession(currentUserId, payload);
     }, 450);
@@ -532,6 +539,9 @@ function DiscoverPageContent({
   }, [
     browseIndex,
     currentUserId,
+    discoverSessionKey,
+    discoverStartOffset,
+    discoverVisibilityTimestamp,
     focusedMovieId,
     isSearchSheetOpen,
     searchQuery,
@@ -1980,6 +1990,8 @@ export default function DiscoverPage() {
     currentUser,
     discoverQueue,
     discoverSessionKey,
+    discoverStartOffset,
+    discoverVisibilityTimestamp,
     registerMovies,
     swipeMovie,
     undoSwipe,
@@ -2003,6 +2015,8 @@ export default function DiscoverPage() {
       currentUserId={currentUserId}
       discoverQueue={discoverQueue}
       discoverSessionKey={discoverSessionKey}
+      discoverStartOffset={discoverStartOffset}
+      discoverVisibilityTimestamp={discoverVisibilityTimestamp}
       registerMovies={registerMovies}
       swipeMovie={swipeMovie}
       undoSwipe={undoSwipe}

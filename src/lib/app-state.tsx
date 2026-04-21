@@ -9,6 +9,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,6 +21,7 @@ import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { buildDiscoverQueue } from "@/lib/discover-queue";
+import { readPersistedDiscoverDeck } from "@/lib/discover-session";
 import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
 import {
   clearStoredAuthSession,
@@ -185,6 +187,8 @@ type AppStateContextValue = {
   discoverQueue: Movie[];
   /** Used with swipes to decide if a recent reject still hides a title from Discover. */
   discoverVisibilityTimestamp: number;
+  /** Rotation offset passed into `buildDiscoverQueue` (persisted with Discover session). */
+  discoverStartOffset: number;
   discoverSessionKey: string;
   linkedUsers: {
     user: User;
@@ -838,6 +842,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setDiscoverVisibilityTimestamp(Date.now());
   };
 
+  useLayoutEffect(() => {
+    const storedUserId = window.localStorage.getItem(CURRENT_USER_KEY);
+    const persisted = readPersistedDiscoverDeck(storedUserId);
+    if (!persisted) {
+      return;
+    }
+
+    setDiscoverShuffleSeed(persisted.shuffleSeed);
+    setDiscoverStartOffset(persisted.startOffset);
+    setDiscoverVisibilityTimestamp(persisted.visibilityTimestamp);
+  }, []);
+
   const requestAccountDataRefresh = useCallback(() => {
     setAccountRefreshKey((current) => current + 1);
   }, []);
@@ -1082,7 +1098,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (!sessionUser && storedSession?.userId) {
         setCurrentUserId(storedSession.userId);
-        refreshDiscoverShuffle(storedSession.userId);
         setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
           getStoredUserTheme(storedSession.userId) ?? getGlobalStoredTheme(),
@@ -1124,7 +1139,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }),
       );
       setCurrentUserId(sessionUser.id);
-      refreshDiscoverShuffle(sessionUser.id);
       setAccountRefreshKey((current) => current + 1);
       setPreferredDarkMode(
         getStoredUserTheme(sessionUser.id) ??
@@ -1144,7 +1158,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
           if (storedSession?.userId) {
             setCurrentUserId(storedSession.userId);
-            refreshDiscoverShuffle(storedSession.userId);
             setAccountRefreshKey((current) => current + 1);
             setPreferredDarkMode(
               getStoredUserTheme(storedSession.userId) ?? getGlobalStoredTheme(),
@@ -3011,6 +3024,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         watchedPickReviews,
         discoverQueue,
         discoverVisibilityTimestamp,
+        discoverStartOffset,
         discoverSessionKey: discoverShuffleSeed,
         linkedUsers,
         sharedMovies,
