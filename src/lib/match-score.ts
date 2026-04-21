@@ -8,6 +8,10 @@ const FAVORITE_GENRE_BONUS = 7.5;
 const DISLIKED_GENRE_PENALTY = 22;
 /** Title mixes something you love and something you skip — net score shouldn’t look like a slam dunk. */
 const MIXED_GENRE_CONFLICT_PENALTY = 12;
+/** User picked favorite genres — if this title has none of them, don’t show a “great” match. */
+const NO_FAVORITE_OVERLAP_PENALTY = 22;
+/** History on genres you didn’t list as favorites counts less (still possible, but weaker). */
+const AFFINITY_OFF_FAVORITE_MULTIPLIER = 0.48;
 
 type MatchContext = {
   /** Legacy: set of genres from accepted swipes (binary bonuses). */
@@ -59,7 +63,11 @@ export function computeMovieMatchPercent(
     if (affinity && affinity.size > 0) {
       const w = affinity.get(genre) ?? 0;
       if (w > 0) {
-        score += Math.min(28, w * 2.65);
+        let add = Math.min(28, w * 2.65);
+        if (favoriteGenres.size > 0 && !favoriteGenres.has(genre)) {
+          add *= AFFINITY_OFF_FAVORITE_MULTIPLIER;
+        }
+        score += add;
       }
     } else if (acceptedGenres.has(genre)) {
       score += 5.5;
@@ -83,6 +91,13 @@ export function computeMovieMatchPercent(
     const hitsDisliked = movieGenres.some((genre) => dislikedGenres.has(genre));
     if (hitsFavorite && hitsDisliked) {
       score -= MIXED_GENRE_CONFLICT_PENALTY;
+    }
+  }
+
+  if (favoriteGenres.size > 0 && movieGenres.length > 0) {
+    const overlapsFavorite = movieGenres.some((genre) => favoriteGenres.has(genre));
+    if (!overlapsFavorite) {
+      score -= NO_FAVORITE_OVERLAP_PENALTY;
     }
   }
 
@@ -251,6 +266,17 @@ export function explainDiscoverSwipeMatch(
     for (const line of genreLines.slice(0, 5)) {
       bullets.push(line);
     }
+  }
+
+  const movieGenreKeys = rawGenres.map((g) => g.trim().toLowerCase());
+  const overlapsStatedFavorite =
+    favoriteGenres.size > 0 &&
+    movieGenreKeys.length > 0 &&
+    movieGenreKeys.some((g) => favoriteGenres.has(g));
+  if (favoriteGenres.size > 0 && movieGenreKeys.length > 0 && !overlapsStatedFavorite) {
+    bullets.push(
+      `None of this title’s genres are in your **favorite** list — we **lower** the match, and history on those genres counts less than genres you asked for.`,
+    );
   }
 
   const hitsFavorite = rawGenres.some((g) => favoriteGenres.has(g.trim().toLowerCase()));

@@ -54,4 +54,22 @@ describe("computeMovieMatchPercent", () => {
     );
     expect(mixed).toBeLessThan(dramaOnly);
   });
+
+  it("drops the score when no genre overlaps stated favorites", () => {
+    const prefs = {
+      favoriteGenres: ["Drama", "Romance"],
+      dislikedGenres: [] as string[],
+      mediaPreference: "both" as const,
+    };
+    const offMenu = computeMovieMatchPercent(
+      { ...baseMovie, genre: ["Horror", "Thriller"] },
+      { onboarding: prefs },
+    );
+    const onMenu = computeMovieMatchPercent(
+      { ...baseMovie, genre: ["Drama", "Thriller"] },
+      { onboarding: prefs },
+    );
+    expect(offMenu).toBeLessThan(onMenu);
+    expect(offMenu).toBeLessThan(72);
+  });
 });
