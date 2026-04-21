@@ -13,6 +13,7 @@ import { partitionAchievements } from "@/lib/achievement-utils";
 import { useAppState } from "@/lib/app-state";
 import { defaultSettings } from "@/lib/mock-data";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { sanitizePartnerGiftCodeInput } from "@/lib/partner-gift-code";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
@@ -364,8 +365,7 @@ export default function SettingsPage() {
   };
 
   const handleRedeemGiftCode = async () => {
-    const code = giftRedeemCode.trim();
-    if (!code) {
+    if (!giftRedeemCode) {
       setGiftRedeemState("error");
       setGiftRedeemFeedback("Enter a gift code first.");
       return;
@@ -388,7 +388,7 @@ export default function SettingsPage() {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: giftRedeemCode }),
       });
       const payload = (await response.json()) as { error?: string };
 
@@ -715,11 +715,15 @@ export default function SettingsPage() {
                   </span>
                   <input
                     value={giftRedeemCode}
-                    onChange={(event) => setGiftRedeemCode(event.target.value.toUpperCase())}
-                    placeholder="CM-GIFT-XXXX-XXXX"
+                    onChange={(event) => setGiftRedeemCode(sanitizePartnerGiftCodeInput(event.target.value))}
+                    placeholder="CMGIFT + 8 characters"
                     autoComplete="off"
                     autoCapitalize="characters"
                     spellCheck={false}
+                    inputMode="text"
+                    lang="en"
+                    maxLength={20}
+                    pattern="[A-Za-z0-9]*"
                     className={`w-full rounded-[16px] border px-3.5 py-3 text-sm font-medium tracking-wide outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
                       isDarkMode
                         ? "border-white/14 bg-white/[0.06] text-white placeholder:text-slate-500"

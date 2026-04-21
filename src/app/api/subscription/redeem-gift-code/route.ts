@@ -1,12 +1,19 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { normalizePartnerGiftCode } from "@/lib/partner-gift-code";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
 const redeemGiftCodeSchema = z.object({
-  code: z.string().min(4),
+  code: z
+    .string()
+    .min(4)
+    .max(32)
+    .regex(/^[A-Za-z0-9]+$/, {
+      message: "Use only English letters and numbers.",
+    }),
 });
 
 type GiftCodeRow = {
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const normalizedCode = parsedBody.data.code.trim().toUpperCase();
+  const normalizedCode = normalizePartnerGiftCode(parsedBody.data.code);
   const giftCodeResult = await supabaseAdmin
     .from("subscription_partner_gift_codes")
     .select(
