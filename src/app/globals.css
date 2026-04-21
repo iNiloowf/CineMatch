@@ -253,6 +253,7 @@ input[type="range"] {
 .glass-shimmer::after {
   content: "";
   position: absolute;
+  z-index: 0;
   inset: -30%;
   background: linear-gradient(
     120deg,

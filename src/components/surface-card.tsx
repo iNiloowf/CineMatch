@@ -17,6 +17,10 @@ type SurfaceCardProps = {
    * so the fill reaches the rounded corners; padding lives on the inner shell only.
    */
   backgroundClassName?: string;
+  /**
+   * Dark mode adds `.glass-shimmer` (animated ::after). On some full-bleed cards that can read as a stray shadow/overlay after theme toggles — disable for those surfaces.
+   */
+  shimmer?: boolean;
 } & ComponentPropsWithoutRef<"section">;
 
 export function SurfaceCard({
@@ -24,6 +28,7 @@ export function SurfaceCard({
   className = "",
   bare = false,
   backgroundClassName,
+  shimmer = true,
   ...props
 }: SurfaceCardProps) {
   const { isDarkMode } = useAppState();
@@ -45,12 +50,16 @@ export function SurfaceCard({
     );
   }
 
+  const darkShell = shimmer
+    ? "glass-shimmer border border-white/16 bg-white/[0.11] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
+    : "border border-white/16 bg-white/[0.11] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
+
   return (
     <section
       {...props}
       className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] p-5 backdrop-blur-xl hover:-translate-y-0.5 ${
         isDarkMode
-          ? "glass-shimmer border border-white/16 bg-white/[0.11] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
+          ? darkShell
           : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]"
       } ${className}`}
     >

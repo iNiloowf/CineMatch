@@ -780,7 +780,11 @@ export default function SettingsPage() {
       />
 
       {currentUser ? (
-        <SurfaceCard className="fade-up-enter !p-0 overflow-hidden" style={{ animationDelay: "0ms" }}>
+        <SurfaceCard
+          shimmer={false}
+          className="fade-up-enter !p-0 overflow-hidden"
+          style={{ animationDelay: "0ms" }}
+        >
           <div
             className={`flex items-start gap-4 px-5 py-4 sm:px-6 sm:py-5 ${
               isDarkMode
