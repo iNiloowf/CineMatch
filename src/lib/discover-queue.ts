@@ -81,6 +81,59 @@ function recencyDeckBoost(
   return 0;
 }
 
+/** First real genre tag (not Movie/Series) — used to mix the deck so it isn’t one-note. */
+function primaryGenreKey(movie: Movie): string {
+  for (const raw of movie.genre) {
+    const trimmed = raw.trim();
+    const lower = trimmed.toLowerCase();
+    if (trimmed && lower !== "movie" && lower !== "series") {
+      return lower;
+    }
+  }
+  return "_other";
+}
+
+/**
+ * Reorders a score-sorted list so back-to-back cards rarely share the same primary genre.
+ * Keeps higher-ranked titles earlier when possible; falls back to strict order if the pool is narrow.
+ */
+export function diversifyDiscoverQueue(sorted: Movie[]): Movie[] {
+  if (sorted.length <= 2) {
+    return sorted;
+  }
+
+  const remaining = [...sorted];
+  const out: Movie[] = [];
+
+  while (remaining.length > 0) {
+    const avoid = new Set<string>();
+    if (out.length >= 1) {
+      avoid.add(primaryGenreKey(out[out.length - 1]!));
+    }
+    if (out.length >= 2) {
+      avoid.add(primaryGenreKey(out[out.length - 2]!));
+    }
+
+    let pickIndex = -1;
+    for (let i = 0; i < remaining.length; i++) {
+      const p = primaryGenreKey(remaining[i]!);
+      if (!avoid.has(p)) {
+        pickIndex = i;
+        break;
+      }
+    }
+
+    if (pickIndex === -1) {
+      pickIndex = 0;
+    }
+
+    const [next] = remaining.splice(pickIndex, 1);
+    out.push(next!);
+  }
+
+  return out;
+}
+
 /**
  * Computes the ordered Discover deck: quality filter, swipe visibility, taste scoring, shuffle, rotation.
  */
@@ -254,19 +307,18 @@ export function buildDiscoverQueue(options: {
   };
 
   if (currentUserId) {
-    return rotateDiscoverQueue(
-      sortDiscoverQueue(
-        movies.filter(
-          (movie) =>
-            passesDiscoverQualityThreshold(movie) && !hiddenMovieIds.has(movie.id),
-        ),
-      ),
+    const filtered = movies.filter(
+      (movie) =>
+        passesDiscoverQualityThreshold(movie) && !hiddenMovieIds.has(movie.id),
     );
+    return rotateDiscoverQueue(diversifyDiscoverQueue(sortDiscoverQueue(filtered)));
   }
 
   return rotateDiscoverQueue(
-    sortBySessionShuffle(
-      movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+    diversifyDiscoverQueue(
+      sortBySessionShuffle(
+        movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+      ),
     ),
   );
 }

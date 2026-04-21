@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDiscoverQueue, hashString } from "@/lib/discover-queue";
+import { buildDiscoverQueue, diversifyDiscoverQueue, hashString } from "@/lib/discover-queue";
 import type { Movie, OnboardingPreferences, SwipeRecord } from "@/lib/types";
 
 const onboarding: OnboardingPreferences = {
@@ -28,6 +28,17 @@ describe("discover-queue", () => {
   it("hashString is deterministic", () => {
     expect(hashString("a")).toBe(hashString("a"));
     expect(hashString("a")).not.toBe(hashString("b"));
+  });
+
+  it("diversifyDiscoverQueue interleaves primary genres when alternatives exist", () => {
+    const sorted = [
+      { ...mkMovie("d1"), genre: ["Drama", "Movie"] },
+      { ...mkMovie("d2"), genre: ["Drama"] },
+      { ...mkMovie("c1"), genre: ["Comedy"] },
+      { ...mkMovie("d3"), genre: ["Drama"] },
+    ];
+    const d = diversifyDiscoverQueue(sorted);
+    expect(d.map((m) => m.id)).toEqual(["d1", "c1", "d2", "d3"]);
   });
 
   it("buildDiscoverQueue returns only quality-passing titles when no user", () => {
