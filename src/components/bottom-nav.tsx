@@ -12,6 +12,26 @@ const items = [
   { href: "/settings", label: "Settings" },
 ];
 
+/** Connect lives outside the 5 tabs; highlight Profile while finishing an invite there. */
+const CONNECT_AS_PROFILE_TAB = /^\/connect(\/|$)/;
+
+function resolveBottomNavHighlight(pathname: string) {
+  const exactIndex = items.findIndex((item) => item.href === pathname);
+  if (exactIndex >= 0) {
+    return {
+      pillIndex: exactIndex,
+      activeHref: items[exactIndex].href,
+    };
+  }
+  if (CONNECT_AS_PROFILE_TAB.test(pathname)) {
+    const profileIndex = items.findIndex((item) => item.href === "/profile");
+    if (profileIndex >= 0) {
+      return { pillIndex: profileIndex, activeHref: "/profile" };
+    }
+  }
+  return { pillIndex: -1, activeHref: null as string | null };
+}
+
 function NavIcon({ href }: { href: string }) {
   if (href === "/discover") {
     return (
@@ -70,8 +90,8 @@ export function BottomNav() {
   const pathname = usePathname();
   const { isDarkMode } = useAppState();
 
-  const matchedIndex = items.findIndex((item) => item.href === pathname);
-  const hasTabMatch = matchedIndex >= 0;
+  const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
+  const hasTabMatch = pillIndex >= 0 && activeHref !== null;
 
   return (
     <nav
@@ -96,11 +116,11 @@ export function BottomNav() {
           } ${hasTabMatch ? "opacity-100" : "opacity-0"}`}
           style={{
             width: "calc((100% - 12px) / 5)",
-            transform: `translateX(calc(${hasTabMatch ? matchedIndex : 0} * 100%))`,
+            transform: `translateX(calc(${hasTabMatch ? pillIndex : 0} * 100%))`,
           }}
         />
         {items.map((item) => {
-          const active = hasTabMatch && pathname === item.href;
+          const active = Boolean(activeHref && item.href === activeHref);
 
           return (
             <Link

@@ -2,14 +2,23 @@
 export const MAX_LINKED_FRIENDS = 30;
 
 /**
- * Line users can put before the URL when sharing an invite (copy / system share sheet).
+ * Invite blurb for share / copy. The invite URL is always alone on the last line
+ * (no trailing text) so clients can linkify it reliably.
  */
 export function buildInviteShareMessage(inviteUrl: string, senderName?: string | null) {
+  const cleanUrl = inviteUrl.trim();
   const name = senderName?.trim();
-  const intro = name
-    ? `Hi! It's ${name}. Add me on CineMatch - open this link to connect our accounts:`
-    : `Hi! Add me on CineMatch - open this link to connect our accounts:`;
-  return `${intro}\n\n${inviteUrl}`;
+  const head = name
+    ? [
+        "CineMatch — match movies & shows with friends.",
+        `From: ${name}`,
+        "Open this link in the app to connect our accounts:",
+      ]
+    : [
+        "CineMatch — match movies & shows with friends.",
+        "Open this link in the app to connect:",
+      ];
+  return `${head.join("\n")}\n\n${cleanUrl}`;
 }
 
 export async function shareOrCopyInviteMessage(
@@ -39,9 +48,8 @@ export async function shareOrCopyInviteMessage(
 
   try {
     if (navigator.clipboard?.writeText) {
-      // Copy the URL alone so paste always yields one clean, tappable link.
-      await navigator.clipboard.writeText(inviteUrl);
-      return { ok: true, message: "Invite link copied." };
+      await navigator.clipboard.writeText(text);
+      return { ok: true, message: "Message copied — link is on the last line." };
     }
   } catch {
     return { ok: false, message: "Couldn’t copy. Try again." };
