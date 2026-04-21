@@ -660,7 +660,13 @@ export default function ProfilePage() {
         </div>
       ) : null}
       {discoverSkipsModalOpen && !discoverSkipDetailMovie ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] !px-5 !pb-[max(1rem,env(safe-area-inset-bottom,0px))] !pt-[max(0.75rem,env(safe-area-inset-top,0px))] bg-slate-950/45 backdrop-blur-md sm:!px-8">
+        <div
+          className="fixed inset-0 z-[var(--z-modal-backdrop)] flex items-center justify-center bg-slate-950/45 backdrop-blur-md"
+          style={{
+            boxSizing: "border-box",
+            padding: `max(12px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px))`,
+          }}
+        >
           <button
             type="button"
             aria-label="Close"
@@ -668,7 +674,7 @@ export default function ProfilePage() {
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex max-h-[min(72dvh,30rem)] w-full max-w-[min(100%,24rem)] flex-col overflow-hidden rounded-[24px] border shadow-[0_20px_56px_rgba(15,23,42,0.2)] sm:max-h-[min(78dvh,32rem)] sm:rounded-[26px] ${
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-full max-w-[min(22rem,calc(100vw-48px))] max-h-[min(72dvh,30rem)] flex-col overflow-hidden rounded-[24px] border shadow-[0_20px_56px_rgba(15,23,42,0.2)] sm:max-h-[min(78dvh,32rem)] sm:max-w-md sm:rounded-[26px] ${
               isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
             }`}
           >
@@ -780,17 +786,17 @@ export default function ProfilePage() {
           footer={({ openTrailer }) => {
             const inPicks = acceptedMovies.some((m) => m.id === discoverSkipDetailMovie.id);
             return (
-              <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:gap-2">
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
-                  className="ui-btn ui-btn-secondary min-h-9 w-full flex-1 px-3 py-2 text-xs sm:min-w-[7rem]"
+                  className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-[8rem]"
                   onClick={() => void openTrailer()}
                 >
                   Trailer
                 </button>
                 <button
                   type="button"
-                  className="ui-btn ui-btn-secondary min-h-9 w-full flex-1 px-3 py-2 text-xs sm:min-w-[7rem]"
+                  className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-[8rem]"
                   onClick={() => void handleRestoreDiscoverSkip(discoverSkipDetailMovie, { closeModals: true })}
                 >
                   Back in Discover
@@ -798,7 +804,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   disabled={inPicks}
-                  className="ui-btn ui-btn-primary min-h-9 w-full flex-1 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[7rem]"
+                  className="ui-btn ui-btn-primary min-h-12 w-full flex-1 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-[8rem]"
                   onClick={() => {
                     void (async () => {
                       registerMovies([discoverSkipDetailMovie]);
