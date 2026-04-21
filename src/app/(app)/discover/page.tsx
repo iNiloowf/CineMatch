@@ -838,22 +838,27 @@ function DiscoverPageContent({
                     { id: "movie" as const, label: "Movies" },
                     { id: "series" as const, label: "Series" },
                     { id: "both" as const, label: "Both" },
-                  ].map((option) => (
-                    <button
-                      key={`ob-media-${option.id}`}
-                      type="button"
-                      onClick={() => setOnboardingMediaPreference(option.id)}
-                      className={`min-h-[2.75rem] w-full rounded-[14px] px-3 py-2.5 text-center text-sm font-semibold ${
-                        onboardingMediaPreference === option.id
-                          ? "bg-violet-600 text-white"
-                          : isDarkMode
-                            ? "border border-white/12 bg-white/8 text-slate-200"
-                            : "border border-slate-200 bg-white text-slate-700"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  ].map((option) => {
+                    const selected = onboardingMediaPreference === option.id;
+                    return (
+                      <button
+                        key={`ob-media-${option.id}`}
+                        type="button"
+                        onClick={() => setOnboardingMediaPreference(option.id)}
+                        className={`min-h-[2.75rem] w-full rounded-[14px] px-3 py-2.5 text-center text-sm font-semibold transition ${
+                          selected
+                            ? isDarkMode
+                              ? "bg-white/[0.06] text-white shadow-[inset_0_0_0_2px_rgba(167,139,250,0.95)] ring-0"
+                              : "bg-slate-50 text-violet-900 shadow-[inset_0_0_0_2px_rgba(124,58,237,0.85)]"
+                            : isDarkMode
+                              ? "border border-white/12 bg-white/8 text-slate-200 hover:bg-white/10"
+                              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : null}
               {onboardingStep === 1 ? (
@@ -865,13 +870,13 @@ function DiscoverPageContent({
                   >
                     {onboardingFavorites.length}/{ONBOARDING_FAVORITE_GENRE_LIMIT} selected
                   </p>
-                  <ul className="grid list-none grid-cols-1 gap-2 sm:grid-cols-2">
+                  <ul className="grid list-none grid-cols-2 gap-2">
                     {onboardingGenres.map((genre) => (
                       <li key={`ob-like-${genre}`}>
                         <button
                           type="button"
                           onClick={() => toggleOnboardingFavoriteGenre(genre)}
-                          className={`flex min-h-[2.75rem] w-full items-center rounded-[14px] px-3 py-2 text-left text-sm font-semibold ${
+                          className={`flex min-h-[2.75rem] w-full items-center justify-center rounded-[14px] px-2 py-2 text-center text-sm font-semibold leading-tight ${
                             onboardingFavorites.includes(genre)
                               ? "bg-violet-600 text-white"
                               : isDarkMode
@@ -893,7 +898,7 @@ function DiscoverPageContent({
                       No other genres left to exclude — you already favor all available genres.
                     </p>
                   ) : (
-                    <ul className="grid list-none grid-cols-1 gap-2 sm:grid-cols-2">
+                    <ul className="grid list-none grid-cols-2 gap-2">
                       {onboardingDislikeGenreOptions.map((genre) => (
                         <li key={`ob-dislike-${genre}`}>
                           <button
@@ -905,7 +910,7 @@ function DiscoverPageContent({
                                   : [...current, genre],
                               )
                             }
-                            className={`flex min-h-[2.75rem] w-full items-center rounded-[14px] px-3 py-2 text-left text-sm font-semibold ${
+                            className={`flex min-h-[2.75rem] w-full items-center justify-center rounded-[14px] px-2 py-2 text-center text-sm font-semibold leading-tight ${
                               onboardingDisliked.includes(genre)
                                 ? "bg-rose-600 text-white"
                                 : isDarkMode
