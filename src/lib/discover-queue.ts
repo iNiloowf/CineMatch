@@ -3,11 +3,11 @@ import { passesDiscoverQualityThreshold } from "@/lib/discover-quality";
 import {
   buildDiscoverGenreAffinity,
   buildRejectedGenreWeights,
+  computeDiscoverPersonalizationWeight,
   computeTasteYearProfile,
-  normalizeDiscoverGenreKey,
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
-import { computeMovieMatchPercent } from "@/lib/match-score";
+import { computeDiscoverPreferenceBlend } from "@/lib/match-score";
 import type { Movie, OnboardingPreferences, SwipeRecord } from "@/lib/types";
 
 export type { DiscoverPickEngagement } from "@/lib/discover-taste";
@@ -112,6 +112,14 @@ export function buildDiscoverQueue(options: {
       )
     : { center: calendarYear - 4, spread: 14, classicEngaged: false };
 
+  const userSwipeCount = currentUserId
+    ? swipes.filter((s) => s.userId === currentUserId).length
+    : 0;
+  const personalizationW = currentUserId
+    ? computeDiscoverPersonalizationWeight(userSwipeCount, pickEngagement.length)
+    : 1;
+  const cold = 1 - personalizationW;
+
   const hiddenMovieIds = new Set(
     currentUserId
       ? swipes
@@ -148,16 +156,15 @@ export function buildDiscoverQueue(options: {
   const sortDiscoverQueue = (list: Movie[]) =>
     [...list].sort((left, right) => {
       const getDiscoverPriorityScore = (movie: Movie) => {
-        const rejectOverlap = movie.genre.reduce((sum, entry) => {
-          const key = normalizeDiscoverGenreKey(entry);
-          return key ? sum + (rejectedGenreWeights.get(key) ?? 0) : sum;
-        }, 0);
-
-        const preferenceMatchScore = computeMovieMatchPercent(movie, {
-          genreAffinityWeights: genreAffinity,
-          rejectedGenreWeights,
-          onboarding: onboardingPreferences,
-        });
+        const preferenceMatchScore = computeDiscoverPreferenceBlend(
+          movie,
+          personalizationW,
+          {
+            genreAffinity,
+            rejectedGenreWeights,
+            onboarding: onboardingPreferences,
+          },
+        );
 
         const mediaPreferenceBonus =
           onboardingPreferences.mediaPreference === "both" ||
@@ -165,20 +172,26 @@ export function buildDiscoverQueue(options: {
             ? 5
             : -6;
 
-        const pop = popularityBoost(movie);
+        const pop =
+          popularityBoost(movie) * (1 + 0.48 * cold);
+        const yearGuest = Math.min(
+          22,
+          ((movie.year - 1980) / Math.max(1, calendarYear - 1980)) * 22,
+        );
+        const yearPersonal = yearPreferenceScore(
+          movie.year,
+          tasteYear,
+          calendarYear,
+        );
         const yearScore = currentUserId
-          ? yearPreferenceScore(movie.year, tasteYear, calendarYear)
-          : Math.min(
-              22,
-              ((movie.year - 1980) / Math.max(1, calendarYear - 1980)) * 22,
-            );
+          ? (1 - personalizationW) * yearGuest + personalizationW * yearPersonal
+          : yearGuest;
 
         return (
           preferenceMatchScore +
           mediaPreferenceBonus +
           pop +
-          yearScore -
-          Math.min(22, rejectOverlap * 3.6)
+          yearScore
         );
       };
 

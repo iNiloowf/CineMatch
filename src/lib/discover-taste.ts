@@ -5,6 +5,20 @@ export type DiscoverPickEngagement = {
   recommended: boolean;
 };
 
+/**
+ * How much to rely on learned taste (swipes + Picks) vs onboarding + popularity cold start.
+ * 0 = new user — lean on onboarding-only match + TMDB popularity + recent releases.
+ * 1 = enough history — full personalized blend.
+ */
+export function computeDiscoverPersonalizationWeight(
+  swipeCount: number,
+  pickEngagementCount: number,
+): number {
+  const units = swipeCount + pickEngagementCount * 0.55;
+  const linear = Math.min(1, units / 12);
+  return linear * linear * (3 - 2 * linear);
+}
+
 export function normalizeDiscoverGenreKey(entry: string) {
   const normalized = entry.trim().toLowerCase();
   if (!normalized || normalized === "movie" || normalized === "series") {

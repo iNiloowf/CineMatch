@@ -1,3 +1,4 @@
+import { discoverYearMatchNudge } from "@/lib/discover-taste";
 import type { Movie, OnboardingPreferences } from "@/lib/types";
 
 type MatchContext = {
@@ -77,8 +78,34 @@ export function computeMovieMatchPercent(
   return Math.max(28, Math.min(98, Math.round(score)));
 }
 
+/** Blends onboarding-only taste with full personalized signals (used for Discover queue + card). */
+export function computeDiscoverPreferenceBlend(
+  movie: Movie,
+  personalizationWeight: number,
+  opts: {
+    genreAffinity: Map<string, number>;
+    rejectedGenreWeights: Map<string, number>;
+    onboarding: Pick<
+      OnboardingPreferences,
+      "favoriteGenres" | "dislikedGenres" | "mediaPreference"
+    >;
+  },
+): number {
+  const w = Math.max(0, Math.min(1, personalizationWeight));
+  const cold = 1 - w;
+  const onboardingOnly = computeMovieMatchPercent(movie, {
+    onboarding: opts.onboarding,
+  });
+  const full = computeMovieMatchPercent(movie, {
+    genreAffinityWeights: opts.genreAffinity,
+    rejectedGenreWeights: opts.rejectedGenreWeights,
+    onboarding: opts.onboarding,
+  });
+  return cold * onboardingOnly + w * full;
+}
+
 /**
- * Discover swipe card: same inputs as queue ranking’s taste layer + small release-year nudge.
+ * Discover swipe card: same blend as queue + release-year nudge scaled by personalization.
  */
 export function computeDiscoverSwipeMatchPercent(
   movie: Movie,
@@ -89,13 +116,26 @@ export function computeDiscoverSwipeMatchPercent(
       OnboardingPreferences,
       "favoriteGenres" | "dislikedGenres" | "mediaPreference"
     >;
-    yearNudge: number;
+    tasteYear: {
+      center: number;
+      spread: number;
+      classicEngaged: boolean;
+    };
+    calendarYear: number;
+    personalizationWeight: number;
   },
 ): number {
-  const base = computeMovieMatchPercent(movie, {
-    genreAffinityWeights: options.genreAffinity,
-    rejectedGenreWeights: options.rejectedGenreWeights,
-    onboarding: options.onboarding,
-  });
-  return Math.max(28, Math.min(98, Math.round(base + options.yearNudge)));
+  const base = computeDiscoverPreferenceBlend(
+    movie,
+    options.personalizationWeight,
+    {
+      genreAffinity: options.genreAffinity,
+      rejectedGenreWeights: options.rejectedGenreWeights,
+      onboarding: options.onboarding,
+    },
+  );
+  const nudge =
+    discoverYearMatchNudge(movie.year, options.tasteYear, options.calendarYear) *
+    options.personalizationWeight;
+  return Math.max(28, Math.min(98, Math.round(base + nudge)));
 }

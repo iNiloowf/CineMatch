@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
-import { discoverYearMatchNudge } from "@/lib/discover-taste";
 import {
   computeDiscoverSwipeMatchPercent,
   computeMovieMatchPercent,
@@ -53,6 +52,7 @@ export function MovieSwipeCard({
     discoverGenreAffinity,
     discoverRejectedGenreWeights,
     discoverTasteYear,
+    discoverPersonalizationWeight,
   } = useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
@@ -98,7 +98,9 @@ export function MovieSwipeCard({
         genreAffinity: discoverGenreAffinity,
         rejectedGenreWeights: discoverRejectedGenreWeights,
         onboarding: onboardingPreferences,
-        yearNudge: discoverYearMatchNudge(movie.year, discoverTasteYear, calendarYear),
+        tasteYear: discoverTasteYear,
+        calendarYear,
+        personalizationWeight: discoverPersonalizationWeight,
       })
     : computeMovieMatchPercent(movie, {
         acceptedGenres,

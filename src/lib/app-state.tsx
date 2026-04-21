@@ -24,6 +24,7 @@ import { buildDiscoverQueue } from "@/lib/discover-queue";
 import {
   buildDiscoverGenreAffinity,
   buildRejectedGenreWeights,
+  computeDiscoverPersonalizationWeight,
   computeTasteYearProfile,
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
@@ -206,6 +207,8 @@ type AppStateContextValue = {
     spread: number;
     classicEngaged: boolean;
   };
+  /** 0 = cold start (onboarding + popularity); 1 = full personalized Discover signals. */
+  discoverPersonalizationWeight: number;
   linkedUsers: {
     user: User;
     status: "accepted" | "pending";
@@ -1564,6 +1567,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     discoverPickEngagement,
     moviesByIdForTaste,
   ]);
+
+  const discoverPersonalizationWeight = useMemo(() => {
+    if (!currentUserId) {
+      return 0;
+    }
+    const swipeCount = data.swipes.filter((s) => s.userId === currentUserId)
+      .length;
+    return computeDiscoverPersonalizationWeight(
+      swipeCount,
+      discoverPickEngagement.length,
+    );
+  }, [currentUserId, data.swipes, discoverPickEngagement.length]);
 
   const discoverQueue = buildDiscoverQueue({
     movies: data.movies,
@@ -3115,6 +3130,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         discoverGenreAffinity,
         discoverRejectedGenreWeights,
         discoverTasteYear,
+        discoverPersonalizationWeight,
         linkedUsers,
         sharedMovies,
         sharedMovieGroups,
