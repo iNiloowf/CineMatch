@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div
       data-app-shell-root="true"
       data-theme={isDarkMode ? "dark" : "light"}
-      className={`relative flex min-h-[100svh] min-h-[100dvh] flex-col px-3 pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-4 sm:pt-4 ${
+      className={`relative flex h-[100dvh] max-h-[100dvh] min-h-0 flex-col overflow-hidden px-3 pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-4 sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
           : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.55),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(251,207,232,0.42),transparent_26%),linear-gradient(180deg,#fcfbff_0%,#f6f8ff_30%,#eef4ff_68%,#fdf7ff_100%)] text-slate-900"
