@@ -50,17 +50,18 @@ export function SurfaceCard({
     );
   }
 
+  /** Opaque dark fill — very transparent + backdrop-blur sampled stale frames (Discover → Settings, theme toggles). */
   const darkShell = shimmer
-    ? "glass-shimmer border border-white/16 bg-white/[0.11] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
-    : "border border-white/16 bg-white/[0.11] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
+    ? "glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
+    : "border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
 
   return (
     <section
       {...props}
-      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] p-5 backdrop-blur-xl hover:-translate-y-0.5 ${
+      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] p-5 hover:-translate-y-0.5 ${
         isDarkMode
           ? darkShell
-          : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]"
+          : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]"
       } ${className}`}
     >
       {!isDarkMode ? (

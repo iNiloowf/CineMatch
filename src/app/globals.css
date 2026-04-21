@@ -258,7 +258,7 @@ input[type="range"] {
   background: linear-gradient(
     120deg,
     transparent 30%,
-    rgba(255, 255, 255, 0.28) 48%,
+    rgba(255, 255, 255, 0.12) 48%,
     transparent 66%
   );
   transform: translateX(-120%);
