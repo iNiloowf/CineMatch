@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useRef } from "react";
 import { useAppState } from "@/lib/app-state";
 
 const items = [
@@ -37,6 +38,9 @@ function resolveBottomNavHighlight(pathname: string) {
   }
   return { pillIndex: -1, activeHref: null as string | null };
 }
+
+const SWIPE_MIN_PX = 52;
+const SWIPE_LOCK_MS = 420;
 
 function NavIcon({ href }: { href: string }) {
   if (href === "/discover") {
@@ -94,10 +98,72 @@ function NavIcon({ href }: { href: string }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isDarkMode } = useAppState();
 
   const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
   const hasTabMatch = pillIndex >= 0 && activeHref !== null;
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const swipeLockUntil = useRef(0);
+
+  const resolveSwipeTabIndex = useCallback(() => {
+    if (pillIndex >= 0) {
+      return pillIndex;
+    }
+    const loose = items.findIndex((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+    if (loose >= 0) {
+      return loose;
+    }
+    return 0;
+  }, [pathname, pillIndex]);
+
+  const handleTouchStart = useCallback((event: React.TouchEvent) => {
+    if (event.touches.length !== 1) {
+      return;
+    }
+    touchStartX.current = event.touches[0].clientX;
+    touchStartY.current = event.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent) => {
+      if (touchStartX.current === null || Date.now() < swipeLockUntil.current) {
+        touchStartX.current = null;
+        touchStartY.current = null;
+        return;
+      }
+      const t = event.changedTouches[0];
+      const dx = t.clientX - touchStartX.current;
+      const dy = t.clientY - (touchStartY.current ?? t.clientY);
+      touchStartX.current = null;
+      touchStartY.current = null;
+
+      if (Math.abs(dx) < SWIPE_MIN_PX) {
+        return;
+      }
+      if (Math.abs(dy) > Math.abs(dx) * 1.15 && Math.abs(dy) > 24) {
+        return;
+      }
+
+      const idx = resolveSwipeTabIndex();
+      if (dx < 0) {
+        const next = Math.min(items.length - 1, idx + 1);
+        if (next !== idx) {
+          swipeLockUntil.current = Date.now() + SWIPE_LOCK_MS;
+          router.push(items[next].href);
+        }
+      } else {
+        const prev = Math.max(0, idx - 1);
+        if (prev !== idx) {
+          swipeLockUntil.current = Date.now() + SWIPE_LOCK_MS;
+          router.push(items[prev].href);
+        }
+      }
+    },
+    [resolveSwipeTabIndex, router],
+  );
 
   return (
     <nav
@@ -108,7 +174,9 @@ export function BottomNav() {
       <div
         data-bottom-nav-panel="true"
         data-bottom-nav-pill="true"
-        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`pointer-events-auto relative mx-auto flex w-full max-w-md touch-pan-y items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
           isDarkMode
             ? "border border-white/16 bg-black/42 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
             : "border border-white/70 bg-white/90 shadow-[0_22px_50px_rgba(124,91,191,0.2)]"
