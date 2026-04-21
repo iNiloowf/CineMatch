@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { DiscoverMatchExplainModal } from "@/components/discover-match-explain-modal";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import {
   shouldVirtualizeList,
@@ -25,6 +27,10 @@ import {
   parseInviteTokenFromPaste,
   shareOrCopyInviteMessage,
 } from "@/lib/invite-link-utils";
+import {
+  explainDiscoverSwipeMatch,
+  type DiscoverSwipeMatchExplanation,
+} from "@/lib/match-score";
 import type { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
@@ -64,6 +70,14 @@ type DiscoverPageContentProps = {
     mediaPreference: "movie" | "series" | "both";
     tasteProfile: string[];
   }) => Promise<void>;
+  discoverGenreAffinity: Map<string, number>;
+  discoverRejectedGenreWeights: Map<string, number>;
+  discoverTasteYear: {
+    center: number;
+    spread: number;
+    classicEngaged: boolean;
+  };
+  discoverPersonalizationWeight: number;
 };
 
 type LastSwipeRecord = {
@@ -91,6 +105,10 @@ function DiscoverPageContent({
   onboardingPreferences,
   isOnboardingComplete,
   completeOnboarding,
+  discoverGenreAffinity,
+  discoverRejectedGenreWeights,
+  discoverTasteYear,
+  discoverPersonalizationWeight,
 }: DiscoverPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -105,6 +123,9 @@ function DiscoverPageContent({
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous">("next");
   const [swipeFeedback, setSwipeFeedback] = useState<"accepted" | "rejected" | null>(null);
   const [lastSwipe, setLastSwipe] = useState<LastSwipeRecord | null>(null);
+  const [matchExplanation, setMatchExplanation] = useState<DiscoverSwipeMatchExplanation | null>(
+    null,
+  );
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [menuBanner, setMenuBanner] = useState<{
     message: string;
@@ -720,6 +741,23 @@ function DiscoverPageContent({
         );
       }, 5200);
 
+      if (decision === "accepted" && currentUserId) {
+        setMatchExplanation(
+          explainDiscoverSwipeMatch(swipedMovie, {
+            genreAffinity: discoverGenreAffinity,
+            rejectedGenreWeights: discoverRejectedGenreWeights,
+            onboarding: {
+              favoriteGenres: onboardingPreferences.favoriteGenres,
+              dislikedGenres: onboardingPreferences.dislikedGenres,
+              mediaPreference: onboardingPreferences.mediaPreference,
+            },
+            tasteYear: discoverTasteYear,
+            calendarYear: new Date().getFullYear(),
+            personalizationWeight: discoverPersonalizationWeight,
+          }),
+        );
+      }
+
       void swipeMovie(swipedMovie.id, decision);
     }, 48);
   }, [
@@ -731,6 +769,14 @@ function DiscoverPageContent({
     focusedMovieId,
     registerMovies,
     swipeMovie,
+    currentUserId,
+    discoverGenreAffinity,
+    discoverRejectedGenreWeights,
+    discoverTasteYear,
+    discoverPersonalizationWeight,
+    onboardingPreferences.favoriteGenres,
+    onboardingPreferences.dislikedGenres,
+    onboardingPreferences.mediaPreference,
   ]);
 
   const onSwipeAccept = useCallback(() => {
@@ -1980,6 +2026,17 @@ function DiscoverPageContent({
           />
         )}
       </div>
+
+      {typeof document !== "undefined" && matchExplanation
+        ? createPortal(
+            <DiscoverMatchExplainModal
+              explanation={matchExplanation}
+              isDarkMode={isDarkMode}
+              onClose={() => setMatchExplanation(null)}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -2003,6 +2060,10 @@ export default function DiscoverPage() {
     onboardingPreferences,
     isOnboardingComplete,
     completeOnboarding,
+    discoverGenreAffinity,
+    discoverRejectedGenreWeights,
+    discoverTasteYear,
+    discoverPersonalizationWeight,
   } = useAppState();
 
   const toggleDarkMode = async () => {
@@ -2029,6 +2090,10 @@ export default function DiscoverPage() {
       onboardingPreferences={onboardingPreferences}
       isOnboardingComplete={isOnboardingComplete}
       completeOnboarding={completeOnboarding}
+      discoverGenreAffinity={discoverGenreAffinity}
+      discoverRejectedGenreWeights={discoverRejectedGenreWeights}
+      discoverTasteYear={discoverTasteYear}
+      discoverPersonalizationWeight={discoverPersonalizationWeight}
     />
   );
 }
