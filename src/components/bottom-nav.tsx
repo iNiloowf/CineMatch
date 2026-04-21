@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo, useRef } from "react";
 import { useAppState } from "@/lib/app-state";
-import {
-  bottomTabNavItems,
-  resolveBottomNavHighlight,
-  useTabSwipeNavigation,
-} from "@/lib/bottom-tab-nav";
+import { bottomTabNavItems, resolveBottomNavHighlight } from "@/lib/bottom-tab-nav";
+import { useBottomNavPillDrag } from "@/lib/use-bottom-nav-pill-drag";
 
 function NavIcon({ href }: { href: string }) {
   if (href === "/discover") {
@@ -65,11 +63,25 @@ function NavIcon({ href }: { href: string }) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { isDarkMode } = useAppState();
-  const { onTouchStart, onTouchEnd } = useTabSwipeNavigation();
+  const { isDarkMode, data, currentUserId } = useAppState();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const reduceMotion = useMemo(() => {
+    if (!currentUserId) {
+      return false;
+    }
+    return data.settings[currentUserId]?.reduceMotion ?? false;
+  }, [currentUserId, data.settings]);
 
   const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
   const hasTabMatch = pillIndex >= 0 && activeHref !== null;
+
+  const { onTouchStart, pillTransformStyle, onActiveLinkClick, isDragging } = useBottomNavPillDrag({
+    panelRef,
+    pillIndex: hasTabMatch ? pillIndex : 0,
+    hasTabMatch,
+    reduceMotion,
+  });
 
   const items = bottomTabNavItems;
 
@@ -80,11 +92,14 @@ export function BottomNav() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)] px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] sm:px-4"
     >
       <div
+        ref={panelRef}
         data-bottom-nav-panel="true"
         data-bottom-nav-pill="true"
+        data-pill-dragging={isDragging ? "true" : undefined}
         onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        className={`pointer-events-auto relative mx-auto flex w-full max-w-md touch-pan-y items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
+        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
+          isDragging ? "touch-none" : "touch-manipulation"
+        } ${
           isDarkMode
             ? "border border-white/16 bg-black/42 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
             : "border border-white/70 bg-white/90 shadow-[0_22px_50px_rgba(124,91,191,0.2)]"
@@ -92,15 +107,12 @@ export function BottomNav() {
       >
         <span
           aria-hidden
-          className={`pointer-events-none absolute bottom-2 left-1.5 top-2 z-0 rounded-[16px] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.34,1.35,0.64,1)] will-change-transform motion-reduce:transition-none motion-reduce:duration-0 ${
+          className={`pointer-events-none absolute bottom-2 left-1.5 top-2 z-0 rounded-[16px] will-change-transform motion-reduce:will-change-auto ${
             isDarkMode
               ? "bg-gradient-to-b from-violet-400/95 via-violet-600 to-violet-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_14px_32px_rgba(109,40,217,0.42)]"
               : "bg-gradient-to-b from-violet-400 via-violet-500 to-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_12px_26px_rgba(109,40,217,0.28)]"
           } ${hasTabMatch ? "opacity-100" : "opacity-0"}`}
-          style={{
-            width: "calc((100% - 12px) / 5)",
-            transform: `translateX(calc(${hasTabMatch ? pillIndex : 0} * 100%))`,
-          }}
+          style={pillTransformStyle}
         />
         {items.map((item) => {
           const active = Boolean(activeHref && item.href === activeHref);
@@ -111,6 +123,7 @@ export function BottomNav() {
               href={item.href}
               data-bottom-nav-link="true"
               data-active={active ? "true" : "false"}
+              onClick={active ? onActiveLinkClick : undefined}
               className={`group relative z-10 flex min-h-[44px] min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-[18px] px-0.5 py-2 transition-[transform,color] duration-300 ease-out motion-reduce:transition-colors motion-reduce:duration-150 max-[380px]:px-0 sm:gap-1 sm:px-1 ${
                 active
                   ? "text-white motion-reduce:scale-100"
