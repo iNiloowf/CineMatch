@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div
       data-app-shell-root="true"
       data-theme={isDarkMode ? "dark" : "light"}
-      className={`relative min-h-[100svh] min-h-[100dvh] px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-4 sm:pt-4 ${
+      className={`relative flex min-h-[100svh] min-h-[100dvh] flex-col px-3 pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-4 sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
           : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.55),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(251,207,232,0.42),transparent_26%),linear-gradient(180deg,#fcfbff_0%,#f6f8ff_30%,#eef4ff_68%,#fdf7ff_100%)] text-slate-900"
@@ -48,10 +48,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <div
         data-app-shell-frame="true"
-        className={`fade-up-enter mx-auto flex h-[calc(100svh-env(safe-area-inset-bottom,0px)-1.5rem)] h-[calc(100dvh-env(safe-area-inset-bottom,0px)-1.5rem)] max-w-md flex-col gap-0 sm:h-[calc(100svh-env(safe-area-inset-bottom,0px)-2rem)] sm:h-[calc(100dvh-env(safe-area-inset-bottom,0px)-2rem)] ${
-          isDarkMode
-            ? "text-slate-100"
-            : "text-slate-900"
+        className={`fade-up-enter mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col ${
+          isDarkMode ? "text-slate-100" : "text-slate-900"
         }`}
       >
         <div className="flex min-h-0 flex-1 flex-col">
@@ -60,13 +58,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             id="main-content"
             data-app-scroll-container="true"
             tabIndex={-1}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             {children}
           </div>
         </div>
-        <BottomNav />
       </div>
+      <BottomNav />
     </div>
   );
 }

@@ -54,11 +54,15 @@
   --discover-stack-gap: clamp(0.75rem, 2.75vw, 1.125rem);
 
   /**
-   * End of #main-content scroll: extra inset so primary cards (SurfaceCard curves + shadows)
-   * are not clipped by the scrollport right above the floating bottom nav pill.
+   * Fixed bottom nav (pill) height + home indicator — scroll padding so content clears the bar.
+   */
+  --app-bottom-nav-overlay: calc(env(safe-area-inset-bottom, 0px) + clamp(4.5rem, 20vmin, 6rem));
+
+  /**
+   * End of #main-content: card curve/shadow clearance + space under fixed bottom nav overlay.
    */
   --app-scroll-pad-bottom: calc(
-    var(--discover-stack-gap) + clamp(1.5rem, 4.5vmin, 2.75rem)
+    var(--discover-stack-gap) + clamp(1.25rem, 4vmin, 2.5rem) + var(--app-bottom-nav-overlay)
   );
 
   /* Radius by role */
