@@ -35,8 +35,11 @@ type TopSharedPick = {
 };
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 const PREMIUM_INSIGHTS_CLOSE_MS = 240;
+/** Legacy: full hide for session — migrated to collapsed bar + Show. */
 const premiumInsightsDismissSessionKey = (userId: string | null) =>
   `cinematch-picks-premium-insights-dismiss-v1-${userId ?? "guest"}`;
+const premiumInsightsExpandedSessionKey = (userId: string | null) =>
+  `cinematch-picks-premium-insights-expanded-v1-${userId ?? "guest"}`;
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -77,7 +80,7 @@ export default function PicksPage() {
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
-  const [isPremiumInsightsClosed, setIsPremiumInsightsClosed] = useState(false);
+  const [isPremiumInsightsExpanded, setIsPremiumInsightsExpanded] = useState(true);
   const [isPremiumInsightsClosing, setIsPremiumInsightsClosing] = useState(false);
   const [isBuyProModalOpen, setIsBuyProModalOpen] = useState(false);
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
@@ -90,18 +93,25 @@ export default function PicksPage() {
     () => premiumInsightsDismissSessionKey(currentUserId),
     [currentUserId],
   );
-  const premiumInsightsDismissKeyRef = useRef(premiumInsightsDismissKey);
-  premiumInsightsDismissKeyRef.current = premiumInsightsDismissKey;
+  const premiumInsightsExpandedKey = useMemo(
+    () => premiumInsightsExpandedSessionKey(currentUserId),
+    [currentUserId],
+  );
+  const premiumInsightsExpandedKeyRef = useRef(premiumInsightsExpandedKey);
+  premiumInsightsExpandedKeyRef.current = premiumInsightsExpandedKey;
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
-    setIsPremiumInsightsClosed(
-      window.sessionStorage.getItem(premiumInsightsDismissKey) === "1",
-    );
+    let expanded = window.sessionStorage.getItem(premiumInsightsExpandedKey) !== "0";
+    if (window.sessionStorage.getItem(premiumInsightsDismissKey) === "1") {
+      expanded = false;
+      window.sessionStorage.removeItem(premiumInsightsDismissKey);
+    }
+    setIsPremiumInsightsExpanded(expanded);
     setIsPremiumInsightsClosing(false);
-  }, [premiumInsightsDismissKey]);
+  }, [premiumInsightsDismissKey, premiumInsightsExpandedKey]);
 
   const pendingRemoveMovie = useMemo(
     () =>
@@ -625,7 +635,7 @@ export default function PicksPage() {
     }
   }, [resolveAccessToken, selectedGiftPartner, selectedGiftPartnerId, selectedPlanType]);
   const handleClosePremiumInsights = useCallback(() => {
-    if (isPremiumInsightsClosed || isPremiumInsightsClosing) {
+    if (!isPremiumInsightsExpanded || isPremiumInsightsClosing) {
       return;
     }
     setIsPremiumInsightsClosing(true);
@@ -634,13 +644,20 @@ export default function PicksPage() {
     }
     premiumInsightsCloseTimerRef.current = window.setTimeout(() => {
       if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(premiumInsightsDismissKeyRef.current, "1");
+        window.sessionStorage.setItem(premiumInsightsExpandedKeyRef.current, "0");
       }
-      setIsPremiumInsightsClosed(true);
+      setIsPremiumInsightsExpanded(false);
       setIsPremiumInsightsClosing(false);
       premiumInsightsCloseTimerRef.current = null;
     }, PREMIUM_INSIGHTS_CLOSE_MS);
-  }, [isPremiumInsightsClosed, isPremiumInsightsClosing]);
+  }, [isPremiumInsightsExpanded, isPremiumInsightsClosing]);
+
+  const handleShowPremiumInsights = useCallback(() => {
+    setIsPremiumInsightsExpanded(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(premiumInsightsExpandedKeyRef.current, "1");
+    }
+  }, []);
 
   const detailsModal =
     selectedMovie && typeof document !== "undefined"
@@ -996,7 +1013,7 @@ export default function PicksPage() {
           </SurfaceCard>
         </div>
 
-        {!isPremiumInsightsClosed ? (
+        {isPremiumInsightsExpanded ? (
           <div
             className={`overflow-hidden transition-all duration-200 ease-out ${
               isPremiumInsightsClosing
@@ -1050,14 +1067,14 @@ export default function PicksPage() {
                   <button
                     type="button"
                     onClick={handleClosePremiumInsights}
-                    aria-label="Close premium insights"
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg border text-xs font-bold ${
+                    aria-label="Close premium pick insights"
+                    className={`min-h-8 shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold ${
                       isDarkMode
-                        ? "border-white/12 bg-white/8 text-slate-300"
-                        : "border-slate-200 bg-white text-slate-500"
+                        ? "border-white/12 bg-white/8 text-slate-200 hover:bg-white/12"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    ×
+                    Close
                   </button>
                 </div>
               </div>
@@ -1175,7 +1192,45 @@ export default function PicksPage() {
               )}
             </SurfaceCard>
           </div>
-        ) : null}
+        ) : (
+          <SurfaceCard
+            className="fade-up-enter p-3.5 sm:p-4"
+            style={{ animationDelay: "130ms" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <p
+                  className={`truncate text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                >
+                  Premium pick insights
+                </p>
+                {!hasProAccess ? (
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
+                      isDarkMode
+                        ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
+                        : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
+                    }`}
+                  >
+                    Pro
+                  </span>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={handleShowPremiumInsights}
+                aria-label="Show premium pick insights"
+                className={`min-h-8 shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
+                  isDarkMode
+                    ? "bg-violet-500/25 text-violet-50 ring-1 ring-violet-400/35 hover:bg-violet-500/35"
+                    : "bg-violet-600 text-white shadow-sm hover:bg-violet-500"
+                }`}
+              >
+                Show
+              </button>
+            </div>
+          </SurfaceCard>
+        )}
 
         {acceptedMovies.length > 0 ? (
           <div className="space-y-3">
