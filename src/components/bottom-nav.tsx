@@ -103,12 +103,21 @@ export function BottomNav() {
     <nav
       data-bottom-nav="true"
       aria-label="Main navigation"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)] px-3 pb-[env(safe-area-inset-bottom,0px)] sm:px-4"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)]"
     >
       {/*
-        Full-width strip is transparent so page content can scroll underneath the rounded
-        top corners of the pill (frosted panel only covers the pill shape).
+        Opaque full-bleed band matches the shell bottom so scroll content does not show through
+        the gaps beside the pill’s rounded corners (e.g. phone corner radius).
       */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[calc(env(safe-area-inset-bottom,0px)+clamp(4.75rem,19vmin,6rem))] ${
+          isDarkMode
+            ? "bg-[#09090f]"
+            : "bg-[#fdf7ff]"
+        }`}
+      />
+      <div className="relative z-10 px-3 pb-[env(safe-area-inset-bottom,0px)] sm:px-4">
       <div
         data-bottom-nav-panel="true"
         data-bottom-nav-pill="true"
@@ -171,6 +180,7 @@ export function BottomNav() {
             </Link>
           );
         })}
+      </div>
       </div>
     </nav>
   );
