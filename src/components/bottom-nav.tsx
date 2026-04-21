@@ -70,10 +70,8 @@ export function BottomNav() {
   const pathname = usePathname();
   const { isDarkMode } = useAppState();
 
-  const activeIndex = Math.max(
-    0,
-    items.findIndex((item) => item.href === pathname),
-  );
+  const matchedIndex = items.findIndex((item) => item.href === pathname);
+  const hasTabMatch = matchedIndex >= 0;
 
   return (
     <nav
@@ -91,18 +89,18 @@ export function BottomNav() {
       >
         <span
           aria-hidden
-          className={`pointer-events-none absolute bottom-2 left-1.5 top-2 z-0 rounded-[16px] transition-transform duration-500 ease-[cubic-bezier(0.34,1.35,0.64,1)] will-change-transform motion-reduce:transition-none motion-reduce:duration-0 ${
+          className={`pointer-events-none absolute bottom-2 left-1.5 top-2 z-0 rounded-[16px] transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.34,1.35,0.64,1)] will-change-transform motion-reduce:transition-none motion-reduce:duration-0 ${
             isDarkMode
               ? "bg-gradient-to-b from-violet-400/95 via-violet-600 to-violet-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_14px_32px_rgba(109,40,217,0.42)]"
               : "bg-gradient-to-b from-violet-400 via-violet-500 to-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_12px_26px_rgba(109,40,217,0.28)]"
-          }`}
+          } ${hasTabMatch ? "opacity-100" : "opacity-0"}`}
           style={{
             width: "calc((100% - 12px) / 5)",
-            transform: `translateX(calc(${activeIndex} * 100%))`,
+            transform: `translateX(calc(${hasTabMatch ? matchedIndex : 0} * 100%))`,
           }}
         />
         {items.map((item) => {
-          const active = pathname === item.href;
+          const active = hasTabMatch && pathname === item.href;
 
           return (
             <Link

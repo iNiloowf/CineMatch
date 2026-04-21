@@ -7,8 +7,8 @@ export const MAX_LINKED_FRIENDS = 30;
 export function buildInviteShareMessage(inviteUrl: string, senderName?: string | null) {
   const name = senderName?.trim();
   const intro = name
-    ? `Hi! It’s ${name}. Add me on CineMatch — open this link to connect our accounts:`
-    : `Hi! Add me on CineMatch — open this link to connect our accounts:`;
+    ? `Hi! It's ${name}. Add me on CineMatch - open this link to connect our accounts:`
+    : `Hi! Add me on CineMatch - open this link to connect our accounts:`;
   return `${intro}\n\n${inviteUrl}`;
 }
 
@@ -24,10 +24,10 @@ export async function shareOrCopyInviteMessage(
 
   try {
     if (navigator.share) {
+      // Omit `url` — combining `text` + `url` duplicates or splits the link on many platforms.
       await navigator.share({
         title: "CineMatch invite",
         text,
-        url: inviteUrl,
       });
       return { ok: true, message: "Ready to send." };
     }
@@ -39,8 +39,9 @@ export async function shareOrCopyInviteMessage(
 
   try {
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return { ok: true, message: "Message copied — paste it in your chat, then send." };
+      // Copy the URL alone so paste always yields one clean, tappable link.
+      await navigator.clipboard.writeText(inviteUrl);
+      return { ok: true, message: "Invite link copied." };
     }
   } catch {
     return { ok: false, message: "Couldn’t copy. Try again." };
