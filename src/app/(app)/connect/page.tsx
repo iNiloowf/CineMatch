@@ -7,7 +7,11 @@ import { NetworkStatusBlock } from "@/components/network-status-block";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
-import { MAX_LINKED_FRIENDS, parseInviteTokenFromPaste } from "@/lib/invite-link-utils";
+import {
+  MAX_LINKED_FRIENDS,
+  parseInviteTokenFromPaste,
+  shareOrCopyInviteMessage,
+} from "@/lib/invite-link-utils";
 
 function ConnectBackdrop({ isDarkMode }: { isDarkMode: boolean }) {
   return (
@@ -79,7 +83,8 @@ export default function ConnectPage() {
     retry?: () => void;
   } | null>(null);
   const [inviteUrl, setInviteUrl] = useState("");
-  const { data, createInviteLink, acceptInviteToken, linkedUsers, isDarkMode } = useAppState();
+  const { data, createInviteLink, acceptInviteToken, linkedUsers, isDarkMode, currentUser } =
+    useAppState();
 
   const shellBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#161022_42%,#0c0a12_100%)]"
@@ -151,14 +156,12 @@ export default function ConnectPage() {
   };
 
   const copyInviteUrl = async () => {
-    if (!inviteUrl || !navigator.clipboard?.writeText) {
+    if (!inviteUrl) {
       return;
     }
-    try {
-      await navigator.clipboard.writeText(inviteUrl);
-      setStatusMessage("Link copied again — ready to paste in any app.");
-    } catch {
-      setStatusMessage("Select the link above and copy manually.");
+    const out = await shareOrCopyInviteMessage(inviteUrl, currentUser?.name);
+    if (out.message) {
+      setStatusMessage(out.message);
     }
   };
 
@@ -396,11 +399,15 @@ export default function ConnectPage() {
                   }
 
                   setInviteUrl(result.url);
-                  setStatusMessage("Invite link created.");
-
-                  if (navigator.clipboard?.writeText) {
-                    await navigator.clipboard.writeText(result.url);
-                    setStatusMessage("Invite link copied — send it to your friend.");
+                  const shared = await shareOrCopyInviteMessage(result.url, currentUser?.name);
+                  if (shared.message) {
+                    setStatusMessage(
+                      shared.ok
+                        ? shared.message
+                        : shared.message || "Invite link created — copy it from below.",
+                    );
+                  } else {
+                    setStatusMessage("Invite link created.");
                   }
                 } catch {
                   const message = "Couldn’t create the invite link. Check your connection.";
@@ -437,7 +444,7 @@ export default function ConnectPage() {
                 {inviteUrl}
               </p>
               <button type="button" onClick={() => void copyInviteUrl()} className="ui-btn ui-btn-secondary w-full min-h-11 text-sm">
-                Copy link again
+                Copy message again
               </button>
             </div>
           ) : null}

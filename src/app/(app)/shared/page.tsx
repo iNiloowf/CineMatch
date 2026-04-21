@@ -53,6 +53,7 @@ export default function SharedWatchlistPage() {
             title="No linked people yet"
             description="Link with someone and their name will show up here right away."
             isDarkMode={isDarkMode}
+            primaryAction={{ label: "Connect", href: "/connect" }}
           />
         ) : null}
 

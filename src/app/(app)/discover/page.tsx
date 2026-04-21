@@ -20,6 +20,10 @@ import {
   type DiscoverSessionSnapshotV1,
 } from "@/lib/discover-session";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import {
+  parseInviteTokenFromPaste,
+  shareOrCopyInviteMessage,
+} from "@/lib/invite-link-utils";
 import type { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
@@ -35,7 +39,14 @@ type DiscoverPageContentProps = {
   undoSwipe: (movieId: string) => Promise<void>;
   isDarkMode: boolean;
   toggleDarkMode: () => Promise<void>;
-  pasteInviteLinkFromClipboard: () => Promise<{ ok: boolean; message: string }>;
+  createInviteLink: () => Promise<
+    | { ok: true; url: string }
+    | { ok: false; message: string }
+  >;
+  acceptInviteToken: (
+    token: string,
+  ) => Promise<{ ok: boolean; message: string; partnerName?: string }>;
+  currentUserName: string | null;
   onboardingPreferences: {
     favoriteGenres: string[];
     dislikedGenres: string[];
@@ -68,7 +79,9 @@ function DiscoverPageContent({
   undoSwipe,
   isDarkMode,
   toggleDarkMode,
-  pasteInviteLinkFromClipboard,
+  createInviteLink,
+  acceptInviteToken,
+  currentUserName,
   onboardingPreferences,
   isOnboardingComplete,
   completeOnboarding,
@@ -107,6 +120,11 @@ function DiscoverPageContent({
   const discoverSessionSaveTimerRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const pasteInviteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [isPasteInviteModalOpen, setIsPasteInviteModalOpen] = useState(false);
+  const [pasteInviteDraft, setPasteInviteDraft] = useState("");
+  const [invitePasteBusy, setInvitePasteBusy] = useState(false);
+  const [copyInviteBusy, setCopyInviteBusy] = useState(false);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
@@ -157,6 +175,7 @@ function DiscoverPageContent({
   });
   useEscapeToClose(isFilterOpen, () => setIsFilterOpen(false));
   useEscapeToClose(isMoreMenuOpen, () => setIsMoreMenuOpen(false));
+  useEscapeToClose(isPasteInviteModalOpen, () => setIsPasteInviteModalOpen(false));
 
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -748,16 +767,16 @@ function DiscoverPageContent({
     setFocusedMovieId(restoredSwipe.focusedMovieId);
   };
 
-  const handlePasteInviteLink = async () => {
-    setIsMoreMenuOpen(false);
-
-    const runPaste = async () => {
-      const result = await pasteInviteLinkFromClipboard();
-      const showRetry = !result.ok;
+  const showMenuBanner = useCallback(
+    (
+      result: { ok: boolean; message: string },
+      retry?: () => void,
+    ) => {
+      const showRetry = !result.ok && Boolean(retry);
       setMenuBanner({
         message: result.message,
         variant: result.ok ? "success" : "error",
-        onRetry: showRetry ? () => void runPaste() : undefined,
+        onRetry: showRetry ? retry : undefined,
       });
       const dismissMs = showRetry ? 9000 : 3600;
       window.setTimeout(() => {
@@ -765,10 +784,76 @@ function DiscoverPageContent({
           current?.message === result.message ? null : current,
         );
       }, dismissMs);
-    };
+    },
+    [],
+  );
 
-    void runPaste();
-  };
+  const openPasteInviteModal = useCallback(() => {
+    setIsMoreMenuOpen(false);
+    setPasteInviteDraft("");
+    setIsPasteInviteModalOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isPasteInviteModalOpen) {
+      return;
+    }
+    queueMicrotask(() => {
+      pasteInviteTextareaRef.current?.focus();
+    });
+  }, [isPasteInviteModalOpen]);
+
+  const handleSubmitPastedInvite = useCallback(async () => {
+    const token = parseInviteTokenFromPaste(pasteInviteDraft);
+    if (!token) {
+      showMenuBanner({
+        ok: false,
+        message:
+          "Couldn’t find a valid invite. Paste the full link, or the token that starts with invite-.",
+      });
+      return;
+    }
+
+    setInvitePasteBusy(true);
+    try {
+      const result = await acceptInviteToken(token);
+      const message = result.ok
+        ? `Connected with ${result.partnerName ?? "your match"}.`
+        : result.message;
+      showMenuBanner({ ok: result.ok, message }, () => void handleSubmitPastedInvite());
+      if (result.ok) {
+        setIsPasteInviteModalOpen(false);
+        setPasteInviteDraft("");
+      }
+    } finally {
+      setInvitePasteBusy(false);
+    }
+  }, [acceptInviteToken, pasteInviteDraft, showMenuBanner]);
+
+  const handleCopyMyLink = useCallback(async () => {
+    setIsMoreMenuOpen(false);
+    setCopyInviteBusy(true);
+    try {
+      const created = await createInviteLink();
+      if (!created.ok) {
+        showMenuBanner(
+          { ok: false, message: created.message },
+          () => void handleCopyMyLink(),
+        );
+        return;
+      }
+      const shared = await shareOrCopyInviteMessage(created.url, currentUserName);
+      if (!shared.message) {
+        return;
+      }
+      showMenuBanner(
+        { ok: shared.ok, message: shared.message },
+        shared.ok ? undefined : () => void handleCopyMyLink(),
+      );
+    } finally {
+      setCopyInviteBusy(false);
+    }
+  }, [createInviteLink, currentUserName, showMenuBanner]);
 
   const persistOnboarding = async (skipSelection: boolean) => {
     setIsSavingOnboarding(true);
@@ -1075,10 +1160,18 @@ function DiscoverPageContent({
                   </Link>
                   <button
                     type="button"
-                    onClick={() => void handlePasteInviteLink()}
+                    disabled={copyInviteBusy}
+                    onClick={() => void handleCopyMyLink()}
+                    className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {copyInviteBusy ? "Preparing link…" : "Copy my link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openPasteInviteModal}
                     className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium"
                   >
-                    Paste Link
+                    Paste link
                   </button>
                   <button
                     type="button"
@@ -1252,6 +1345,88 @@ function DiscoverPageContent({
                 Try again
               </button>
             ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {isPasteInviteModalOpen ? (
+        <div
+          role="presentation"
+          className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] flex items-end justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-16 backdrop-blur-md sm:items-center sm:px-4 sm:pb-8 ${
+            isDarkMode ? "bg-slate-950/72" : "bg-slate-950/45"
+          }`}
+          onClick={() => setIsPasteInviteModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="paste-invite-dialog-title"
+            className={`relative z-10 w-full max-w-md overflow-hidden rounded-[26px] border shadow-[0_24px_80px_rgba(15,23,42,0.35)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="ui-modal-accent-bar" aria-hidden />
+            <div className={`ui-shell-header shrink-0 ${isDarkMode ? "border-white/10" : "border-slate-200/80"}`}>
+              <div className="min-w-0 flex-1">
+                <h2
+                  id="paste-invite-dialog-title"
+                  className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                >
+                  Paste an invite
+                </h2>
+                <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Paste the message or link you received. We’ll find the invite token.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPasteInviteModalOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-3 px-5 pb-5 pt-2">
+              <textarea
+                ref={pasteInviteTextareaRef}
+                value={pasteInviteDraft}
+                onChange={(event) => setPasteInviteDraft(event.target.value)}
+                rows={5}
+                placeholder="Optional note + https://…/connect?invite=…"
+                disabled={invitePasteBusy}
+                className={`w-full resize-y rounded-[18px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 disabled:opacity-60 ${
+                  isDarkMode
+                    ? "border-white/14 bg-white/[0.06] text-slate-100 placeholder:text-slate-500"
+                    : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
+                }`}
+              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsPasteInviteModalOpen(false)}
+                  className="ui-btn ui-btn-secondary min-h-11 w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={invitePasteBusy}
+                  onClick={() => void handleSubmitPastedInvite()}
+                  className="ui-btn ui-btn-primary min-h-11 w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {invitePasteBusy ? "Connecting…" : "Connect"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1815,6 +1990,7 @@ function DiscoverPageContent({
 export default function DiscoverPage() {
   const {
     currentUserId,
+    currentUser,
     discoverQueue,
     discoverSessionKey,
     registerMovies,
@@ -1823,6 +1999,7 @@ export default function DiscoverPage() {
     isDarkMode,
     updateSettings,
     acceptInviteToken,
+    createInviteLink,
     onboardingPreferences,
     isOnboardingComplete,
     completeOnboarding,
@@ -1830,57 +2007,6 @@ export default function DiscoverPage() {
 
   const toggleDarkMode = async () => {
     await updateSettings({ darkMode: !isDarkMode });
-  };
-
-  const pasteInviteLinkFromClipboard = async () => {
-    if (typeof window === "undefined" || !navigator.clipboard?.readText) {
-      return {
-        ok: false,
-        message: "Clipboard access is not available on this device.",
-      };
-    }
-
-    try {
-      const clipboardText = (await navigator.clipboard.readText()).trim();
-      if (!clipboardText) {
-        return { ok: false, message: "Clipboard is empty." };
-      }
-
-      const extractToken = () => {
-        if (clipboardText.startsWith("invite-")) {
-          return clipboardText;
-        }
-
-        try {
-          const parsed = new URL(clipboardText);
-          const inviteToken = parsed.searchParams.get("invite");
-          return inviteToken?.trim() || null;
-        } catch {
-          return null;
-        }
-      };
-
-      const token = extractToken();
-      if (!token) {
-        return {
-          ok: false,
-          message: "Clipboard text is not a valid CineMatch invite link.",
-        };
-      }
-
-      const result = await acceptInviteToken(token);
-      return {
-        ok: result.ok,
-        message: result.ok
-          ? `Connected with ${result.partnerName ?? "your match"}.`
-          : result.message,
-      };
-    } catch {
-      return {
-        ok: false,
-        message: "Clipboard permission was denied.",
-      };
-    }
   };
 
   return (
@@ -1894,7 +2020,9 @@ export default function DiscoverPage() {
       undoSwipe={undoSwipe}
       isDarkMode={isDarkMode}
       toggleDarkMode={toggleDarkMode}
-      pasteInviteLinkFromClipboard={pasteInviteLinkFromClipboard}
+      createInviteLink={createInviteLink}
+      acceptInviteToken={acceptInviteToken}
+      currentUserName={currentUser?.name ?? null}
       onboardingPreferences={onboardingPreferences}
       isOnboardingComplete={isOnboardingComplete}
       completeOnboarding={completeOnboarding}

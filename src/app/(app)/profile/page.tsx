@@ -10,6 +10,7 @@ import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
+import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
 import type { Movie, ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -29,6 +30,7 @@ export default function ProfilePage() {
     watchedPickReviews,
     achievements,
     completeOnboarding,
+    createInviteLink,
     updateProfile,
     markPickWatched,
     registerMovies,
@@ -83,6 +85,7 @@ export default function ProfilePage() {
   const [discoverSkipDetailMovie, setDiscoverSkipDetailMovie] = useState<Movie | null>(null);
   const [watchedReviewTab, setWatchedReviewTab] = useState<"recommended" | "notRecommended">("recommended");
   const [editingWatchedMovieId, setEditingWatchedMovieId] = useState<string | null>(null);
+  const [copyInviteBusy, setCopyInviteBusy] = useState(false);
   const editingWatchedEntry = useMemo(
     () =>
       editingWatchedMovieId
@@ -181,6 +184,29 @@ export default function ProfilePage() {
     },
     [registerMovies, undoSwipe],
   );
+
+  const handleCopyInviteFromProfile = useCallback(async () => {
+    if (!currentUser) {
+      return;
+    }
+    setCopyInviteBusy(true);
+    try {
+      const created = await createInviteLink();
+      if (!created.ok) {
+        setSaveFeedback("error");
+        setSaveMessage(created.message);
+        return;
+      }
+      const out = await shareOrCopyInviteMessage(created.url, currentUser.name);
+      if (!out.message) {
+        return;
+      }
+      setSaveFeedback(out.ok ? "saved" : "error");
+      setSaveMessage(out.message);
+    } finally {
+      setCopyInviteBusy(false);
+    }
+  }, [createInviteLink, currentUser]);
 
   if (!isReady) {
     return (
@@ -443,27 +469,6 @@ export default function ProfilePage() {
           <path d="M17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
           <path d="M3.5 19a5.5 5.5 0 0 1 11 0" strokeLinecap="round" />
           <path d="M13 19a4.5 4.5 0 0 1 7.5-3.3" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      href: "/connect",
-      title: "Connect",
-      subtitle: "Invite & link flow",
-      accentBar: "bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500",
-      surface: isDarkMode
-        ? "border-cyan-400/15 bg-gradient-to-br from-slate-900/90 to-cyan-950/40 ring-1 ring-cyan-400/12"
-        : "border-cyan-200/90 bg-gradient-to-br from-white via-sky-50/90 to-cyan-50/40 ring-1 ring-sky-100/90 shadow-[0_12px_32px_rgba(14,116,144,0.1)]",
-      iconWrap: isDarkMode
-        ? "bg-cyan-500/20 text-cyan-50 ring-2 ring-cyan-400/30"
-        : "bg-cyan-600 text-white ring-2 ring-cyan-300/55 shadow-sm",
-      titleClass: isDarkMode ? "text-white" : "text-slate-900",
-      subClass: isDarkMode ? "text-cyan-100/85" : "text-cyan-800/90",
-      chevronClass: isDarkMode ? "text-cyan-200/90" : "text-cyan-600",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeLinecap="round" />
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeLinecap="round" />
         </svg>
       ),
     },
@@ -1311,41 +1316,61 @@ export default function ProfilePage() {
           </div>
         </form>
         {!isEditing ? (
-          <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
-          {(
-            [
-              { value: acceptedMovies.length, label: "Picks", href: "/picks" as const },
-              {
-                value: linkedUsers.filter((user) => user.status === "accepted").length,
-                label: "Friends",
-                href: "/shared" as const,
-              },
-              {
-                value: profileWatchedTotal,
-                label: "Watched",
-                href: "/picks" as const,
-              },
-            ] as const
-          ).map((stat, index) => (
-            <Link
-              key={stat.label}
-              href={stat.href}
-              className={`discover-toolbar-enter rounded-[22px] px-2 py-3 text-center transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:px-3 sm:py-4 ${statShell}`}
-              style={{ animationDelay: `${80 + index * 70}ms` }}
-            >
-              <p className={`text-xl font-semibold tabular-nums sm:text-2xl ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {stat.value}
-              </p>
-              <p
-                className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] sm:text-xs ${
-                  isDarkMode ? "text-slate-400" : "text-slate-400"
-                }`}
+          <>
+            <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
+              {(
+                [
+                  { value: acceptedMovies.length, label: "Picks", href: "/picks" as const },
+                  {
+                    value: linkedUsers.filter((user) => user.status === "accepted").length,
+                    label: "Friends",
+                    href: "/shared" as const,
+                  },
+                  {
+                    value: profileWatchedTotal,
+                    label: "Watched",
+                    href: "/picks" as const,
+                  },
+                ] as const
+              ).map((stat, index) => (
+                <Link
+                  key={stat.label}
+                  href={stat.href}
+                  className={`discover-toolbar-enter rounded-[22px] px-2 py-3 text-center transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:px-3 sm:py-4 ${statShell}`}
+                  style={{ animationDelay: `${80 + index * 70}ms` }}
+                >
+                  <p
+                    className={`text-xl font-semibold tabular-nums sm:text-2xl ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                  >
+                    {stat.value}
+                  </p>
+                  <p
+                    className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] sm:text-xs ${
+                      isDarkMode ? "text-slate-400" : "text-slate-400"
+                    }`}
+                  >
+                    {stat.label}
+                  </p>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Link
+                href="/connect"
+                className={`ui-btn ui-btn-primary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold sm:w-auto`}
               >
-                {stat.label}
-              </p>
-            </Link>
-          ))}
-          </div>
+                Connect
+              </Link>
+              <button
+                type="button"
+                disabled={copyInviteBusy}
+                onClick={() => void handleCopyInviteFromProfile()}
+                className={`ui-btn ui-btn-secondary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto`}
+              >
+                {copyInviteBusy ? "Preparing…" : "Copy my link"}
+              </button>
+            </div>
+          </>
         ) : null}
       </SurfaceCard>
 
@@ -1450,7 +1475,7 @@ export default function ProfilePage() {
         ) : null}
       </SurfaceCard>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {shortcutTiles.map((tile, index) => (
           <Link
             key={tile.href}
