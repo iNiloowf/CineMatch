@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
-import { passesDiscoverQualityThreshold } from "@/lib/discover-quality";
+import { passesDiscoverListEligibility } from "@/lib/discover-quality";
 import { Movie } from "@/lib/types";
 import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
         ? await searchTmdbMedia(query)
         : await getMergedMovies()
       : database.movies;
-  const filteredMovies = movies.filter(passesDiscoverQualityThreshold);
+  const calendarYear = new Date().getFullYear();
+  const filteredMovies = movies.filter((m) =>
+    passesDiscoverListEligibility(m, calendarYear),
+  );
 
   if (movieId) {
     const mergedMovies = await getMergedMovies();

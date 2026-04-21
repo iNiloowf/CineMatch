@@ -1,5 +1,5 @@
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
-import { passesDiscoverQualityThreshold } from "@/lib/discover-quality";
+import { passesDiscoverListEligibility } from "@/lib/discover-quality";
 import {
   buildDiscoverGenreAffinity,
   buildRejectedGenreWeights,
@@ -20,6 +20,20 @@ export function hashString(value: string) {
   }
 
   return Math.abs(hash);
+}
+
+/** Stable first occurrence wins — duplicate IDs in merged feeds were surfacing the same title twice. */
+function dedupeMoviesById(movies: Movie[]): Movie[] {
+  const seen = new Set<string>();
+  const out: Movie[] = [];
+  for (const m of movies) {
+    if (seen.has(m.id)) {
+      continue;
+    }
+    seen.add(m.id);
+    out.push(m);
+  }
+  return out;
 }
 
 function popularityBoost(movie: Movie): number {
@@ -159,8 +173,9 @@ export function buildDiscoverQueue(options: {
     pickEngagement = [],
   } = options;
 
-  const moviesById = new Map(movies.map((m) => [m.id, m]));
   const calendarYear = new Date().getFullYear();
+  const pool = dedupeMoviesById(movies);
+  const moviesById = new Map(pool.map((m) => [m.id, m]));
   const nowMs = discoverVisibilityTimestamp;
 
   const acceptedIds = new Set(
@@ -174,7 +189,7 @@ export function buildDiscoverQueue(options: {
       : [],
   );
 
-  const acceptedMovies = movies.filter((movie) => acceptedIds.has(movie.id));
+  const acceptedMovies = pool.filter((movie) => acceptedIds.has(movie.id));
 
   const genreAffinity = currentUserId
     ? buildDiscoverGenreAffinity(acceptedMovies, pickEngagement, moviesById)
@@ -307,9 +322,10 @@ export function buildDiscoverQueue(options: {
   };
 
   if (currentUserId) {
-    const filtered = movies.filter(
+    const filtered = pool.filter(
       (movie) =>
-        passesDiscoverQualityThreshold(movie) && !hiddenMovieIds.has(movie.id),
+        passesDiscoverListEligibility(movie, calendarYear) &&
+        !hiddenMovieIds.has(movie.id),
     );
     return rotateDiscoverQueue(diversifyDiscoverQueue(sortDiscoverQueue(filtered)));
   }
@@ -317,7 +333,7 @@ export function buildDiscoverQueue(options: {
   return rotateDiscoverQueue(
     diversifyDiscoverQueue(
       sortBySessionShuffle(
-        movies.filter((movie) => passesDiscoverQualityThreshold(movie)),
+        pool.filter((movie) => passesDiscoverListEligibility(movie, calendarYear)),
       ),
     ),
   );

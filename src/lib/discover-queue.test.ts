@@ -57,6 +57,36 @@ describe("discover-queue", () => {
     expect(q.map((m) => m.id)).not.toContain("low");
   });
 
+  it("buildDiscoverQueue dedupes duplicate movie ids", () => {
+    const a = mkMovie("dup");
+    const q = buildDiscoverQueue({
+      movies: [a, { ...a, title: "Dup again" }],
+      swipes: [],
+      currentUserId: "u1",
+      discoverShuffleSeed: "s",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+    });
+    expect(q.filter((m) => m.id === "dup")).toHaveLength(1);
+  });
+
+  it("buildDiscoverQueue excludes unreleased (future year) titles", () => {
+    const future = { ...mkMovie("fut"), year: 2099 };
+    const ok = mkMovie("ok");
+    const q = buildDiscoverQueue({
+      movies: [future, ok],
+      swipes: [],
+      currentUserId: null,
+      discoverShuffleSeed: "s",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+    });
+    expect(q.map((m) => m.id)).not.toContain("fut");
+    expect(q.map((m) => m.id)).toContain("ok");
+  });
+
   it("buildDiscoverQueue hides accepted swipes for current user", () => {
     const a = mkMovie("a");
     const b = mkMovie("b");

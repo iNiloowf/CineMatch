@@ -3,7 +3,9 @@ import {
   getRuntimeMinutes,
   MIN_DISCOVER_RATING,
   MIN_DISCOVER_RUNTIME_MINUTES,
+  passesDiscoverListEligibility,
   passesDiscoverQualityThreshold,
+  passesDiscoverReleased,
 } from "@/lib/discover-quality";
 import type { Movie } from "@/lib/types";
 
@@ -50,5 +52,23 @@ describe("discover-quality", () => {
       runtime: `${MIN_DISCOVER_RUNTIME_MINUTES} min`,
     });
     expect(passesDiscoverQualityThreshold(m)).toBe(true);
+  });
+
+  it("passesDiscoverReleased rejects future release years", () => {
+    const cy = 2026;
+    expect(passesDiscoverReleased(movie({ id: "f", year: 2027 }), cy)).toBe(false);
+    expect(passesDiscoverReleased(movie({ id: "ok", year: 2026 }), cy)).toBe(true);
+  });
+
+  it("passesDiscoverListEligibility combines quality and release", () => {
+    const cy = 2026;
+    const good = movie({
+      id: "g",
+      rating: MIN_DISCOVER_RATING,
+      runtime: `${MIN_DISCOVER_RUNTIME_MINUTES} min`,
+      year: 2025,
+    });
+    expect(passesDiscoverListEligibility(good, cy)).toBe(true);
+    expect(passesDiscoverListEligibility({ ...good, year: 2028 }, cy)).toBe(false);
   });
 });
