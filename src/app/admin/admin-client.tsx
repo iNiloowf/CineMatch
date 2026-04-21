@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import type { ConversationEntry } from "@/lib/support-ticket-conversation";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type DashboardStats = {
@@ -51,6 +52,7 @@ type DashboardTicketRow = {
   createdAt: string;
   adminReply: string | null;
   adminRepliedAt: string | null;
+  conversation: ConversationEntry[];
 };
 
 type DashboardPayload = {
@@ -296,6 +298,7 @@ export default function AdminDesktopPage() {
           status?: DashboardTicketRow["status"];
           adminReply?: string | null;
           adminRepliedAt?: string | null;
+          conversation?: ConversationEntry[];
         };
 
         if (!response.ok || !payload.status) {
@@ -310,6 +313,7 @@ export default function AdminDesktopPage() {
                   status: payload.status ?? status,
                   adminReply: payload.adminReply ?? ticket.adminReply,
                   adminRepliedAt: payload.adminRepliedAt ?? ticket.adminRepliedAt,
+                  conversation: payload.conversation ?? ticket.conversation,
                 }
               : ticket,
           ),
@@ -321,6 +325,7 @@ export default function AdminDesktopPage() {
                 status: payload.status ?? status,
                 adminReply: payload.adminReply ?? current.adminReply,
                 adminRepliedAt: payload.adminRepliedAt ?? current.adminRepliedAt,
+                conversation: payload.conversation ?? current.conversation,
               }
             : current,
         );
@@ -404,6 +409,7 @@ export default function AdminDesktopPage() {
         adminReply?: string | null;
         adminRepliedAt?: string | null;
         status?: DashboardTicketRow["status"];
+        conversation?: ConversationEntry[];
       };
 
       if (!response.ok) {
@@ -418,6 +424,7 @@ export default function AdminDesktopPage() {
         adminReply: nextReply,
         adminRepliedAt: nextAt,
         status: payload.status ?? ticket.status,
+        conversation: payload.conversation ?? ticket.conversation,
       });
 
       setSelectedTicket((current) => (current?.id === selectedTicket.id ? merge(current) : current));
@@ -827,35 +834,53 @@ export default function AdminDesktopPage() {
                   </div>
                 </div>
 
-                <div
-                  className={`min-h-[120px] rounded-[18px] border p-4 text-sm leading-7 ${
-                    isDarkMode ? "border-white/10 bg-white/[0.03] text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  {selectedTicket.message}
-                </div>
-
-                {selectedTicket.adminReply ? (
-                  <div>
-                    <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
-                      Current reply (user-visible)
+                <div className="space-y-3">
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
+                    Conversation
+                  </p>
+                  <div
+                    className={`rounded-[18px] border p-4 text-sm leading-7 ${
+                      isDarkMode ? "border-slate-500/25 bg-slate-900/40 text-slate-100" : "border-slate-200 bg-slate-50 text-slate-800"
+                    }`}
+                  >
+                    <p className={`text-[10px] font-semibold uppercase tracking-wide ${softText}`}>User</p>
+                    <p className="mt-1 whitespace-pre-wrap">{selectedTicket.message}</p>
+                    <p className={`mt-2 text-[11px] ${softText}`}>
+                      {new Date(selectedTicket.createdAt).toLocaleString()}
                     </p>
+                  </div>
+                  {(selectedTicket.conversation.length > 0
+                    ? selectedTicket.conversation
+                    : selectedTicket.adminReply
+                      ? [
+                          {
+                            from: "admin" as const,
+                            body: selectedTicket.adminReply,
+                            at: selectedTicket.adminRepliedAt ?? selectedTicket.createdAt,
+                          },
+                        ]
+                      : []
+                  ).map((entry, index) => (
                     <div
-                      className={`mt-2 rounded-[18px] border p-4 text-sm leading-7 ${
-                        isDarkMode
-                          ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-50"
-                          : "border-emerald-200/90 bg-emerald-50 text-emerald-900"
+                      key={`${entry.at}-${index}`}
+                      className={`rounded-[18px] border p-4 text-sm leading-7 ${
+                        entry.from === "admin"
+                          ? isDarkMode
+                            ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-50"
+                            : "border-emerald-200/90 bg-emerald-50 text-emerald-900"
+                          : isDarkMode
+                            ? "border-slate-500/25 bg-slate-900/40 text-slate-100"
+                            : "border-slate-200 bg-slate-50 text-slate-800"
                       }`}
                     >
-                      {selectedTicket.adminReply}
-                    </div>
-                    {selectedTicket.adminRepliedAt ? (
-                      <p className={`mt-1 text-[11px] ${softText}`}>
-                        Sent {new Date(selectedTicket.adminRepliedAt).toLocaleString()}
+                      <p className={`text-[10px] font-semibold uppercase tracking-wide ${softText}`}>
+                        {entry.from === "admin" ? "You (admin)" : "User"}
                       </p>
-                    ) : null}
-                  </div>
-                ) : null}
+                      <p className="mt-1 whitespace-pre-wrap">{entry.body}</p>
+                      <p className={`mt-2 text-[11px] ${softText}`}>{new Date(entry.at).toLocaleString()}</p>
+                    </div>
+                  ))}
+                </div>
 
                 <div>
                   <label htmlFor="admin-ticket-reply" className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
@@ -866,7 +891,7 @@ export default function AdminDesktopPage() {
                     value={adminReplyDraft}
                     onChange={(event) => setAdminReplyDraft(event.target.value)}
                     rows={5}
-                    placeholder="Type a reply. It replaces any previous reply and shows in the user’s My tickets page."
+                    placeholder="Adds another admin message to the thread (previous replies stay visible)."
                     className={`mt-2 w-full resize-y rounded-[16px] border px-3 py-2.5 text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 ${
                       isDarkMode
                         ? "border-white/14 bg-white/[0.06] text-slate-100 placeholder:text-slate-500"

@@ -465,7 +465,8 @@ create table if not exists public.support_tickets (
   status text not null default 'open'
     check (status in ('open', 'in_progress', 'under_review', 'closed')),
   admin_reply text,
-  admin_replied_at timestamptz
+  admin_replied_at timestamptz,
+  conversation jsonb not null default '[]'::jsonb
 );
 
 create index if not exists idx_support_tickets_user_id

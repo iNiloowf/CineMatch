@@ -4,18 +4,24 @@ import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
+import {
+  appendConversation,
+  parseConversation,
+  type ConversationEntry,
+} from "@/lib/support-ticket-conversation";
 import { z } from "zod";
 
 type SupportTicketStatus = "open" | "under_review" | "closed";
-type TicketStatusRow = {
+type TicketRowAfterUpdate = {
   id: string;
   status: SupportTicketStatus | "in_progress";
   admin_reply: string | null;
   admin_replied_at: string | null;
+  conversation: unknown;
 };
 type TicketIdRow = { id: string };
 type TicketMutationResult = {
-  data: TicketStatusRow | null;
+  data: TicketRowAfterUpdate | null;
   error: { message?: string } | null;
 };
 
@@ -80,13 +86,38 @@ export async function PATCH(
   const { status: nextStatus, adminReply } = parsedBody.data;
 
   const nowIso = new Date().toISOString();
-  const updatePayload: Record<string, string> = {
+  const updatePayload: Record<string, unknown> = {
     updated_at: nowIso,
   };
 
   if (adminReply !== undefined) {
+    const existingRow = (await supabaseAdmin
+      .from("support_tickets")
+      .select("conversation")
+      .eq("id", ticketId)
+      .maybeSingle()) as {
+      data: { conversation: unknown } | null;
+      error: { message?: string } | null;
+    };
+
+    if (existingRow.error) {
+      return apiJsonError(
+        500,
+        existingRow.error.message ?? "Could not load ticket.",
+        { code: API_ERROR_CODES.INTERNAL, request },
+      );
+    }
+
+    const entry: ConversationEntry = {
+      from: "admin",
+      body: adminReply,
+      at: nowIso,
+    };
+    const nextConversation = appendConversation(existingRow.data?.conversation ?? [], entry);
+
     updatePayload.admin_reply = adminReply;
     updatePayload.admin_replied_at = nowIso;
+    updatePayload.conversation = nextConversation;
   }
 
   if (nextStatus !== undefined) {
@@ -97,7 +128,7 @@ export async function PATCH(
     .from("support_tickets")
     .update(updatePayload as never)
     .eq("id", ticketId)
-    .select("id, status, admin_reply, admin_replied_at")
+    .select("id, status, admin_reply, admin_replied_at, conversation")
     .maybeSingle()) as TicketMutationResult;
 
   if (
@@ -110,7 +141,7 @@ export async function PATCH(
       .from("support_tickets")
       .update(retryPayload as never)
       .eq("id", ticketId)
-      .select("id, status, admin_reply, admin_replied_at")
+      .select("id, status, admin_reply, admin_replied_at, conversation")
       .maybeSingle()) as TicketMutationResult;
   }
 
@@ -128,6 +159,8 @@ export async function PATCH(
       request,
     });
   }
+
+  const conversationOut = parseConversation(updateResult.data.conversation);
 
   void logSecurityAudit({
     action: "admin_ticket_update",
@@ -147,6 +180,7 @@ export async function PATCH(
       status: updateResult.data.status,
       adminReply: updateResult.data.admin_reply,
       adminRepliedAt: updateResult.data.admin_replied_at,
+      conversation: conversationOut,
     },
     request,
   );

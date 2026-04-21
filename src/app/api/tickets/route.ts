@@ -11,6 +11,7 @@ import {
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { parseConversation } from "@/lib/support-ticket-conversation";
 import { z } from "zod";
 
 type TicketPriority = "low" | "normal" | "high";
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
   const listResult = (await supabaseAdmin
     .from("support_tickets")
     .select(
-      "id, subject, message, priority, status, created_at, updated_at, admin_reply, admin_replied_at",
+      "id, subject, message, priority, status, created_at, updated_at, admin_reply, admin_replied_at, conversation",
     )
     .eq("user_id", authToken.userId)
     .order("created_at", { ascending: false })
@@ -98,6 +99,7 @@ export async function GET(request: NextRequest) {
       updated_at: string;
       admin_reply: string | null;
       admin_replied_at: string | null;
+      conversation: unknown;
     }> | null;
     error: { message?: string; code?: string } | null;
   };
@@ -127,6 +129,7 @@ export async function GET(request: NextRequest) {
         updatedAt: row.updated_at,
         adminReply: row.admin_reply,
         adminRepliedAt: row.admin_replied_at,
+        conversation: parseConversation(row.conversation),
       })),
     },
     request,

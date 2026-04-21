@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
+import { parseConversation } from "@/lib/support-ticket-conversation";
 import { logSecurityAudit } from "@/server/security-audit";
 
 type ProfileRow = {
@@ -44,6 +45,7 @@ type TicketRow = {
   created_at: string;
   admin_reply: string | null;
   admin_replied_at: string | null;
+  conversation: unknown;
 };
 
 type SupabaseErrorLike = {
@@ -274,7 +276,9 @@ export async function POST(request: NextRequest) {
       .eq("status", "open"),
     supabaseAdmin
       .from("support_tickets")
-      .select("id, user_id, subject, message, priority, status, created_at, admin_reply, admin_replied_at")
+      .select(
+        "id, user_id, subject, message, priority, status, created_at, admin_reply, admin_replied_at, conversation",
+      )
       .order("created_at", { ascending: false })
       .limit(40),
   ]);
@@ -408,6 +412,7 @@ export async function POST(request: NextRequest) {
         createdAt: ticket.created_at,
         adminReply: ticket.admin_reply,
         adminRepliedAt: ticket.admin_replied_at,
+        conversation: parseConversation(ticket.conversation),
       })),
     },
     request,
