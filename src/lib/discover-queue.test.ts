@@ -69,4 +69,28 @@ describe("discover-queue", () => {
     expect(q.map((m) => m.id)).not.toContain("a");
     expect(q.map((m) => m.id)).toContain("b");
   });
+
+  it("prefers recent titles over very old ones when taste is modern", () => {
+    const old = { ...mkMovie("old-1972"), year: 1972 };
+    const recent = { ...mkMovie("recent-2023"), year: 2023 };
+    const prior = { ...mkMovie("recent-2022"), year: 2022 };
+    const q = buildDiscoverQueue({
+      movies: [old, recent, prior],
+      swipes: [
+        {
+          userId: "u1",
+          movieId: "recent-2022",
+          decision: "accepted",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      currentUserId: "u1",
+      discoverShuffleSeed: "seed",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+      pickEngagement: [{ movieId: "recent-2022", recommended: true }],
+    });
+    expect(q[0]?.id).toBe("recent-2023");
+  });
 });

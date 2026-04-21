@@ -24,6 +24,7 @@ type TmdbMovieDetails = {
   title: string;
   overview: string;
   vote_average: number;
+  popularity?: number;
   poster_path: string | null;
   release_date: string | null;
   runtime: number | null;
@@ -35,6 +36,7 @@ type TmdbTvDetails = {
   name: string;
   overview: string;
   vote_average: number;
+  popularity?: number;
   poster_path: string | null;
   first_air_date: string | null;
   episode_run_time: number[];
@@ -161,6 +163,10 @@ function mapTmdbMovie(details: TmdbMovieDetails): Movie {
       : new Date().getFullYear(),
     runtime: minutesToRuntimeLabel(details.runtime),
     rating: Number(details.vote_average.toFixed(1)),
+    popularity:
+      typeof details.popularity === "number" && Number.isFinite(details.popularity)
+        ? details.popularity
+        : undefined,
     genre: genres.length > 0 ? genres : ["Movie"],
     description:
       details.overview ||
@@ -192,6 +198,10 @@ function mapTmdbSeries(details: TmdbTvDetails): Movie {
       : new Date().getFullYear(),
     runtime: minutesToRuntimeLabel(averageRuntime),
     rating: Number(details.vote_average.toFixed(1)),
+    popularity:
+      typeof details.popularity === "number" && Number.isFinite(details.popularity)
+        ? details.popularity
+        : undefined,
     genre: genres.length > 0 ? genres : ["Series"],
     description:
       details.overview ||

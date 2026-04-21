@@ -1488,6 +1488,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     discoverStartOffset,
     discoverVisibilityTimestamp,
     onboardingPreferences,
+    pickEngagement: currentUserId
+      ? data.watchedPickReviews
+          .filter((entry) => entry.userId === currentUserId)
+          .map((entry) => ({
+            movieId: entry.movieId,
+            recommended: entry.recommended,
+          }))
+      : undefined,
   });
 
   const sharedMovies: SharedMovieView[] = currentUserId

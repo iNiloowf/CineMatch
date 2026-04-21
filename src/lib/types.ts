@@ -5,6 +5,8 @@ export type Movie = {
   year: number;
   runtime: string;
   rating: number;
+  /** TMDB popularity (unbounded); used for Discover ranking when present. */
+  popularity?: number;
   genre: string[];
   description: string;
   trailerUrl?: string;
