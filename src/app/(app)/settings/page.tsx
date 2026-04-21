@@ -780,9 +780,28 @@ export default function SettingsPage() {
       />
 
       {currentUser ? (
-        <SurfaceCard className="fade-up-enter !p-0 overflow-hidden" style={{ animationDelay: "0ms" }}>
+        <SurfaceCard className="fade-up-enter relative !p-0 overflow-hidden" style={{ animationDelay: "0ms" }}>
+          <Link
+            href="/profile"
+            className={`absolute left-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full transition active:scale-[0.98] ${
+              isDarkMode
+                ? "bg-white/10 text-slate-100 hover:bg-white/16"
+                : "bg-white/90 text-slate-700 shadow-sm ring-1 ring-slate-200/90 hover:bg-white"
+            }`}
+            aria-label="Edit profile"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5" aria-hidden>
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
           <div
-            className={`flex items-start gap-4 px-5 py-4 sm:px-6 sm:py-5 ${
+            className={`flex items-start gap-4 px-5 py-4 pt-16 sm:px-6 sm:py-5 sm:pt-[3.25rem] ${
               isDarkMode
                 ? "bg-gradient-to-br from-violet-950/40 to-white/[0.04]"
                 : "bg-gradient-to-br from-violet-50/90 via-white to-sky-50/30"
@@ -804,11 +823,6 @@ export default function SettingsPage() {
                 {currentUser.bio}
               </p>
             </div>
-          </div>
-          <div className={`border-t px-5 py-3 sm:px-6 ${isDarkMode ? "border-white/10" : "border-slate-200/80"}`}>
-            <Link href="/profile" className="ui-btn ui-btn-secondary inline-flex">
-              Edit profile details
-            </Link>
           </div>
         </SurfaceCard>
       ) : null}

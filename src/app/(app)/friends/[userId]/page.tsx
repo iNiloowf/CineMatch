@@ -320,18 +320,6 @@ export default function FriendProfilePage() {
             {partner.bio}
           </p>
         ) : null}
-        <div
-          className={`border-t px-5 pb-5 pt-4 sm:px-6 ${
-            isDarkMode ? "border-white/10" : "border-slate-200/85"
-          }`}
-        >
-          <AchievementBadgesShowcase
-            earned={earnedBadges}
-            isDarkMode={isDarkMode}
-            variant="friend"
-            compact
-          />
-        </div>
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
@@ -533,6 +521,25 @@ export default function FriendProfilePage() {
               })}
             </ul>
           )}
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard
+        className="fade-up-enter !p-0 overflow-hidden"
+        style={{ animationDelay: "180ms" }}
+      >
+        <div
+          className={`border-b px-5 py-3.5 sm:px-6 ${isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/85 bg-slate-50/60"}`}
+        >
+          <p className={sectionEyebrow}>Achievements</p>
+        </div>
+        <div className={`px-5 pb-5 pt-4 sm:px-6 ${isDarkMode ? "border-white/10" : ""}`}>
+          <AchievementBadgesShowcase
+            earned={earnedBadges}
+            isDarkMode={isDarkMode}
+            variant="friend"
+            compact
+          />
         </div>
       </SurfaceCard>
     </div>

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import type { SharedMovieView } from "@/lib/types";
 
-const DESCRIPTION_COLLAPSE_AT = 160;
-
 export function mutualChipClass(isDarkMode: boolean) {
   return isDarkMode
     ? "border border-violet-400/25 bg-violet-500/14 text-violet-100 ring-1 ring-violet-400/22"
@@ -85,10 +83,6 @@ export type SharedPartnerMovieCardProps = {
   entry: SharedMovieView;
   isDarkMode: boolean;
   hasProAccess: boolean;
-  desc: string;
-  needsMore: boolean;
-  expanded: boolean;
-  onToggleDescription: () => void;
   onOpenDetails: () => void;
   toggleSharedMovie: (partnerId: string, movieId: string, checked: boolean) => Promise<void>;
   toggleWatched: (partnerId: string, movieId: string, checked: boolean) => Promise<void>;
@@ -98,10 +92,6 @@ export function SharedPartnerMovieCard({
   entry,
   isDarkMode,
   hasProAccess,
-  desc,
-  needsMore,
-  expanded,
-  onToggleDescription,
   onOpenDetails,
   toggleSharedMovie,
   toggleWatched,
@@ -112,7 +102,11 @@ export function SharedPartnerMovieCard({
         isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.06)]"
       }`}
     >
-      <div className="relative h-[8.5rem] w-full overflow-hidden sm:h-36">
+      <button
+        type="button"
+        onClick={onOpenDetails}
+        className="relative block h-[7.25rem] w-full overflow-hidden text-left sm:h-32"
+      >
         <div
           className="absolute inset-0"
           style={{
@@ -125,89 +119,34 @@ export function SharedPartnerMovieCard({
         >
           <PosterBackdrop imageUrl={entry.movie.poster.imageUrl} profile="list" objectFit="cover" />
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_40%,rgba(15,23,42,0.75)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_40%,rgba(15,23,42,0.78)_100%)]" />
         <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2 sm:left-4 sm:right-4">
           <span className="rounded-full bg-black/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/95 ring-1 ring-white/15 backdrop-blur-sm">
             {entry.movie.mediaType === "series" ? "Series" : "Movie"}
           </span>
-          <div className="flex shrink-0 gap-1.5">
-            <span className="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
-              {entry.movie.year}
-            </span>
-            <span className="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
-              {entry.movie.runtime}
-            </span>
-          </div>
+          <span className="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold text-white/92 ring-1 ring-white/15 backdrop-blur-sm">
+            {entry.movie.year}
+          </span>
         </div>
         <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
           <h3 className="line-clamp-2 text-[0.9375rem] font-bold leading-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-base">
             {entry.movie.title}
           </h3>
         </div>
-      </div>
+      </button>
 
       <div className="space-y-3 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span
-            className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${mutualChipClass(isDarkMode)}`}
-          >
-            Shared match
-          </span>
-          <span
-            className={`max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-semibold ${partnerChipClass(isDarkMode)}`}
-          >
-            You & {entry.partner.name}
-          </span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}
-          >
-            ★ {entry.movie.rating.toFixed(1)}
-          </span>
-        </div>
-
-        <p className={`text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-          Both of you said yes to this title.
-        </p>
-
-        <p className={`text-[11px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-          {entry.movie.genre.join(" • ")}
-        </p>
-
-        <div
-          className={`rounded-[18px] border px-3 py-3 sm:px-3.5 sm:py-3.5 ${
-            isDarkMode ? "border-white/10 bg-black/30" : "border-slate-200/90 bg-slate-50/95"
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className={`w-full rounded-[14px] border px-3 py-2.5 text-center text-xs font-semibold transition active:scale-[0.99] ${
+            isDarkMode
+              ? "border-white/12 bg-white/[0.06] text-slate-100 hover:bg-white/10"
+              : "border-slate-200/90 bg-slate-50 text-slate-800 hover:bg-slate-100"
           }`}
         >
-          <p
-            className={`text-xs leading-relaxed ${!expanded && needsMore ? "line-clamp-3" : ""} ${
-              isDarkMode ? "text-slate-200" : "text-slate-700"
-            }`}
-          >
-            {desc}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-            {needsMore ? (
-              <button
-                type="button"
-                onClick={onToggleDescription}
-                className={`shared-detail-link min-h-9 underline-offset-2 hover:underline ${
-                  isDarkMode ? "text-violet-300" : "text-violet-700"
-                }`}
-              >
-                {expanded ? "Show less" : "Show more"}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={onOpenDetails}
-              className={`shared-detail-link min-h-9 underline-offset-2 hover:underline ${
-                isDarkMode ? "text-slate-300" : "text-slate-600"
-              }`}
-            >
-              Full details
-            </button>
-          </div>
-        </div>
+          Full details
+        </button>
 
         <div className="space-y-2.5 pt-0.5">
           <TogglePill
@@ -255,5 +194,3 @@ export function SharedPartnerMovieCard({
 export function entryKey(entry: SharedMovieView) {
   return `${entry.linkId}-${entry.movie.id}`;
 }
-
-export { DESCRIPTION_COLLAPSE_AT };

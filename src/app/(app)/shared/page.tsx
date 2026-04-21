@@ -7,13 +7,7 @@ import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteEmptyCard } from "@/components/app-route-status";
-import {
-  DESCRIPTION_COLLAPSE_AT,
-  entryKey,
-  mutualChipClass,
-  ratingChipClass,
-  SharedPartnerMovieCard,
-} from "@/components/shared-partner-movie-card";
+import { entryKey, mutualChipClass, ratingChipClass, SharedPartnerMovieCard } from "@/components/shared-partner-movie-card";
 import { SurfaceCard } from "@/components/surface-card";
 import {
   shouldVirtualizeList,
@@ -26,17 +20,12 @@ export default function SharedWatchlistPage() {
   const { sharedMovieGroups, toggleWatched, toggleSharedMovie, isDarkMode, hasProAccess } = useAppState();
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
-  const [expandedDescription, setExpandedDescription] = useState<Record<string, boolean>>({});
 
   const closeDetails = useCallback(() => {
     setDetailsMovie(null);
   }, []);
 
   useEscapeToClose(Boolean(detailsMovie), closeDetails);
-
-  const toggleDescription = useCallback((key: string) => {
-    setExpandedDescription((prev) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
 
   return (
     <>
@@ -127,24 +116,18 @@ export default function SharedWatchlistPage() {
                     {shouldVirtualizeList(group.movies.length) ? (
                       <VirtualScrollList
                         count={group.movies.length}
-                        estimateItemSize={400}
+                        estimateItemSize={280}
                         className="max-h-[min(72vh,36rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
                       >
                         {(index) => {
                           const entry = group.movies[index]!;
                           const key = entryKey(entry);
-                          const desc = entry.movie.description;
-                          const needsMore = desc.length > DESCRIPTION_COLLAPSE_AT;
-                          const expanded = Boolean(expandedDescription[key]);
                           return (
                             <SharedPartnerMovieCard
+                              key={key}
                               entry={entry}
                               isDarkMode={isDarkMode}
                               hasProAccess={hasProAccess}
-                              desc={desc}
-                              needsMore={needsMore}
-                              expanded={expanded}
-                              onToggleDescription={() => toggleDescription(key)}
                               onOpenDetails={() => setDetailsMovie(entry)}
                               toggleSharedMovie={toggleSharedMovie}
                               toggleWatched={toggleWatched}
@@ -155,9 +138,6 @@ export default function SharedWatchlistPage() {
                     ) : (
                       group.movies.map((entry) => {
                         const key = entryKey(entry);
-                        const desc = entry.movie.description;
-                        const needsMore = desc.length > DESCRIPTION_COLLAPSE_AT;
-                        const expanded = Boolean(expandedDescription[key]);
 
                         return (
                           <SharedPartnerMovieCard
@@ -165,10 +145,6 @@ export default function SharedWatchlistPage() {
                             entry={entry}
                             isDarkMode={isDarkMode}
                             hasProAccess={hasProAccess}
-                            desc={desc}
-                            needsMore={needsMore}
-                            expanded={expanded}
-                            onToggleDescription={() => toggleDescription(key)}
                             onOpenDetails={() => setDetailsMovie(entry)}
                             toggleSharedMovie={toggleSharedMovie}
                             toggleWatched={toggleWatched}
