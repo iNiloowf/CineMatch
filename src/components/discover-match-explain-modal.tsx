@@ -47,7 +47,7 @@ export function DiscoverMatchExplainModal({
               {explanation.headline}
             </p>
             <p className={`mt-1 text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              How we estimated your match — same signals as the % on the card.
+              Tap “Match” anytime to see this again — same formula as the % on the card.
             </p>
           </div>
           <button

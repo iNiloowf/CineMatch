@@ -741,23 +741,6 @@ function DiscoverPageContent({
         );
       }, 5200);
 
-      if (decision === "accepted" && currentUserId) {
-        setMatchExplanation(
-          explainDiscoverSwipeMatch(swipedMovie, {
-            genreAffinity: discoverGenreAffinity,
-            rejectedGenreWeights: discoverRejectedGenreWeights,
-            onboarding: {
-              favoriteGenres: onboardingPreferences.favoriteGenres,
-              dislikedGenres: onboardingPreferences.dislikedGenres,
-              mediaPreference: onboardingPreferences.mediaPreference,
-            },
-            tasteYear: discoverTasteYear,
-            calendarYear: new Date().getFullYear(),
-            personalizationWeight: discoverPersonalizationWeight,
-          }),
-        );
-      }
-
       void swipeMovie(swipedMovie.id, decision);
     }, 48);
   }, [
@@ -769,6 +752,28 @@ function DiscoverPageContent({
     focusedMovieId,
     registerMovies,
     swipeMovie,
+  ]);
+
+  const openMatchExplanation = useCallback(() => {
+    if (!movie || !currentUserId) {
+      return;
+    }
+    setMatchExplanation(
+      explainDiscoverSwipeMatch(movie, {
+        genreAffinity: discoverGenreAffinity,
+        rejectedGenreWeights: discoverRejectedGenreWeights,
+        onboarding: {
+          favoriteGenres: onboardingPreferences.favoriteGenres,
+          dislikedGenres: onboardingPreferences.dislikedGenres,
+          mediaPreference: onboardingPreferences.mediaPreference,
+        },
+        tasteYear: discoverTasteYear,
+        calendarYear: new Date().getFullYear(),
+        personalizationWeight: discoverPersonalizationWeight,
+      }),
+    );
+  }, [
+    movie,
     currentUserId,
     discoverGenreAffinity,
     discoverRejectedGenreWeights,
@@ -1983,6 +1988,7 @@ function DiscoverPageContent({
                 isInteractionLocked={transitionState !== "idle" || Boolean(swipeFeedback)}
                 swipeFeedback={swipeFeedback}
                 suppressTrailerPlayButton={!isOnboardingComplete}
+                onMatchPercentClick={currentUserId ? openMatchExplanation : undefined}
               />
             </div>
           </div>

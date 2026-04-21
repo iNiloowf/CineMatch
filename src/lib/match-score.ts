@@ -186,7 +186,7 @@ export function explainDiscoverSwipeMatch(
   const bullets: string[] = [];
 
   bullets.push(
-    `We start from this title’s **IMDb ${movie.rating.toFixed(1)}** score, then adjust for your genres, what you’ve liked or skipped, and release year. The **${percent}%** on the card is that blend, rounded.`,
+    `We start from this title’s **IMDb ${movie.rating.toFixed(1)}** score, then adjust for your genres, what you’ve liked or skipped, and release year. The **${percent}%** match is that blend, rounded.`,
   );
 
   if (cold > 0.04) {
@@ -259,8 +259,8 @@ export function explainDiscoverSwipeMatch(
 
   const headline =
     movie.title.length > 42
-      ? `Why ~${percent}% match?`
-      : `Why “${movie.title}” matched at ~${percent}%`;
+      ? `Why ~${percent}% fits your taste?`
+      : `Why “${movie.title}” is ~${percent}% your taste`;
 
   return {
     percent,

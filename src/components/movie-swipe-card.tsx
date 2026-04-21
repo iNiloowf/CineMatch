@@ -30,6 +30,8 @@ type MovieSwipeCardProps = {
   swipeFeedback?: "accepted" | "rejected" | null;
   /** Hide the center trailer play control (e.g. until first-run onboarding is done). */
   suppressTrailerPlayButton?: boolean;
+  /** Discover: tap the Match % chip to explain why it fits your taste. */
+  onMatchPercentClick?: () => void;
 };
 
 export function MovieSwipeCard({
@@ -43,6 +45,7 @@ export function MovieSwipeCard({
   isInteractionLocked = false,
   swipeFeedback = null,
   suppressTrailerPlayButton = false,
+  onMatchPercentClick,
 }: MovieSwipeCardProps) {
   const {
     isDarkMode,
@@ -470,31 +473,80 @@ export function MovieSwipeCard({
               </p>
             </div>
           </div>
-          <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-            <svg
-              viewBox="0 0 24 24"
-              className={`${statSvg} ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
+          {onMatchPercentClick ? (
+            <button
+              type="button"
+              disabled={isInteractionLocked}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMatchPercentClick();
+              }}
+              aria-label={`Why ${matchScore}% match for your taste?`}
+              className={`flex h-full min-h-[2.75rem] w-full min-w-0 items-center justify-center gap-2 self-stretch rounded-xl px-1 touch-manipulation transition sm:gap-2.5 ${
+                isInteractionLocked
+                  ? "cursor-not-allowed opacity-60"
+                  : isDarkMode
+                    ? "cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-400/80"
+                    : "cursor-pointer hover:bg-violet-50/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-500/70"
+              }`}
             >
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
-              <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
-              <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
-            </svg>
-            <div className="min-w-0 text-center sm:text-left">
-              <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                {matchScore}%
-              </p>
-              <p className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                Match
-              </p>
+              <svg
+                viewBox="0 0 24 24"
+                className={`${statSvg} shrink-0 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
+                <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+              <div className="min-w-0 text-center sm:text-left">
+                <p
+                  className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                >
+                  {matchScore}%
+                </p>
+                <p
+                  className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-violet-200/95" : "text-violet-600/90"}`}
+                >
+                  Match · why?
+                </p>
+              </div>
+            </button>
+          ) : (
+            <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
+              <svg
+                viewBox="0 0 24 24"
+                className={`${statSvg} ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
+                <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+              <div className="min-w-0 text-center sm:text-left">
+                <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  {matchScore}%
+                </p>
+                <p
+                  className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}
+                >
+                  Match
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="mt-[var(--swipe-y-gap)] flex min-h-0 flex-1 flex-col overflow-hidden">
