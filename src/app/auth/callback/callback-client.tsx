@@ -14,7 +14,7 @@ function parseHashParams(hash: string): URLSearchParams {
 export function AuthCallbackClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [phase, setPhase] = useState<"working" | "success" | "error">("working");
+  const [phase, setPhase] = useState<"working" | "error">("working");
   const [message, setMessage] = useState("Confirming your email…");
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -32,7 +32,7 @@ export function AuthCallbackClient() {
       return;
     }
 
-    const next = searchParams.get("next") || "/discover";
+    const next = searchParams.get("next") || "/auth/email-confirmed";
 
     void (async () => {
       try {
@@ -40,11 +40,7 @@ export function AuthCallbackClient() {
 
         const { data: existingSession } = await supabase.auth.getSession();
         if (existingSession.session) {
-          setMessage("Your email is verified. You can use CineMatch with this account.");
-          setPhase("success");
-          window.setTimeout(() => {
-            router.replace(next);
-          }, 2200);
+          router.replace(next);
           return;
         }
 
@@ -100,11 +96,7 @@ export function AuthCallbackClient() {
           }
         }
 
-        setMessage("Your email is verified. You can use CineMatch with this account.");
-        setPhase("success");
-        window.setTimeout(() => {
-          router.replace(next);
-        }, 2200);
+        router.replace(next);
       } catch (callbackError) {
         setError(
           callbackError instanceof Error
@@ -185,12 +177,6 @@ export function AuthCallbackClient() {
                   Back to sign in
                 </Link>
               </div>
-            </>
-          ) : phase === "success" ? (
-            <>
-              <h1 className="text-2xl font-semibold text-slate-900">Email verified</h1>
-              <p className="text-sm leading-7 text-slate-600">{message}</p>
-              <p className="text-xs text-slate-400">Redirecting you…</p>
             </>
           ) : (
             <>

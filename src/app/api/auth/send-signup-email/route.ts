@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       data: {
         full_name: name,
       },
-      redirectTo: `${getAppUrl(request)}/auth/callback?next=/discover`,
+      redirectTo: `${getAppUrl(request)}/auth/callback?next=${encodeURIComponent("/auth/email-confirmed")}`,
     },
   });
 
