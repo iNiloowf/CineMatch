@@ -409,7 +409,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-5">
+    <div className="w-full min-w-0 space-y-4">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
