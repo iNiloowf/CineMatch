@@ -1285,6 +1285,12 @@ function DiscoverPageContent({
                     setIsSearchSheetOpen(true);
                   }
                 }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.currentTarget.blur();
+                  }
+                }}
+                enterKeyHint="search"
                 placeholder="Search a movie or series"
                 aria-describedby="discover-search-hint"
                 className={`ui-input-shell w-full min-w-0 py-2 pl-9 text-[13px] outline-none focus:border-violet-400 max-[380px]:text-[12px] sm:pl-10 ${
@@ -1589,6 +1595,12 @@ function DiscoverPageContent({
                       setIsSearchSheetOpen(true);
                     }
                   }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.currentTarget.blur();
+                    }
+                  }}
+                  enterKeyHint="search"
                   placeholder="Search a movie or series"
                   aria-describedby="discover-overlay-search-hint"
                   className={`w-full rounded-[18px] border py-2.5 pl-10 pr-11 text-sm outline-none transition ${
