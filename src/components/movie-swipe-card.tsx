@@ -25,6 +25,8 @@ type MovieSwipeCardProps = {
   canGoNext: boolean;
   isInteractionLocked?: boolean;
   swipeFeedback?: "accepted" | "rejected" | null;
+  /** Hide the center trailer play control (e.g. until first-run onboarding is done). */
+  suppressTrailerPlayButton?: boolean;
 };
 
 export function MovieSwipeCard({
@@ -37,6 +39,7 @@ export function MovieSwipeCard({
   canGoNext,
   isInteractionLocked = false,
   swipeFeedback = null,
+  suppressTrailerPlayButton = false,
 }: MovieSwipeCardProps) {
   const { isDarkMode, acceptedMovies, onboardingPreferences } = useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -356,28 +359,30 @@ export function MovieSwipeCard({
                 </svg>
               </button>
             </div>
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <button
-                type="button"
-                onClick={handleOpenTrailer}
-                disabled={!hasTrailer || isLoadingTrailer}
-                aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-[999px] border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
-                  hasTrailer
-                    ? "bg-black/24 text-white hover:bg-black/34"
-                    : "cursor-not-allowed bg-black/16 text-white/55"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="ml-1 h-6 w-6"
-                  aria-hidden="true"
+            {!suppressTrailerPlayButton ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={handleOpenTrailer}
+                  disabled={!hasTrailer || isLoadingTrailer}
+                  aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
+                  className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-[999px] border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
+                    hasTrailer
+                      ? "bg-black/24 text-white hover:bg-black/34"
+                      : "cursor-not-allowed bg-black/16 text-white/55"
+                  }`}
                 >
-                  <path d="m8 5 11 7-11 7V5Z" />
-                </svg>
-              </button>
-            </div>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="ml-1 h-6 w-6"
+                    aria-hidden="true"
+                  >
+                    <path d="m8 5 11 7-11 7V5Z" />
+                  </svg>
+                </button>
+              </div>
+            ) : null}
             <div className="space-y-2.5 pt-4">
               <div className="flex flex-wrap gap-1.5">
                 {movie.genre.slice(0, 3).map((genre) => (

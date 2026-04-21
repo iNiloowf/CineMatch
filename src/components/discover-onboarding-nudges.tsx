@@ -28,12 +28,15 @@ type DiscoverOnboardingNudgesProps = {
   isDarkMode: boolean;
   /** Show gesture / filter tips only when there is an active title to swipe. */
   hasActiveBrowse: boolean;
+  /** Tips appear only after the first-run onboarding questionnaire is finished. */
+  isOnboardingComplete: boolean;
 };
 
 export function DiscoverOnboardingNudges({
   userId,
   isDarkMode,
   hasActiveBrowse,
+  isOnboardingComplete,
 }: DiscoverOnboardingNudgesProps) {
   const [gesturesDismissed, setGesturesDismissed] = useState(() =>
     readDismissed(userId, "gestures"),
@@ -64,7 +67,7 @@ export function DiscoverOnboardingNudges({
       autoTimerRef.current = null;
     }
 
-    if (!hasActiveBrowse || (gesturesDismissed && filtersDismissed)) {
+    if (!isOnboardingComplete || !hasActiveBrowse || (gesturesDismissed && filtersDismissed)) {
       return;
     }
 
@@ -85,9 +88,9 @@ export function DiscoverOnboardingNudges({
         autoTimerRef.current = null;
       }
     };
-  }, [hasActiveBrowse, gesturesDismissed, filtersDismissed, userId]);
+  }, [isOnboardingComplete, hasActiveBrowse, gesturesDismissed, filtersDismissed, userId]);
 
-  if (!hasActiveBrowse || (gesturesDismissed && filtersDismissed)) {
+  if (!isOnboardingComplete || !hasActiveBrowse || (gesturesDismissed && filtersDismissed)) {
     return null;
   }
 
