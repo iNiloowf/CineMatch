@@ -512,9 +512,9 @@ export function MovieSwipeCard({
                   {matchScore}%
                 </p>
                 <p
-                  className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-violet-200/95" : "text-violet-600/90"}`}
+                  className={`text-[9px] max-[380px]:leading-tight sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}
                 >
-                  Match · why?
+                  Match
                 </p>
               </div>
             </button>

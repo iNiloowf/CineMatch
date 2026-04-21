@@ -46,9 +46,6 @@ export function DiscoverMatchExplainModal({
             <p id="discover-match-explain-title" className="text-base font-semibold leading-snug text-inherit">
               {explanation.headline}
             </p>
-            <p className={`mt-1 text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              Tap “Match” anytime to see this again — same formula as the % on the card.
-            </p>
           </div>
           <button
             type="button"
