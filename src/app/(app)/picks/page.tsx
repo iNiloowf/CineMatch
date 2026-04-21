@@ -964,7 +964,7 @@ export default function PicksPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
-            style={{ animationDelay: "40ms" }}
+            style={{ animationDelay: "52ms" }}
           >
             <p
               className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
@@ -996,7 +996,7 @@ export default function PicksPage() {
           </SurfaceCard>
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
-            style={{ animationDelay: "120ms" }}
+            style={{ animationDelay: "68ms" }}
           >
             <p
               className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
@@ -1028,7 +1028,7 @@ export default function PicksPage() {
           </SurfaceCard>
         </div>
 
-        <SurfaceCard className="space-y-2.5 p-3.5 sm:p-4">
+        <SurfaceCard className="space-y-2.5 p-3.5 sm:p-4" style={{ animationDelay: "84ms" }}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p

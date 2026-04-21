@@ -36,7 +36,9 @@ export const PicksMovieRow = memo(function PicksMovieRow({
   watchedRecommended,
   onUnwatch,
 }: PicksMovieRowProps) {
-  const enterDelay = `${Math.min(listIndex, 12) * 45}ms`;
+  /** After stats + premium block (see Picks page delays); short stagger down the list. */
+  const PICKS_ROW_ENTRANCE_BASE_MS = 96;
+  const enterDelay = `${PICKS_ROW_ENTRANCE_BASE_MS + Math.min(listIndex, 16) * 26}ms`;
   const isWatchedTab = variant === "watched";
 
   return (
