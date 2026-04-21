@@ -409,7 +409,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-8">
+    <div className="w-full min-w-0 space-y-10">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
@@ -837,9 +837,9 @@ export default function SettingsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "40ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "40ms" }}>
         <p className={sectionEyebrow}>Appearance</p>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <SettingToggle
             label="Dark mode"
             description="Switch the app to a darker evening-friendly theme."
@@ -873,7 +873,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "110ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "110ms" }}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
           className={`w-full min-w-0 rounded-[18px] border px-4 py-4 ${
@@ -1100,9 +1100,9 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "120ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "120ms" }}>
         <p className={sectionEyebrow}>Privacy</p>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <SettingToggle
             label="Hide spoilers"
             description="Keep descriptions gentle and spoiler-light."
