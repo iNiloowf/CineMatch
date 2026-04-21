@@ -24,4 +24,34 @@ describe("computeMovieMatchPercent", () => {
     expect(score).toBeGreaterThanOrEqual(28);
     expect(score).toBeLessThanOrEqual(98);
   });
+
+  it("does not use IMDb — high rating alone cannot max the dial", () => {
+    const popular = computeMovieMatchPercent({ ...baseMovie, rating: 9.4 });
+    const mid = computeMovieMatchPercent({ ...baseMovie, rating: 5.0 });
+    expect(popular).toBe(mid);
+  });
+
+  it("penalizes a disliked genre more than a favorite lifts (same title)", () => {
+    const mixed = computeMovieMatchPercent(
+      { ...baseMovie, genre: ["Comedy", "Drama"] },
+      {
+        onboarding: {
+          favoriteGenres: ["Drama"],
+          dislikedGenres: ["Comedy"],
+          mediaPreference: "both",
+        },
+      },
+    );
+    const dramaOnly = computeMovieMatchPercent(
+      { ...baseMovie, genre: ["Drama"] },
+      {
+        onboarding: {
+          favoriteGenres: ["Drama"],
+          dislikedGenres: ["Comedy"],
+          mediaPreference: "both",
+        },
+      },
+    );
+    expect(mixed).toBeLessThan(dramaOnly);
+  });
 });

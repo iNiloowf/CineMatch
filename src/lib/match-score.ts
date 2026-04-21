@@ -1,6 +1,14 @@
 import { discoverYearMatchNudge } from "@/lib/discover-taste";
 import type { Movie, OnboardingPreferences } from "@/lib/types";
 
+/** Midpoint before taste adjustments — IMDb/popularity must not inflate “match %”. */
+const TASTE_MATCH_NEUTRAL_BASE = 54;
+const FAVORITE_GENRE_BONUS = 7.5;
+/** Stronger than a single favorite so “avoid” genres actually pull the dial down. */
+const DISLIKED_GENRE_PENALTY = 22;
+/** Title mixes something you love and something you skip — net score shouldn’t look like a slam dunk. */
+const MIXED_GENRE_CONFLICT_PENALTY = 12;
+
 type MatchContext = {
   /** Legacy: set of genres from accepted swipes (binary bonuses). */
   acceptedGenres?: Iterable<string>;
@@ -45,7 +53,7 @@ export function computeMovieMatchPercent(
     .map((genre) => genre.trim().toLowerCase())
     .filter((genre) => Boolean(genre) && genre !== "movie" && genre !== "series");
 
-  let score = 44 + movie.rating * 5.2;
+  let score = TASTE_MATCH_NEUTRAL_BASE;
 
   for (const genre of movieGenres) {
     if (affinity && affinity.size > 0) {
@@ -58,15 +66,23 @@ export function computeMovieMatchPercent(
     }
 
     if (favoriteGenres.has(genre)) {
-      score += 8.5;
+      score += FAVORITE_GENRE_BONUS;
     }
     if (dislikedGenres.has(genre)) {
-      score -= 13;
+      score -= DISLIKED_GENRE_PENALTY;
     }
 
     const rej = rejectedW?.get(genre) ?? 0;
     if (rej > 0) {
       score -= Math.min(18, rej * 6.2);
+    }
+  }
+
+  if (movieGenres.length > 0) {
+    const hitsFavorite = movieGenres.some((genre) => favoriteGenres.has(genre));
+    const hitsDisliked = movieGenres.some((genre) => dislikedGenres.has(genre));
+    if (hitsFavorite && hitsDisliked) {
+      score -= MIXED_GENRE_CONFLICT_PENALTY;
     }
   }
 
@@ -207,7 +223,7 @@ export function explainDiscoverSwipeMatch(
   const bullets: string[] = [];
 
   bullets.push(
-    `**IMDb ${movie.rating.toFixed(1)}** sets the popularity baseline. Two inner scores: **${onboardingOnly}%** (signup genres + media choice) vs **${fullPersonalized}%** (adds genre weights from likes, Picks, passes). Blended match: **${blend.toFixed(1)}%** = **${cold.toFixed(2)}**×${onboardingOnly} + **${w.toFixed(2)}**×${fullPersonalized}.`,
+    `**No IMDb / popularity in this %** — neutral taste base **${TASTE_MATCH_NEUTRAL_BASE}**, then genres & history only. Inner scores: **${onboardingOnly}%** (signup) vs **${fullPersonalized}%** (with likes, Picks, passes). Blend **${blend.toFixed(1)}%** = **${cold.toFixed(2)}**×${onboardingOnly} + **${w.toFixed(2)}**×${fullPersonalized}.`,
   );
 
   if (w < 0.12) {
@@ -246,12 +262,20 @@ export function explainDiscoverSwipeMatch(
 
   if (genreLines.length === 0) {
     bullets.push(
-      `No genre on this title hit a strong signal yet (favorites, avoids, or your history) — **${percent}%** is mostly rating + blend above.`,
+      `No genre on this title hit a strong signal yet — **${percent}%** is mostly the **${TASTE_MATCH_NEUTRAL_BASE}** baseline plus blend (not popularity).`,
     );
   } else {
     for (const line of genreLines.slice(0, 5)) {
       bullets.push(line);
     }
+  }
+
+  const hitsFavorite = rawGenres.some((g) => favoriteGenres.has(g.trim().toLowerCase()));
+  const hitsDisliked = rawGenres.some((g) => dislikedGenres.has(g.trim().toLowerCase()));
+  if (hitsFavorite && hitsDisliked) {
+    bullets.push(
+      `This title includes **both** a genre you **favorite** and one you **avoid** → **−${MIXED_GENRE_CONFLICT_PENALTY}** mixed-genre adjustment.`,
+    );
   }
 
   const mediaPreference = options.onboarding.mediaPreference ?? "both";
