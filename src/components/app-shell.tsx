@@ -64,6 +64,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
+      {/*
+        Fade-out band above the nav (z below nav): scroll content stays visible in the main
+        safe area / upper nav, then fades so it is not visible from mid-nav downward.
+      */}
+      <div
+        aria-hidden
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[19] h-[calc(env(safe-area-inset-bottom,0px)+clamp(3.25rem,15vmin,4.75rem))] bg-gradient-to-t ${
+          isDarkMode
+            ? "from-[#09090f] via-[#09090f]/85 to-transparent"
+            : "from-[#fdf7ff] via-[#fdf7ff]/82 to-transparent"
+        }`}
+      />
       <BottomNav />
     </div>
   );
