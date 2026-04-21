@@ -1095,7 +1095,7 @@ function DiscoverPageContent({
 
       {!isSearchOpen ? (
         <div className="shrink-0 space-y-2 sm:space-y-2.5">
-          <div className="flex items-center justify-between px-1 pb-0 pt-0.5">
+          <div className="flex items-center justify-between px-2 pb-0 pt-0.5 sm:px-3">
             <h1
               className={`text-[1.45rem] font-semibold tracking-[-0.03em] ${
                 isDarkMode ? "text-white" : "text-slate-900"
@@ -1128,7 +1128,7 @@ function DiscoverPageContent({
               </button>
               {isMoreMenuOpen ? (
                 <div
-                  className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 p-2"
+                  className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 min-w-[13.5rem] p-2"
                 >
                   <Link
                     href="/settings"
@@ -1159,25 +1159,30 @@ function DiscoverPageContent({
                   >
                     Paste link
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void toggleDarkMode();
-                      setIsMoreMenuOpen(false);
-                    }}
-                    className="ui-menu-item mt-1 flex w-full items-center justify-between px-3 py-2.5 text-left font-medium"
-                  >
-                    <span>Dark mode</span>
-                    <span
-                      className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                        isDarkMode
-                          ? "bg-violet-500/24 text-violet-200"
-                          : "bg-slate-100 text-slate-500"
+                  <div className="mt-1 flex w-full items-center justify-between gap-3 rounded-[0.875rem] px-3 py-2.5">
+                    <span className="text-sm font-medium text-[var(--color-text-strong)]">Dark mode</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isDarkMode}
+                      aria-label="Dark mode"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void toggleDarkMode();
+                      }}
+                      className={`relative shrink-0 rounded-full transition-colors duration-200 ${
+                        isDarkMode ? "h-7 w-12 bg-violet-600" : "h-7 w-12 bg-slate-300"
                       }`}
                     >
-                      {isDarkMode ? "On" : "Off"}
-                    </span>
-                  </button>
+                      <span
+                        className={`pointer-events-none absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                          isDarkMode ? "translate-x-5" : "translate-x-0"
+                        }`}
+                        aria-hidden
+                      />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -1200,7 +1205,7 @@ function DiscoverPageContent({
             hasActiveBrowse={Boolean(movie)}
             isOnboardingComplete={isOnboardingComplete}
           />
-          <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 max-[380px]:px-2.5">
+          <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 sm:px-3.5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
@@ -1359,7 +1364,7 @@ function DiscoverPageContent({
             role="dialog"
             aria-modal="true"
             aria-labelledby="paste-invite-dialog-title"
-            className={`relative z-10 w-full max-w-md overflow-hidden rounded-[26px] border shadow-[0_24px_80px_rgba(15,23,42,0.35)] ${
+            className={`ui-popup-motion relative z-10 w-full max-w-md overflow-hidden rounded-[26px] border shadow-[0_24px_80px_rgba(15,23,42,0.35)] ${
               isDarkMode
                 ? "border-white/12 bg-slate-950 text-slate-100"
                 : "border-slate-200/90 bg-white text-slate-900"
@@ -1719,7 +1724,7 @@ function DiscoverPageContent({
             role="dialog"
             aria-modal="true"
             aria-labelledby="discover-filter-sheet-title"
-            className={`ui-shell ui-shell--bottom expand-soft w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
+            className={`ui-shell ui-shell--bottom expand-sheet w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
               isDarkMode
                 ? "border border-white/10 bg-slate-950"
                 : "border border-white/70 bg-white"
@@ -1889,7 +1894,7 @@ function DiscoverPageContent({
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {movie ? (
-          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px]">
+          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] px-1.5 sm:px-2">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"

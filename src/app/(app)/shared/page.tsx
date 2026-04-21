@@ -36,7 +36,7 @@ export default function SharedWatchlistPage() {
           description="Open each person to see what you matched on together."
         />
 
-        <div className="shared-ui-copy space-y-4 sm:space-y-5">
+        <div className="shared-ui-copy space-y-4 px-0.5 sm:space-y-5 sm:px-1">
         {sharedMovieGroups.length === 0 ? (
           <AppRouteEmptyCard
             title="No linked people yet"

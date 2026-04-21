@@ -261,13 +261,38 @@ input[type="range"] {
 }
 
 .expand-soft {
-  animation: expandSoft var(--motion-duration-reveal) var(--motion-ease-standard) both;
+  animation: expandSoft var(--motion-duration-reveal) var(--motion-ease-emphasized) both;
   transform-origin: top center;
 }
 
+/** Bottom sheet (e.g. Discover filter) — slides up from the anchor edge */
+.expand-sheet {
+  animation: sheetSlideUp var(--motion-duration-reveal) var(--motion-ease-emphasized) both;
+  transform-origin: bottom center;
+}
+
 .details-modal-shell {
-  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-standard) both;
+  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
   transform-origin: top center;
+}
+
+/** Centered dialogs under .ui-overlay (direct shell child) */
+.ui-overlay > .ui-shell.ui-shell--dialog-sm,
+.ui-overlay > .ui-shell.ui-shell--dialog-md,
+.ui-overlay > .ui-shell.ui-shell--dialog-lg {
+  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  transform-origin: center center;
+}
+
+/** Paste invite etc. — panel without ui-shell--dialog-md */
+.ui-popup-motion {
+  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  transform-origin: center center;
+}
+
+.shared-details-modal {
+  animation: detailsModalIn var(--motion-duration-modal) var(--motion-ease-emphasized) both;
+  transform-origin: center center;
 }
 
 /** Profile / friend header avatar ring — soft pop-in */
@@ -637,6 +662,8 @@ input[type="range"] {
   box-shadow: var(--elev-menu);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+  animation: menuPopoverIn var(--motion-duration-ui) var(--motion-ease-emphasized) both;
+  transform-origin: top right;
 }
 
 .ui-menu-item {
@@ -1146,7 +1173,7 @@ input[type="range"] {
 @keyframes expandSoft {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.985);
+    transform: translateY(-10px) scale(0.98);
   }
 
   to {
@@ -1155,10 +1182,34 @@ input[type="range"] {
   }
 }
 
+@keyframes sheetSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuPopoverIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @keyframes detailsModalIn {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.985);
+    transform: translateY(18px) scale(0.94);
   }
 
   to {
@@ -1511,7 +1562,20 @@ html[data-reduce-motion="true"] .expand-soft {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 
-html[data-reduce-motion="true"] .details-modal-shell {
+html[data-reduce-motion="true"] .expand-sheet {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
+
+html[data-reduce-motion="true"] .ui-menu-panel {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
+
+html[data-reduce-motion="true"] .details-modal-shell,
+html[data-reduce-motion="true"] .ui-overlay > .ui-shell.ui-shell--dialog-sm,
+html[data-reduce-motion="true"] .ui-overlay > .ui-shell.ui-shell--dialog-md,
+html[data-reduce-motion="true"] .ui-overlay > .ui-shell.ui-shell--dialog-lg,
+html[data-reduce-motion="true"] .ui-popup-motion,
+html[data-reduce-motion="true"] .shared-details-modal {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
 }
 
