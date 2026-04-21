@@ -409,7 +409,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-10">
+    <div className="w-full min-w-0 space-y-6">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
@@ -839,7 +839,7 @@ export default function SettingsPage() {
 
       <SurfaceCard className="fade-up-enter" style={{ animationDelay: "40ms" }}>
         <p className={sectionEyebrow}>Appearance</p>
-        <div className="mt-7 space-y-4">
+        <div className="mt-3.5 space-y-4">
           <SettingToggle
             label="Dark mode"
             description="Switch the app to a darker evening-friendly theme."
@@ -863,7 +863,7 @@ export default function SettingsPage() {
 
       <SurfaceCard className="fade-up-enter" style={{ animationDelay: "75ms" }}>
         <p className={sectionEyebrow}>Notifications</p>
-        <div className="mt-7 space-y-4">
+        <div className="mt-3.5 space-y-4">
           <SettingToggle
             label="Notifications"
             description="Get nudges when new shared matches appear."
@@ -876,7 +876,7 @@ export default function SettingsPage() {
       <SurfaceCard className="fade-up-enter" style={{ animationDelay: "110ms" }}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
-          className={`mt-7 w-full min-w-0 rounded-[18px] border px-4 py-4 ${
+          className={`mt-3.5 w-full min-w-0 rounded-[18px] border px-4 py-4 ${
             isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"
           }`}
         >
@@ -1102,7 +1102,7 @@ export default function SettingsPage() {
 
       <SurfaceCard className="fade-up-enter" style={{ animationDelay: "120ms" }}>
         <p className={sectionEyebrow}>Privacy</p>
-        <div className="mt-7 space-y-4">
+        <div className="mt-3.5 space-y-4">
           <SettingToggle
             label="Hide spoilers"
             description="Keep descriptions gentle and spoiler-light."
