@@ -42,6 +42,8 @@ type TicketRow = {
   priority: "low" | "normal" | "high";
   status: "open" | "in_progress" | "under_review" | "closed";
   created_at: string;
+  admin_reply: string | null;
+  admin_replied_at: string | null;
 };
 
 type SupabaseErrorLike = {
@@ -272,7 +274,7 @@ export async function POST(request: NextRequest) {
       .eq("status", "open"),
     supabaseAdmin
       .from("support_tickets")
-      .select("id, user_id, subject, message, priority, status, created_at")
+      .select("id, user_id, subject, message, priority, status, created_at, admin_reply, admin_replied_at")
       .order("created_at", { ascending: false })
       .limit(40),
   ]);
@@ -404,6 +406,8 @@ export async function POST(request: NextRequest) {
         priority: ticket.priority,
         status: ticket.status,
         createdAt: ticket.created_at,
+        adminReply: ticket.admin_reply,
+        adminRepliedAt: ticket.admin_replied_at,
       })),
     },
     request,

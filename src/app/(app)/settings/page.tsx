@@ -1147,29 +1147,6 @@ export default function SettingsPage() {
             </div>
           )}
         </SurfaceCard>
-
-        <SurfaceCard className="fade-up-enter mt-4 space-y-6" style={{ animationDelay: "150ms" }}>
-          <p className={sectionEyebrow}>Legal</p>
-          <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Review app policies and terms before using CineMatch.
-          </p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setLegalModal("privacy")}
-              className="ui-btn ui-btn-secondary w-full"
-            >
-              Privacy Policy
-            </button>
-            <button
-              type="button"
-              onClick={() => setLegalModal("terms")}
-              className="ui-btn ui-btn-secondary w-full"
-            >
-              Terms of Service
-            </button>
-          </div>
-        </SurfaceCard>
       </div>
 
       <div
@@ -1198,6 +1175,12 @@ export default function SettingsPage() {
         >
           Open contact admin form
         </button>
+        <Link
+          href="/settings/tickets"
+          className="ui-btn ui-btn-secondary mt-3 block w-full text-center"
+        >
+          My tickets
+        </Link>
         {ticketSubject || ticketMessage ? (
           <p className={`mt-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
             Draft saved. Reopen the popup to continue.
@@ -1234,6 +1217,29 @@ export default function SettingsPage() {
           Log out
         </button>
       </div>
+
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "160ms" }}>
+        <p className={sectionEyebrow}>Legal</p>
+        <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          Review app policies and terms before using CineMatch.
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setLegalModal("privacy")}
+            className="ui-btn ui-btn-secondary w-full"
+          >
+            Privacy Policy
+          </button>
+          <button
+            type="button"
+            onClick={() => setLegalModal("terms")}
+            className="ui-btn ui-btn-secondary w-full"
+          >
+            Terms of Service
+          </button>
+        </div>
+      </SurfaceCard>
     </div>
   );
 }

@@ -23,6 +23,12 @@ function resolveBottomNavHighlight(pathname: string) {
       activeHref: items[exactIndex].href,
     };
   }
+  if (pathname.startsWith("/settings")) {
+    const settingsIndex = items.findIndex((item) => item.href === "/settings");
+    if (settingsIndex >= 0) {
+      return { pillIndex: settingsIndex, activeHref: "/settings" };
+    }
+  }
   if (CONNECT_AS_PROFILE_TAB.test(pathname)) {
     const profileIndex = items.findIndex((item) => item.href === "/profile");
     if (profileIndex >= 0) {

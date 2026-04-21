@@ -463,7 +463,9 @@ create table if not exists public.support_tickets (
   priority text not null default 'normal'
     check (priority in ('low', 'normal', 'high')),
   status text not null default 'open'
-    check (status in ('open', 'in_progress', 'under_review', 'closed'))
+    check (status in ('open', 'in_progress', 'under_review', 'closed')),
+  admin_reply text,
+  admin_replied_at timestamptz
 );
 
 create index if not exists idx_support_tickets_user_id

@@ -4,11 +4,15 @@ import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { z } from "zod";
 
 type SupportTicketStatus = "open" | "under_review" | "closed";
-type TicketStatusRow = { id: string; status: SupportTicketStatus | "in_progress" };
+type TicketStatusRow = {
+  id: string;
+  status: SupportTicketStatus | "in_progress";
+  admin_reply: string | null;
+  admin_replied_at: string | null;
+};
 type TicketIdRow = { id: string };
 type TicketMutationResult = {
   data: TicketStatusRow | null;
@@ -17,9 +21,16 @@ type TicketMutationResult = {
 
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MUTATION_MAX = 80;
-const updateTicketBodySchema = z.object({
-  status: z.enum(["open", "under_review", "closed"]),
-});
+
+const updateTicketBodySchema = z
+  .object({
+    status: z.enum(["open", "under_review", "closed"]).optional(),
+    adminReply: z.string().trim().min(1, "Reply cannot be empty.").max(8000).optional(),
+  })
+  .refine(
+    (body) => body.status !== undefined || body.adminReply !== undefined,
+    { message: "Provide a status change and/or an admin reply." },
+  );
 
 function isLegacyStatusConstraintError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -27,29 +38,6 @@ function isLegacyStatusConstraintError(message: string | undefined) {
     normalized.includes("support_tickets_status_check") &&
     normalized.includes("violates check constraint")
   );
-}
-
-async function updateTicketStatus(
-  ticketId: string,
-  status: SupportTicketStatus | "in_progress",
-): Promise<TicketMutationResult> {
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return {
-      data: null,
-      error: { message: "Admin dashboard is not configured on the server yet." },
-    };
-  }
-
-  return (await supabaseAdmin
-    .from("support_tickets")
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    } as never)
-    .eq("id", ticketId)
-    .select("id, status")
-    .maybeSingle()) as TicketMutationResult;
 }
 
 export async function PATCH(
@@ -76,12 +64,11 @@ export async function PATCH(
     return parsedBody.response;
   }
 
-  const { status: nextStatus } = parsedBody.data;
   const adminAuth = await requireServerAdmin(request);
   if (!adminAuth.ok) {
     return adminAuth.response;
   }
-  const { identity } = adminAuth;
+  const { identity, supabaseAdmin } = adminAuth;
 
   if (!ticketId) {
     return apiJsonError(400, "Ticket id is required.", {
@@ -90,23 +77,47 @@ export async function PATCH(
     });
   }
 
-  let effectiveStatus: SupportTicketStatus | "in_progress" = nextStatus;
-  let updateResult = await updateTicketStatus(ticketId, effectiveStatus);
+  const { status: nextStatus, adminReply } = parsedBody.data;
+
+  const nowIso = new Date().toISOString();
+  const updatePayload: Record<string, string> = {
+    updated_at: nowIso,
+  };
+
+  if (adminReply !== undefined) {
+    updatePayload.admin_reply = adminReply;
+    updatePayload.admin_replied_at = nowIso;
+  }
+
+  if (nextStatus !== undefined) {
+    updatePayload.status = nextStatus;
+  }
+
+  let updateResult = (await supabaseAdmin
+    .from("support_tickets")
+    .update(updatePayload as never)
+    .eq("id", ticketId)
+    .select("id, status, admin_reply, admin_replied_at")
+    .maybeSingle()) as TicketMutationResult;
 
   if (
     nextStatus === "under_review" &&
     updateResult.error &&
     isLegacyStatusConstraintError(updateResult.error.message)
   ) {
-    // Backward compatibility for databases that still allow "in_progress" only.
-    effectiveStatus = "in_progress";
-    updateResult = await updateTicketStatus(ticketId, effectiveStatus);
+    const retryPayload = { ...updatePayload, status: "in_progress" as const };
+    updateResult = (await supabaseAdmin
+      .from("support_tickets")
+      .update(retryPayload as never)
+      .eq("id", ticketId)
+      .select("id, status, admin_reply, admin_replied_at")
+      .maybeSingle()) as TicketMutationResult;
   }
 
   if (updateResult.error) {
     return apiJsonError(
       500,
-      updateResult.error.message ?? "Ticket status could not be updated.",
+      updateResult.error.message ?? "Ticket could not be updated.",
       { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
@@ -119,13 +130,13 @@ export async function PATCH(
   }
 
   void logSecurityAudit({
-    action: "admin_ticket_status_update",
+    action: "admin_ticket_update",
     ip: clientIp(request),
     metadata: {
       actor: identity.email ?? identity.userId,
       ticketId,
-      requestedStatus: nextStatus,
-      effectiveStatus,
+      status: nextStatus,
+      hasAdminReply: Boolean(adminReply),
     },
   });
 
@@ -134,6 +145,8 @@ export async function PATCH(
       ok: true,
       ticketId: updateResult.data.id,
       status: updateResult.data.status,
+      adminReply: updateResult.data.admin_reply,
+      adminRepliedAt: updateResult.data.admin_replied_at,
     },
     request,
   );

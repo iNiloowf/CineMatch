@@ -60,6 +60,79 @@ function buildTicketAcknowledgementHtml({
   `;
 }
 
+export async function GET(request: NextRequest) {
+  const authToken = await verifyBearerFromRequest(request);
+
+  if (!authToken) {
+    return apiJsonError(401, "You need to be signed in to view your tickets.", {
+      code: API_ERROR_CODES.UNAUTHORIZED,
+      request,
+    });
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+
+  if (!supabaseAdmin) {
+    return apiJsonError(
+      500,
+      "Ticket service is not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL, request },
+    );
+  }
+
+  const listResult = (await supabaseAdmin
+    .from("support_tickets")
+    .select(
+      "id, subject, message, priority, status, created_at, updated_at, admin_reply, admin_replied_at",
+    )
+    .eq("user_id", authToken.userId)
+    .order("created_at", { ascending: false })
+    .limit(50)) as {
+    data: Array<{
+      id: string;
+      subject: string;
+      message: string;
+      priority: TicketPriority;
+      status: string;
+      created_at: string;
+      updated_at: string;
+      admin_reply: string | null;
+      admin_replied_at: string | null;
+    }> | null;
+    error: { message?: string; code?: string } | null;
+  };
+
+  if (listResult.error) {
+    if (isMissingSupportTicketsError(listResult.error)) {
+      return apiJsonOk({ tickets: [], ticketsUnavailable: true }, request);
+    }
+    return apiJsonError(
+      500,
+      listResult.error.message ?? "Could not load tickets.",
+      { code: API_ERROR_CODES.INTERNAL, request },
+    );
+  }
+
+  const rows = listResult.data ?? [];
+
+  return apiJsonOk(
+    {
+      tickets: rows.map((row) => ({
+        id: row.id,
+        subject: row.subject,
+        message: row.message,
+        priority: row.priority,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        adminReply: row.admin_reply,
+        adminRepliedAt: row.admin_replied_at,
+      })),
+    },
+    request,
+  );
+}
+
 function buildAdminTicketNotificationHtml({
   ticketId,
   userName,

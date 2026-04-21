@@ -49,6 +49,8 @@ type DashboardTicketRow = {
   priority: "low" | "normal" | "high";
   status: "open" | "in_progress" | "under_review" | "closed";
   createdAt: string;
+  adminReply: string | null;
+  adminRepliedAt: string | null;
 };
 
 type DashboardPayload = {
@@ -74,6 +76,7 @@ export default function AdminDesktopPage() {
   const [selectedTicket, setSelectedTicket] = useState<DashboardTicketRow | null>(null);
   const [isTicketActionLoading, setIsTicketActionLoading] = useState(false);
   const [ticketActionFeedback, setTicketActionFeedback] = useState("");
+  const [adminReplyDraft, setAdminReplyDraft] = useState("");
   const [subscriptionActionState, setSubscriptionActionState] = useState<{
     userId: string;
     message: string;
@@ -89,6 +92,11 @@ export default function AdminDesktopPage() {
   useEffect(() => {
     adminGateRef.current = adminGate;
   }, [adminGate]);
+
+  useEffect(() => {
+    setAdminReplyDraft("");
+    setTicketActionFeedback("");
+  }, [selectedTicket?.id]);
 
   useEffect(() => {
     if (adminGate !== "ready") {
@@ -286,6 +294,8 @@ export default function AdminDesktopPage() {
         const payload = (await response.json()) as {
           error?: string;
           status?: DashboardTicketRow["status"];
+          adminReply?: string | null;
+          adminRepliedAt?: string | null;
         };
 
         if (!response.ok || !payload.status) {
@@ -294,8 +304,25 @@ export default function AdminDesktopPage() {
 
         updateDashboardTickets(
           (dashboard?.tickets ?? []).map((ticket) =>
-            ticket.id === ticketId ? { ...ticket, status: payload.status ?? status } : ticket,
+            ticket.id === ticketId
+              ? {
+                  ...ticket,
+                  status: payload.status ?? status,
+                  adminReply: payload.adminReply ?? ticket.adminReply,
+                  adminRepliedAt: payload.adminRepliedAt ?? ticket.adminRepliedAt,
+                }
+              : ticket,
           ),
+        );
+        setSelectedTicket((current) =>
+          current?.id === ticketId
+            ? {
+                ...current,
+                status: payload.status ?? status,
+                adminReply: payload.adminReply ?? current.adminReply,
+                adminRepliedAt: payload.adminRepliedAt ?? current.adminRepliedAt,
+              }
+            : current,
         );
         setTicketActionFeedback(
           payload.status === "under_review" || payload.status === "in_progress"
@@ -348,6 +375,73 @@ export default function AdminDesktopPage() {
     },
     [dashboard?.tickets, getAdminAccessToken, updateDashboardTickets],
   );
+
+  const handleSendAdminReply = useCallback(async () => {
+    if (!selectedTicket) {
+      return;
+    }
+    const text = adminReplyDraft.trim();
+    if (!text) {
+      setTicketActionFeedback("Write a reply before sending.");
+      return;
+    }
+
+    setIsTicketActionLoading(true);
+    setTicketActionFeedback("");
+
+    try {
+      const accessToken = await getAdminAccessToken();
+      const response = await fetch(`/api/admin/tickets/${selectedTicket.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ adminReply: text }),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        adminReply?: string | null;
+        adminRepliedAt?: string | null;
+        status?: DashboardTicketRow["status"];
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Reply could not be saved.");
+      }
+
+      const nextReply = payload.adminReply ?? text;
+      const nextAt = payload.adminRepliedAt ?? new Date().toISOString();
+
+      const merge = (ticket: DashboardTicketRow): DashboardTicketRow => ({
+        ...ticket,
+        adminReply: nextReply,
+        adminRepliedAt: nextAt,
+        status: payload.status ?? ticket.status,
+      });
+
+      setSelectedTicket((current) => (current?.id === selectedTicket.id ? merge(current) : current));
+      updateDashboardTickets(
+        (dashboard?.tickets ?? []).map((ticket) =>
+          ticket.id === selectedTicket.id ? merge(ticket) : ticket,
+        ),
+      );
+      setAdminReplyDraft("");
+      setTicketActionFeedback("Reply saved. The user will see it under Settings → My tickets.");
+    } catch (error) {
+      setTicketActionFeedback(
+        error instanceof Error ? error.message : "Reply could not be saved.",
+      );
+    } finally {
+      setIsTicketActionLoading(false);
+    }
+  }, [
+    adminReplyDraft,
+    dashboard?.tickets,
+    getAdminAccessToken,
+    selectedTicket,
+    updateDashboardTickets,
+  ]);
 
   const handleUpdateSubscription = useCallback(
     async (
@@ -734,11 +828,59 @@ export default function AdminDesktopPage() {
                 </div>
 
                 <div
-                  className={`min-h-[220px] rounded-[18px] border p-4 text-sm leading-7 ${
+                  className={`min-h-[120px] rounded-[18px] border p-4 text-sm leading-7 ${
                     isDarkMode ? "border-white/10 bg-white/[0.03] text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"
                   }`}
                 >
                   {selectedTicket.message}
+                </div>
+
+                {selectedTicket.adminReply ? (
+                  <div>
+                    <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
+                      Current reply (user-visible)
+                    </p>
+                    <div
+                      className={`mt-2 rounded-[18px] border p-4 text-sm leading-7 ${
+                        isDarkMode
+                          ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-50"
+                          : "border-emerald-200/90 bg-emerald-50 text-emerald-900"
+                      }`}
+                    >
+                      {selectedTicket.adminReply}
+                    </div>
+                    {selectedTicket.adminRepliedAt ? (
+                      <p className={`mt-1 text-[11px] ${softText}`}>
+                        Sent {new Date(selectedTicket.adminRepliedAt).toLocaleString()}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div>
+                  <label htmlFor="admin-ticket-reply" className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
+                    Reply to user
+                  </label>
+                  <textarea
+                    id="admin-ticket-reply"
+                    value={adminReplyDraft}
+                    onChange={(event) => setAdminReplyDraft(event.target.value)}
+                    rows={5}
+                    placeholder="Type a reply. It replaces any previous reply and shows in the user’s My tickets page."
+                    className={`mt-2 w-full resize-y rounded-[16px] border px-3 py-2.5 text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 ${
+                      isDarkMode
+                        ? "border-white/14 bg-white/[0.06] text-slate-100 placeholder:text-slate-500"
+                        : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleSendAdminReply()}
+                    disabled={isTicketActionLoading}
+                    className="ui-btn ui-btn-primary mt-3 w-full disabled:opacity-60"
+                  >
+                    {isTicketActionLoading ? "Sending…" : "Send reply"}
+                  </button>
                 </div>
 
                 {ticketActionFeedback ? (
