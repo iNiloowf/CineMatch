@@ -111,6 +111,21 @@ describe("discover-queue", () => {
     expect(q.map((m) => m.id)).toContain("b");
   });
 
+  it("ranks 2023+ releases before 2022-and-older when taste is similar", () => {
+    const y2022 = { ...mkMovie("y2022"), year: 2022 };
+    const y2025 = { ...mkMovie("y2025"), year: 2025 };
+    const q = buildDiscoverQueue({
+      movies: [y2022, y2025],
+      swipes: [],
+      currentUserId: "u1",
+      discoverShuffleSeed: "seed",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+    });
+    expect(q[0]?.id).toBe("y2025");
+  });
+
   it("prefers recent titles over very old ones when taste is modern", () => {
     const old = { ...mkMovie("old-1972"), year: 1972 };
     const recent = { ...mkMovie("recent-2023"), year: 2023 };

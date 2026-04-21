@@ -95,6 +95,24 @@ function recencyDeckBoost(
   return 0;
 }
 
+/**
+ * Pull 2022-and-older releases down the Discover deck so fresher titles surface first.
+ * Skipped when taste profile says the user engages with classics.
+ */
+function pre2023DiscoverPenalty(
+  movieYear: number,
+  classicEngaged: boolean,
+): number {
+  if (classicEngaged) {
+    return 0;
+  }
+  if (movieYear >= 2023) {
+    return 0;
+  }
+  const yearsBack = 2023 - movieYear;
+  return -Math.min(26, 7 + yearsBack * 0.42);
+}
+
 /** First real genre tag (not Movie/Series) — used to mix the deck so it isn’t one-note. */
 function primaryGenreKey(movie: Movie): string {
   for (const raw of movie.genre) {
@@ -284,13 +302,18 @@ export function buildDiscoverQueue(options: {
           : yearGuest;
 
         const recencyDeck = recencyDeckBoost(movie.year, calendarYear, tasteYear);
+        const staleReleasePenalty = pre2023DiscoverPenalty(
+          movie.year,
+          tasteYear.classicEngaged,
+        );
 
         return (
           preferenceMatchScore * 1.24 +
           mediaPreferenceBonus +
           pop * 1.28 +
           yearScore +
-          recencyDeck
+          recencyDeck +
+          staleReleasePenalty
         );
       };
 
