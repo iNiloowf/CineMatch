@@ -1,7 +1,16 @@
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { passesDiscoverQualityThreshold } from "@/lib/discover-quality";
+import {
+  buildDiscoverGenreAffinity,
+  buildRejectedGenreWeights,
+  computeTasteYearProfile,
+  normalizeDiscoverGenreKey,
+} from "@/lib/discover-taste";
+import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import type { Movie, OnboardingPreferences, SwipeRecord } from "@/lib/types";
+
+export type { DiscoverPickEngagement } from "@/lib/discover-taste";
 
 export function hashString(value: string) {
   let hash = 0;
@@ -11,106 +20,6 @@ export function hashString(value: string) {
   }
 
   return Math.abs(hash);
-}
-
-function normalizeGenreKey(entry: string) {
-  const normalized = entry.trim().toLowerCase();
-  if (!normalized || normalized === "movie" || normalized === "series") {
-    return null;
-  }
-  return normalized;
-}
-
-function buildAcceptedGenreCounts(acceptedMovies: Movie[]) {
-  return acceptedMovies.reduce<Map<string, number>>((counts, movie) => {
-    movie.genre.forEach((entry) => {
-      const key = normalizeGenreKey(entry);
-      if (!key) {
-        return;
-      }
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    });
-
-    return counts;
-  }, new Map<string, number>());
-}
-
-/**
- * Merge Picks “watched” signals into genre weights: strong for thumbs-up, weak for thumbs-down.
- */
-function mergePickEngagementIntoGenreCounts(
-  base: Map<string, number>,
-  pickEngagement: { movieId: string; recommended: boolean }[],
-  moviesById: Map<string, Movie>,
-) {
-  for (const { movieId, recommended } of pickEngagement) {
-    const movie = moviesById.get(movieId);
-    if (!movie) {
-      continue;
-    }
-    const weight = recommended ? 2.35 : 0.42;
-    movie.genre.forEach((entry) => {
-      const key = normalizeGenreKey(entry);
-      if (!key) {
-        return;
-      }
-      base.set(key, (base.get(key) ?? 0) + weight);
-    });
-  }
-}
-
-export type DiscoverPickEngagement = {
-  movieId: string;
-  recommended: boolean;
-};
-
-function computeTasteYearProfile(
-  acceptedMovies: Movie[],
-  pickEngagement: DiscoverPickEngagement[],
-  moviesById: Map<string, Movie>,
-  calendarYear: number,
-): { center: number; spread: number; classicEngaged: boolean } {
-  const samples: { year: number; w: number }[] = [];
-
-  for (const m of acceptedMovies) {
-    samples.push({ year: m.year, w: 1 });
-  }
-  for (const pe of pickEngagement) {
-    const m = moviesById.get(pe.movieId);
-    if (!m) {
-      continue;
-    }
-    samples.push({ year: m.year, w: pe.recommended ? 1.55 : 0.4 });
-  }
-
-  if (samples.length === 0) {
-    return {
-      center: calendarYear - 5,
-      spread: 16,
-      classicEngaged: false,
-    };
-  }
-
-  let sumW = 0;
-  let sumY = 0;
-  for (const s of samples) {
-    sumW += s.w;
-    sumY += s.year * s.w;
-  }
-  const center = sumY / sumW;
-
-  const years = samples.map((s) => s.year);
-  const mean = years.reduce((a, b) => a + b, 0) / years.length;
-  let varSum = 0;
-  for (const y of years) {
-    varSum += (y - mean) ** 2;
-  }
-  const spread = Math.max(9, Math.min(30, Math.sqrt(varSum / years.length) || 14));
-
-  const classicEngaged =
-    center <= 2001 || samples.some((s) => s.year <= 1996 && s.w >= 1);
-
-  return { center, spread, classicEngaged };
 }
 
 function popularityBoost(movie: Movie): number {
@@ -171,6 +80,7 @@ export function buildDiscoverQueue(options: {
 
   const moviesById = new Map(movies.map((m) => [m.id, m]));
   const calendarYear = new Date().getFullYear();
+  const nowMs = discoverVisibilityTimestamp;
 
   const acceptedIds = new Set(
     currentUserId
@@ -185,10 +95,13 @@ export function buildDiscoverQueue(options: {
 
   const acceptedMovies = movies.filter((movie) => acceptedIds.has(movie.id));
 
-  const genreAffinity = buildAcceptedGenreCounts(acceptedMovies);
-  if (currentUserId && pickEngagement.length > 0) {
-    mergePickEngagementIntoGenreCounts(genreAffinity, pickEngagement, moviesById);
-  }
+  const genreAffinity = currentUserId
+    ? buildDiscoverGenreAffinity(acceptedMovies, pickEngagement, moviesById)
+    : new Map<string, number>();
+
+  const rejectedGenreWeights = currentUserId
+    ? buildRejectedGenreWeights(swipes, moviesById, currentUserId, nowMs)
+    : new Map<string, number>();
 
   const tasteYear = currentUserId
     ? computeTasteYearProfile(
@@ -235,13 +148,14 @@ export function buildDiscoverQueue(options: {
   const sortDiscoverQueue = (list: Movie[]) =>
     [...list].sort((left, right) => {
       const getDiscoverPriorityScore = (movie: Movie) => {
-        const acceptedGenreAffinity = movie.genre.reduce((score, entry) => {
-          const key = normalizeGenreKey(entry);
-          return key ? score + (genreAffinity.get(key) ?? 0) : score;
+        const rejectOverlap = movie.genre.reduce((sum, entry) => {
+          const key = normalizeDiscoverGenreKey(entry);
+          return key ? sum + (rejectedGenreWeights.get(key) ?? 0) : sum;
         }, 0);
 
         const preferenceMatchScore = computeMovieMatchPercent(movie, {
-          acceptedGenres: genreAffinity.keys(),
+          genreAffinityWeights: genreAffinity,
+          rejectedGenreWeights,
           onboarding: onboardingPreferences,
         });
 
@@ -254,14 +168,17 @@ export function buildDiscoverQueue(options: {
         const pop = popularityBoost(movie);
         const yearScore = currentUserId
           ? yearPreferenceScore(movie.year, tasteYear, calendarYear)
-          : Math.min(22, (movie.year - 1980) / Math.max(1, calendarYear - 1980) * 22);
+          : Math.min(
+              22,
+              ((movie.year - 1980) / Math.max(1, calendarYear - 1980)) * 22,
+            );
 
         return (
           preferenceMatchScore +
-          acceptedGenreAffinity * 3.15 +
           mediaPreferenceBonus +
           pop +
-          yearScore
+          yearScore -
+          Math.min(22, rejectOverlap * 3.6)
         );
       };
 

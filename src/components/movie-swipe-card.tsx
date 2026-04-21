@@ -4,7 +4,11 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
-import { computeMovieMatchPercent } from "@/lib/match-score";
+import { discoverYearMatchNudge } from "@/lib/discover-taste";
+import {
+  computeDiscoverSwipeMatchPercent,
+  computeMovieMatchPercent,
+} from "@/lib/match-score";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -41,7 +45,15 @@ export function MovieSwipeCard({
   swipeFeedback = null,
   suppressTrailerPlayButton = false,
 }: MovieSwipeCardProps) {
-  const { isDarkMode, acceptedMovies, onboardingPreferences } = useAppState();
+  const {
+    isDarkMode,
+    acceptedMovies,
+    onboardingPreferences,
+    currentUserId,
+    discoverGenreAffinity,
+    discoverRejectedGenreWeights,
+    discoverTasteYear,
+  } = useAppState();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl ?? null);
@@ -79,10 +91,19 @@ export function MovieSwipeCard({
       ),
     [acceptedMovies],
   );
-  const matchScore = computeMovieMatchPercent(movie, {
-    acceptedGenres,
-    onboarding: onboardingPreferences,
-  });
+
+  const calendarYear = new Date().getFullYear();
+  const matchScore = currentUserId
+    ? computeDiscoverSwipeMatchPercent(movie, {
+        genreAffinity: discoverGenreAffinity,
+        rejectedGenreWeights: discoverRejectedGenreWeights,
+        onboarding: onboardingPreferences,
+        yearNudge: discoverYearMatchNudge(movie.year, discoverTasteYear, calendarYear),
+      })
+    : computeMovieMatchPercent(movie, {
+        acceptedGenres,
+        onboarding: onboardingPreferences,
+      });
   const handleToggleDescription = () => {
     if (!shouldClamp) {
       return;

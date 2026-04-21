@@ -21,6 +21,12 @@ import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { buildDiscoverQueue } from "@/lib/discover-queue";
+import {
+  buildDiscoverGenreAffinity,
+  buildRejectedGenreWeights,
+  computeTasteYearProfile,
+} from "@/lib/discover-taste";
+import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { readPersistedDiscoverDeck } from "@/lib/discover-session";
 import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
 import {
@@ -190,6 +196,16 @@ type AppStateContextValue = {
   /** Rotation offset passed into `buildDiscoverQueue` (persisted with Discover session). */
   discoverStartOffset: number;
   discoverSessionKey: string;
+  /** Genre weights (accepts + Picks) for Discover match % — aligned with queue. */
+  discoverGenreAffinity: Map<string, number>;
+  /** Decayed reject signals per genre — aligned with queue. */
+  discoverRejectedGenreWeights: Map<string, number>;
+  /** Release-year taste — used for Discover match % nudge. */
+  discoverTasteYear: {
+    center: number;
+    spread: number;
+    classicEngaged: boolean;
+  };
   linkedUsers: {
     user: User;
     status: "accepted" | "pending";
@@ -1480,6 +1496,75 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     new Map<string, number>(),
   );
 
+  const moviesByIdForTaste = useMemo(
+    () => new Map(data.movies.map((m) => [m.id, m])),
+    [data.movies],
+  );
+
+  const discoverPickEngagement: DiscoverPickEngagement[] = useMemo(
+    () =>
+      currentUserId
+        ? data.watchedPickReviews
+            .filter((entry) => entry.userId === currentUserId)
+            .map((entry) => ({
+              movieId: entry.movieId,
+              recommended: entry.recommended,
+            }))
+        : [],
+    [currentUserId, data.watchedPickReviews],
+  );
+
+  const discoverGenreAffinity = useMemo(() => {
+    if (!currentUserId) {
+      return new Map<string, number>();
+    }
+    return buildDiscoverGenreAffinity(
+      acceptedMovies,
+      discoverPickEngagement,
+      moviesByIdForTaste,
+    );
+  }, [
+    currentUserId,
+    acceptedMovies,
+    discoverPickEngagement,
+    moviesByIdForTaste,
+  ]);
+
+  const discoverRejectedGenreWeights = useMemo(() => {
+    if (!currentUserId) {
+      return new Map<string, number>();
+    }
+    return buildRejectedGenreWeights(
+      data.swipes,
+      moviesByIdForTaste,
+      currentUserId,
+      discoverVisibilityTimestamp,
+    );
+  }, [
+    currentUserId,
+    data.swipes,
+    moviesByIdForTaste,
+    discoverVisibilityTimestamp,
+  ]);
+
+  const discoverTasteYear = useMemo(() => {
+    const y = new Date().getFullYear();
+    if (!currentUserId) {
+      return { center: y - 4, spread: 14, classicEngaged: false };
+    }
+    return computeTasteYearProfile(
+      acceptedMovies,
+      discoverPickEngagement,
+      moviesByIdForTaste,
+      y,
+    );
+  }, [
+    currentUserId,
+    acceptedMovies,
+    discoverPickEngagement,
+    moviesByIdForTaste,
+  ]);
+
   const discoverQueue = buildDiscoverQueue({
     movies: data.movies,
     swipes: data.swipes,
@@ -1488,14 +1573,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     discoverStartOffset,
     discoverVisibilityTimestamp,
     onboardingPreferences,
-    pickEngagement: currentUserId
-      ? data.watchedPickReviews
-          .filter((entry) => entry.userId === currentUserId)
-          .map((entry) => ({
-            movieId: entry.movieId,
-            recommended: entry.recommended,
-          }))
-      : undefined,
+    pickEngagement: discoverPickEngagement,
   });
 
   const sharedMovies: SharedMovieView[] = currentUserId
@@ -3034,6 +3112,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         discoverVisibilityTimestamp,
         discoverStartOffset,
         discoverSessionKey: discoverShuffleSeed,
+        discoverGenreAffinity,
+        discoverRejectedGenreWeights,
+        discoverTasteYear,
         linkedUsers,
         sharedMovies,
         sharedMovieGroups,

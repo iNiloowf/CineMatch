@@ -1,7 +1,14 @@
 import type { Movie, OnboardingPreferences } from "@/lib/types";
 
 type MatchContext = {
+  /** Legacy: set of genres from accepted swipes (binary bonuses). */
   acceptedGenres?: Iterable<string>;
+  /**
+   * When provided, replaces binary `acceptedGenres` for swipe affinity: accepts + Picks reviews.
+   */
+  genreAffinityWeights?: Map<string, number>;
+  /** Decayed cumulative weight from Discover passes on genres (downweights). */
+  rejectedGenreWeights?: Map<string, number>;
   onboarding?: Pick<
     OnboardingPreferences,
     "favoriteGenres" | "dislikedGenres" | "mediaPreference"
@@ -30,6 +37,8 @@ export function computeMovieMatchPercent(
   const acceptedGenres = normalizeGenreSet(context?.acceptedGenres);
   const favoriteGenres = normalizeGenreSet(context?.onboarding?.favoriteGenres);
   const dislikedGenres = normalizeGenreSet(context?.onboarding?.dislikedGenres);
+  const affinity = context?.genreAffinityWeights;
+  const rejectedW = context?.rejectedGenreWeights;
 
   const movieGenres = movie.genre
     .map((genre) => genre.trim().toLowerCase())
@@ -38,14 +47,25 @@ export function computeMovieMatchPercent(
   let score = 44 + movie.rating * 5.2;
 
   for (const genre of movieGenres) {
-    if (acceptedGenres.has(genre)) {
+    if (affinity && affinity.size > 0) {
+      const w = affinity.get(genre) ?? 0;
+      if (w > 0) {
+        score += Math.min(28, w * 2.65);
+      }
+    } else if (acceptedGenres.has(genre)) {
       score += 5.5;
     }
+
     if (favoriteGenres.has(genre)) {
       score += 8.5;
     }
     if (dislikedGenres.has(genre)) {
       score -= 13;
+    }
+
+    const rej = rejectedW?.get(genre) ?? 0;
+    if (rej > 0) {
+      score -= Math.min(18, rej * 6.2);
     }
   }
 
@@ -55,4 +75,27 @@ export function computeMovieMatchPercent(
   }
 
   return Math.max(28, Math.min(98, Math.round(score)));
+}
+
+/**
+ * Discover swipe card: same inputs as queue ranking’s taste layer + small release-year nudge.
+ */
+export function computeDiscoverSwipeMatchPercent(
+  movie: Movie,
+  options: {
+    genreAffinity: Map<string, number>;
+    rejectedGenreWeights: Map<string, number>;
+    onboarding: Pick<
+      OnboardingPreferences,
+      "favoriteGenres" | "dislikedGenres" | "mediaPreference"
+    >;
+    yearNudge: number;
+  },
+): number {
+  const base = computeMovieMatchPercent(movie, {
+    genreAffinityWeights: options.genreAffinity,
+    rejectedGenreWeights: options.rejectedGenreWeights,
+    onboarding: options.onboarding,
+  });
+  return Math.max(28, Math.min(98, Math.round(base + options.yearNudge)));
 }

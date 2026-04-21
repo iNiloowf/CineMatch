@@ -19,9 +19,9 @@ const baseMovie: Movie = {
 };
 
 describe("computeMovieMatchPercent", () => {
-  it("returns a score in 0–100 range", () => {
+  it("returns a score in the clamped match range", () => {
     const score = computeMovieMatchPercent(baseMovie);
-    expect(score).toBeGreaterThanOrEqual(0);
-    expect(score).toBeLessThanOrEqual(100);
+    expect(score).toBeGreaterThanOrEqual(28);
+    expect(score).toBeLessThanOrEqual(98);
   });
 });
