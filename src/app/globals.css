@@ -31,6 +31,8 @@
   --motion-duration-shimmer-loop: 7.5s;
   --motion-duration-shimmer-skeleton: 2s;
   --motion-duration-soft-pulse: 4.8s;
+  /** Bottom tab route: horizontal slide between main tabs */
+  --motion-duration-tab-route: 280ms;
 
   --motion-ease-standard: var(--ease-soft);
   --motion-ease-emphasized: cubic-bezier(0.2, 0.9, 0.25, 1);
@@ -1552,6 +1554,60 @@ input[type="range"] {
   }
 }
 
+/* Bottom tab routes — slide in sync with tab index (Discover → … → Settings) */
+@keyframes tabRouteEnterForward {
+  from {
+    opacity: 0.92;
+    transform: translate3d(12%, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tabRouteEnterBack {
+  from {
+    opacity: 0.92;
+    transform: translate3d(-12%, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tabRouteEnterFade {
+  from {
+    opacity: 0.88;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.tab-route-surface {
+  min-height: 0;
+}
+
+.tab-route-enter--forward {
+  animation: tabRouteEnterForward var(--motion-duration-tab-route) var(--motion-ease-standard) both;
+  will-change: transform, opacity;
+}
+
+.tab-route-enter--back {
+  animation: tabRouteEnterBack var(--motion-duration-tab-route) var(--motion-ease-standard) both;
+  will-change: transform, opacity;
+}
+
+.tab-route-enter--fade {
+  animation: tabRouteEnterFade calc(var(--motion-duration-tab-route) * 0.85) var(--motion-ease-standard) both;
+  will-change: opacity;
+}
+
 /*
   Softer motion: set on <html> when the user enables “Less motion” in Settings
   or when the OS requests reduced motion (synced from app-state).
@@ -1587,6 +1643,14 @@ html[data-reduce-motion="true"] .ui-motion-surface:hover {
 
 html[data-reduce-motion="true"] .fade-up-enter {
   animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+}
+
+html[data-reduce-motion="true"] .tab-route-enter--forward,
+html[data-reduce-motion="true"] .tab-route-enter--back,
+html[data-reduce-motion="true"] .tab-route-enter--fade {
+  animation: motionOpacityIn var(--motion-duration-instant) var(--motion-ease-standard) both;
+  will-change: auto;
+  transform: none;
 }
 
 html[data-reduce-motion="true"] .picks-row-enter,

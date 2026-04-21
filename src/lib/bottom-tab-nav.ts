@@ -38,8 +38,13 @@ export function resolveBottomNavHighlight(pathname: string) {
   return { pillIndex: -1, activeHref: null as string | null };
 }
 
-const SWIPE_MIN_PX = 52;
-const SWIPE_LOCK_MS = 420;
+/** Minimum horizontal distance (px) before a swipe counts as tab navigation. */
+export const TAB_SWIPE_MIN_DISTANCE_PX = 64;
+/** Reject gestures where vertical movement dominates (accidental scrolls). */
+export const TAB_SWIPE_VERTICAL_DOMINANCE = 1.12;
+/** Ignore horizontal swipe if vertical delta exceeds this (px). */
+export const TAB_SWIPE_MAX_VERTICAL_PX = 32;
+const SWIPE_LOCK_MS = 440;
 
 export function useTabSwipeNavigation() {
   const pathname = usePathname();
@@ -84,10 +89,10 @@ export function useTabSwipeNavigation() {
       touchStartX.current = null;
       touchStartY.current = null;
 
-      if (Math.abs(dx) < SWIPE_MIN_PX) {
+      if (Math.abs(dx) < TAB_SWIPE_MIN_DISTANCE_PX) {
         return;
       }
-      if (Math.abs(dy) > Math.abs(dx) * 1.15 && Math.abs(dy) > 24) {
+      if (Math.abs(dy) > Math.abs(dx) * TAB_SWIPE_VERTICAL_DOMINANCE && Math.abs(dy) > TAB_SWIPE_MAX_VERTICAL_PX) {
         return;
       }
 

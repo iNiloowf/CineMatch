@@ -4,6 +4,7 @@ import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
 import { MatchToast } from "@/components/match-toast";
 import { OfflineBanner } from "@/components/offline-banner";
+import { TabScreenTransition } from "@/components/tab-screen-transition";
 import { useAppState } from "@/lib/app-state";
 import { useTabSwipeNavigation } from "@/lib/bottom-tab-nav";
 
@@ -62,9 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             tabIndex={-1}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
-            className="relative z-0 min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="relative z-0 min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
-            {children}
+            <TabScreenTransition>{children}</TabScreenTransition>
           </div>
         </div>
       </div>
