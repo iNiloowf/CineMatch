@@ -1836,57 +1836,60 @@ function DiscoverPageContent({
 
       {lastSwipe ? (
         <div
-          className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 pt-[max(0.25rem,env(safe-area-inset-top,0px))]"
+          className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-3 pt-[max(0.25rem,env(safe-area-inset-top,0px))] sm:px-4"
           role="status"
           aria-live="polite"
         >
           <div
-            className={`app-notify-banner pointer-events-auto relative w-full max-w-md overflow-hidden rounded-[28px] p-4 backdrop-blur-xl ${
+            className={`app-notify-banner pointer-events-auto relative w-full max-w-[min(100%,20rem)] overflow-hidden rounded-2xl border px-3 py-2.5 backdrop-blur-xl sm:max-w-md sm:rounded-[24px] sm:px-3.5 sm:py-3 ${
               isDarkMode
-                ? "border border-violet-400/25 bg-slate-950/94 text-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
-                : "border border-violet-200/90 bg-white/96 text-slate-900 shadow-[0_16px_44px_rgba(124,58,237,0.14)]"
+                ? "border-white/12 bg-slate-950/92 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.42)]"
+                : "border-slate-200/85 bg-white/95 text-slate-900 shadow-[0_10px_32px_rgba(124,58,237,0.1)]"
             }`}
           >
-            <div className="pointer-events-none absolute left-3 top-3 text-[10px] text-violet-400/70" aria-hidden>
-              ✦
-            </div>
-
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl leading-none shadow-[0_4px_14px_rgba(109,40,217,0.25)] ${
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[1.05rem] leading-none shadow-[0_2px_10px_rgba(109,40,217,0.22)] sm:h-10 sm:w-10 sm:text-lg ${
                   isDarkMode ? "bg-violet-500 text-white" : "bg-violet-600 text-white"
                 }`}
                 aria-hidden
               >
                 {lastSwipe.decision === "accepted" ? "★" : "↩"}
               </div>
-              <div className="min-w-0 flex-1 font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+              <div className="min-w-0 flex-1">
                 <p
-                  className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${
-                    isDarkMode ? "text-violet-300" : "text-violet-600"
+                  className={`text-[9px] font-semibold uppercase tracking-[0.18em] ${
+                    isDarkMode ? "text-violet-300/95" : "text-violet-600"
                   }`}
                 >
                   Swipe recorded
                 </p>
-                <p className={`mt-1 text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                <p
+                  className={`mt-0.5 text-sm font-semibold leading-tight sm:text-[0.95rem] ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
                   {lastSwipe.decision === "accepted" ? "Saved to picks" : "Skipped for now"}
                 </p>
-                <p className={`mt-1 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                <p
+                  className={`mt-0.5 line-clamp-2 text-[11px] leading-snug sm:text-xs ${
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  }`}
+                  title={lastSwipe.movie.title}
+                >
                   {lastSwipe.movie.title}
                 </p>
               </div>
-              <div className="flex shrink-0 flex-col items-stretch">
-                <button
-                  type="button"
-                  onClick={handleUndoSwipe}
-                  aria-label="Undo last swipe"
-                  className={`min-h-8 shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                    isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  Undo
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleUndoSwipe}
+                aria-label="Undo last swipe"
+                className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold leading-none tracking-wide sm:min-h-8 sm:px-2.5 sm:text-[10px] ${
+                  isDarkMode ? "bg-white/10 text-slate-200 hover:bg-white/14" : "bg-slate-100 text-slate-600 hover:bg-slate-200/90"
+                }`}
+              >
+                Undo
+              </button>
             </div>
           </div>
         </div>
@@ -1929,10 +1932,11 @@ function DiscoverPageContent({
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
           <AppRouteNetworkStatus
+            compact
             variant="empty"
             isDarkMode={isDarkMode}
             title="No titles match these filters"
-            description="Broaden or clear your genre picks, or open the filter sheet to choose different genres."
+            description="Try clearing genres or adjust the filter sheet."
             secondaryAction={{
               label: "Clear genres",
               onClick: () => {
@@ -1940,24 +1944,25 @@ function DiscoverPageContent({
               },
             }}
             tertiaryAction={{
-              label: "Adjust filters",
+              label: "Filters",
               onClick: () => setIsFilterOpen(true),
             }}
           />
         ) : (
           <AppRouteNetworkStatus
+            compact
             variant="empty"
             isDarkMode={isDarkMode}
-            title="You’ve gone through every title for now"
-            description="Jump into your saved picks or shared lists to see what overlaps with people you’re linked with."
+            title="You’re caught up for now"
+            description="Open Picks or Shared to keep exploring."
             secondaryAction={{
-              label: "View picks",
+              label: "Picks",
               onClick: () => {
                 router.push("/picks");
               },
             }}
             tertiaryAction={{
-              label: "Shared list",
+              label: "Shared",
               onClick: () => {
                 router.push("/shared");
               },

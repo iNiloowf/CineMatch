@@ -119,7 +119,11 @@ export function AppRouteEmptyCard({
  */
 export function AppRouteNetworkStatus(props: ComponentProps<typeof NetworkStatusBlock>) {
   return (
-    <div className="flex min-h-[40vh] w-full flex-1 flex-col items-center justify-center px-4 py-8">
+    <div
+      className={`flex w-full flex-1 flex-col items-center justify-center px-4 ${
+        props.compact ? "min-h-[30vh] py-5 sm:min-h-[34vh] sm:py-6" : "min-h-[40vh] py-8"
+      }`}
+    >
       <NetworkStatusBlock {...props} />
     </div>
   );
