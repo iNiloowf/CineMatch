@@ -56,7 +56,10 @@
   /**
    * Fixed bottom nav (pill) height + home indicator — scroll padding so content clears the bar.
    */
-  --app-bottom-nav-overlay: calc(env(safe-area-inset-bottom, 0px) + clamp(4.5rem, 20vmin, 6rem));
+  /* +0.25rem: gap above physical home indicator / bottom edge (see BottomNav padding) */
+  --app-bottom-nav-overlay: calc(
+    env(safe-area-inset-bottom, 0px) + 0.25rem + clamp(4.5rem, 20vmin, 6rem)
+  );
 
   /**
    * End of #main-content: card curve/shadow clearance + space under fixed bottom nav overlay.

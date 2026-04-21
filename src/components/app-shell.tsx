@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       */}
       <div
         aria-hidden
-        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[19] h-[calc(env(safe-area-inset-bottom,0px)+clamp(3.25rem,15vmin,4.75rem))] bg-gradient-to-t ${
+        className={`pointer-events-none fixed inset-x-0 bottom-0 z-[19] h-[calc(env(safe-area-inset-bottom,0px)+0.25rem+clamp(3.25rem,15vmin,4.75rem))] bg-gradient-to-t ${
           isDarkMode
             ? "from-[#09090f] via-[#09090f]/85 to-transparent"
             : "from-[#fdf7ff] via-[#fdf7ff]/82 to-transparent"
