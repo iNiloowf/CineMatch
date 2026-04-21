@@ -14,6 +14,7 @@ import { AppRouteNetworkStatus } from "@/components/app-route-status";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
 import { DiscoverCardSkeleton, SearchResultsSkeletonList } from "@/components/ui-skeleton";
+import { FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import {
   loadDiscoverSession,
   saveDiscoverSession,
@@ -27,7 +28,6 @@ import {
 import type { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
-const ONBOARDING_FAVORITE_GENRE_LIMIT = 5;
 const ONBOARDING_STEP_COUNT = 3;
 
 type DiscoverPageContentProps = {
@@ -363,7 +363,7 @@ function DiscoverPageContent({
       if (current.includes(genre)) {
         return current.filter((entry) => entry !== genre);
       }
-      if (current.length >= ONBOARDING_FAVORITE_GENRE_LIMIT) {
+      if (current.length >= FAVORITE_GENRE_LIMIT) {
         return current;
       }
       setOnboardingDisliked((disliked) => disliked.filter((entry) => entry !== genre));
@@ -906,7 +906,7 @@ function DiscoverPageContent({
                 <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                   {[
                     "Pick what Discover should prioritize.",
-                    `Select up to ${ONBOARDING_FAVORITE_GENRE_LIMIT} genres you want more of (A–Z).`,
+                    `Select up to ${FAVORITE_GENRE_LIMIT} genres you want more of (A–Z).`,
                     "Tap genres you usually avoid. Favorites are hidden so they won’t clash.",
                   ][onboardingStep] ?? ""}
                 </p>
@@ -949,7 +949,7 @@ function DiscoverPageContent({
                       isDarkMode ? "text-slate-400" : "text-slate-500"
                     }`}
                   >
-                    {onboardingFavorites.length}/{ONBOARDING_FAVORITE_GENRE_LIMIT} selected
+                    {onboardingFavorites.length}/{FAVORITE_GENRE_LIMIT} selected
                   </p>
                   <ul className="grid list-none grid-cols-2 gap-2">
                     {onboardingGenres.map((genre) => (

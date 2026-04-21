@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
-import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
+import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
 import type { Movie, ProProfileStyle } from "@/lib/types";
@@ -124,7 +124,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
+      setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
       setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
       setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
       setIsFavoriteGenresOpen(false);
@@ -239,7 +239,7 @@ export default function ProfilePage() {
     setAvatarPreview(undefined);
     setAvatarFile(null);
     setClearAvatarOnSave(false);
-    setFavoriteGenresDraft(onboardingPreferences.favoriteGenres);
+    setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
     setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
     setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
     setIsFavoriteGenresOpen(false);
@@ -301,7 +301,7 @@ export default function ProfilePage() {
           .map((genre) => genre.trim())
           .filter((genre) => Boolean(genre) && !dislikedGenresDraft.includes(genre)),
       ),
-    );
+    ).slice(0, FAVORITE_GENRE_LIMIT);
     const cleanedDislikedGenres = Array.from(
       new Set(
         dislikedGenresDraft
@@ -1153,7 +1153,7 @@ export default function ProfilePage() {
                         <div>
                           <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Genres you like</p>
                           <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                            {favoriteGenresDraft.length} selected
+                            {favoriteGenresDraft.length}/{FAVORITE_GENRE_LIMIT} selected — stronger Discover signal when fewer.
                           </p>
                         </div>
                         <button
@@ -1171,23 +1171,39 @@ export default function ProfilePage() {
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             {profileGenres.map((genre) => {
                               const active = favoriteGenresDraft.includes(genre);
+                              const atFavoriteLimit =
+                                !active && favoriteGenresDraft.length >= FAVORITE_GENRE_LIMIT;
                               return (
                                 <button
                                   key={`fav-${genre}`}
                                   type="button"
+                                  disabled={atFavoriteLimit}
+                                  title={
+                                    atFavoriteLimit
+                                      ? `Select up to ${FAVORITE_GENRE_LIMIT} favorite genres`
+                                      : undefined
+                                  }
                                   onClick={() =>
-                                    setFavoriteGenresDraft((current) =>
-                                      current.includes(genre)
-                                        ? current.filter((entry) => entry !== genre)
-                                        : [...current, genre],
-                                    )
+                                    setFavoriteGenresDraft((current) => {
+                                      if (current.includes(genre)) {
+                                        return current.filter((entry) => entry !== genre);
+                                      }
+                                      if (current.length >= FAVORITE_GENRE_LIMIT) {
+                                        return current;
+                                      }
+                                      return [...current, genre];
+                                    })
                                   }
                                   className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-[11px] font-semibold leading-tight transition sm:text-xs ${
                                     active
                                       ? "bg-violet-600 text-white shadow-sm"
-                                      : isDarkMode
-                                        ? "border border-white/12 bg-white/8 text-slate-200"
-                                        : "border border-slate-200/90 bg-white text-slate-700"
+                                      : atFavoriteLimit
+                                        ? isDarkMode
+                                          ? "cursor-not-allowed border border-white/8 bg-white/[0.03] text-slate-500 opacity-55"
+                                          : "cursor-not-allowed border border-slate-200/60 bg-slate-100/80 text-slate-400 opacity-70"
+                                        : isDarkMode
+                                          ? "border border-white/12 bg-white/8 text-slate-200"
+                                          : "border border-slate-200/90 bg-white text-slate-700"
                                   }`}
                                 >
                                   {genre}
