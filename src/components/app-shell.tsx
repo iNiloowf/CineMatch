@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             id="main-content"
             data-app-scroll-container="true"
             tabIndex={-1}
-            className="flex-1 overflow-y-auto overscroll-contain pb-[var(--discover-stack-gap)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             {children}
           </div>

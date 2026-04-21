@@ -53,6 +53,14 @@
   /** Discover: toolbar ↔ card ↔ bottom nav (shared with app shell scroll padding). */
   --discover-stack-gap: clamp(0.75rem, 2.75vw, 1.125rem);
 
+  /**
+   * End of #main-content scroll: extra inset so primary cards (SurfaceCard curves + shadows)
+   * are not clipped by the scrollport right above the floating bottom nav pill.
+   */
+  --app-scroll-pad-bottom: calc(
+    var(--discover-stack-gap) + clamp(1.5rem, 4.5vmin, 2.75rem)
+  );
+
   /* Radius by role */
   --radius-control: 1rem; /* icon buttons, compact controls */
   --radius-md: 1rem;
@@ -107,6 +115,10 @@
   --color-chip-surface-text: #475569;
   --color-chip-on-dark-bg: rgba(0, 0, 0, 0.28);
   --color-chip-on-dark-text: rgba(255, 255, 255, 0.88);
+}
+
+[data-app-scroll-container="true"] {
+  scroll-padding-bottom: var(--app-scroll-pad-bottom);
 }
 
 /* Dark shell: brighter meta copy + slightly stronger glass so WCAG-ish contrast holds */
