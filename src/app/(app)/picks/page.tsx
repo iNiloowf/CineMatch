@@ -34,7 +34,7 @@ type TopSharedPick = {
   reasons: string[];
 };
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
-const PREMIUM_INSIGHTS_CLOSE_MS = 240;
+const PREMIUM_INSIGHTS_CLOSE_MS = 420;
 /** Legacy: full hide for session — migrated to collapsed bar + Show. */
 const premiumInsightsDismissSessionKey = (userId: string | null) =>
   `cinematch-picks-premium-insights-dismiss-v1-${userId ?? "guest"}`;
@@ -82,6 +82,8 @@ export default function PicksPage() {
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [isPremiumInsightsExpanded, setIsPremiumInsightsExpanded] = useState(true);
   const [isPremiumInsightsClosing, setIsPremiumInsightsClosing] = useState(false);
+  /** Drives grid 0fr→1fr when opening from collapsed (smooth expand). */
+  const [insightsPanelReveal, setInsightsPanelReveal] = useState(true);
   const [isBuyProModalOpen, setIsBuyProModalOpen] = useState(false);
   const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
   const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
@@ -111,6 +113,7 @@ export default function PicksPage() {
     }
     setIsPremiumInsightsExpanded(expanded);
     setIsPremiumInsightsClosing(false);
+    setInsightsPanelReveal(true);
   }, [premiumInsightsDismissKey, premiumInsightsExpandedKey]);
 
   const pendingRemoveMovie = useMemo(
@@ -654,9 +657,15 @@ export default function PicksPage() {
 
   const handleShowPremiumInsights = useCallback(() => {
     setIsPremiumInsightsExpanded(true);
+    setInsightsPanelReveal(false);
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(premiumInsightsExpandedKeyRef.current, "1");
     }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setInsightsPanelReveal(true);
+      });
+    });
   }, []);
 
   const detailsModal =
@@ -885,6 +894,16 @@ export default function PicksPage() {
         )
       : null;
 
+  const premiumInsightsExpandedShell =
+    isPremiumInsightsExpanded || isPremiumInsightsClosing;
+  const premiumInsightsGridRowsFr: "0fr" | "1fr" | undefined =
+    !premiumInsightsExpandedShell
+      ? undefined
+      : isPremiumInsightsClosing ||
+          (isPremiumInsightsExpanded && !insightsPanelReveal)
+        ? "0fr"
+        : "1fr";
+
   return (
     <>
       <div className="space-y-5">
@@ -1013,18 +1032,22 @@ export default function PicksPage() {
           </SurfaceCard>
         </div>
 
-        {isPremiumInsightsExpanded ? (
+        {premiumInsightsExpandedShell ? (
           <div
-            className={`overflow-hidden transition-all duration-200 ease-out ${
-              isPremiumInsightsClosing
-                ? "max-h-0 -translate-y-2 opacity-0"
-                : "max-h-[720px] translate-y-0 opacity-100"
-            }`}
+            className="grid overflow-hidden transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
+            style={{ gridTemplateRows: premiumInsightsGridRowsFr }}
           >
-            <SurfaceCard
-              className="fade-up-enter space-y-2.5 p-3.5 sm:p-4"
-              style={{ animationDelay: "130ms" }}
-            >
+            <div className="min-h-0 overflow-hidden">
+              <div
+                className={`transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 ${
+                  isPremiumInsightsClosing
+                    ? "opacity-0 [transform:translate3d(0,-6px,0)]"
+                    : isPremiumInsightsExpanded && !insightsPanelReveal
+                      ? "opacity-0 [transform:translate3d(0,6px,0)]"
+                      : "opacity-100 [transform:translate3d(0,0,0)]"
+                }`}
+              >
+                <SurfaceCard className="space-y-2.5 p-3.5 sm:p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p
@@ -1068,10 +1091,10 @@ export default function PicksPage() {
                     type="button"
                     onClick={handleClosePremiumInsights}
                     aria-label="Close premium pick insights"
-                    className={`min-h-8 shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold ${
+                    className={`premium-insights-chrome-btn shrink-0 rounded-md border px-2 py-1 text-[10px] font-medium leading-none tracking-wide transition-colors ${
                       isDarkMode
-                        ? "border-white/12 bg-white/8 text-slate-200 hover:bg-white/12"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        ? "border-white/10 bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-200"
+                        : "border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                     }`}
                   >
                     Close
@@ -1191,11 +1214,12 @@ export default function PicksPage() {
                 </>
               )}
             </SurfaceCard>
+              </div>
+            </div>
           </div>
         ) : (
           <SurfaceCard
-            className="fade-up-enter p-3.5 sm:p-4"
-            style={{ animationDelay: "130ms" }}
+            className="p-3.5 sm:p-4 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -1220,10 +1244,10 @@ export default function PicksPage() {
                 type="button"
                 onClick={handleShowPremiumInsights}
                 aria-label="Show premium pick insights"
-                className={`min-h-8 shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
+                className={`premium-insights-chrome-btn shrink-0 rounded-md px-2 py-1 text-[10px] font-medium leading-none tracking-wide transition active:scale-[0.98] motion-reduce:active:scale-100 ${
                   isDarkMode
-                    ? "bg-violet-500/25 text-violet-50 ring-1 ring-violet-400/35 hover:bg-violet-500/35"
-                    : "bg-violet-600 text-white shadow-sm hover:bg-violet-500"
+                    ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/30 hover:bg-violet-500/32"
+                    : "bg-violet-600 text-white shadow-sm ring-1 ring-violet-500/30 hover:bg-violet-500"
                 }`}
               >
                 Show

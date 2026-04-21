@@ -176,6 +176,20 @@ body {
   overflow-x: hidden;
 }
 
+/** Picks premium insights — small UI chrome, neutral system stack (not display face) */
+.premium-insights-chrome-btn {
+  font-family:
+    ui-rounded,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-feature-settings: "tnum" 1;
+}
+
 a,
 button,
 section,
