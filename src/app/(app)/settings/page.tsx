@@ -147,8 +147,8 @@ export default function SettingsPage() {
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
 
   const preferencesDivider = isDarkMode
-    ? "border-t border-white/10 pt-8 mt-6"
-    : "border-t border-slate-200/90 pt-8 mt-6";
+    ? "border-t border-white/10 pt-5 mt-4"
+    : "border-t border-slate-200/90 pt-5 mt-4";
 
   const { incomplete: achievementsInProgress } = useMemo(
     () => partitionAchievements(achievements),
@@ -409,7 +409,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-6">
+    <div className="w-full min-w-0 space-y-5">
       {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
