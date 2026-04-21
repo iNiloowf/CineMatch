@@ -745,6 +745,19 @@ input[type="range"] {
 }
 
 /* Colorful top stripe on dialogs / sheets (same family as Settings → Redeem partner gift). */
+/* Profile → Skipped on Discover list — text-style actions (overrides button { font: inherit }). */
+.discover-skips-action {
+  font-size: 0.625rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+@media (min-width: 640px) {
+  .discover-skips-action {
+    font-size: 0.6875rem;
+  }
+}
+
 .ui-modal-accent-bar {
   pointer-events: none;
   position: absolute;
