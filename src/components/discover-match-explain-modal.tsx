@@ -68,7 +68,7 @@ export function DiscoverMatchExplainModal({
           </button>
         </div>
         <div
-          className={`ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-3 pb-1 text-[13px] leading-relaxed ${
+          className={`ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-3 pb-1 text-[14px] leading-relaxed ${
             isDarkMode ? "text-slate-200" : "text-slate-700"
           }`}
         >

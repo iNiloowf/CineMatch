@@ -25,9 +25,9 @@ export function hashString(value: string) {
 function popularityBoost(movie: Movie): number {
   const p = movie.popularity;
   if (typeof p === "number" && Number.isFinite(p) && p > 0) {
-    return Math.min(26, 6.2 * Math.log1p(p));
+    return Math.min(34, 7.4 * Math.log1p(p));
   }
-  return Math.min(9, Math.max(0, (movie.rating - 5.4) * 2.1));
+  return Math.min(14, Math.max(0, (movie.rating - 5.2) * 2.5));
 }
 
 function yearPreferenceScore(
@@ -51,6 +51,34 @@ function yearPreferenceScore(
   score += Math.min(9, 9 * recencyNudge);
 
   return score;
+}
+
+/** Extra deck priority: newer titles first unless the user clearly likes classics. */
+function recencyDeckBoost(
+  movieYear: number,
+  calendarYear: number,
+  taste: { classicEngaged: boolean },
+): number {
+  if (taste.classicEngaged) {
+    return 0;
+  }
+  const age = calendarYear - movieYear;
+  if (age <= 8) {
+    return 12;
+  }
+  if (age <= 18) {
+    return 8;
+  }
+  if (age <= 30) {
+    return 3;
+  }
+  if (age >= 52) {
+    return -14;
+  }
+  if (age >= 40) {
+    return -7;
+  }
+  return 0;
 }
 
 /**
@@ -173,7 +201,7 @@ export function buildDiscoverQueue(options: {
             : -6;
 
         const pop =
-          popularityBoost(movie) * (1 + 0.48 * cold);
+          popularityBoost(movie) * (1 + 0.55 * cold);
         const yearGuest = Math.min(
           22,
           ((movie.year - 1980) / Math.max(1, calendarYear - 1980)) * 22,
@@ -187,11 +215,14 @@ export function buildDiscoverQueue(options: {
           ? (1 - personalizationW) * yearGuest + personalizationW * yearPersonal
           : yearGuest;
 
+        const recencyDeck = recencyDeckBoost(movie.year, calendarYear, tasteYear);
+
         return (
-          preferenceMatchScore +
+          preferenceMatchScore * 1.24 +
           mediaPreferenceBonus +
-          pop +
-          yearScore
+          pop * 1.28 +
+          yearScore +
+          recencyDeck
         );
       };
 

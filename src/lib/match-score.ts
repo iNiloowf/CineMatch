@@ -163,8 +163,8 @@ export type DiscoverSwipeMatchExplanation = {
 };
 
 /**
- * Human-readable breakdown for the Discover card match % (same inputs as
- * `computeDiscoverSwipeMatchPercent`). Used after a successful Like.
+ * Plain-language breakdown for the Discover card match % (same inputs as
+ * `computeDiscoverSwipeMatchPercent`). Shown when the user taps Match.
  */
 export function explainDiscoverSwipeMatch(
   movie: Movie,
@@ -185,32 +185,10 @@ export function explainDiscoverSwipeMatch(
   },
 ): DiscoverSwipeMatchExplanation {
   const w = Math.max(0, Math.min(1, options.personalizationWeight));
-  const cold = 1 - w;
   const affinity = options.genreAffinity;
   const rejectedW = options.rejectedGenreWeights;
   const favoriteGenres = normalizeGenreSet(options.onboarding.favoriteGenres);
   const dislikedGenres = normalizeGenreSet(options.onboarding.dislikedGenres);
-
-  const onboardingOnly = computeMovieMatchPercent(movie, {
-    onboarding: options.onboarding,
-  });
-  const fullPersonalized = computeMovieMatchPercent(movie, {
-    genreAffinityWeights: affinity,
-    rejectedGenreWeights: rejectedW,
-    onboarding: options.onboarding,
-  });
-  const blend = computeDiscoverPreferenceBlend(movie, w, {
-    genreAffinity: affinity,
-    rejectedGenreWeights: rejectedW,
-    onboarding: options.onboarding,
-  });
-  const rawYearNudge = discoverYearMatchNudge(
-    movie.year,
-    options.tasteYear,
-    options.calendarYear,
-  );
-  const scaledYearNudge = rawYearNudge * w;
-  const rawBeforeClamp = blend + scaledYearNudge;
   const percent = computeDiscoverSwipeMatchPercent(movie, options);
 
   const rawGenres = movie.genre
@@ -223,12 +201,16 @@ export function explainDiscoverSwipeMatch(
   const bullets: string[] = [];
 
   bullets.push(
-    `**No IMDb / popularity in this %** — neutral taste base **${TASTE_MATCH_NEUTRAL_BASE}**, then genres & history only. Inner scores: **${onboardingOnly}%** (signup) vs **${fullPersonalized}%** (with likes, Picks, passes). Blend **${blend.toFixed(1)}%** = **${cold.toFixed(2)}**×${onboardingOnly} + **${w.toFixed(2)}**×${fullPersonalized}.`,
+    `**${percent}%** is about **your taste**, not how famous or viral a title is. We don’t use IMDb score or popularity inside this number — only genres you care about, what you’ve saved or skipped, and (a little) release year.`,
   );
 
-  if (w < 0.12) {
+  if (w < 0.15) {
     bullets.push(
-      `Personalization weight is **${Math.round(w * 100)}%** — the score still leans on what you chose at signup until you save more titles.`,
+      `We’re **still learning** your habits — most of this score comes from what you chose when you joined. Save and rate a few more titles and it’ll follow you more closely.`,
+    );
+  } else {
+    bullets.push(
+      `Roughly **${Math.round(w * 100)}%** of the signal now comes from **what you actually watch and save**; the rest ties back to your signup choices.`,
     );
   }
 
@@ -241,17 +223,18 @@ export function explainDiscoverSwipeMatch(
     const dis = dislikedGenres.has(key);
 
     const bits: string[] = [];
-    if (affinity.size > 0 && aff > 0) {
-      bits.push(`likes/Picks signal **${aff.toFixed(2)}**`);
-    }
-    if (fav && !dis) {
-      bits.push("onboarding **favorite**");
-    }
     if (dis) {
-      bits.push("onboarding **avoid**");
+      bits.push("you told us you usually want **less** of this");
+    } else if (fav) {
+      bits.push("this matches a genre you said you **want more** of");
     }
-    if (rej > 0.02) {
-      bits.push(`recent passes **${rej.toFixed(2)}**`);
+    if (affinity.size > 0 && aff > 0.45) {
+      bits.push("similar to things you’ve **liked or picked** lately");
+    } else if (affinity.size > 0 && aff > 0) {
+      bits.push("a bit like titles you’ve **rated or saved** before");
+    }
+    if (rej > 0.05) {
+      bits.push("you’ve **passed** similar titles on Discover recently");
     }
 
     if (bits.length === 0) {
@@ -262,7 +245,7 @@ export function explainDiscoverSwipeMatch(
 
   if (genreLines.length === 0) {
     bullets.push(
-      `No genre on this title hit a strong signal yet — **${percent}%** is mostly the **${TASTE_MATCH_NEUTRAL_BASE}** baseline plus blend (not popularity).`,
+      `The genres here didn’t line up strongly with your favorites or avoids yet — **${percent}%** is mostly the neutral starting point until we know you better.`,
     );
   } else {
     for (const line of genreLines.slice(0, 5)) {
@@ -274,37 +257,47 @@ export function explainDiscoverSwipeMatch(
   const hitsDisliked = rawGenres.some((g) => dislikedGenres.has(g.trim().toLowerCase()));
   if (hitsFavorite && hitsDisliked) {
     bullets.push(
-      `This title includes **both** a genre you **favorite** and one you **avoid** → **−${MIXED_GENRE_CONFLICT_PENALTY}** mixed-genre adjustment.`,
+      `This title mixes something you **love** with something you’d **rather skip**, so we **don’t** treat it like a perfect match.`,
     );
   }
 
   const mediaPreference = options.onboarding.mediaPreference ?? "both";
   if (mediaPreference !== "both" && movie.mediaType !== mediaPreference) {
     bullets.push(
-      `You prefer **${mediaPreference === "movie" ? "movies" : "series"}**; this is **${movie.mediaType}** → **−8** in the inner score (same as the card).`,
+      `You asked Discover to focus on **${mediaPreference === "movie" ? "movies" : "series"}**; this one is a **${movie.mediaType}**, so we lower the match a little.`,
     );
   }
 
   const center = Math.round(options.tasteYear.center);
-  const spread = Math.round(options.tasteYear.spread);
-  const roundedCombined = Math.round(rawBeforeClamp);
-  const clampNote =
-    roundedCombined !== percent
-      ? ` Inner **${roundedCombined}%** was clamped to **${percent}%**.`
-      : "";
+  const spread = options.tasteYear.spread;
+  const diff = Math.abs(movie.year - center);
+
+  if (options.tasteYear.classicEngaged && movie.year < 1995) {
+    bullets.push(
+      `**${movie.year}** fits the **older** films you tend to enjoy — we give that a small boost.`,
+    );
+  } else if (diff <= spread * 1.15) {
+    bullets.push(
+      `**${movie.year}** is close to the **kinds of years** you usually pick (around **${center}**), so the match gets a small lift.`,
+    );
+  } else if (movie.year < center - spread * 1.4) {
+    bullets.push(
+      `**${movie.year}** is **older** than most of what you watch — we nudge the match **down** a bit.`,
+    );
+  } else {
+    bullets.push(
+      `**${movie.year}** is a bit outside your usual era (around **${center}**), so release year only nudges the score slightly.`,
+    );
+  }
 
   bullets.push(
-    `**Release year:** your history clusters ~**${center}** (±**${spread}** yrs). **${movie.year}** → year factor **${rawYearNudge >= 0 ? "+" : ""}${rawYearNudge.toFixed(2)}** × personalization **${w.toFixed(2)}** = **${scaledYearNudge >= 0 ? "+" : ""}${scaledYearNudge.toFixed(2)}** on top of **${blend.toFixed(1)}%** → **${rawBeforeClamp.toFixed(1)}** before rounding.`,
-  );
-
-  bullets.push(
-    `**Dial:** round(**${rawBeforeClamp.toFixed(1)}**) → **${roundedCombined}%**, then cap **28–98** → **${percent}%** shown.${clampNote}`,
+    `We show the result on a **28–98** scale so you can compare titles quickly — it’s a guide, not a guarantee.`,
   );
 
   const headline =
-    movie.title.length > 42
-      ? `~${percent}% match — breakdown`
-      : `“${movie.title}” · ~${percent}%`;
+    movie.title.length > 40
+      ? `Your ${percent}% taste match`
+      : `${movie.title} — ${percent}% match`;
 
   return {
     percent,
