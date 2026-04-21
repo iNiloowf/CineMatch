@@ -837,9 +837,9 @@ export default function SettingsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "40ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "40ms" }}>
         <p className={sectionEyebrow}>Appearance</p>
-        <div className="space-y-5">
+        <div className="mt-7 space-y-4">
           <SettingToggle
             label="Dark mode"
             description="Switch the app to a darker evening-friendly theme."
@@ -861,9 +861,9 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "75ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "75ms" }}>
         <p className={sectionEyebrow}>Notifications</p>
-        <div className="space-y-4">
+        <div className="mt-7 space-y-4">
           <SettingToggle
             label="Notifications"
             description="Get nudges when new shared matches appear."
@@ -873,10 +873,10 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "110ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "110ms" }}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
-          className={`w-full min-w-0 rounded-[18px] border px-4 py-4 ${
+          className={`mt-7 w-full min-w-0 rounded-[18px] border px-4 py-4 ${
             isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"
           }`}
         >
@@ -1100,9 +1100,9 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter space-y-8" style={{ animationDelay: "120ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "120ms" }}>
         <p className={sectionEyebrow}>Privacy</p>
-        <div className="space-y-5">
+        <div className="mt-7 space-y-4">
           <SettingToggle
             label="Hide spoilers"
             description="Keep descriptions gentle and spoiler-light."
