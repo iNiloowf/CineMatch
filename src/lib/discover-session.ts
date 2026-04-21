@@ -5,6 +5,13 @@ export type DiscoverSessionSnapshotV1 = {
   browseIndex: number;
   focusedMovieId: string | null;
   isSearchSheetOpen: boolean;
+  /**
+   * When present together, restores the same Discover deck ordering after reload
+   * or tab restore (must match `buildDiscoverQueue` inputs).
+   */
+  deckShuffleSeed?: string;
+  deckStartOffset?: number;
+  deckVisibilityTimestamp?: number;
 };
 
 const STORAGE_PREFIX = "cinematch-discover-session-v1";
@@ -31,6 +38,20 @@ export function loadDiscoverSession(
       return null;
     }
 
+    const deckShuffleSeed =
+      typeof parsed.deckShuffleSeed === "string" && parsed.deckShuffleSeed.trim()
+        ? parsed.deckShuffleSeed
+        : undefined;
+    const deckStartOffset =
+      typeof parsed.deckStartOffset === "number" && Number.isFinite(parsed.deckStartOffset)
+        ? Math.floor(parsed.deckStartOffset)
+        : undefined;
+    const deckVisibilityTimestamp =
+      typeof parsed.deckVisibilityTimestamp === "number" &&
+      Number.isFinite(parsed.deckVisibilityTimestamp)
+        ? parsed.deckVisibilityTimestamp
+        : undefined;
+
     return {
       v: 1,
       searchQuery: typeof parsed.searchQuery === "string" ? parsed.searchQuery : "",
@@ -46,6 +67,9 @@ export function loadDiscoverSession(
           ? parsed.focusedMovieId
           : null,
       isSearchSheetOpen: Boolean(parsed.isSearchSheetOpen),
+      deckShuffleSeed,
+      deckStartOffset,
+      deckVisibilityTimestamp,
     };
   } catch {
     return null;
@@ -68,4 +92,38 @@ export function saveDiscoverSession(
   } catch {
     // Quota or private mode — ignore.
   }
+}
+
+/** Used on cold start so Discover order matches the last saved session snapshot. */
+export function readPersistedDiscoverDeck(
+  userId: string | null,
+): {
+  shuffleSeed: string;
+  startOffset: number;
+  visibilityTimestamp: number;
+} | null {
+  const snapshot = loadDiscoverSession(userId);
+  if (!snapshot?.deckShuffleSeed?.trim()) {
+    return null;
+  }
+
+  if (
+    typeof snapshot.deckStartOffset !== "number" ||
+    !Number.isFinite(snapshot.deckStartOffset)
+  ) {
+    return null;
+  }
+
+  if (
+    typeof snapshot.deckVisibilityTimestamp !== "number" ||
+    !Number.isFinite(snapshot.deckVisibilityTimestamp)
+  ) {
+    return null;
+  }
+
+  return {
+    shuffleSeed: snapshot.deckShuffleSeed.trim(),
+    startOffset: Math.floor(snapshot.deckStartOffset),
+    visibilityTimestamp: snapshot.deckVisibilityTimestamp,
+  };
 }

@@ -106,16 +106,16 @@ export function BottomNav() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)] px-3 pb-[env(safe-area-inset-bottom,0px)] sm:px-4"
     >
       {/*
-        Outer strip stays transparent so content can scroll under the top corner wedges only.
-        The pill itself is effectively opaque so the page doesn’t read through the bar.
+        Full-width strip is transparent so page content can scroll underneath the rounded
+        top corners of the pill (frosted panel only covers the pill shape).
       */}
       <div
         data-bottom-nav-panel="true"
         data-bottom-nav-pill="true"
-        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
+        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
           isDarkMode
-            ? "border border-white/12 bg-[rgb(15_23_42)] shadow-[0_22px_50px_rgba(0,0,0,0.45)]"
-            : "border border-slate-200/90 bg-white shadow-[0_22px_50px_rgba(124,91,191,0.18)]"
+            ? "border border-white/16 bg-black/42 shadow-[0_22px_50px_rgba(0,0,0,0.35)]"
+            : "border border-white/70 bg-white/90 shadow-[0_22px_50px_rgba(124,91,191,0.2)]"
         }`}
       >
         <span
