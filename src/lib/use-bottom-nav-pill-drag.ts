@@ -264,6 +264,11 @@ export function useBottomNavPillDrag(opts: {
     return settledPillIndex;
   })();
 
+  /** Nearest tab index — drives label/icon “active” styling so it stays aligned with the pill while dragging. */
+  const visualHighlightIndex = hasTabMatch
+    ? Math.min(tabCount - 1, Math.max(0, Math.round(visualIndexForPill)))
+    : -1;
+
   const transitionMs = reduceMotion ? 80 : isDragging ? 0 : 320;
   const transitionEasing = reduceMotion ? "ease" : "cubic-bezier(0.34, 1.35, 0.64, 1)";
 
@@ -285,5 +290,6 @@ export function useBottomNavPillDrag(opts: {
     pillTransformStyle,
     onActiveLinkClick,
     isDragging,
+    visualHighlightIndex,
   };
 }

@@ -76,12 +76,13 @@ export function BottomNav() {
   const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
   const hasTabMatch = pillIndex >= 0 && activeHref !== null;
 
-  const { onTouchStart, pillTransformStyle, onActiveLinkClick, isDragging } = useBottomNavPillDrag({
-    panelRef,
-    pillIndex: hasTabMatch ? pillIndex : 0,
-    hasTabMatch,
-    reduceMotion,
-  });
+  const { onTouchStart, pillTransformStyle, onActiveLinkClick, isDragging, visualHighlightIndex } =
+    useBottomNavPillDrag({
+      panelRef,
+      pillIndex: hasTabMatch ? pillIndex : 0,
+      hasTabMatch,
+      reduceMotion,
+    });
 
   const items = bottomTabNavItems;
 
@@ -114,18 +115,20 @@ export function BottomNav() {
           } ${hasTabMatch ? "opacity-100" : "opacity-0"}`}
           style={pillTransformStyle}
         />
-        {items.map((item) => {
-          const active = Boolean(activeHref && item.href === activeHref);
+        {items.map((item, index) => {
+          const routeActive = Boolean(activeHref && item.href === activeHref);
+          const visualActive = hasTabMatch && index === visualHighlightIndex;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               data-bottom-nav-link="true"
-              data-active={active ? "true" : "false"}
-              onClick={active ? onActiveLinkClick : undefined}
+              data-active={visualActive ? "true" : "false"}
+              aria-current={routeActive ? "page" : undefined}
+              onClick={routeActive ? onActiveLinkClick : undefined}
               className={`group relative z-10 flex min-h-[44px] min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-[18px] px-0.5 py-2 transition-[transform,color] duration-300 ease-out motion-reduce:transition-colors motion-reduce:duration-150 max-[380px]:px-0 sm:gap-1 sm:px-1 ${
-                active
+                visualActive
                   ? "text-white motion-reduce:scale-100"
                   : isDarkMode
                     ? "text-slate-300 hover:bg-white/[0.06] active:scale-[0.97] motion-reduce:active:scale-100"
@@ -138,7 +141,7 @@ export function BottomNav() {
                 data-bottom-nav-icon="true"
                 aria-hidden="true"
                 className={`flex h-6 w-6 items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none ${
-                  active
+                  visualActive
                     ? "scale-110 text-white motion-reduce:scale-100"
                     : isDarkMode
                       ? "text-slate-300 group-hover:scale-105 group-active:scale-95"
