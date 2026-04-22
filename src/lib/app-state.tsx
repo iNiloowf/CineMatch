@@ -9,7 +9,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -28,8 +27,10 @@ import {
   computeTasteYearProfile,
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
-import { readPersistedDiscoverDeck } from "@/lib/discover-session";
+import { CURRENT_USER_KEY } from "@/lib/app-state/constants";
 import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
+import { useAppToasts } from "@/lib/hooks/use-app-toasts";
+import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
 import {
   clearStoredAuthSession,
   getStoredAuthSession,
@@ -59,8 +60,8 @@ import type {
 import {
   Achievement,
   AppData,
-  MutualMatchToastPayload,
   AuthUser,
+  MutualMatchToastPayload,
   Movie,
   OnboardingPreferences,
   ProfileSettings,
@@ -70,9 +71,9 @@ import {
   SwipeDecision,
   User,
 } from "@/lib/types";
+import { getEffectiveSubscriptionTier, type SubscriptionTier } from "@/lib/subscription-tier";
 
 const STORAGE_KEY = "cinematch-demo-state-v5";
-const CURRENT_USER_KEY = "cinematch-current-user-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
 const THEME_STORAGE_KEY = "cinematch-theme-mode";
 const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
@@ -113,8 +114,6 @@ type SupabaseErrorLike = {
   message?: string;
   code?: string;
 } | null;
-
-type SubscriptionTier = "free" | "pro";
 
 type AppStateContextValue = {
   data: AppData;
@@ -330,16 +329,6 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
     subscriptionTier: settings.subscription_tier === "pro" ? "pro" : "free",
     adminModeSimulatePro: settings.admin_mode_simulate_pro ?? false,
   };
-}
-
-function getEffectiveSubscriptionTier(settings?: ProfileSettings): SubscriptionTier {
-  if (!settings) {
-    return "free";
-  }
-  if (settings.adminModeSimulatePro) {
-    return "pro";
-  }
-  return settings.subscriptionTier;
 }
 
 function mapSwipeRow(swipe: SwipeRow) {
@@ -819,19 +808,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isSyncingAccountData, setIsSyncingAccountData] = useState(false);
   const [accountSyncError, setAccountSyncError] = useState<string | null>(null);
   const [accountRefreshKey, setAccountRefreshKey] = useState(0);
-  const [discoverShuffleSeed, setDiscoverShuffleSeed] = useState(() =>
-    Date.now().toString(),
-  );
-  const [discoverStartOffset, setDiscoverStartOffset] = useState(() =>
-    Math.floor(Math.random() * 1000),
-  );
-  const [discoverVisibilityTimestamp, setDiscoverVisibilityTimestamp] = useState(
-    () => Date.now(),
-  );
-  const [unlockedAchievement, setUnlockedAchievement] =
-    useState<Achievement | null>(null);
-  const [mutualMatchToast, setMutualMatchToast] =
-    useState<MutualMatchToastPayload | null>(null);
+  const {
+    discoverShuffleSeed,
+    discoverStartOffset,
+    discoverVisibilityTimestamp,
+    refreshDiscoverShuffle,
+  } = useDiscoverDeckSession();
+  const {
+    unlockedAchievement,
+    mutualMatchToast,
+    dismissUnlockedAchievement,
+    dismissMutualMatchToast,
+    setUnlockedAchievement,
+    setMutualMatchToast,
+  } = useAppToasts();
   const syncRetryCountRef = useRef(0);
   const isDarkMode = preferredDarkMode;
   const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
@@ -842,36 +832,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const hasProAccess = effectiveSubscriptionTier === "pro";
   const adminSubscriptionPreviewModeEnabled =
     currentSettings?.adminModeSimulatePro ?? false;
-  const refreshDiscoverShuffle = (userId: string | null) => {
-    const nextShuffleSeed =
-      userId && typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? `${userId}-${crypto.randomUUID()}`
-        : userId
-          ? `${userId}-${Date.now()}-${Math.random()}`
-          : `${Date.now()}-${Math.random()}`;
-    const nextOffset =
-      typeof crypto !== "undefined" && "getRandomValues" in crypto
-        ? crypto.getRandomValues(new Uint32Array(1))[0]
-        : Math.floor(Math.random() * 100000);
-
-    setDiscoverShuffleSeed(
-      nextShuffleSeed,
-    );
-    setDiscoverStartOffset(nextOffset);
-    setDiscoverVisibilityTimestamp(Date.now());
-  };
-
-  useLayoutEffect(() => {
-    const storedUserId = window.localStorage.getItem(CURRENT_USER_KEY);
-    const persisted = readPersistedDiscoverDeck(storedUserId);
-    if (!persisted) {
-      return;
-    }
-
-    setDiscoverShuffleSeed(persisted.shuffleSeed);
-    setDiscoverStartOffset(persisted.startOffset);
-    setDiscoverVisibilityTimestamp(persisted.visibilityTimestamp);
-  }, []);
 
   const requestAccountDataRefresh = useCallback(() => {
     setAccountRefreshKey((current) => current + 1);
@@ -1259,7 +1219,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       active = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [refreshDiscoverShuffle]);
 
   useSupabaseAccountRefreshChannels(currentUserId, requestAccountDataRefresh);
 
@@ -1746,7 +1706,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [achievements, currentUserId]);
+  }, [achievements, currentUserId, setUnlockedAchievement]);
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
     const supabase = getSupabaseBrowserClient();
@@ -3093,9 +3053,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         refreshAccountData: requestAccountDataRefresh,
         achievements,
         unlockedAchievement,
-        dismissUnlockedAchievement: () => setUnlockedAchievement(null),
+        dismissUnlockedAchievement,
         mutualMatchToast,
-        dismissMutualMatchToast: () => setMutualMatchToast(null),
+        dismissMutualMatchToast,
         login,
         signup,
         logout,

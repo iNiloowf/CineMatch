@@ -28,7 +28,8 @@ Code review of `main`: auth (login, signup, `/auth/check-email`, `/auth/callback
 
 ## Recommended next (highest leverage)
 
-- [ ] **`app-state.tsx` size** — Still **~2.7k** lines; continue peeling **non-sync** concerns (e.g. discover session, toasts, billing touchpoints) into hooks/libs with narrow imports.
+- [ ] **`app-state.tsx` size** — Still **~2.7k** lines (`AppStateProvider`); peel more **non-sync** logic into hooks/libs (next: shared list derivations, swipe pipeline, theme/onboarding).
+  - [x] **First peel (Apr 2026):** Discover deck shuffle/offset/visibility + cold hydration → `useDiscoverDeckSession` + `discover-deck-rng`; achievement + mutual-match toasts → `useAppToasts`; `getEffectiveSubscriptionTier` → `subscription-tier.ts`; `CURRENT_USER_KEY` → `app-state/constants.ts`.
 - [ ] **Automated integration tests** — Unit tests exist under `src/lib/*.test.ts`; add **API route** tests (Vitest + `Request` mocks) or **Playwright** for auth → discover → picks happy path.
 - [ ] **Manual QA doc** — Extend `docs/MANUAL_QA.md` with **Supabase email** path: signup → `/auth/check-email` → inbox link → `/auth/email-confirmed` → app.
 - [ ] **Notifications setting** — Toggle persists (`updateSettings`) but there is **no push/email pipeline**; add helper copy (“Coming soon”) or scope **web push / email digests** and wire one path.
