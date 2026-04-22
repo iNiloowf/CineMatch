@@ -131,8 +131,8 @@ export function BottomNav() {
                 visualActive
                   ? "text-white motion-reduce:scale-100"
                   : isDarkMode
-                    ? "text-slate-300 hover:bg-white/[0.06] active:scale-[0.97] motion-reduce:active:scale-100"
-                    : "text-slate-500 hover:bg-slate-900/[0.05] active:scale-[0.97] motion-reduce:active:scale-100"
+                    ? "text-slate-300 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/[0.06]"
+                    : "text-slate-500 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-slate-900/[0.05]"
               }`}
               aria-label={item.label}
               title={item.label}
@@ -144,8 +144,8 @@ export function BottomNav() {
                   visualActive
                     ? "scale-110 text-white motion-reduce:scale-100"
                     : isDarkMode
-                      ? "text-slate-300 group-hover:scale-105 group-active:scale-95"
-                      : "text-slate-500 group-hover:scale-105 group-active:scale-95"
+                      ? "text-slate-300 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
+                      : "text-slate-500 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
                 }`}
               >
                 <NavIcon href={item.href} />

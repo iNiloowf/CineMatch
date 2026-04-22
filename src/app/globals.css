@@ -1843,6 +1843,23 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
   color: #ffffff !important;
 }
 
+/*
+  Touch / coarse pointers: Safari (and others) can leave a sticky :hover background after a tap.
+  When the user then drags the pill, the previous tab can look “stuck” gray — clear hover/focus wash
+  on inactive tabs only (active tab uses transparent over the pill).
+*/
+@media (hover: none), (pointer: coarse) {
+  [data-bottom-nav-panel="true"][data-bottom-nav-pill="true"]
+    [data-bottom-nav-link="true"][data-active="false"]:hover,
+  [data-bottom-nav-panel="true"][data-bottom-nav-pill="true"]
+    [data-bottom-nav-link="true"][data-active="false"]:focus,
+  [data-bottom-nav-panel="true"][data-bottom-nav-pill="true"]
+    [data-bottom-nav-link="true"][data-active="false"]:focus-visible {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+}
+
 .theme-dark .text-slate-900 {
   color: #f8fafc !important;
 }
