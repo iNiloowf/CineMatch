@@ -4,11 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SurfaceCard } from "@/components/surface-card";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { clearSignupPendingEmail } from "@/lib/signup-pending-email";
 import { useAppState } from "@/lib/app-state";
 
 export default function EmailConfirmedPage() {
   const { isDarkMode } = useAppState();
   const [hasSession, setHasSession] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    clearSignupPendingEmail();
+  }, []);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -44,10 +49,12 @@ export default function EmailConfirmedPage() {
           </p>
           <div className="space-y-2">
             <h1 className={`text-2xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              Email confirmed
+              You&apos;re all set
             </h1>
             <p className={`text-sm leading-7 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-              Your email address is verified. You can sign in with your email and password whenever you&apos;re ready.
+              Your email is verified and your CineMatch account is active. If you opened this link on the same device
+              where you signed up, you may already be signed in—otherwise use your email and password on the sign-in
+              page.
             </p>
           </div>
           {hasSession === null ? (
@@ -56,7 +63,7 @@ export default function EmailConfirmedPage() {
             <>
               {hasSession ? (
                 <p className={`rounded-[18px] px-4 py-3 text-sm leading-snug ${isDarkMode ? "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-400/25" : "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200/80"}`}>
-                  You&apos;re signed in from this confirmation link. You can go straight into the app.
+                  You&apos;re signed in on this device. Continue to Discover to start matching and saving picks.
                 </p>
               ) : null}
               <div className="flex flex-col gap-3 pt-1">

@@ -55,7 +55,7 @@ Captured from planning notes. **Not all implemented**; treat as a prioritized qu
 ### Auth & onboarding
 
 - [x] **Stronger signup password** — **Done in code:** min 8 chars + at least one special character (`signupPasswordFieldSchema`); `/api` signup + send-signup-email aligned.
-- [ ] **Email confirmation UX** — Dedicated post-signup / “confirm your email” screen (Supabase); polish copy.
+- [x] **Email confirmation UX** — Dedicated `/auth/check-email` after signup (Supabase); `/auth/email-confirmed` after link; pending payload in session for resend (same tab).
 - [ ] **Onboarding: “tune your voice”** — Max **5** favorite genres; dislikes step (exclude picks from favorites); tidy genre UI; ask **movie vs series vs both**.
 - [ ] **Autoplay preference** — First-run prompt (on/off); persist; verify Settings autoplay matches backend.
 
