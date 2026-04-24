@@ -699,7 +699,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="space-y-5 mx-2.5 sm:mx-3.5">
+    <div className="space-y-5 mx-3 sm:mx-4">
       {removePhotoModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
