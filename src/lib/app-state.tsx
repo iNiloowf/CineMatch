@@ -2536,13 +2536,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const openOfflineInvite = data.invites.find(
-      (invite) => invite.inviterId === currentUserId && invite.usedAt === null,
+    const myInviterInvites = data.invites.filter(
+      (invite) => invite.inviterId === currentUserId,
     );
-    if (openOfflineInvite) {
+    if (myInviterInvites.length > 0) {
+      const latest = myInviterInvites.reduce((a, b) =>
+        a.createdAt >= b.createdAt ? a : b,
+      );
       return {
         ok: true,
-        url: `${window.location.origin}/connect?invite=${openOfflineInvite.token}`,
+        url: `${window.location.origin}/connect?invite=${latest.token}`,
       };
     }
 
@@ -2552,7 +2555,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ...current,
       invites: [
         ...current.invites.filter(
-          (invite) => !(invite.inviterId === currentUserId && invite.usedAt === null),
+          (invite) => invite.inviterId !== currentUserId,
         ),
         {
           id: `invite-${crypto.randomUUID()}`,
@@ -2698,14 +2701,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
         },
       ],
-      invites: current.invites.map((entry) =>
-        entry.token === token
-          ? {
-              ...entry,
-              usedAt: new Date().toISOString(),
-            }
-          : entry,
-      ),
     }));
 
     return { ok: true, message: "You’re connected now." };

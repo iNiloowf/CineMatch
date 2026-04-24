@@ -34,11 +34,12 @@ export async function POST(request: NextRequest) {
 
   const currentUserId = authToken.userId;
 
+  // Reuse the same row/token forever (one stable link to share in groups);
+  // accept no longer sets used_at.
   const existing = (await supabaseAdmin
     .from("invite_links")
     .select("id, inviter_id, token, created_at, used_at")
     .eq("inviter_id", currentUserId)
-    .is("used_at", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle()) as {

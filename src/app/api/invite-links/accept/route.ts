@@ -95,13 +95,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (invite.used_at) {
-    return apiJsonError(400, "This invite link has already been used.", {
-      code: API_ERROR_CODES.BAD_REQUEST,
-      request,
-    });
-  }
-
   const existingLinkResult = await supabaseAdmin
     .from("linked_users")
     .select("id, requester_id, target_id, status, created_at")
@@ -182,10 +175,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await supabaseAdmin
-    .from("invite_links")
-    .update({ used_at: new Date().toISOString() } as never)
-    .eq("id", invite.id);
+  // Same invite token stays valid so more people (e.g. a group) can use one link;
+  // do not set used_at. Limits are enforced by linked_users + MAX_LINKED_FRIENDS.
 
   void logSecurityAudit({
     action: "invite_link_accept",
@@ -208,10 +199,7 @@ export async function POST(request: NextRequest) {
     {
       link: linkResult.data,
       partnerProfile: inviterProfileResult.data ?? null,
-      invite: {
-        ...invite,
-        used_at: new Date().toISOString(),
-      },
+      invite,
     },
     request,
   );
