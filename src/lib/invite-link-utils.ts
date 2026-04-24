@@ -5,8 +5,10 @@ export const MAX_LINKED_FRIENDS = 30;
 const LTR_MARK = "\u200E";
 
 /**
- * Invite blurb for share / copy. The invite URL is always alone on the last line
- * (no trailing text) so clients can linkify it reliably.
+ * Lines above the link are peppy (with emoji); the URL is always a single unbroken
+ * `https://...` on the last line with a leading LTR mark so apps (esp. RTL chats)
+ * link the full path+query, not a broken "domain only" span.
+ * Avoid fancy Unicode dashes in the body: they can confuse bidi in some clients.
  */
 export function buildInviteShareMessage(inviteUrl: string, senderName?: string | null) {
   const cleanUrl = inviteUrl.trim();
@@ -16,13 +18,13 @@ export function buildInviteShareMessage(inviteUrl: string, senderName?: string |
   const name = senderName?.trim();
   const head = name
     ? [
-        "CineMatch — match movies & shows with friends.",
-        `From: ${name}`,
-        "Open this link in the app to connect our accounts:",
+        "CineMatch - match movies & shows with friends! 🍿",
+        `👤 From: ${name}`,
+        "Open this in the CineMatch app to connect: ✨",
       ]
     : [
-        "CineMatch — match movies & shows with friends.",
-        "Open this link in the app to connect:",
+        "CineMatch - match movies & shows with friends! 🍿",
+        "Open this in the CineMatch app to connect: ✨",
       ];
   return `${head.join("\n")}\n\n${LTR_MARK}${cleanUrl}`;
 }
@@ -65,11 +67,12 @@ async function tryCopyInvite(
   fallbackUrl: string,
 ): Promise<{ ok: boolean; message: string }> {
   if (await copyTextToClipboard(text)) {
-    return { ok: true, message: "Message copied — link is on the last line." };
+    return { ok: true, message: "Message copied! Link is on the last line (tap in chat to open)." };
   }
   if (fallbackUrl && fallbackUrl !== text) {
-    if (await copyTextToClipboard(fallbackUrl)) {
-      return { ok: true, message: "Link copied. Paste and send it to your friend." };
+    const fb = /^https?:/i.test(fallbackUrl) ? `${LTR_MARK}${fallbackUrl.trim()}` : fallbackUrl.trim();
+    if (await copyTextToClipboard(fb)) {
+      return { ok: true, message: "Link only copied (use Paste link in the app to connect)." };
     }
   }
   return { ok: false, message: "Couldn’t copy. Try again or long-press the link below to copy it." };
@@ -90,21 +93,10 @@ export async function shareOrCopyInviteMessage(
   }
 
   const cleanUrl = inviteUrl.trim();
-  // Single-line LTR-prefixed URL: chat apps (esp. in RTL) linkify the full path+query, not
-  // a broken origin-only + plain "/connect?…" span when pasting a multi-line block.
-  const urlForClipboard = cleanUrl
-    ? /^https?:/i.test(cleanUrl)
-      ? `${LTR_MARK}${cleanUrl}`
-      : cleanUrl
-    : "";
   const text = buildInviteShareMessage(cleanUrl, senderName);
 
   if (options?.preferCopy) {
-    if (urlForClipboard) {
-      if (await copyTextToClipboard(urlForClipboard)) {
-        return { ok: true, message: "Link copied. Paste in chat to share." };
-      }
-    }
+    // Full message (emoji + blurb) + tappable LTR line for URL; not URL-only.
     return tryCopyInvite(text, cleanUrl);
   }
 
