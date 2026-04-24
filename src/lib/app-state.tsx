@@ -2471,8 +2471,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, message: "Log in first to create a connect link." };
     }
 
-    const token = `invite-${crypto.randomUUID()}`;
-    const createdAt = new Date().toISOString();
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
@@ -2538,6 +2536,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    const openOfflineInvite = data.invites.find(
+      (invite) => invite.inviterId === currentUserId && invite.usedAt === null,
+    );
+    if (openOfflineInvite) {
+      return {
+        ok: true,
+        url: `${window.location.origin}/connect?invite=${openOfflineInvite.token}`,
+      };
+    }
+
+    const token = `invite-${crypto.randomUUID()}`;
+    const createdAt = new Date().toISOString();
     setData((current) => ({
       ...current,
       invites: [

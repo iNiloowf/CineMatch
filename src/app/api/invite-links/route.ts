@@ -22,6 +22,55 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  const supabaseAdmin = getSupabaseAdminClient();
+
+  if (!supabaseAdmin) {
+    return apiJsonError(
+      500,
+      "Invite creation is not configured on the server yet.",
+      { code: API_ERROR_CODES.INTERNAL, request },
+    );
+  }
+
+  const currentUserId = authToken.userId;
+
+  const existing = (await supabaseAdmin
+    .from("invite_links")
+    .select("id, inviter_id, token, created_at, used_at")
+    .eq("inviter_id", currentUserId)
+    .is("used_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()) as {
+    data: {
+      id: string;
+      inviter_id: string;
+      token: string;
+      created_at: string;
+      used_at: string | null;
+    } | null;
+    error: { message?: string } | null;
+  };
+
+  if (existing.error) {
+    return apiJsonError(
+      500,
+      existing.error.message ?? "We couldn’t look up an invite for this account.",
+      { code: API_ERROR_CODES.INTERNAL, request },
+    );
+  }
+
+  if (existing.data) {
+    return apiJsonOk(
+      {
+        invite: existing.data,
+        url: `${getAppUrl(request)}/connect?invite=${encodeURIComponent(existing.data.token)}`,
+        reused: true,
+      },
+      request,
+    );
+  }
+
   const rate = checkRateLimit({
     key: `invite:create:${authToken.userId}`,
     max: INVITE_CREATE_MAX,
@@ -39,18 +88,6 @@ export async function POST(request: NextRequest) {
       },
     );
   }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (!supabaseAdmin) {
-    return apiJsonError(
-      500,
-      "Invite creation is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL, request },
-    );
-  }
-
-  const currentUserId = authToken.userId;
 
   const token = `invite-${crypto.randomUUID()}`;
   const createdAt = new Date().toISOString();
@@ -95,7 +132,8 @@ export async function POST(request: NextRequest) {
   return apiJsonOk(
     {
       invite: insertResult.data,
-      url: `${getAppUrl(request)}/connect?invite=${token}`,
+      url: `${getAppUrl(request)}/connect?invite=${encodeURIComponent(token)}`,
+      reused: false,
     },
     request,
   );

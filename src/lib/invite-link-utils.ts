@@ -21,41 +21,92 @@ export function buildInviteShareMessage(inviteUrl: string, senderName?: string |
   return `${head.join("\n")}\n\n${cleanUrl}`;
 }
 
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through
+    }
+  }
+  if (typeof document === "undefined") {
+    return false;
+  }
+  try {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.setAttribute("readonly", "");
+    el.setAttribute("aria-hidden", "true");
+    el.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(el);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Tries the Clipboard API, then a hidden textarea + execCommand (WebView / some browsers).
+ * Optionally falls back to copying the raw URL (short) if the full message fails.
+ */
+async function tryCopyInvite(
+  text: string,
+  fallbackUrl: string,
+): Promise<{ ok: boolean; message: string }> {
+  if (await copyTextToClipboard(text)) {
+    return { ok: true, message: "Message copied — link is on the last line." };
+  }
+  if (fallbackUrl && fallbackUrl !== text) {
+    if (await copyTextToClipboard(fallbackUrl)) {
+      return { ok: true, message: "Link copied. Paste and send it to your friend." };
+    }
+  }
+  return { ok: false, message: "Couldn’t copy. Try again or long-press the link below to copy it." };
+}
+
+export type ShareOrCopyInviteOptions = {
+  /** "Copy" buttons: copy to clipboard; skip the system share sheet first. */
+  preferCopy?: boolean;
+};
+
 export async function shareOrCopyInviteMessage(
   inviteUrl: string,
   senderName?: string | null,
+  options?: ShareOrCopyInviteOptions,
 ): Promise<{ ok: boolean; message: string }> {
   if (typeof window === "undefined") {
     return { ok: false, message: "Sharing isn’t available here." };
   }
 
-  const text = buildInviteShareMessage(inviteUrl, senderName);
+  const cleanUrl = inviteUrl.trim();
+  const text = buildInviteShareMessage(cleanUrl, senderName);
 
-  try {
-    if (navigator.share) {
-      // Omit `url` — combining `text` + `url` duplicates or splits the link on many platforms.
+  if (options?.preferCopy) {
+    return tryCopyInvite(text, cleanUrl);
+  }
+
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    try {
       await navigator.share({
         title: "CineMatch invite",
         text,
       });
       return { ok: true, message: "Ready to send." };
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      return { ok: false, message: "" };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        // Dismissed share sheet — most users want clipboard next.
+        return tryCopyInvite(text, cleanUrl);
+      }
+      return tryCopyInvite(text, cleanUrl);
     }
   }
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return { ok: true, message: "Message copied — link is on the last line." };
-    }
-  } catch {
-    return { ok: false, message: "Couldn’t copy. Try again." };
-  }
-
-  return { ok: false, message: "Couldn’t share or copy. Try again." };
+  return tryCopyInvite(text, cleanUrl);
 }
 
 export function parseInviteTokenFromPaste(value: string) {

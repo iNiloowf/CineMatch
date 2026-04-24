@@ -273,12 +273,13 @@ export default function ProfilePage() {
         setSaveMessage(created.message);
         return;
       }
-      const out = await shareOrCopyInviteMessage(created.url, currentUser.name);
-      if (!out.message) {
-        return;
-      }
+      const out = await shareOrCopyInviteMessage(created.url, currentUser.name, {
+        preferCopy: true,
+      });
       setSaveFeedback(out.ok ? "saved" : "error");
-      setSaveMessage(out.message);
+      setSaveMessage(
+        out.message || (out.ok ? "Done." : "Couldn’t copy. Try again."),
+      );
     } finally {
       setCopyInviteBusy(false);
     }

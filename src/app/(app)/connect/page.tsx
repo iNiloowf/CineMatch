@@ -159,7 +159,9 @@ export default function ConnectPage() {
     if (!inviteUrl) {
       return;
     }
-    const out = await shareOrCopyInviteMessage(inviteUrl, currentUser?.name);
+    const out = await shareOrCopyInviteMessage(inviteUrl, currentUser?.name, {
+      preferCopy: true,
+    });
     if (out.message) {
       setStatusMessage(out.message);
     }

@@ -930,23 +930,30 @@ function DiscoverPageContent({
   }, [acceptInviteToken, pasteInviteDraft, showMenuBanner]);
 
   const handleCopyMyLink = useCallback(async () => {
-    setIsMoreMenuOpen(false);
     setCopyInviteBusy(true);
     try {
       const created = await createInviteLink();
       if (!created.ok) {
+        setIsMoreMenuOpen(false);
         showMenuBanner(
           { ok: false, message: created.message },
           () => void handleCopyMyLink(),
         );
         return;
       }
-      const shared = await shareOrCopyInviteMessage(created.url, currentUserName);
-      if (!shared.message) {
-        return;
-      }
+      // Copy/share while the menu is still open so the click counts as a user gesture
+      // for the Clipboard API (after await, activation is often lost on some browsers).
+      const shared = await shareOrCopyInviteMessage(created.url, currentUserName, {
+        preferCopy: true,
+      });
+      setIsMoreMenuOpen(false);
       showMenuBanner(
-        { ok: shared.ok, message: shared.message },
+        {
+          ok: shared.ok,
+          message:
+            shared.message ||
+            (shared.ok ? "Done." : "Couldn’t copy. Try again."),
+        },
         shared.ok ? undefined : () => void handleCopyMyLink(),
       );
     } finally {
