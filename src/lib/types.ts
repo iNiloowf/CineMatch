@@ -26,8 +26,17 @@ export type User = {
   avatarImageUrl?: string;
   bio: string;
   city: string;
+  favoriteMovie?: FavoriteMovieSummary;
   /** Public visual style used on profile cards. */
   profileStyle?: ProProfileStyle;
+};
+
+export type FavoriteMovieSummary = {
+  id: string;
+  title: string;
+  year: number;
+  posterImageUrl?: string;
+  mediaType: "movie" | "series";
 };
 
 export type ProProfileStyle =

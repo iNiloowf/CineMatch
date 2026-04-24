@@ -10,6 +10,11 @@ export type ProfileRow = {
   bio: string;
   city: string;
   profile_style?: ProProfileStyle | null;
+  favorite_movie_id?: string | null;
+  favorite_movie_title?: string | null;
+  favorite_movie_year?: number | null;
+  favorite_movie_poster_url?: string | null;
+  favorite_movie_media_type?: "movie" | "series" | null;
 };
 
 export type SettingsRow = {

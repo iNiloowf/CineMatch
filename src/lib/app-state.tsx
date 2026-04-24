@@ -61,6 +61,7 @@ import {
   Achievement,
   AppData,
   AuthUser,
+  FavoriteMovieSummary,
   MutualMatchToastPayload,
   Movie,
   OnboardingPreferences,
@@ -174,6 +175,7 @@ type AppStateContextValue = {
     city: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
+    favoriteMovie?: FavoriteMovieSummary | null;
     profileStyle?: ProProfileStyle;
     /** When true, clears stored profile photo (ignored if `avatarFile` is set). */
     clearAvatar?: boolean;
@@ -270,6 +272,7 @@ function ensureLocalUser(
     avatarImageUrl?: string;
     bio?: string;
     city?: string;
+    favoriteMovie?: FavoriteMovieSummary | null;
     profileStyle?: ProProfileStyle;
   },
 ) {
@@ -288,6 +291,10 @@ function ensureLocalUser(
               avatarImageUrl: payload.avatarImageUrl ?? user.avatarImageUrl,
               bio: payload.bio ?? user.bio,
               city: payload.city ?? user.city,
+              favoriteMovie:
+                payload.favoriteMovie === undefined
+                  ? user.favoriteMovie
+                  : (payload.favoriteMovie ?? undefined),
               profileStyle: payload.profileStyle ?? user.profileStyle,
             }
           : user,
@@ -305,6 +312,7 @@ function ensureLocalUser(
     bio:
       payload.bio ?? "New to CineMatch and building the perfect watchlist.",
     city: payload.city ?? "Set your city",
+    favoriteMovie: payload.favoriteMovie ?? undefined,
     profileStyle: payload.profileStyle ?? "classic",
   };
 
@@ -376,6 +384,27 @@ function mapMovieRow(movie: MovieRow): Movie {
       accentFrom: movie.accent_from,
       accentTo: movie.accent_to,
     },
+  };
+}
+
+function mapProfileFavoriteMovie(
+  profile: ProfileRow,
+): FavoriteMovieSummary | undefined {
+  if (
+    !profile.favorite_movie_id ||
+    !profile.favorite_movie_title ||
+    !Number.isFinite(profile.favorite_movie_year)
+  ) {
+    return undefined;
+  }
+
+  return {
+    id: profile.favorite_movie_id,
+    title: profile.favorite_movie_title,
+    year: Number(profile.favorite_movie_year),
+    posterImageUrl: profile.favorite_movie_poster_url ?? undefined,
+    mediaType:
+      profile.favorite_movie_media_type === "series" ? "series" : "movie",
   };
 }
 
@@ -888,6 +917,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           avatarImageUrl: profile.avatar_image_url ?? undefined,
           bio: profile.bio,
           city: profile.city,
+          favoriteMovie: mapProfileFavoriteMovie(profile),
           profileStyle: profile.profile_style ?? "classic",
         });
       }
@@ -2578,6 +2608,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             avatarImageUrl: partnerProfile?.avatar_image_url ?? undefined,
             bio: partnerProfile?.bio ?? "Connected on CineMatch.",
             city: partnerProfile?.city ?? "",
+            favoriteMovie: partnerProfile
+              ? mapProfileFavoriteMovie(partnerProfile)
+              : undefined,
             profileStyle: partnerProfile?.profile_style ?? "classic",
           }),
           links: [
@@ -2797,6 +2830,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city,
     avatarImageUrl,
     avatarFile,
+    favoriteMovie,
     profileStyle,
     clearAvatar,
   }: {
@@ -2805,6 +2839,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
+    favoriteMovie?: FavoriteMovieSummary | null;
     profileStyle?: ProProfileStyle;
     clearAvatar?: boolean;
   }): Promise<{ ok: boolean; message?: string }> => {
@@ -2870,6 +2905,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         profile_style: profileStyle ?? currentUser?.profileStyle ?? "classic",
         updated_at: new Date().toISOString(),
       };
+      if (favoriteMovie !== undefined) {
+        profilePatch.favorite_movie_id = favoriteMovie?.id ?? null;
+        profilePatch.favorite_movie_title = favoriteMovie?.title ?? null;
+        profilePatch.favorite_movie_year = favoriteMovie?.year ?? null;
+        profilePatch.favorite_movie_poster_url = favoriteMovie?.posterImageUrl ?? null;
+        profilePatch.favorite_movie_media_type = favoriteMovie?.mediaType ?? null;
+      }
       if (clearAvatar) {
         profilePatch.avatar_image_url = null;
       } else if (typeof nextAvatarImageUrl === "string" && nextAvatarImageUrl.length > 0) {
@@ -2902,6 +2944,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               avatarImageUrl: clearAvatar
                 ? undefined
                 : (nextAvatarImageUrl ?? user.avatarImageUrl),
+              favoriteMovie:
+                favoriteMovie === undefined
+                  ? user.favoriteMovie
+                  : (favoriteMovie ?? undefined),
               profileStyle: profileStyle ?? user.profileStyle ?? "classic",
             }
           : user,

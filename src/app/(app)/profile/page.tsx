@@ -6,13 +6,14 @@ import { AchievementBadgesShowcase } from "@/components/achievement-badges-showc
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
+import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
-import type { Movie, ProProfileStyle } from "@/lib/types";
+import type { FavoriteMovieSummary, Movie, ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
@@ -78,6 +79,11 @@ export default function ProfilePage() {
   const [mediaPreferenceDraft, setMediaPreferenceDraft] = useState<"movie" | "series" | "both">("both");
   const [isFavoriteGenresOpen, setIsFavoriteGenresOpen] = useState(false);
   const [isDislikedGenresOpen, setIsDislikedGenresOpen] = useState(false);
+  const [favoriteMovieDraft, setFavoriteMovieDraft] = useState<FavoriteMovieSummary | null>(null);
+  const [favoriteMovieSearchQuery, setFavoriteMovieSearchQuery] = useState("");
+  const [favoriteMovieSearchResults, setFavoriteMovieSearchResults] = useState<Movie[]>([]);
+  const [favoriteMovieSearchState, setFavoriteMovieSearchState] = useState<"idle" | "loading" | "error">("idle");
+  const [favoriteMovieSearchMessage, setFavoriteMovieSearchMessage] = useState("");
   const [isProStudioOpen, setIsProStudioOpen] = useState(false);
   /** Applies Pro Studio style immediately while save runs (server round-trip was slow). */
   const [optimisticProfileStyle, setOptimisticProfileStyle] = useState<ProProfileStyle | null>(null);
@@ -93,10 +99,6 @@ export default function ProfilePage() {
         : null,
     [editingWatchedMovieId, watchedPickReviews],
   );
-
-  const sectionEyebrow = isDarkMode
-    ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
-    : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
 
   useEscapeToClose(removePhotoModalOpen, () => setRemovePhotoModalOpen(false));
   useEscapeToClose(Boolean(editingWatchedEntry), () => setEditingWatchedMovieId(null));
@@ -127,10 +129,72 @@ export default function ProfilePage() {
       setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
       setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
       setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
+      setFavoriteMovieDraft(currentUser?.favoriteMovie ?? null);
+      setFavoriteMovieSearchQuery("");
+      setFavoriteMovieSearchResults([]);
+      setFavoriteMovieSearchState("idle");
+      setFavoriteMovieSearchMessage("");
       setIsFavoriteGenresOpen(false);
       setIsDislikedGenresOpen(false);
     });
-  }, [onboardingPreferences]);
+  }, [currentUser?.favoriteMovie, onboardingPreferences]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    const trimmed = favoriteMovieSearchQuery.trim();
+    if (trimmed.length < 2) {
+      setFavoriteMovieSearchResults([]);
+      setFavoriteMovieSearchState("idle");
+      setFavoriteMovieSearchMessage("");
+      return;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setFavoriteMovieSearchState("loading");
+      setFavoriteMovieSearchMessage("");
+      try {
+        const response = await fetch(
+          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ""}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        if (!active) {
+          return;
+        }
+        if (!response.ok) {
+          setFavoriteMovieSearchState("error");
+          setFavoriteMovieSearchResults([]);
+          setFavoriteMovieSearchMessage("Couldn’t search movies right now.");
+          return;
+        }
+        const payload = (await response.json()) as { movies?: Movie[] };
+        const movies = (payload.movies ?? []).filter((movie) => movie.mediaType === "movie");
+        registerMovies(movies);
+        setFavoriteMovieSearchResults(movies);
+        setFavoriteMovieSearchState("idle");
+        setFavoriteMovieSearchMessage(
+          movies.length === 0 ? "No matches found. Try another title." : "",
+        );
+      } catch {
+        if (!active) {
+          return;
+        }
+        setFavoriteMovieSearchState("error");
+        setFavoriteMovieSearchResults([]);
+        setFavoriteMovieSearchMessage("Couldn’t search movies right now.");
+      }
+    }, 260);
+
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [favoriteMovieSearchQuery, isEditing, currentUserId, registerMovies]);
 
   const profileGenres = useMemo(
     () =>
@@ -242,6 +306,11 @@ export default function ProfilePage() {
     setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
     setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
     setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
+    setFavoriteMovieDraft(currentUser?.favoriteMovie ?? null);
+    setFavoriteMovieSearchQuery("");
+    setFavoriteMovieSearchResults([]);
+    setFavoriteMovieSearchState("idle");
+    setFavoriteMovieSearchMessage("");
     setIsFavoriteGenresOpen(false);
     setIsDislikedGenresOpen(false);
   };
@@ -284,6 +353,7 @@ export default function ProfilePage() {
       city: "",
       avatarImageUrl: clearAvatarOnSave ? null : currentUser.avatarImageUrl,
       avatarFile: clearAvatarOnSave ? null : avatarFile,
+      favoriteMovie: favoriteMovieDraft,
       clearAvatar: clearAvatarOnSave,
     });
 
@@ -352,6 +422,7 @@ export default function ProfilePage() {
   ] as const;
   const selectedProfileStyle: ProProfileStyle =
     optimisticProfileStyle ?? currentUser.profileStyle ?? "classic";
+  const favoriteMoviePreview = favoriteMovieDraft ?? currentUser?.favoriteMovie ?? null;
   /** Theme-aware frame: solid border + inset sheen + outer glow (border avoids ring/shadow conflicts). */
   const proHeaderCardStyle = selectedProfileStyle === "glass"
     ? isDarkMode
@@ -1120,6 +1191,105 @@ export default function ProfilePage() {
                     Bio
                     <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={`${inputClass} min-h-[5.5rem] resize-y`} />
                   </label>
+                  <div className="space-y-2">
+                    <p className={labelClass}>Favorite movie</p>
+                    <input
+                      value={favoriteMovieSearchQuery}
+                      onChange={(event) => setFavoriteMovieSearchQuery(event.target.value)}
+                      className={inputClass}
+                      placeholder="Search and pick one movie..."
+                    />
+                    {favoriteMovieSearchState === "loading" ? (
+                      <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Searching...
+                      </p>
+                    ) : null}
+                    {favoriteMovieSearchMessage ? (
+                      <p
+                        className={`text-xs ${
+                          favoriteMovieSearchState === "error"
+                            ? isDarkMode
+                              ? "text-rose-300"
+                              : "text-rose-700"
+                            : isDarkMode
+                              ? "text-slate-400"
+                              : "text-slate-500"
+                        }`}
+                      >
+                        {favoriteMovieSearchMessage}
+                      </p>
+                    ) : null}
+                    {favoriteMovieSearchResults.length > 0 ? (
+                      <div
+                        className={`max-h-56 overflow-y-auto rounded-[16px] border ${
+                          isDarkMode
+                            ? "border-white/12 bg-white/[0.03]"
+                            : "border-slate-200/90 bg-white"
+                        }`}
+                      >
+                        <ul className={`divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-100"}`}>
+                          {favoriteMovieSearchResults.slice(0, 8).map((movie) => (
+                            <li key={`favorite-search-${movie.id}`}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFavoriteMovieDraft({
+                                    id: movie.id,
+                                    title: movie.title,
+                                    year: movie.year,
+                                    posterImageUrl: movie.poster.imageUrl,
+                                    mediaType: movie.mediaType,
+                                  });
+                                  setFavoriteMovieSearchQuery(movie.title);
+                                  setFavoriteMovieSearchResults([]);
+                                  setFavoriteMovieSearchState("idle");
+                                  setFavoriteMovieSearchMessage("");
+                                }}
+                                className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition ${
+                                  isDarkMode
+                                    ? "text-slate-100 hover:bg-white/8"
+                                    : "text-slate-800 hover:bg-slate-50"
+                                }`}
+                              >
+                                <span className="truncate">{movie.title}</span>
+                                <span className={`shrink-0 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                                  {movie.year}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {favoriteMovieDraft ? (
+                      <div
+                        className={`flex items-center justify-between gap-3 rounded-[16px] border px-3 py-2 ${
+                          isDarkMode
+                            ? "border-violet-400/25 bg-violet-500/10"
+                            : "border-violet-200 bg-violet-50/80"
+                        }`}
+                      >
+                        <p className={`min-w-0 truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                          {favoriteMovieDraft.title} ({favoriteMovieDraft.year})
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFavoriteMovieDraft(null);
+                            setFavoriteMovieSearchQuery("");
+                            setFavoriteMovieSearchResults([]);
+                            setFavoriteMovieSearchState("idle");
+                            setFavoriteMovieSearchMessage("");
+                          }}
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200"
+                          }`}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 </section>
 
@@ -1331,7 +1501,45 @@ export default function ProfilePage() {
                 </section>
               </div>
             ) : (
-              <div className="space-y-2.5 pt-0.5">
+              <div className="space-y-3 pt-0.5">
+                <div>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                    Favorite movie
+                  </p>
+                  {favoriteMoviePreview ? (
+                    <div
+                      className={`mt-2 flex items-center gap-3 rounded-[18px] border p-3 ${
+                        isDarkMode
+                          ? "border-white/12 bg-white/[0.05]"
+                          : "border-slate-200/90 bg-slate-50/80"
+                      }`}
+                    >
+                      <div
+                        className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] ${
+                          isDarkMode ? "bg-white/8" : "bg-slate-200"
+                        }`}
+                      >
+                        <PosterBackdrop
+                          imageUrl={favoriteMoviePreview.posterImageUrl}
+                          profile="search"
+                          objectFit="cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                          {favoriteMoviePreview.title}
+                        </p>
+                        <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                          {favoriteMoviePreview.year} • {favoriteMoviePreview.mediaType === "series" ? "Series" : "Movie"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Not set yet.
+                    </p>
+                  )}
+                </div>
                 <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   About
                 </p>

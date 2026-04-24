@@ -23,7 +23,7 @@ export async function fetchAccountSyncFromBrowser(
 ): Promise<AccountSyncPayload | null> {
   const profileResult = await supabaseClient
     .from("profiles")
-    .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
+    .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type")
     .eq("id", activeUserId)
     .maybeSingle();
 
@@ -62,7 +62,7 @@ export async function fetchAccountSyncFromBrowser(
     partnerIds.length > 0
       ? supabaseClient
           .from("profiles")
-          .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style")
+          .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type")
           .in("id", partnerIds)
       : Promise.resolve({
           data: [] as ProfileRow[],
