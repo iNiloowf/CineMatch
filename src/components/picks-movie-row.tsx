@@ -185,59 +185,54 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             </div>
           </div>
         ) : (
-        <div className="flex flex-col gap-2 pt-0.5 sm:flex-row sm:items-center sm:justify-between">
-          <p className={`hidden text-[11px] font-medium sm:block ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-            Tap the card for details, trailer, and share.
-          </p>
-          <div className="flex w-full gap-1.5 sm:w-auto sm:justify-end">
-            <button
-              type="button"
-              aria-label={`Mark ${movie.title} as watched`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onMarkWatched(movie.id);
-              }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:min-w-[8.5rem] sm:flex-none ${
-                isDarkMode
-                  ? "border-violet-400/35 bg-violet-500/18 text-violet-100 hover:bg-violet-500/28"
-                  : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
-              }`}
-            >
-              Mark as watched
-            </button>
-            <button
-              type="button"
-              aria-label={`Share ${movie.title}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                void onShare(movie.id);
-              }}
-              className={`picks-row-action inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:min-w-[6rem] sm:flex-none ${
-                isDarkMode
-                  ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
-                  : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
-              }`}
-            >
-              <PicksIconShare className="h-4 w-4 shrink-0 opacity-95" />
-              Share
-            </button>
-            <button
-              type="button"
-              aria-label={`Remove ${movie.title} from your picks`}
-              title="Remove from picks"
-              onClick={(event) => {
-                event.stopPropagation();
-                onRequestRemove(movie.id);
-              }}
-              className={`picks-row-action inline-flex h-9 min-h-9 w-9 shrink-0 touch-manipulation items-center justify-center rounded-[12px] border transition active:scale-[0.98] ${
-                isDarkMode
-                  ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
-                  : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-              }`}
-            >
-              <PicksIconTrash className="h-4 w-4 shrink-0 opacity-95" />
-            </button>
-          </div>
+        <div className="flex w-full flex-col gap-1.5 pt-0.5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            aria-label={`Share ${movie.title}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              void onShare(movie.id);
+            }}
+            className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-[12px] px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+              isDarkMode
+                ? "border border-white/12 bg-white/10 text-white hover:bg-white/14"
+                : "border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
+            }`}
+          >
+            <PicksIconShare className="h-4 w-4 shrink-0 opacity-95" />
+            Share
+          </button>
+          <button
+            type="button"
+            aria-label={`Mark ${movie.title} as watched`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onMarkWatched(movie.id);
+            }}
+            className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+              isDarkMode
+                ? "border-violet-400/35 bg-violet-500/18 text-violet-100 hover:bg-violet-500/28"
+                : "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
+            }`}
+          >
+            Mark watched
+          </button>
+          <button
+            type="button"
+            aria-label={`Remove ${movie.title} from your picks`}
+            title="Remove from picks"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRequestRemove(movie.id);
+            }}
+            className={`picks-row-action inline-flex min-h-9 w-full items-center justify-center rounded-[12px] border px-2.5 transition active:scale-[0.98] sm:w-auto sm:min-w-[6rem] ${
+              isDarkMode
+                ? "border-rose-400/35 bg-rose-500/14 text-rose-100 hover:bg-rose-500/22"
+                : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+            }`}
+          >
+            Remove
+          </button>
         </div>
         )}
       </div>
