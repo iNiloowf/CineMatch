@@ -162,21 +162,34 @@ export default function SharedWatchlistPage() {
       </div>
 
       {detailsMovie ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/55 backdrop-blur-md">
+        <div
+          className={`ui-overlay ui-overlay--fill z-[var(--z-modal-backdrop)] !p-0 ${
+            isDarkMode ? "bg-slate-950/60" : "bg-slate-950/50"
+          } backdrop-blur-md`}
+        >
           <button
             type="button"
             aria-label="Close details"
             onClick={closeDetails}
-            className="absolute inset-0 cursor-default bg-transparent"
+            className="absolute inset-0 z-0 cursor-default bg-transparent"
           />
           <div
-            className={`shared-details-modal shared-ui-copy ui-shell ui-shell--dialog-md relative z-10 flex max-h-[min(88dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] flex-col overflow-hidden rounded-[30px] shadow-[0_16px_48px_rgba(15,23,42,0.16)] ${
-              isDarkMode ? "border border-white/10 bg-slate-950" : "bg-white"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shared-details-title"
+            className={`shared-details-modal shared-ui-copy ui-shell ui-shell--fullscreen relative z-10 flex h-[100dvh] min-h-0 w-full min-w-0 max-w-none flex-col overflow-hidden rounded-none shadow-none ${
+              isDarkMode ? "border-0 border-white/10 bg-slate-950" : "bg-white"
             }`}
+            onClick={(e) => e.stopPropagation()}
           >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className="ui-shell-header !border-b-black/6 shrink-0">
+            <span className="ui-modal-accent-bar rounded-none" aria-hidden />
+            <div
+              className={`ui-shell-header !border-b-black/6 shrink-0 !pt-[max(0.875rem,env(safe-area-inset-top,0px))] ${
+                isDarkMode ? "bg-slate-950/95" : "bg-white/95"
+              }`}
+            >
               <p
+                id="shared-details-title"
                 className={`min-w-0 flex-1 text-[11px] font-medium tracking-[0.01em] ${
                   isDarkMode ? "text-slate-300" : "text-slate-500"
                 }`}
@@ -204,7 +217,9 @@ export default function SharedWatchlistPage() {
               </button>
             </div>
 
-            <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4">
+            <div
+              className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4 !pb-[max(1rem,env(safe-area-inset-bottom,0.75rem))] [-webkit-overflow-scrolling:touch]"
+            >
               <div
                 className="relative h-52 overflow-hidden rounded-[24px]"
                 style={{
