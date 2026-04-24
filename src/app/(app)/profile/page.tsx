@@ -1585,7 +1585,7 @@ export default function ProfilePage() {
                 </section>
               </div>
             ) : (
-              <div className="space-y-3 pt-0.5">
+              <div className="space-y-2 pt-0">
                 <div>
                   <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                     Favorite movie
@@ -1636,7 +1636,7 @@ export default function ProfilePage() {
         </form>
         {!isEditing ? (
           <>
-            <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 pt-1 sm:gap-3">
               {(
                 [
                   { value: acceptedMovies.length, label: "Picks", href: "/picks" as const },
@@ -1673,7 +1673,7 @@ export default function ProfilePage() {
                 </Link>
               ))}
             </div>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Link
                 href="/connect"
                 className={`ui-btn ui-btn-primary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold sm:w-auto`}
