@@ -15,6 +15,11 @@ export type ProfileRow = {
   favorite_movie_year?: number | null;
   favorite_movie_poster_url?: string | null;
   favorite_movie_media_type?: "movie" | "series" | null;
+  profile_header_movie_id?: string | null;
+  profile_header_movie_title?: string | null;
+  profile_header_movie_year?: number | null;
+  profile_header_poster_url?: string | null;
+  profile_header_media_type?: "movie" | "series" | null;
 };
 
 export type SettingsRow = {

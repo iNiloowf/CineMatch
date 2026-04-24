@@ -84,8 +84,14 @@ export default function ProfilePage() {
   const [favoriteMovieSearchResults, setFavoriteMovieSearchResults] = useState<Movie[]>([]);
   const [favoriteMovieSearchState, setFavoriteMovieSearchState] = useState<"idle" | "loading" | "error">("idle");
   const [favoriteMovieSearchMessage, setFavoriteMovieSearchMessage] = useState("");
+  const [profileHeaderMovieDraft, setProfileHeaderMovieDraft] = useState<FavoriteMovieSummary | null>(null);
+  const [headerBgSearchQuery, setHeaderBgSearchQuery] = useState("");
+  const [headerBgSearchResults, setHeaderBgSearchResults] = useState<Movie[]>([]);
+  const [headerBgSearchState, setHeaderBgSearchState] = useState<"idle" | "loading" | "error">("idle");
+  const [headerBgSearchMessage, setHeaderBgSearchMessage] = useState("");
   const [editSectionsOpen, setEditSectionsOpen] = useState({
-    basicInfo: true,
+    basicInfo: false,
+    headerBackground: false,
     watchedReviews: false,
     discoveryPreferences: false,
     discoverSkips: false,
@@ -140,8 +146,14 @@ export default function ProfilePage() {
       setFavoriteMovieSearchResults([]);
       setFavoriteMovieSearchState("idle");
       setFavoriteMovieSearchMessage("");
+      setProfileHeaderMovieDraft(currentUser?.profileHeaderMovie ?? null);
+      setHeaderBgSearchQuery("");
+      setHeaderBgSearchResults([]);
+      setHeaderBgSearchState("idle");
+      setHeaderBgSearchMessage("");
       setEditSectionsOpen({
-        basicInfo: true,
+        basicInfo: false,
+        headerBackground: false,
         watchedReviews: false,
         discoveryPreferences: false,
         discoverSkips: false,
@@ -149,7 +161,7 @@ export default function ProfilePage() {
       setIsFavoriteGenresOpen(false);
       setIsDislikedGenresOpen(false);
     });
-  }, [currentUser?.favoriteMovie, onboardingPreferences]);
+  }, [currentUser?.favoriteMovie, currentUser?.profileHeaderMovie, onboardingPreferences]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -207,6 +219,63 @@ export default function ProfilePage() {
       window.clearTimeout(timer);
     };
   }, [favoriteMovieSearchQuery, isEditing, currentUserId, registerMovies]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    const trimmed = headerBgSearchQuery.trim();
+    if (trimmed.length < 2) {
+      setHeaderBgSearchResults([]);
+      setHeaderBgSearchState("idle");
+      setHeaderBgSearchMessage("");
+      return;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setHeaderBgSearchState("loading");
+      setHeaderBgSearchMessage("");
+      try {
+        const response = await fetch(
+          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ""}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        if (!active) {
+          return;
+        }
+        if (!response.ok) {
+          setHeaderBgSearchState("error");
+          setHeaderBgSearchResults([]);
+          setHeaderBgSearchMessage("Couldn’t search movies right now.");
+          return;
+        }
+        const payload = (await response.json()) as { movies?: Movie[] };
+        const movies = payload.movies ?? [];
+        registerMovies(movies);
+        setHeaderBgSearchResults(movies);
+        setHeaderBgSearchState("idle");
+        setHeaderBgSearchMessage(
+          movies.length === 0 ? "No matches found. Try another title." : "",
+        );
+      } catch {
+        if (!active) {
+          return;
+        }
+        setHeaderBgSearchState("error");
+        setHeaderBgSearchResults([]);
+        setHeaderBgSearchMessage("Couldn’t search movies right now.");
+      }
+    }, 260);
+
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [headerBgSearchQuery, isEditing, currentUserId, registerMovies]);
 
   const profileGenres = useMemo(
     () =>
@@ -324,8 +393,14 @@ export default function ProfilePage() {
     setFavoriteMovieSearchResults([]);
     setFavoriteMovieSearchState("idle");
     setFavoriteMovieSearchMessage("");
+    setProfileHeaderMovieDraft(currentUser?.profileHeaderMovie ?? null);
+    setHeaderBgSearchQuery("");
+    setHeaderBgSearchResults([]);
+    setHeaderBgSearchState("idle");
+    setHeaderBgSearchMessage("");
     setEditSectionsOpen({
-      basicInfo: true,
+      basicInfo: false,
+      headerBackground: false,
       watchedReviews: false,
       discoveryPreferences: false,
       discoverSkips: false,
@@ -373,6 +448,7 @@ export default function ProfilePage() {
       avatarImageUrl: clearAvatarOnSave ? null : currentUser.avatarImageUrl,
       avatarFile: clearAvatarOnSave ? null : avatarFile,
       favoriteMovie: favoriteMovieDraft,
+      profileHeaderMovie: profileHeaderMovieDraft,
       clearAvatar: clearAvatarOnSave,
     });
 
@@ -445,6 +521,10 @@ export default function ProfilePage() {
   const selectedProfileStyle: ProProfileStyle =
     optimisticProfileStyle ?? currentUser.profileStyle ?? "classic";
   const favoriteMoviePreview = favoriteMovieDraft ?? currentUser?.favoriteMovie ?? null;
+  const headerHeroMovie = isEditing
+    ? profileHeaderMovieDraft
+    : (currentUser?.profileHeaderMovie ?? null);
+  const headerHeroPosterUrl = headerHeroMovie?.posterImageUrl;
   /** Theme-aware frame: solid border + inset sheen + outer glow (border avoids ring/shadow conflicts). */
   const proHeaderCardStyle = selectedProfileStyle === "glass"
     ? isDarkMode
@@ -1051,6 +1131,7 @@ export default function ProfilePage() {
       <SurfaceCard
         bare
         backgroundClassName={proHeaderCardStyle}
+        heroImageUrl={headerHeroPosterUrl}
         className={`fade-up-enter discover-toolbar-enter${selectedProfileStyle === "rainbow" ? " surface-rainbow-top-accent" : ""}`}
         style={{ animationDelay: "0ms" }}
       >
@@ -1334,6 +1415,139 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 </div>
+                </section>
+
+                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditSectionsOpen((current) => ({
+                        ...current,
+                        headerBackground: !current.headerBackground,
+                      }))
+                    }
+                    className="flex w-full items-start justify-between gap-2 text-left"
+                  >
+                    <div>
+                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Header background
+                      </p>
+                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Pick a film — friends see the same art on your card.
+                      </p>
+                    </div>
+                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
+                      {editSectionsOpen.headerBackground ? "−" : "+"}
+                    </span>
+                  </button>
+                  {editSectionsOpen.headerBackground ? (
+                    <div className="space-y-2">
+                      <p className={`text-[11px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                        Search a movie or series (uses its poster as the cover behind your name).
+                      </p>
+                      <input
+                        value={headerBgSearchQuery}
+                        onChange={(event) => setHeaderBgSearchQuery(event.target.value)}
+                        className={inputClass}
+                        placeholder="Type to search TMDb…"
+                      />
+                      {headerBgSearchState === "loading" ? (
+                        <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                          Searching…
+                        </p>
+                      ) : null}
+                      {headerBgSearchMessage ? (
+                        <p
+                          className={`text-xs ${
+                            headerBgSearchState === "error"
+                              ? isDarkMode
+                                ? "text-rose-300"
+                                : "text-rose-700"
+                              : isDarkMode
+                                ? "text-slate-400"
+                                : "text-slate-500"
+                          }`}
+                        >
+                          {headerBgSearchMessage}
+                        </p>
+                      ) : null}
+                      {headerBgSearchResults.length > 0 ? (
+                        <div
+                          className={`max-h-56 overflow-y-auto rounded-[16px] border ${
+                            isDarkMode
+                              ? "border-white/12 bg-white/[0.03]"
+                              : "border-slate-200/90 bg-white"
+                          }`}
+                        >
+                          <ul className={`divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-100"}`}>
+                            {headerBgSearchResults.slice(0, 8).map((movie) => (
+                              <li key={`header-bg-search-${movie.id}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setProfileHeaderMovieDraft({
+                                      id: movie.id,
+                                      title: movie.title,
+                                      year: movie.year,
+                                      posterImageUrl: movie.poster.imageUrl,
+                                      mediaType: movie.mediaType,
+                                    });
+                                    setHeaderBgSearchQuery(movie.title);
+                                    setHeaderBgSearchResults([]);
+                                    setHeaderBgSearchState("idle");
+                                    setHeaderBgSearchMessage("");
+                                  }}
+                                  className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition ${
+                                    isDarkMode
+                                      ? "text-slate-100 hover:bg-white/8"
+                                      : "text-slate-800 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span className="truncate">
+                                    {movie.title}{" "}
+                                    <span className="text-xs font-normal text-slate-500">
+                                      ({movie.mediaType === "series" ? "Series" : "Movie"})
+                                    </span>
+                                  </span>
+                                  <span className={`shrink-0 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                                    {movie.year}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {profileHeaderMovieDraft ? (
+                        <div
+                          className={`flex items-center justify-between gap-3 rounded-[16px] border px-3 py-2 ${
+                            isDarkMode
+                              ? "border-cyan-400/25 bg-cyan-500/10"
+                              : "border-cyan-200 bg-cyan-50/80"
+                          }`}
+                        >
+                          <p className={`min-w-0 truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                            {profileHeaderMovieDraft.title} ({profileHeaderMovieDraft.year})
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProfileHeaderMovieDraft(null);
+                              setHeaderBgSearchQuery("");
+                              setHeaderBgSearchResults([]);
+                              setHeaderBgSearchState("idle");
+                              setHeaderBgSearchMessage("");
+                            }}
+                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200"
+                            }`}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>

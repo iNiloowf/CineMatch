@@ -200,6 +200,7 @@ export default function FriendProfilePage() {
   }
 
   const inMineSelected = selectedMovie ? myAcceptedIds.has(selectedMovie.id) : false;
+  const friendHeaderBgUrl = partner.profileHeaderMovie?.posterImageUrl;
 
   return (
     <div className="space-y-5 pb-2">
@@ -281,11 +282,32 @@ export default function FriendProfilePage() {
       >
         <div
           className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${friendHeaderStyleClass}${
+            friendHeaderBgUrl ? " min-h-[7.5rem]" : ""
+          } ${
             partnerProfileStyle === "rainbow" ? " surface-rainbow-top-accent" : ""
           }`}
         >
-          <span className={`pointer-events-none absolute inset-0 ${friendHeaderPatternClass}`} aria-hidden />
-          <div className="profile-avatar-pop relative shrink-0">
+          {friendHeaderBgUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- TMDb poster
+            <img
+              src={friendHeaderBgUrl}
+              alt=""
+              className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+            />
+          ) : null}
+          {friendHeaderBgUrl ? (
+            <span
+              className="pointer-events-none absolute inset-0 z-[1] h-full w-full bg-gradient-to-b from-slate-950/20 via-slate-950/15 to-slate-950/45"
+              aria-hidden
+            />
+          ) : null}
+          <span
+            className={`pointer-events-none absolute inset-0 z-[2] ${
+              friendHeaderBgUrl ? "opacity-88" : ""
+            } ${friendHeaderPatternClass}`}
+            aria-hidden
+          />
+          <div className="profile-avatar-pop relative z-[3] shrink-0">
             <div
               className={`rounded-full p-0.5 ${isDarkMode ? "bg-gradient-to-br from-violet-400/50 to-fuchsia-500/30" : "bg-gradient-to-br from-violet-400 to-fuchsia-400"}`}
             >
@@ -297,7 +319,7 @@ export default function FriendProfilePage() {
               />
             </div>
           </div>
-          <div className="relative min-w-0 flex-1">
+          <div className="relative z-[3] min-w-0 flex-1">
             <p className={sectionEyebrow}>Linked friend</p>
             <p
               className={`mt-1 truncate text-lg font-bold sm:text-xl ${

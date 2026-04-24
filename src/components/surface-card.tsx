@@ -15,8 +15,12 @@ type SurfaceCardProps = {
   /**
    * Full-bleed layer behind padded content (bare only). Put ring / shadow / gradients here
    * so the fill reaches the rounded corners; padding lives on the inner shell only.
+   * When `heroImageUrl` is set, it renders behind this at z-0; this layer is z-1 and slightly
+   * transparent so the movie art shows through.
    */
   backgroundClassName?: string;
+  /** Optional poster/photo (e.g. profile header) — bare mode only, below themed background. */
+  heroImageUrl?: string;
   /**
    * Dark mode adds `.glass-shimmer` (animated ::after). On some full-bleed cards that can read as a stray shadow/overlay after theme toggles — disable for those surfaces.
    */
@@ -28,10 +32,12 @@ export function SurfaceCard({
   className = "",
   bare = false,
   backgroundClassName,
+  heroImageUrl,
   shimmer = true,
   ...props
 }: SurfaceCardProps) {
   const { isDarkMode } = useAppState();
+  const hasHero = Boolean(heroImageUrl);
 
   if (bare) {
     return (
@@ -39,9 +45,29 @@ export function SurfaceCard({
         {...props}
         className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] hover:-translate-y-0.5 ${className}`}
       >
+        {heroImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- external TMDB poster
+          <img
+            src={heroImageUrl}
+            alt=""
+            className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+          />
+        ) : null}
+        {hasHero ? (
+          <span
+            className={
+              isDarkMode
+                ? "pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden rounded-[inherit] bg-gradient-to-b from-slate-950/25 via-slate-950/15 to-slate-950/50"
+                : "pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden rounded-[inherit] bg-gradient-to-b from-white/40 via-slate-100/30 to-slate-900/35"
+            }
+            aria-hidden
+          />
+        ) : null}
         {backgroundClassName ? (
           <span
-            className={`pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] ${backgroundClassName}`}
+            className={`pointer-events-none absolute inset-0 z-[1] overflow-hidden rounded-[inherit] ${
+              hasHero ? "opacity-88" : ""
+            } ${backgroundClassName}`}
             aria-hidden
           />
         ) : null}

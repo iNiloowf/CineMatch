@@ -27,6 +27,8 @@ export type User = {
   bio: string;
   city: string;
   favoriteMovie?: FavoriteMovieSummary;
+  /** Optional poster behind the profile header; visible to linked friends. */
+  profileHeaderMovie?: FavoriteMovieSummary;
   /** Public visual style used on profile cards. */
   profileStyle?: ProProfileStyle;
 };
