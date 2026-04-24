@@ -224,6 +224,35 @@ type AppStateContextValue = {
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
+const MISSING_PROFILE_HEADER_DB_HINT =
+  "Profile background wasn’t saved: run supabase/migrations/20260424240000_profile_header_movie.sql in the Supabase SQL editor, then set it again.";
+
+function isMissingProfileHeaderColumnError(
+  message: string | undefined | null,
+): boolean {
+  if (!message) {
+    return false;
+  }
+  const m = message.toLowerCase();
+  return (
+    m.includes("profile_header") ||
+    (m.includes("schema cache") && (m.includes("column") || m.includes("field"))) ||
+    (m.includes("could not find") && m.includes("column"))
+  );
+}
+
+function withoutProfileHeaderFields(
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = { ...patch };
+  for (const key of Object.keys(next)) {
+    if (key.startsWith("profile_header_")) {
+      delete next[key];
+    }
+  }
+  return next;
+}
+
 function mergeProfileSettings(
   partial: Partial<ProfileSettings> | undefined,
 ): ProfileSettings {
@@ -2891,6 +2920,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, message: "You need to be signed in to update your profile." };
     }
 
+    let retriedProfileWithoutHeader = false;
+
     const supabase = getSupabaseBrowserClient();
     const passedAvatar =
       typeof avatarImageUrl === "string" && avatarImageUrl.trim().length > 0
@@ -2975,10 +3006,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         .eq("id", currentUserId);
 
       if (profileError) {
-        return {
-          ok: false,
-          message: profileError.message ?? "Couldn’t save your profile to the server.",
-        };
+        const canRetry =
+          profileHeaderMovie !== undefined &&
+          isMissingProfileHeaderColumnError(profileError.message);
+        if (canRetry) {
+          const { error: retryError } = await supabase
+            .from("profiles")
+            .update(withoutProfileHeaderFields(profilePatch) as never)
+            .eq("id", currentUserId);
+          if (retryError) {
+            return {
+              ok: false,
+              message: retryError.message ?? "Couldn’t save your profile to the server.",
+            };
+          }
+          retriedProfileWithoutHeader = true;
+        } else {
+          return {
+            ok: false,
+            message: profileError.message ?? "Couldn’t save your profile to the server.",
+          };
+        }
       }
     }
 
@@ -2999,8 +3047,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 favoriteMovie === undefined
                   ? user.favoriteMovie
                   : (favoriteMovie ?? undefined),
-              profileHeaderMovie:
-                profileHeaderMovie === undefined
+              profileHeaderMovie: retriedProfileWithoutHeader
+                ? user.profileHeaderMovie
+                : profileHeaderMovie === undefined
                   ? user.profileHeaderMovie
                   : (profileHeaderMovie ?? undefined),
               profileStyle: profileStyle ?? user.profileStyle ?? "classic",
@@ -3009,7 +3058,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ),
     }));
     // Avoid full account sync here — it delays the UI and reapplies cached snapshots.
-    return { ok: true };
+    return {
+      ok: true,
+      message: retriedProfileWithoutHeader
+        ? MISSING_PROFILE_HEADER_DB_HINT
+        : undefined,
+    };
   };
 
   const updateSettings = async (payload: Partial<ProfileSettings>) => {
