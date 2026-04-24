@@ -3,7 +3,6 @@ import {
   getRuntimeMinutes,
   MIN_DISCOVER_RATING,
   MIN_DISCOVER_RUNTIME_MINUTES,
-  DISCOVER_ERA_FLOOR_YEAR,
   passesDiscoverListEligibility,
   passesDiscoverQualityThreshold,
   passesDiscoverReleased,
@@ -61,30 +60,6 @@ describe("discover-quality", () => {
     expect(passesDiscoverReleased(movie({ id: "ok", year: 2026 }), cy)).toBe(true);
   });
 
-  it("passesDiscoverReleased rejects years before the discover era floor", () => {
-    const cy = 2026;
-    expect(
-      passesDiscoverReleased(movie({ id: "nineties", year: 1994 }), cy),
-    ).toBe(false);
-    expect(
-      passesDiscoverReleased(
-        movie({ id: "edge", year: DISCOVER_ERA_FLOOR_YEAR }),
-        cy,
-      ),
-    ).toBe(true);
-  });
-
-  it("passesDiscoverReleased allows pre-floor when era floor is disabled", () => {
-    const cy = 2026;
-    expect(
-      passesDiscoverReleased(
-        movie({ id: "classic", year: 1994 }),
-        cy,
-        { eraFloorYear: null },
-      ),
-    ).toBe(true);
-  });
-
   it("passesDiscoverListEligibility combines quality and release", () => {
     const cy = 2026;
     const good = movie({
@@ -94,22 +69,6 @@ describe("discover-quality", () => {
       year: 2025,
     });
     expect(passesDiscoverListEligibility(good, cy)).toBe(true);
-    expect(passesDiscoverListEligibility({ ...good, year: 2028 }, cy)).toBe(
-      false,
-    );
-  });
-
-  it("passesDiscoverListEligibility rejects pre-era-floor titles in default mode", () => {
-    const cy = 2026;
-    const legacy = movie({
-      id: "legacy",
-      year: 1990,
-      rating: MIN_DISCOVER_RATING,
-      runtime: `${MIN_DISCOVER_RUNTIME_MINUTES} min`,
-    });
-    expect(passesDiscoverListEligibility(legacy, cy)).toBe(false);
-    expect(
-      passesDiscoverListEligibility(legacy, cy, { eraFloorYear: null }),
-    ).toBe(true);
+    expect(passesDiscoverListEligibility({ ...good, year: 2028 }, cy)).toBe(false);
   });
 });

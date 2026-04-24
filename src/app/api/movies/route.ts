@@ -25,21 +25,15 @@ export async function GET(request: NextRequest) {
   const movieId = rawMovieId?.trim() || undefined;
   const database = getDatabase();
   const query = rawQuery?.trim() ?? "";
-  const isTmdbSearch = source === "tmdb" && query.length > 0;
   const movies =
     source === "tmdb"
-      ? isTmdbSearch
+      ? query
         ? await searchTmdbMedia(query)
         : await getMergedMovies()
       : database.movies;
   const calendarYear = new Date().getFullYear();
-  // Default deck: recent era only; search keeps pre-floor classics findable.
   const filteredMovies = movies.filter((m) =>
-    passesDiscoverListEligibility(
-      m,
-      calendarYear,
-      isTmdbSearch ? { eraFloorYear: null } : undefined,
-    ),
+    passesDiscoverListEligibility(m, calendarYear),
   );
 
   if (movieId) {
