@@ -29,6 +29,7 @@ import {
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { CURRENT_USER_KEY } from "@/lib/app-state/constants";
 import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
+import { publicAppOriginForInviteLinks } from "@/lib/public-app-origin";
 import { useAppToasts } from "@/lib/hooks/use-app-toasts";
 import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
 import {
@@ -2545,7 +2546,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       );
       return {
         ok: true,
-        url: `${window.location.origin}/connect?invite=${latest.token}`,
+        url: `${publicAppOriginForInviteLinks(window.location.origin)}/connect?invite=${latest.token}`,
       };
     }
 
@@ -2569,7 +2570,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return {
       ok: true,
-      url: `${window.location.origin}/connect?invite=${token}`,
+      url: `${publicAppOriginForInviteLinks(window.location.origin)}/connect?invite=${token}`,
     };
   };
 

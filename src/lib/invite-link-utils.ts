@@ -67,7 +67,7 @@ async function tryCopyInvite(
   fallbackUrl: string,
 ): Promise<{ ok: boolean; message: string }> {
   if (await copyTextToClipboard(text)) {
-    return { ok: true, message: "Message copied! Link is on the last line (tap in chat to open)." };
+    return { ok: true, message: "Copied! Share the last line in chat to connect." };
   }
   if (fallbackUrl && fallbackUrl !== text) {
     const fb = /^https?:/i.test(fallbackUrl) ? `${LTR_MARK}${fallbackUrl.trim()}` : fallbackUrl.trim();

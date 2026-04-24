@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 
 const ALPH = "abcdefghijklmnopqrstuvwxyz0123456789";
-const CODE_LEN = 10;
+/* Shorter path = less wrapping in chat bubbles */
+const CODE_LEN = 8;
 
 function randomCode(): string {
   const bytes = crypto.randomBytes(16);

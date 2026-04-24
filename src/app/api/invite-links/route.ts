@@ -4,17 +4,20 @@ import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
 import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { publicAppOriginForInviteLinks } from "@/lib/public-app-origin";
 import { randomCode } from "@/server/invite-link-code";
 
-function getAppUrl(request: NextRequest) {
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? new URL(request.url).origin;
+function getInviteAppOrigin(request: NextRequest) {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? new URL(request.url).origin;
+  return publicAppOriginForInviteLinks(raw);
 }
 
 /**
  * Public share URL (short) — fits one line in Telegram; redirects to /connect?invite=….
  */
 function publicShortInviteUrl(request: NextRequest, code: string) {
-  return `${getAppUrl(request)}/c/${code}`;
+  return `${getInviteAppOrigin(request)}/c/${code}`;
 }
 
 type InviteRow = {

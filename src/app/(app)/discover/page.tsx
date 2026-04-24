@@ -1631,24 +1631,25 @@ function DiscoverPageContent({
 
       {menuBanner ? (
         <div
-          className={`fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 ${
+          className={`fixed inset-x-0 z-[200] flex justify-center px-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))] ${
             menuBanner.onRetry ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
-          <div className="flex max-w-md flex-col items-center gap-2">
+          <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:items-center">
             <div
-              className={`ui-toast-note px-4 py-2 text-center font-semibold ${
+              role="status"
+              className={`mx-auto w-full max-w-sm rounded-2xl px-4 py-3 text-center text-sm font-semibold leading-snug shadow-[0_20px_50px_rgba(0,0,0,0.45)] sm:text-base ${
                 menuBanner.variant === "error"
                   ? isDarkMode
-                    ? "border border-rose-400/30 text-rose-100 shadow-[0_10px_32px_rgba(244,63,94,0.12)]"
-                    : "border border-rose-200/80 text-rose-800 shadow-[0_10px_32px_rgba(244,63,94,0.08)]"
+                    ? "border border-rose-400/50 bg-rose-950/95 text-rose-50 ring-1 ring-rose-400/20"
+                    : "border border-rose-200 bg-rose-50 text-rose-900 ring-1 ring-rose-200/60"
                   : menuBanner.variant === "success"
                     ? isDarkMode
-                      ? "border border-emerald-400/32 text-emerald-50 shadow-[0_10px_32px_rgba(16,185,129,0.14)]"
-                      : "border border-emerald-200/90 text-emerald-900 shadow-[0_10px_32px_rgba(16,185,129,0.1)]"
+                      ? "border border-emerald-400/45 bg-slate-950/95 text-white ring-1 ring-white/10"
+                      : "border border-emerald-200 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200/70"
                     : isDarkMode
-                      ? "border border-white/12 text-slate-100"
-                      : "border border-slate-200/85 text-slate-800"
+                      ? "border border-white/20 bg-slate-950/95 text-white ring-1 ring-white/10"
+                      : "border border-slate-200 bg-white text-slate-900 ring-1 ring-slate-200/80"
               }`}
             >
               {menuBanner.message}

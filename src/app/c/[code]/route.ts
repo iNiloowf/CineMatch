@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { publicAppOriginForInviteLinks } from "@/lib/public-app-origin";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
 function baseUrl(request: NextRequest) {
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? new URL(request.url).origin;
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? new URL(request.url).origin;
+  return publicAppOriginForInviteLinks(raw);
 }
 
 type RouteContext = { params: Promise<{ code: string }> };
