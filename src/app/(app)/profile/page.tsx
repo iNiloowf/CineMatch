@@ -1175,6 +1175,43 @@ export default function ProfilePage() {
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
                 </p>
+                {favoriteMoviePreview ? (
+                  <div className="mt-2.5 flex min-w-0 items-center gap-2.5">
+                    <div
+                      className={`relative h-11 w-8 shrink-0 overflow-hidden rounded-lg ${
+                        isDarkMode ? "bg-white/10 ring-1 ring-white/10" : "bg-slate-200 ring-1 ring-slate-200/80"
+                      }`}
+                    >
+                      <PosterBackdrop
+                        imageUrl={favoriteMoviePreview.posterImageUrl}
+                        profile="search"
+                        objectFit="cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p
+                        className={`text-[9px] font-bold uppercase tracking-[0.16em] ${
+                          isDarkMode ? "text-violet-300/90" : "text-violet-600/90"
+                        }`}
+                      >
+                        Favorite
+                      </p>
+                      <p
+                        className={`truncate text-sm font-semibold leading-tight ${
+                          isDarkMode ? "text-white" : "text-slate-900"
+                        }`}
+                      >
+                        {favoriteMoviePreview.title}
+                      </p>
+                      <p
+                        className={`text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                      >
+                        {favoriteMoviePreview.year} ·{" "}
+                        {favoriteMoviePreview.mediaType === "series" ? "Series" : "Movie"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
             {isEditing ? (
@@ -1801,44 +1838,6 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-2 pt-0">
-                <div>
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Favorite movie
-                  </p>
-                  {favoriteMoviePreview ? (
-                    <div
-                      className={`mt-1.5 flex items-center gap-3 rounded-[18px] border p-3 ${
-                        isDarkMode
-                          ? "border-white/12 bg-white/[0.05]"
-                          : "border-slate-200/90 bg-slate-50/80"
-                      }`}
-                    >
-                      <div
-                        className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] ${
-                          isDarkMode ? "bg-white/8" : "bg-slate-200"
-                        }`}
-                      >
-                        <PosterBackdrop
-                          imageUrl={favoriteMoviePreview.posterImageUrl}
-                          profile="search"
-                          objectFit="cover"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {favoriteMoviePreview.title}
-                        </p>
-                        <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          {favoriteMoviePreview.year} • {favoriteMoviePreview.mediaType === "series" ? "Series" : "Movie"}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Not set yet.
-                    </p>
-                  )}
-                </div>
                 <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   About
                 </p>
