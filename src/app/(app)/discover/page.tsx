@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DiscoverMatchExplainModal } from "@/components/discover-match-explain-modal";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
@@ -127,6 +127,10 @@ function DiscoverPageContent({
     null,
   );
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [moreMenuCoords, setMoreMenuCoords] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const [menuBanner, setMenuBanner] = useState<{
     message: string;
     variant: "success" | "error";
@@ -147,6 +151,7 @@ function DiscoverPageContent({
   const discoverSessionSaveTimerRef = useRef<number | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const pasteInviteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isPasteInviteModalOpen, setIsPasteInviteModalOpen] = useState(false);
   const [pasteInviteDraft, setPasteInviteDraft] = useState("");
@@ -596,7 +601,9 @@ function DiscoverPageContent({
         return;
       }
 
-      if (!menuRef.current?.contains(targetNode)) {
+      const inTrigger = menuRef.current?.contains(targetNode) ?? false;
+      const inPanel = moreMenuPanelRef.current?.contains(targetNode) ?? false;
+      if (!inTrigger && !inPanel) {
         setIsMoreMenuOpen(false);
       }
     };
@@ -604,6 +611,51 @@ function DiscoverPageContent({
     document.addEventListener("mousedown", handleOutsideClick);
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isMoreMenuOpen]);
+
+  useLayoutEffect(() => {
+    if (!isMoreMenuOpen) {
+      setMoreMenuCoords(null);
+      return;
+    }
+    if (!menuRef.current) {
+      return;
+    }
+    const rect = menuRef.current.getBoundingClientRect();
+    setMoreMenuCoords({
+      top: rect.bottom + 8,
+      right: Math.max(12, globalThis.innerWidth - rect.right),
+    });
+  }, [isMoreMenuOpen]);
+
+  useEffect(() => {
+    if (!isMoreMenuOpen) {
+      return;
+    }
+    const main = document.getElementById("main-content");
+    if (!main) {
+      return;
+    }
+    const onScroll = () => {
+      setIsMoreMenuOpen(false);
+    };
+    main.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      main.removeEventListener("scroll", onScroll);
+    };
+  }, [isMoreMenuOpen]);
+
+  useEffect(() => {
+    if (!isMoreMenuOpen) {
+      return;
+    }
+    const onResize = () => {
+      setIsMoreMenuOpen(false);
+    };
+    globalThis.addEventListener("resize", onResize, { passive: true });
+    return () => {
+      globalThis.removeEventListener("resize", onResize);
     };
   }, [isMoreMenuOpen]);
 
@@ -1164,100 +1216,283 @@ function DiscoverPageContent({
             >
               CineMatch
             </h1>
-            <div ref={menuRef} className="relative">
-              <button
-                type="button"
-                aria-label="Open more options"
-                aria-expanded={isMoreMenuOpen}
-                onClick={() => setIsMoreMenuOpen((current) => !current)}
-                className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
-                  isDarkMode
-                    ? "text-slate-300 hover:bg-white/8"
-                    : "text-slate-700 hover:bg-black/5"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="ui-icon-md"
-                  aria-hidden="true"
+            <div className="flex shrink-0">
+              <div ref={menuRef} className="relative">
+                <button
+                  type="button"
+                  aria-label="Open more options"
+                  aria-haspopup="dialog"
+                  aria-expanded={isMoreMenuOpen}
+                  aria-controls={isMoreMenuOpen ? "discover-more-menu" : undefined}
+                  onClick={() => setIsMoreMenuOpen((current) => !current)}
+                  className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
+                    isDarkMode
+                      ? isMoreMenuOpen
+                        ? "bg-white/12 text-white ring-2 ring-violet-400/45"
+                        : "text-slate-300 hover:bg-white/8"
+                      : isMoreMenuOpen
+                        ? "bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
+                        : "text-slate-700 hover:bg-black/5"
+                  }`}
                 >
-                  <circle cx="12" cy="5" r="1.8" />
-                  <circle cx="12" cy="12" r="1.8" />
-                  <circle cx="12" cy="19" r="1.8" />
-                </svg>
-              </button>
-              {isMoreMenuOpen ? (
-                <div
-                  className="ui-menu-panel absolute right-0 top-12 z-[var(--z-popover)] w-56 min-w-[13.5rem] p-2"
-                >
-                  <Link
-                    href="/settings"
-                    onClick={() => setIsMoreMenuOpen(false)}
-                    className="ui-menu-item block px-3 py-2.5 font-medium"
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="ui-icon-md"
+                    aria-hidden="true"
                   >
-                    Settings
-                  </Link>
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsMoreMenuOpen(false)}
-                    className="ui-menu-item block px-3 py-2.5 font-medium"
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={copyInviteBusy}
-                    onClick={() => void handleCopyMyLink()}
-                    className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {copyInviteBusy ? "Preparing link…" : "Copy my link"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openPasteInviteModal}
-                    className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium"
-                  >
-                    Paste link
-                  </button>
-                  <div className="mt-1 flex w-full items-center justify-between gap-3 rounded-[0.875rem] px-3 py-2.5">
-                    <span className="text-sm font-medium text-[var(--color-text-strong)]">Dark mode</span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={isDarkMode}
-                      aria-label="Dark mode"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        void toggleDarkMode();
-                      }}
-                      className={`relative shrink-0 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? "h-7 w-12 bg-violet-600" : "h-7 w-12 bg-slate-300"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
-                          isDarkMode ? "translate-x-5" : "translate-x-0"
-                        }`}
+                    <circle cx="12" cy="5" r="1.8" />
+                    <circle cx="12" cy="12" r="1.8" />
+                    <circle cx="12" cy="19" r="1.8" />
+                  </svg>
+                </button>
+              </div>
+              {typeof document !== "undefined" && isMoreMenuOpen && moreMenuCoords
+                ? createPortal(
+                    <>
+                      <div
+                        role="presentation"
+                        className="fixed inset-0 z-[var(--z-overlay)] bg-slate-900/35 backdrop-blur-[2px] dark:bg-black/50"
+                        onClick={() => setIsMoreMenuOpen(false)}
                         aria-hidden
                       />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      void logout().then(() => {
-                        router.push("/");
-                      });
-                    }}
-                    className="ui-menu-item mt-1 block w-full px-3 py-2.5 text-left font-medium text-rose-600 dark:text-rose-300"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              ) : null}
+                      <div
+                        ref={moreMenuPanelRef}
+                        id="discover-more-menu"
+                        className="ui-menu-panel discover-more-menu fixed z-[var(--z-popover)] w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(72dvh,32rem)] overflow-y-auto p-0 shadow-2xl"
+                        style={{
+                          top: moreMenuCoords.top,
+                          right: moreMenuCoords.right,
+                        }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="discover-more-menu-title"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <div className="px-1.5 py-1">
+                          <p
+                            id="discover-more-menu-title"
+                            className={`px-2 pt-0.5 pb-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
+                              isDarkMode ? "text-slate-500" : "text-slate-500"
+                            }`}
+                          >
+                            Account
+                          </p>
+                          <div className="space-y-0.5">
+                            <Link
+                              href="/settings"
+                              onClick={() => setIsMoreMenuOpen(false)}
+                              className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-violet-500/15 text-violet-200" : "bg-violet-100 text-violet-700"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              </span>
+                              <span className="min-w-0">Settings</span>
+                            </Link>
+                            <Link
+                              href="/profile"
+                              onClick={() => setIsMoreMenuOpen(false)}
+                              className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-sky-500/15 text-sky-200" : "bg-sky-100 text-sky-700"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                              </span>
+                              <span className="min-w-0">Profile</span>
+                            </Link>
+                          </div>
+                          <p
+                            className={`px-2 pb-1.5 pt-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] ${
+                              isDarkMode ? "text-slate-500" : "text-slate-500"
+                            }`}
+                          >
+                            Connect
+                          </p>
+                          <div className="space-y-0.5">
+                            <button
+                              type="button"
+                              disabled={copyInviteBusy}
+                              onClick={() => void handleCopyMyLink()}
+                              className="ui-menu-item flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 text-left font-medium disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-emerald-500/15 text-emerald-200" : "bg-emerald-100 text-emerald-700"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                </svg>
+                              </span>
+                              <span className="min-w-0">
+                                {copyInviteBusy ? "Preparing link…" : "Copy my link"}
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={openPasteInviteModal}
+                              className="ui-menu-item flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 text-left font-medium"
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-amber-500/15 text-amber-200" : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                </svg>
+                              </span>
+                              <div className="min-w-0 text-left">
+                                <span className="block">Paste link</span>
+                                <span
+                                  className={`mt-0.5 block text-xs font-normal ${
+                                    isDarkMode ? "text-slate-500" : "text-slate-500"
+                                  }`}
+                                >
+                                  Add someone’s invite
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+                          <div
+                            className={`mt-2 flex w-full items-center justify-between gap-3 rounded-[0.9rem] px-2.5 py-2.5 ${
+                              isDarkMode ? "bg-white/[0.07]" : "bg-slate-100/80"
+                            }`}
+                          >
+                            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-[var(--color-text-strong)]">
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-white/10" : "bg-white shadow-sm"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                                </svg>
+                              </span>
+                              <span>Dark mode</span>
+                            </span>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={isDarkMode}
+                              aria-label="Dark mode"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                void toggleDarkMode();
+                              }}
+                              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${
+                                isDarkMode ? "bg-violet-600" : "bg-slate-300"
+                              }`}
+                            >
+                              <span
+                                className={`pointer-events-none absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out ${
+                                  isDarkMode ? "translate-x-5" : "translate-x-0"
+                                }`}
+                                aria-hidden
+                              />
+                            </button>
+                          </div>
+                          <div
+                            className={`my-1.5 h-px w-full ${
+                              isDarkMode ? "bg-white/10" : "bg-slate-200/80"
+                            }`}
+                            aria-hidden
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMoreMenuOpen(false);
+                              void logout().then(() => {
+                                router.push("/");
+                              });
+                            }}
+                            className={`ui-menu-item discover-more-menu__signout flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 text-left text-sm font-semibold ${
+                              isDarkMode ? "text-rose-300" : "text-rose-600"
+                            }`}
+                          >
+                            <span
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                isDarkMode ? "bg-rose-500/15" : "bg-rose-100"
+                              }`}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="ui-icon-md ui-icon-stroke"
+                                strokeWidth="1.75"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden
+                              >
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                              </svg>
+                            </span>
+                            <span>Sign out</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>,
+                    document.body,
+                  )
+                : null}
             </div>
           </div>
           <DiscoverOnboardingNudges

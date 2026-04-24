@@ -719,6 +719,21 @@ input[type="range"] {
   box-shadow: var(--elev-menu), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+[data-app-shell-root][data-theme="light"] .discover-more-menu .ui-menu-item:hover {
+  background: rgba(241, 245, 249, 0.95);
+}
+[data-app-shell-root][data-theme="dark"] .discover-more-menu .ui-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+[data-app-shell-root][data-theme="light"] .discover-more-menu .discover-more-menu__signout.ui-menu-item:hover,
+[data-app-shell-root][data-theme="light"] .discover-more-menu .discover-more-menu__signout:hover {
+  background: #fff1f2;
+}
+[data-app-shell-root][data-theme="dark"] .discover-more-menu .discover-more-menu__signout.ui-menu-item:hover,
+[data-app-shell-root][data-theme="dark"] .discover-more-menu .discover-more-menu__signout:hover {
+  background: rgba(244, 63, 94, 0.12);
+}
+
 .ui-menu-item {
   border-radius: 0.875rem;
   color: var(--color-text-strong);
