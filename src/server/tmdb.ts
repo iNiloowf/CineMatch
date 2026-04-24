@@ -1,3 +1,4 @@
+import { DISCOVER_ERA_FLOOR_YEAR } from "@/lib/discover-quality";
 import { Movie } from "@/lib/types";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -313,7 +314,7 @@ export async function fetchTmdbDiscoverMovies(page = 1, limit = 12) {
   }
 
   const discover = await tmdbFetch<TmdbPagedResults>(
-    `/discover/movie?language=en-US&include_adult=false&include_video=false&sort_by=popularity.desc&page=${page}${getTmdbQueryParams()}`,
+    `/discover/movie?language=en-US&include_adult=false&include_video=false&sort_by=popularity.desc&primary_release_date.gte=${DISCOVER_ERA_FLOOR_YEAR}-01-01&page=${page}${getTmdbQueryParams()}`,
   );
 
   const detailCandidates = discover.results
@@ -337,7 +338,7 @@ export async function fetchTmdbDiscoverSeries(page = 1, limit = 12) {
   }
 
   const discover = await tmdbFetch<TmdbPagedResults>(
-    `/discover/tv?language=en-US&include_adult=false&sort_by=popularity.desc&page=${page}${getTmdbQueryParams()}`,
+    `/discover/tv?language=en-US&include_adult=false&sort_by=popularity.desc&first_air_date.gte=${DISCOVER_ERA_FLOOR_YEAR}-01-01&page=${page}${getTmdbQueryParams()}`,
   );
 
   const detailCandidates = discover.results
