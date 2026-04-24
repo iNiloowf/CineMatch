@@ -1239,40 +1239,19 @@ export default function PicksPage() {
             <div className="space-y-3 sm:space-y-3.5">
               {picksListTab === "queue" ? (
                 queueMovies.length > 0 ? (
-                  shouldVirtualizeList(queueMovies.length) ? (
-                    <VirtualScrollList count={queueMovies.length} estimateItemSize={118}>
-                      {(index) => {
-                        const movie = queueMovies[index]!;
-                        return (
-                          <PicksMovieRow
-                            key={movie.id}
-                            movie={movie}
-                            listIndex={index}
-                            matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
-                            isDarkMode={isDarkMode}
-                            onOpenDetails={openPickDetails}
-                            onShare={handleShareMovie}
-                            onMarkWatched={requestMarkWatched}
-                            onRequestRemove={requestRemovePick}
-                          />
-                        );
-                      }}
-                    </VirtualScrollList>
-                  ) : (
-                    queueMovies.map((movie, index) => (
-                      <PicksMovieRow
-                        key={movie.id}
-                        movie={movie}
-                        listIndex={index}
-                        matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
-                        isDarkMode={isDarkMode}
-                        onOpenDetails={openPickDetails}
-                        onShare={handleShareMovie}
-                        onMarkWatched={requestMarkWatched}
-                        onRequestRemove={requestRemovePick}
-                      />
-                    ))
-                  )
+                  queueMovies.map((movie, index) => (
+                    <PicksMovieRow
+                      key={movie.id}
+                      movie={movie}
+                      listIndex={index}
+                      matchingPartners={partnerNamesByPickId.get(movie.id) ?? []}
+                      isDarkMode={isDarkMode}
+                      onOpenDetails={openPickDetails}
+                      onShare={handleShareMovie}
+                      onMarkWatched={requestMarkWatched}
+                      onRequestRemove={requestRemovePick}
+                    />
+                  ))
                 ) : (
                   <SurfaceCard className="space-y-2 px-4 py-5 text-center sm:px-5">
                     <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
