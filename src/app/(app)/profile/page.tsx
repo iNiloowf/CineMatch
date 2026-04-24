@@ -1160,7 +1160,8 @@ export default function ProfilePage() {
                       {editSectionsOpen.basicInfo ? "−" : "+"}
                     </span>
                   </button>
-                  <div className={`flex flex-col gap-4 sm:flex-row sm:items-start ${editSectionsOpen.basicInfo ? "" : "hidden"}`}>
+                  <div className={editSectionsOpen.basicInfo ? "" : "hidden"}>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="flex shrink-0 flex-col items-center gap-3">
                     <div className="relative">
                       <AvatarBadge
@@ -1330,6 +1331,7 @@ export default function ProfilePage() {
                       </div>
                     ) : null}
                   </div>
+                </div>
                 </div>
                 </section>
 
