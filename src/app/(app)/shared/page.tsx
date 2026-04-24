@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
@@ -14,6 +15,7 @@ import {
   VirtualScrollList,
 } from "@/components/virtual-scroll-list";
 import { useAppState } from "@/lib/app-state";
+import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
 import type { SharedMovieView } from "@/lib/types";
 
 export default function SharedWatchlistPage() {
@@ -161,130 +163,209 @@ export default function SharedWatchlistPage() {
         </div>
       </div>
 
-      {detailsMovie ? (
-        <div
-          className={`ui-overlay ui-overlay--fill z-[var(--z-modal-backdrop)] !p-0 ${
-            isDarkMode ? "bg-slate-950/60" : "bg-slate-950/50"
-          } backdrop-blur-md`}
-        >
-          <button
-            type="button"
-            aria-label="Close details"
-            onClick={closeDetails}
-            className="absolute inset-0 z-0 cursor-default bg-transparent"
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shared-details-title"
-            className={`shared-details-modal shared-ui-copy ui-shell ui-shell--fullscreen relative z-10 flex h-[100dvh] min-h-0 w-full min-w-0 max-w-none flex-col overflow-hidden rounded-none shadow-none ${
-              isDarkMode ? "border-0 border-white/10 bg-slate-950" : "bg-white"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="ui-modal-accent-bar rounded-none" aria-hidden />
+      {detailsMovie && typeof document !== "undefined"
+        ? createPortal(
             <div
-              className={`ui-shell-header !border-b-black/6 shrink-0 !pt-[max(0.875rem,env(safe-area-inset-top,0px))] ${
-                isDarkMode ? "bg-slate-950/95" : "bg-white/95"
-              }`}
+              className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]"
             >
-              <p
-                id="shared-details-title"
-                className={`min-w-0 flex-1 text-[11px] font-medium tracking-[0.01em] ${
-                  isDarkMode ? "text-slate-300" : "text-slate-500"
-                }`}
-              >
-                Mutual match details
-              </p>
               <button
                 type="button"
                 aria-label="Close details"
                 onClick={closeDetails}
-                className={`ui-shell-close ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                className="absolute inset-0 z-0 cursor-default bg-transparent"
+              />
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="shared-details-movie-title"
+                className={`details-modal-shell shared-ui-copy ui-shell pointer-events-auto absolute inset-x-0 bottom-0 top-0 z-10 mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-lg flex-col shadow-[0_24px_80px_rgba(15,23,42,0.2)] ${
+                  isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
                 }`}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="ui-icon-md ui-icon-stroke"
-                  aria-hidden="true"
+                <span className="ui-modal-accent-bar" aria-hidden />
+                <div
+                  className={`ui-shell-header !border-b-black/6 !py-3 !pt-[max(1rem,env(safe-area-inset-top,0px))] shrink-0 ${
+                    isDarkMode ? "bg-slate-950" : "bg-white"
+                  }`}
                 >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div
-              className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4 !pb-[max(1rem,env(safe-area-inset-bottom,0.75rem))] [-webkit-overflow-scrolling:touch]"
-            >
-              <div
-                className="relative h-52 overflow-hidden rounded-[24px]"
-                style={{
-                  backgroundImage: detailsMovie.movie.poster.imageUrl
-                    ? undefined
-                    : `linear-gradient(135deg, ${detailsMovie.movie.poster.accentFrom}, ${detailsMovie.movie.poster.accentTo})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                <PosterBackdrop
-                  imageUrl={detailsMovie.movie.poster.imageUrl}
-                  profile="hero"
-                  objectFit="cover"
-                />
-              </div>
-
-              <div className="mt-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/friends/${detailsMovie.partner.id}`}
-                    className="shrink-0 rounded-full outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-violet-400/80"
-                    onClick={(event) => event.stopPropagation()}
+                  <p
+                    className={`min-w-0 flex-1 truncate text-xs font-medium tracking-[0.01em] ${
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
+                    }`}
                   >
-                    <AvatarBadge
-                      initials={detailsMovie.partner.avatar}
-                      imageUrl={detailsMovie.partner.avatarImageUrl}
-                      sizeClassName="h-9 w-9"
-                      textClassName="text-xs font-semibold"
-                    />
-                  </Link>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${mutualChipClass(isDarkMode)}`}
+                    Mutual match details
+                  </p>
+                  <button
+                    type="button"
+                    aria-label="Close details"
+                    onClick={closeDetails}
+                    className={`ui-shell-close ${
+                      isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                    }`}
                   >
-                    Shared match
-                  </span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      className="ui-icon-md ui-icon-stroke"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      {detailsMovie.movie.title}
-                    </h3>
-                    <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                      {detailsMovie.movie.year} • {detailsMovie.movie.runtime} • with {detailsMovie.partner.name}
+
+                <div
+                  className={`ui-shell-body !flex !min-h-0 !flex-1 !flex-col !overflow-hidden !px-0 !pb-0 !pt-0 ${
+                    isDarkMode ? "bg-slate-950" : "bg-white"
+                  }`}
+                >
+                  <div
+                    className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4"
+                    style={{
+                      paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0.75rem))",
+                    }}
+                  >
+                    <p
+                      className={`mb-3 flex items-center gap-2 text-[11px] font-semibold ${
+                        isDarkMode ? "text-slate-400" : "text-slate-500"
+                      }`}
+                    >
+                      <span aria-hidden className="select-none">
+                        ↓
+                      </span>
+                      Scroll for your match and synopsis.
                     </p>
+
+                    <div
+                      className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
+                      style={{
+                        backgroundImage: detailsMovie.movie.poster.imageUrl
+                          ? undefined
+                          : `linear-gradient(145deg, ${detailsMovie.movie.poster.accentFrom}, ${detailsMovie.movie.poster.accentTo})`,
+                        backgroundSize: detailsMovie.movie.poster.imageUrl ? undefined : "cover",
+                        backgroundPosition: "center",
+                      }}
+                    >
+                      <PosterBackdrop
+                        imageUrl={detailsMovie.movie.poster.imageUrl}
+                        profile="hero"
+                        objectFit="cover"
+                      />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_38%,rgba(15,23,42,0.46)_100%)]" />
+                      <div className="relative flex min-h-[12rem] flex-col justify-between sm:min-h-[13rem]">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="rounded-full bg-violet-600/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white">
+                            {detailsMovie.movie.mediaType === "series" ? "Series" : "Movie"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
+                              {detailsMovie.movie.year}
+                            </span>
+                            <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
+                              {formatRuntimeForDisplay(detailsMovie.movie.runtime)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-6">
+                          {detailsMovie.movie.genre.length > 0 ? (
+                            <p className="text-xs font-medium text-white/90">
+                              {detailsMovie.movie.genre.slice(0, 3).join(" • ")}
+                            </p>
+                          ) : null}
+                          <h2
+                            id="shared-details-movie-title"
+                            className="text-[1.65rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] sm:text-[1.8rem]"
+                          >
+                            {detailsMovie.movie.title}
+                          </h2>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-start gap-3 sm:mt-5">
+                      <Link
+                        href={`/friends/${detailsMovie.partner.id}`}
+                        className="shrink-0 rounded-full outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-violet-400/80"
+                        onClick={closeDetails}
+                      >
+                        <AvatarBadge
+                          initials={detailsMovie.partner.avatar}
+                          imageUrl={detailsMovie.partner.avatarImageUrl}
+                          sizeClassName="h-10 w-10"
+                          textClassName="text-sm font-semibold"
+                        />
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${mutualChipClass(isDarkMode)}`}
+                        >
+                          Shared match
+                        </span>
+                        <p
+                          className={`mt-1.5 text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}
+                        >
+                          with {detailsMovie.partner.name}
+                        </p>
+                        <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          Tap the avatar to open their profile
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`mt-4 flex items-start justify-between gap-3 sm:mt-5 ${
+                        isDarkMode ? "border-b border-white/8 pb-4" : "border-b border-slate-200/90 pb-4"
+                      }`}
+                    >
+                      <p className={`min-w-0 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+                        You both accepted this in Discover.
+                      </p>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}
+                      >
+                        ★ {detailsMovie.movie.rating.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {detailsMovie.movie.genre.length > 3 ? (
+                      <p
+                        className={`mt-3 text-[11px] leading-relaxed ${
+                          isDarkMode ? "text-slate-500" : "text-slate-500"
+                        }`}
+                      >
+                        {detailsMovie.movie.genre.join(" · ")}
+                      </p>
+                    ) : null}
+
+                    <div
+                      className={`relative mt-4 rounded-[22px] px-4 py-4 ${
+                        isDarkMode ? "bg-white/10" : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] leading-5 ${
+                          isDarkMode ? "text-slate-200" : "text-slate-600"
+                        }`}
+                      >
+                        {detailsMovie.movie.description}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`pointer-events-none sticky bottom-0 z-[1] -mx-1 mt-2 h-8 bg-gradient-to-t ${
+                        isDarkMode ? "from-slate-950" : "from-white"
+                      } to-transparent`}
+                      aria-hidden
+                    />
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${ratingChipClass(isDarkMode)}`}>
-                    ★ {detailsMovie.movie.rating.toFixed(1)}
-                  </span>
                 </div>
-
-                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                  {detailsMovie.movie.genre.join(" • ")}
-                </p>
-
-                <p
-                  className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
-                >
-                  {detailsMovie.movie.description}
-                </p>
               </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
