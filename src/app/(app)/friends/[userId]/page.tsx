@@ -320,6 +320,57 @@ export default function FriendProfilePage() {
             {partner.bio}
           </p>
         ) : null}
+        {partner.favoriteMovie ? (
+          <div
+            className={`px-5 py-4 sm:px-6 ${
+              partner.bio
+                ? isDarkMode
+                  ? "border-t border-white/10"
+                  : "border-t border-slate-200/85"
+                : ""
+            }`}
+          >
+            <p
+              className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                isDarkMode ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
+              Favorite movie
+            </p>
+            <div
+              className={`mt-1.5 flex items-center gap-3 rounded-[18px] border p-3 ${
+                isDarkMode
+                  ? "border-white/12 bg-white/[0.05]"
+                  : "border-slate-200/90 bg-slate-50/80"
+              }`}
+            >
+              <div
+                className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] ${
+                  isDarkMode ? "bg-white/8" : "bg-slate-200"
+                }`}
+              >
+                <PosterBackdrop
+                  imageUrl={partner.favoriteMovie.posterImageUrl}
+                  profile="search"
+                  objectFit="cover"
+                />
+              </div>
+              <div className="min-w-0">
+                <p
+                  className={`truncate text-sm font-semibold ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}
+                >
+                  {partner.favoriteMovie.title}
+                </p>
+                <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  {partner.favoriteMovie.year} •{" "}
+                  {partner.favoriteMovie.mediaType === "series" ? "Series" : "Movie"}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
