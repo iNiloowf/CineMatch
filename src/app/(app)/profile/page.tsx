@@ -1056,7 +1056,7 @@ export default function ProfilePage() {
         {proHeaderPatternClass ? (
           <span className={`pointer-events-none absolute inset-0 z-0 ${proHeaderPatternClass}`} aria-hidden />
         ) : null}
-        <form className="relative z-10 w-full min-w-0 space-y-6 bg-transparent" onSubmit={handleSubmit}>
+        <form className="relative z-10 w-full min-w-0 space-y-4 bg-transparent" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               <div className="profile-avatar-pop relative shrink-0">
@@ -1139,7 +1139,7 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
-          <div className="mt-1 space-y-5 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
@@ -1592,7 +1592,7 @@ export default function ProfilePage() {
                   </p>
                   {favoriteMoviePreview ? (
                     <div
-                      className={`mt-2 flex items-center gap-3 rounded-[18px] border p-3 ${
+                      className={`mt-1.5 flex items-center gap-3 rounded-[18px] border p-3 ${
                         isDarkMode
                           ? "border-white/12 bg-white/[0.05]"
                           : "border-slate-200/90 bg-slate-50/80"
@@ -1627,16 +1627,15 @@ export default function ProfilePage() {
                 <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   About
                 </p>
-                <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                   {currentUser.bio?.trim() ? currentUser.bio : "—"}
                 </p>
               </div>
             )}
           </div>
-        </form>
         {!isEditing ? (
           <>
-            <div className="grid grid-cols-3 gap-2 pt-1 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 pt-0.5 sm:gap-3">
               {(
                 [
                   { value: acceptedMovies.length, label: "Picks", href: "/picks" as const },
@@ -1673,7 +1672,7 @@ export default function ProfilePage() {
                 </Link>
               ))}
             </div>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Link
                 href="/connect"
                 className={`ui-btn ui-btn-primary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold sm:w-auto`}
@@ -1691,6 +1690,7 @@ export default function ProfilePage() {
             </div>
           </>
         ) : null}
+        </form>
       </SurfaceCard>
 
       <SurfaceCard
