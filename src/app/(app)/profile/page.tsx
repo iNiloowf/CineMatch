@@ -84,6 +84,12 @@ export default function ProfilePage() {
   const [favoriteMovieSearchResults, setFavoriteMovieSearchResults] = useState<Movie[]>([]);
   const [favoriteMovieSearchState, setFavoriteMovieSearchState] = useState<"idle" | "loading" | "error">("idle");
   const [favoriteMovieSearchMessage, setFavoriteMovieSearchMessage] = useState("");
+  const [editSectionsOpen, setEditSectionsOpen] = useState({
+    basicInfo: true,
+    watchedReviews: false,
+    discoveryPreferences: false,
+    discoverSkips: false,
+  });
   const [isProStudioOpen, setIsProStudioOpen] = useState(false);
   /** Applies Pro Studio style immediately while save runs (server round-trip was slow). */
   const [optimisticProfileStyle, setOptimisticProfileStyle] = useState<ProProfileStyle | null>(null);
@@ -134,6 +140,12 @@ export default function ProfilePage() {
       setFavoriteMovieSearchResults([]);
       setFavoriteMovieSearchState("idle");
       setFavoriteMovieSearchMessage("");
+      setEditSectionsOpen({
+        basicInfo: true,
+        watchedReviews: false,
+        discoveryPreferences: false,
+        discoverSkips: false,
+      });
       setIsFavoriteGenresOpen(false);
       setIsDislikedGenresOpen(false);
     });
@@ -311,6 +323,12 @@ export default function ProfilePage() {
     setFavoriteMovieSearchResults([]);
     setFavoriteMovieSearchState("idle");
     setFavoriteMovieSearchMessage("");
+    setEditSectionsOpen({
+      basicInfo: true,
+      watchedReviews: false,
+      discoveryPreferences: false,
+      discoverSkips: false,
+    });
     setIsFavoriteGenresOpen(false);
     setIsDislikedGenresOpen(false);
   };
@@ -407,6 +425,9 @@ export default function ProfilePage() {
     : "w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white";
 
   const labelClass = isDarkMode ? "text-sm font-medium text-slate-200" : "text-sm font-medium text-slate-700";
+  const editSectionShell = isDarkMode
+    ? "rounded-[18px] border border-white/12 bg-white/[0.03]"
+    : "rounded-[18px] border border-slate-200/90 bg-slate-50/60";
 
   /** One shared accent system for shortcuts + primary profile actions */
   const actionGradient =
@@ -1085,11 +1106,16 @@ export default function ProfilePage() {
                     setRemovePhotoModalOpen(false);
                     setIsEditing(false);
                   }}
-                  className={`rounded-full px-3 py-2 text-xs font-semibold transition ${
+                  aria-label="Close edit profile"
+                  title="Close edit profile"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
                     isDarkMode ? "bg-white/10 text-slate-100 hover:bg-white/15" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
-                  Cancel
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2.2" aria-hidden>
+                    <path d="M18 6 6 18" strokeLinecap="round" />
+                    <path d="m6 6 12 12" strokeLinecap="round" />
+                  </svg>
                 </button>
                 <button
                   type="submit"
@@ -1116,11 +1142,25 @@ export default function ProfilePage() {
           <div className="mt-1 space-y-5 sm:space-y-6">
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
-                <section className="space-y-3">
-                  <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Basic info
-                  </p>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditSectionsOpen((current) => ({
+                        ...current,
+                        basicInfo: !current.basicInfo,
+                      }))
+                    }
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                  >
+                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Basic info
+                    </p>
+                    <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
+                      {editSectionsOpen.basicInfo ? "−" : "+"}
+                    </span>
+                  </button>
+                  <div className={`flex flex-col gap-4 sm:flex-row sm:items-start ${editSectionsOpen.basicInfo ? "" : "hidden"}`}>
                   <div className="flex shrink-0 flex-col items-center gap-3">
                     <div className="relative">
                       <AvatarBadge
@@ -1293,26 +1333,52 @@ export default function ProfilePage() {
                 </div>
                 </section>
 
-                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
-
-                <section className="space-y-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Watched reviews
-                    </p>
-                    <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      From Picks after you mark a title watched.
-                    </p>
-                  </div>
-                  {watchedReviewsEditorSection}
+                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditSectionsOpen((current) => ({
+                        ...current,
+                        watchedReviews: !current.watchedReviews,
+                      }))
+                    }
+                    className="flex w-full items-start justify-between gap-2 text-left"
+                  >
+                    <div>
+                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Watched reviews
+                      </p>
+                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        From Picks after you mark a title watched.
+                      </p>
+                    </div>
+                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
+                      {editSectionsOpen.watchedReviews ? "−" : "+"}
+                    </span>
+                  </button>
+                  {editSectionsOpen.watchedReviews ? watchedReviewsEditorSection : null}
                 </section>
 
-                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
-
-                <section className="space-y-4">
-                  <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                    Discovery preferences
-                  </p>
+                <section className={`space-y-4 p-3 sm:p-4 ${editSectionShell}`}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditSectionsOpen((current) => ({
+                        ...current,
+                        discoveryPreferences: !current.discoveryPreferences,
+                      }))
+                    }
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                  >
+                    <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      Discovery preferences
+                    </p>
+                    <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
+                      {editSectionsOpen.discoveryPreferences ? "−" : "+"}
+                    </span>
+                  </button>
+                  {editSectionsOpen.discoveryPreferences && (
+                  <>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div
                       className={`flex flex-col gap-3 rounded-[18px] border p-4 ${
@@ -1468,36 +1534,52 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   </div>
+                  </>
+                  )}
                 </section>
 
-                <div className={`h-px ${isDarkMode ? "bg-white/10" : "bg-slate-200/90"}`} aria-hidden />
-
-                <section className="space-y-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Discover skips
-                    </p>
-                    <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Titles you pass stay off your Discover stack for about a week. Open the list to bring one back
-                      into your queue, read details, or save it to picks.
-                    </p>
-                  </div>
+                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <button
                     type="button"
-                    onClick={() => setDiscoverSkipsModalOpen(true)}
-                    className={`w-full rounded-[16px] border px-4 py-3 text-left text-sm font-semibold transition sm:max-w-md ${
-                      isDarkMode
-                        ? "border-white/14 bg-white/[0.06] text-white hover:bg-white/[0.1]"
-                        : "border-slate-200/90 bg-white text-slate-900 shadow-sm hover:bg-slate-50"
-                    }`}
+                    onClick={() =>
+                      setEditSectionsOpen((current) => ({
+                        ...current,
+                        discoverSkips: !current.discoverSkips,
+                      }))
+                    }
+                    className="flex w-full items-start justify-between gap-2 text-left"
                   >
-                    <span className="block">Recently skipped on Discover</span>
-                    <span className={`mt-0.5 block text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      {skippedDiscoverMovies.length === 0
-                        ? "No hidden titles right now"
-                        : `${skippedDiscoverMovies.length} title${skippedDiscoverMovies.length === 1 ? "" : "s"} hidden from Discover`}
+                    <div>
+                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Discover skips
+                      </p>
+                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        Titles you pass stay off your Discover stack for about a week. Open the list to bring one back
+                        into your queue, read details, or save it to picks.
+                      </p>
+                    </div>
+                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
+                      {editSectionsOpen.discoverSkips ? "−" : "+"}
                     </span>
                   </button>
+                  {editSectionsOpen.discoverSkips ? (
+                    <button
+                      type="button"
+                      onClick={() => setDiscoverSkipsModalOpen(true)}
+                      className={`w-full rounded-[16px] border px-4 py-3 text-left text-sm font-semibold transition sm:max-w-md ${
+                        isDarkMode
+                          ? "border-white/14 bg-white/[0.06] text-white hover:bg-white/[0.1]"
+                          : "border-slate-200/90 bg-white text-slate-900 shadow-sm hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="block">Recently skipped on Discover</span>
+                      <span className={`mt-0.5 block text-xs font-medium ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        {skippedDiscoverMovies.length === 0
+                          ? "No hidden titles right now"
+                          : `${skippedDiscoverMovies.length} title${skippedDiscoverMovies.length === 1 ? "" : "s"} hidden from Discover`}
+                      </span>
+                    </button>
+                  ) : null}
                 </section>
               </div>
             ) : (
