@@ -1,12 +1,18 @@
 /** Max linked friend relationships (accepted + pending) per account in the UI and API. */
 export const MAX_LINKED_FRIENDS = 30;
 
+/** LTR / bidi: keeps full https://…/path?… one tappable link in RTL chats. */
+const LTR_MARK = "\u200E";
+
 /**
  * Invite blurb for share / copy. The invite URL is always alone on the last line
  * (no trailing text) so clients can linkify it reliably.
  */
 export function buildInviteShareMessage(inviteUrl: string, senderName?: string | null) {
   const cleanUrl = inviteUrl.trim();
+  if (!cleanUrl) {
+    return "";
+  }
   const name = senderName?.trim();
   const head = name
     ? [
@@ -18,7 +24,7 @@ export function buildInviteShareMessage(inviteUrl: string, senderName?: string |
         "CineMatch — match movies & shows with friends.",
         "Open this link in the app to connect:",
       ];
-  return `${head.join("\n")}\n\n${cleanUrl}`;
+  return `${head.join("\n")}\n\n${LTR_MARK}${cleanUrl}`;
 }
 
 async function copyTextToClipboard(text: string): Promise<boolean> {
@@ -84,9 +90,21 @@ export async function shareOrCopyInviteMessage(
   }
 
   const cleanUrl = inviteUrl.trim();
+  // Single-line LTR-prefixed URL: chat apps (esp. in RTL) linkify the full path+query, not
+  // a broken origin-only + plain "/connect?…" span when pasting a multi-line block.
+  const urlForClipboard = cleanUrl
+    ? /^https?:/i.test(cleanUrl)
+      ? `${LTR_MARK}${cleanUrl}`
+      : cleanUrl
+    : "";
   const text = buildInviteShareMessage(cleanUrl, senderName);
 
   if (options?.preferCopy) {
+    if (urlForClipboard) {
+      if (await copyTextToClipboard(urlForClipboard)) {
+        return { ok: true, message: "Link copied. Paste in chat to share." };
+      }
+    }
     return tryCopyInvite(text, cleanUrl);
   }
 
@@ -109,8 +127,11 @@ export async function shareOrCopyInviteMessage(
   return tryCopyInvite(text, cleanUrl);
 }
 
+/** Strip invisible bidi/embedding marks that we add for copy/paste; keeps URL/invite parsing. */
+const stripBidiClutter = (s: string) => s.replace(/[\u200E\u200F\u200B\uFEFF\u2066-\u2069\u202A-\u202E]/g, "").trim();
+
 export function parseInviteTokenFromPaste(value: string) {
-  const trimmed = value.trim();
+  const trimmed = stripBidiClutter(value);
 
   if (!trimmed) {
     return "";
@@ -131,7 +152,7 @@ export function parseInviteTokenFromPaste(value: string) {
   }
 
   for (const line of trimmed.split(/\r?\n/)) {
-    const t = line.trim();
+    const t = stripBidiClutter(line);
     if (!t.includes("http")) {
       continue;
     }
