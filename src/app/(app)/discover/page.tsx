@@ -25,6 +25,7 @@ import {
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import {
   parseInviteTokenFromPaste,
+  resolvePastedInviteToToken,
   shareOrCopyInviteMessage,
 } from "@/lib/invite-link-utils";
 import {
@@ -903,12 +904,12 @@ function DiscoverPageContent({
   }, [isPasteInviteModalOpen]);
 
   const handleSubmitPastedInvite = useCallback(async () => {
-    const token = parseInviteTokenFromPaste(pasteInviteDraft);
+    const token = await resolvePastedInviteToToken(pasteInviteDraft);
     if (!token) {
       showMenuBanner({
         ok: false,
         message:
-          "Couldn’t find a valid invite. Paste the full link, or the token that starts with invite-.",
+          "Couldn’t find a valid invite. Paste a connect link, a short /c/… link, or a token that starts with invite-.",
       });
       return;
     }

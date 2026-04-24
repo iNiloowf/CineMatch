@@ -50,6 +50,7 @@ export type InviteRow = {
   token: string;
   created_at: string;
   used_at: string | null;
+  link_code: string | null;
 };
 
 export type SharedWatchRow = {

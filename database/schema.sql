@@ -132,6 +132,7 @@ create table if not exists public.invite_links (
   id uuid primary key default gen_random_uuid(),
   inviter_id uuid not null references public.profiles(id) on delete cascade,
   token text not null unique,
+  link_code text,
   created_at timestamptz not null default now(),
   expires_at timestamptz,
   used_at timestamptz
@@ -151,6 +152,9 @@ create index if not exists idx_swipes_movie_id on public.swipes(movie_id);
 create index if not exists idx_linked_users_requester_id on public.linked_users(requester_id);
 create index if not exists idx_linked_users_target_id on public.linked_users(target_id);
 create index if not exists idx_invite_links_inviter_id on public.invite_links(inviter_id);
+create unique index if not exists idx_invite_links_link_code
+  on public.invite_links (link_code)
+  where link_code is not null;
 create index if not exists idx_shared_watchlist_linked_user_id on public.shared_watchlist(linked_user_id);
 
 insert into storage.buckets (id, name, public)

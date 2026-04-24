@@ -41,6 +41,7 @@ type InviteRow = {
   token: string;
   created_at: string;
   used_at: string | null;
+  link_code: string | null;
 };
 
 type SwipeRow = {
@@ -269,7 +270,7 @@ export async function GET(request: NextRequest) {
         .or(`requester_id.eq.${currentUserId},target_id.eq.${currentUserId}`),
       supabaseAdmin
         .from("invite_links")
-        .select("id, inviter_id, token, created_at, used_at")
+        .select("id, inviter_id, token, created_at, used_at, link_code")
         .eq("inviter_id", currentUserId)
         .order("created_at", { ascending: false }),
     ]);

@@ -122,6 +122,42 @@ export async function shareOrCopyInviteMessage(
 /** Strip invisible bidi/embedding marks that we add for copy/paste; keeps URL/invite parsing. */
 const stripBidiClutter = (s: string) => s.replace(/[\u200E\u200F\u200B\uFEFF\u2066-\u2069\u202A-\u202E]/g, "").trim();
 
+/** E.g. …/c/a1b2c3d4e5 in our short invite URLs (redirects to /connect?invite=…). */
+const SHORT_C_PATH = /\/c\/([a-z0-9]{6,20})(?:[/?#]|\s|$)/i;
+
+export function extractShortInviteCodeFromPaste(value: string) {
+  const t = stripBidiClutter(value);
+  const m = t.match(SHORT_C_PATH);
+  return m ? m[1]!.toLowerCase() : "";
+}
+
+/**
+ * Full token (invite-…), from a long /connect?invite= URL, raw token, or a short /c/… code (async lookup).
+ */
+export async function resolvePastedInviteToToken(value: string): Promise<string> {
+  const fromSync = parseInviteTokenFromPaste(value);
+  if (fromSync) {
+    return fromSync;
+  }
+  const code = extractShortInviteCodeFromPaste(value);
+  if (!code) {
+    return "";
+  }
+  try {
+    const res = await fetch(
+      `/api/invite/resolve?code=${encodeURIComponent(code)}`,
+      { method: "GET" },
+    );
+    const j = (await res.json()) as { token?: string; error?: string };
+    if (res.ok && typeof j.token === "string" && j.token.startsWith("invite-")) {
+      return j.token;
+    }
+  } catch {
+    // offline / blocked
+  }
+  return "";
+}
+
 export function parseInviteTokenFromPaste(value: string) {
   const trimmed = stripBidiClutter(value);
 

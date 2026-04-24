@@ -39,7 +39,7 @@ export async function fetchAccountSyncFromBrowser(
       .or(`requester_id.eq.${activeUserId},target_id.eq.${activeUserId}`),
     supabaseClient
       .from("invite_links")
-      .select("id, inviter_id, token, created_at, used_at")
+      .select("id, inviter_id, token, created_at, used_at, link_code")
       .eq("inviter_id", activeUserId)
       .order("created_at", { ascending: false }),
   ]);

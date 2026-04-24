@@ -10,6 +10,7 @@ import { useAppState } from "@/lib/app-state";
 import {
   MAX_LINKED_FRIENDS,
   parseInviteTokenFromPaste,
+  resolvePastedInviteToToken,
   shareOrCopyInviteMessage,
 } from "@/lib/invite-link-utils";
 
@@ -301,11 +302,15 @@ export default function ConnectPage() {
             <p className={eyebrow}>Have a link?</p>
             <p className={`text-base font-semibold ${isDarkMode ? "text-slate-50" : "text-slate-900"}`}>Paste an invite</p>
             <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-              Drop the full URL here. Valid links include{" "}
+              Paste a connect link. You can use a short one like{" "}
               <code className={`rounded px-1 py-0.5 text-[11px] font-mono ${isDarkMode ? "bg-white/10" : "bg-slate-100"}`}>
-                /connect?invite=
+                /c/…
               </code>{" "}
-              followed by a token.
+              (best for chat apps) or the long{" "}
+              <code className={`rounded px-1 py-0.5 text-[11px] font-mono ${isDarkMode ? "bg-white/10" : "bg-slate-100"}`}>
+                /connect?invite=…
+              </code>{" "}
+              link.
             </p>
           </div>
           <div className="space-y-3">
@@ -317,7 +322,7 @@ export default function ConnectPage() {
                 setManualInviteToken(parseInviteTokenFromPaste(nextValue));
               }}
               rows={4}
-              placeholder="https://…/connect?invite=…"
+              placeholder="https://…/c/…  or  https://…/connect?invite=…"
               className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
                 isDarkMode
                   ? "border-white/16 bg-white/10 text-slate-100 placeholder:text-slate-500 focus:bg-white/14"
@@ -343,10 +348,10 @@ export default function ConnectPage() {
               type="button"
               disabled={inviteBusy || atFriendLimit}
               onClick={async () => {
-                const token = parseInviteTokenFromPaste(manualInviteValue);
+                const token = await resolvePastedInviteToToken(manualInviteValue);
 
                 if (!token) {
-                  setStatusMessage("Paste a valid invite link first.");
+                  setStatusMessage("Paste a valid short /c/… or /connect?invite=… link first.");
                   return;
                 }
 
