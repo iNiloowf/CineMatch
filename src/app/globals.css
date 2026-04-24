@@ -711,6 +711,14 @@ input[type="range"] {
   transform-origin: top right;
 }
 
+/* Dark: shell uses a very light --color-surface-glass; popovers over the search row need a real scrim. */
+[data-app-shell-root][data-theme="dark"] .ui-menu-panel {
+  background: color-mix(in srgb, rgb(12, 10, 20) 92%, rgba(0, 0, 0, 0.5));
+  -webkit-backdrop-filter: blur(28px) saturate(1.15);
+  backdrop-filter: blur(28px) saturate(1.15);
+  box-shadow: var(--elev-menu), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
 .ui-menu-item {
   border-radius: 0.875rem;
   color: var(--color-text-strong);

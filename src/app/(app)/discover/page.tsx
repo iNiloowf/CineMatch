@@ -1505,7 +1505,7 @@ function DiscoverPageContent({
         <div
           role="presentation"
           className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] backdrop-blur-2xl ${
-            isDarkMode ? "bg-slate-950/88" : "bg-slate-950/48"
+            isDarkMode ? "bg-slate-950/68" : "bg-slate-950/48"
           }`}
           onClick={() => {
             setSearchQuery("");
@@ -1519,7 +1519,7 @@ function DiscoverPageContent({
             aria-labelledby="discover-search-sheet-title"
             className={`ui-shell ui-shell--fullscreen ui-shell--dialog-md mx-auto flex flex-col overflow-hidden border ${
               isDarkMode
-                ? "border-white/10 bg-slate-950"
+                ? "border-white/12 bg-slate-950/72 backdrop-blur-2xl"
                 : "border-slate-200/80 bg-white"
             }`}
             onClick={(event) => event.stopPropagation()}
@@ -1799,7 +1799,7 @@ function DiscoverPageContent({
             aria-labelledby="discover-filter-sheet-title"
             className={`ui-shell ui-shell--bottom expand-sheet w-full shadow-[0_25px_80px_rgba(15,23,42,0.18)] ${
               isDarkMode
-                ? "border border-white/10 bg-slate-950"
+                ? "border border-white/12 bg-slate-950/78 backdrop-blur-2xl"
                 : "border border-white/70 bg-white"
             }`}
             onClick={(event) => event.stopPropagation()}
