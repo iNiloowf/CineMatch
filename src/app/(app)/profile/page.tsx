@@ -929,7 +929,8 @@ export default function ProfilePage() {
                         src={preset.imageUrl}
                         alt={preset.label}
                         className="h-full w-full object-cover"
-                        loading="lazy"
+                        loading="eager"
+                        decoding="async"
                         sizes="(max-width: 640px) 50vw, 150px"
                       />
                       <span
