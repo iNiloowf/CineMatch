@@ -1204,6 +1204,14 @@ input[type="range"] {
   background-color: var(--bg-scroll);
 }
 
+/**
+ * Discover v2: overlap #main-content bottom scroll padding so the movie card extends to the
+ * bottom tab bar (small hairline gap only; button row still has its own safe-area padding).
+ */
+[data-app-scroll-container="true"] .discover-v2-page-stack {
+  margin-bottom: calc(-1 * (var(--app-scroll-pad-bottom) - 0.5rem));
+}
+
 [data-app-shell-root][data-theme="dark"] #main-content {
   background-color: var(--bg-scroll);
 }

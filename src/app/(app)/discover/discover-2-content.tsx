@@ -1009,7 +1009,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md flex-1 flex-col gap-1.5 overflow-visible min-h-[calc(100dvh-10.5rem)] sm:min-h-[calc(100dvh-9.5rem)] sm:gap-2.5"
+      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md flex-1 min-h-0 flex-col gap-1.5 overflow-visible sm:gap-2.5"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
