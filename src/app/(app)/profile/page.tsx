@@ -1648,7 +1648,7 @@ export default function ProfilePage() {
                         Watched reviews
                       </p>
                       <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        From Picks after you mark a title watched.
+                        From Picks after you mark a title watched. Titles you mark <span className="font-semibold">Recommended</span> appear on your friend profile for people you’re linked with.
                       </p>
                     </div>
                     <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>

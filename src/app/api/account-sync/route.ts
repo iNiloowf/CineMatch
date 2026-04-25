@@ -59,6 +59,14 @@ type SharedWatchRow = {
   updated_at: string;
 };
 
+type WatchedPickReviewRow = {
+  id: string;
+  user_id: string;
+  movie_id: string;
+  recommended: boolean;
+  watched_at: string;
+};
+
 type MovieRow = {
   id: string;
   title: string;
@@ -285,7 +293,8 @@ export async function GET(request: NextRequest) {
   );
   const sharedLinkIds = linkRows.map((link) => link.id);
 
-  const [partnerProfilesResult, ownSwipesResult, partnerAcceptedSwipesResult, sharedWatchResult] =
+  const reviewUserIds = [currentUserId, ...partnerIds];
+  const [partnerProfilesResult, ownSwipesResult, partnerAcceptedSwipesResult, sharedWatchResult, watchedPickReviewsResult] =
     await Promise.all([
       partnerIds.length > 0
         ? supabaseAdmin
@@ -310,18 +319,32 @@ export async function GET(request: NextRequest) {
             .select("id, linked_user_id, movie_id, watched, updated_at")
             .in("linked_user_id", sharedLinkIds)
         : Promise.resolve({ data: [] as SharedWatchRow[] }),
+      supabaseAdmin
+        .from("watched_pick_reviews")
+        .select("id, user_id, movie_id, recommended, watched_at")
+        .in("user_id", reviewUserIds),
     ]);
+
+  const watchedPickReviewRows: WatchedPickReviewRow[] = watchedPickReviewsResult.error
+    ? []
+    : ((watchedPickReviewsResult.data ?? []) as WatchedPickReviewRow[]) ?? [];
 
   const swipeRows = [
     ...(((ownSwipesResult.data ?? []) as SwipeRow[]) ?? []),
     ...(((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? []),
   ];
-  const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
+  const movieIds = new Set(swipeRows.map((swipe) => swipe.movie_id));
+  for (const row of watchedPickReviewRows) {
+    movieIds.add(row.movie_id);
+  }
+  const movieIdList = Array.from(movieIds);
 
-  const movieChunks = chunk(movieIds, 150);
+  const movieChunks = chunk(movieIdList, 150);
   const movieResults = await Promise.all(
     movieChunks.map((ids) =>
-      supabaseAdmin
+      ids.length === 0
+        ? Promise.resolve({ data: [] as MovieRow[] })
+        : supabaseAdmin
         .from("movies")
         .select(
           "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
@@ -340,6 +363,7 @@ export async function GET(request: NextRequest) {
       swipes: swipeRows,
       sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
       movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
+      watchedPickReviews: watchedPickReviewRows,
     },
     request,
   );

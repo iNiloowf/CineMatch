@@ -8,6 +8,7 @@ import type {
   ProfileRow,
   SharedWatchRow,
   SwipeRow,
+  WatchedPickReviewRow,
 } from "@/lib/account-sync/types";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -97,16 +98,24 @@ export async function fetchAccountSyncFromBrowser(
           error: null,
         });
 
+  const reviewUserIds = [activeUserId, ...partnerIds];
+  const watchedPickReviewsPromise = supabaseClient
+    .from("watched_pick_reviews")
+    .select("id, user_id, movie_id, recommended, watched_at")
+    .in("user_id", reviewUserIds);
+
   const [
     partnerProfilesResult,
     ownSwipesResult,
     partnerAcceptedSwipesResult,
     sharedWatchResult,
+    watchedPickReviewsResult,
   ] = await Promise.all([
     partnerProfilesPromise,
     ownSwipesPromise,
     partnerAcceptedSwipesPromise,
     sharedWatchPromise,
+    watchedPickReviewsPromise,
   ]);
 
   if (
@@ -118,11 +127,19 @@ export async function fetchAccountSyncFromBrowser(
     return null;
   }
 
+  const watchedPickReviewRows: WatchedPickReviewRow[] = watchedPickReviewsResult.error
+    ? []
+    : (((watchedPickReviewsResult.data ?? []) as WatchedPickReviewRow[]) ?? []);
+
   const swipeRows = [
     ...(((ownSwipesResult.data ?? []) as SwipeRow[]) ?? []),
     ...(((partnerAcceptedSwipesResult.data ?? []) as SwipeRow[]) ?? []),
   ];
-  const movieIds = Array.from(new Set(swipeRows.map((swipe) => swipe.movie_id)));
+  const movieIdSet = new Set(swipeRows.map((swipe) => swipe.movie_id));
+  for (const row of watchedPickReviewRows) {
+    movieIdSet.add(row.movie_id);
+  }
+  const movieIds = Array.from(movieIdSet);
   const movieChunks = chunkItems(movieIds, 75);
   const movieResults = await Promise.all(
     movieChunks.map((ids) =>
@@ -155,5 +172,6 @@ export async function fetchAccountSyncFromBrowser(
     movies: movieResults.flatMap(
       (result) => ((result.data ?? []) as MovieRow[]) ?? [],
     ),
+    watchedPickReviews: watchedPickReviewRows,
   };
 }

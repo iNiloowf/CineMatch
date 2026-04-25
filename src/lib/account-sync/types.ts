@@ -41,6 +41,14 @@ export type SwipeRow = {
   created_at: string;
 };
 
+export type WatchedPickReviewRow = {
+  id: string;
+  user_id: string;
+  movie_id: string;
+  recommended: boolean;
+  watched_at: string;
+};
+
 export type LinkRow = {
   id: string;
   requester_id: string;
@@ -90,6 +98,8 @@ export type AccountSyncPayload = {
   swipes: SwipeRow[];
   sharedWatch: SharedWatchRow[];
   movies: MovieRow[];
+  /** Own + linked friends' rows; needed for "recommends" on friend profile. */
+  watchedPickReviews?: WatchedPickReviewRow[];
 };
 
 export const DEFAULT_SETTINGS_ROW_BASE = {

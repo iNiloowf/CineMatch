@@ -57,6 +57,7 @@ import type {
   SettingsRow,
   SharedWatchRow,
   SwipeRow,
+  WatchedPickReviewRow,
 } from "@/lib/account-sync/types";
 import {
   Achievement,
@@ -72,6 +73,7 @@ import {
   SharedMovieView,
   SwipeDecision,
   User,
+  WatchedPickReview,
 } from "@/lib/types";
 import { getEffectiveSubscriptionTier, type SubscriptionTier } from "@/lib/subscription-tier";
 
@@ -382,6 +384,16 @@ function mapSwipeRow(swipe: SwipeRow) {
     movieId: swipe.movie_id,
     decision: swipe.decision,
     createdAt: swipe.created_at,
+  };
+}
+
+function mapWatchedPickReviewRow(row: WatchedPickReviewRow): WatchedPickReview {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    movieId: row.movie_id,
+    recommended: row.recommended,
+    watchedAt: row.watched_at,
   };
 }
 
@@ -1012,6 +1024,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         })),
       ];
 
+      const serverWatchedPicks = (payload.watchedPickReviews ?? []).map(
+        mapWatchedPickReviewRow,
+      );
+      const mergedWatchedPickReviews: WatchedPickReview[] = [
+        ...next.watchedPickReviews.filter(
+          (entry) => !hydratedSwipeUserIds.includes(entry.userId),
+        ),
+        ...serverWatchedPicks,
+      ];
+
       if (ownSettings) {
         const mapped = mapSettingsRow(ownSettings);
         if (getStoredUserAutoplayTrailers(activeUserId) === null) {
@@ -1032,6 +1054,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           links: currentLinks,
           invites: currentInvites,
           sharedWatch: currentSharedWatch,
+          watchedPickReviews: mergedWatchedPickReviews,
           settings: {
             ...next.settings,
             [activeUserId]: {
@@ -1048,6 +1071,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         links: currentLinks,
         invites: currentInvites,
         sharedWatch: currentSharedWatch,
+        watchedPickReviews: mergedWatchedPickReviews,
         settings: next.settings,
       };
     });
@@ -2419,12 +2443,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           !(entry.userId === currentUserId && entry.movieId === movieId),
       ),
     }));
+
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && isSupabaseConfigured()) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("watched_pick_reviews")
+        .delete()
+        .eq("user_id", currentUserId)
+        .eq("movie_id", movieId);
+      if (error) {
+        requestAccountDataRefresh();
+      }
+    }
   };
 
   const markPickWatched = async (movieId: string, recommended: boolean) => {
     if (!currentUserId) {
       return;
     }
+
+    const watchedAt = new Date().toISOString();
 
     setData((current) => {
       const existing = current.watchedPickReviews.find(
@@ -2439,7 +2478,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               ? {
                   ...entry,
                   recommended,
-                  watchedAt: new Date().toISOString(),
+                  watchedAt,
                 }
               : entry,
           ),
@@ -2455,11 +2494,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             userId: currentUserId,
             movieId,
             recommended,
-            watchedAt: new Date().toISOString(),
+            watchedAt,
           },
         ],
       };
     });
+
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && isSupabaseConfigured()) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("watched_pick_reviews").upsert(
+        {
+          user_id: currentUserId,
+          movie_id: movieId,
+          recommended,
+          watched_at: watchedAt,
+        },
+        { onConflict: "user_id,movie_id" },
+      );
+      if (error) {
+        requestAccountDataRefresh();
+      }
+    }
   };
 
   const unmarkPickWatched = async (movieId: string) => {
@@ -2473,6 +2529,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         (entry) => !(entry.userId === currentUserId && entry.movieId === movieId),
       ),
     }));
+
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && isSupabaseConfigured()) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from("watched_pick_reviews")
+        .delete()
+        .eq("user_id", currentUserId)
+        .eq("movie_id", movieId);
+      if (error) {
+        requestAccountDataRefresh();
+      }
+    }
   };
 
   const toggleSharedMovie = async (

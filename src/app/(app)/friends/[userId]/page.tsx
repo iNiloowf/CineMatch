@@ -16,6 +16,7 @@ import {
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { shareMovieDeepLink } from "@/lib/share-movie-link";
 import { useAppState } from "@/lib/app-state";
+import type { Movie } from "@/lib/types";
 
 export default function FriendProfilePage() {
   const params = useParams();
@@ -69,10 +70,43 @@ export default function FriendProfilePage() {
     [data, userId],
   );
 
-  const selectedMovie = useMemo(
-    () => savedMovies.find((movie) => movie.id === selectedMovieId) ?? null,
-    [savedMovies, selectedMovieId],
-  );
+  /** Titles they marked “Recommended” after watching (synced for linked friends). */
+  const partnerRecommendations = useMemo(() => {
+    if (!userId) {
+      return [];
+    }
+    const movieById = new Map(data.movies.map((m) => [m.id, m]));
+    const entries = data.watchedPickReviews
+      .filter((e) => e.userId === userId && e.recommended)
+      .sort(
+        (a, b) =>
+          new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime(),
+      );
+    const seen = new Set<string>();
+    const out: Movie[] = [];
+    for (const e of entries) {
+      if (seen.has(e.movieId)) {
+        continue;
+      }
+      seen.add(e.movieId);
+      const m = movieById.get(e.movieId);
+      if (m) {
+        out.push(m);
+      }
+    }
+    return out;
+  }, [data.movies, data.watchedPickReviews, userId]);
+
+  const selectedMovie = useMemo(() => {
+    if (!selectedMovieId) {
+      return null;
+    }
+    return (
+      savedMovies.find((movie) => movie.id === selectedMovieId) ??
+      partnerRecommendations.find((movie) => movie.id === selectedMovieId) ??
+      null
+    );
+  }, [savedMovies, partnerRecommendations, selectedMovieId]);
   const partnerGenreInsights = useMemo(() => {
     const likedCounts = new Map<string, number>();
     const dislikedCounts = new Map<string, number>();
@@ -110,6 +144,9 @@ export default function FriendProfilePage() {
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
+  const recommendSectionEyebrow = isDarkMode
+    ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300/90"
+    : "text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600/90";
   const partnerProfileStyle = partner?.profileStyle ?? "classic";
   const friendHeaderStyleClass =
     partnerProfileStyle === "glass"
@@ -287,7 +324,7 @@ export default function FriendProfilePage() {
           title={partner.name}
           description={
             linkEntry.status === "accepted"
-              ? "Saved picks — tap a title for details."
+              ? "Their recommends and Discover picks — tap a title for details."
               : "Pending link — picks appear when you’re both active."
           }
         />
@@ -530,6 +567,132 @@ export default function FriendProfilePage() {
               </div>
             )}
           </div>
+        </div>
+      </SurfaceCard>
+
+      <SurfaceCard className="fade-up-enter !p-5 sm:!p-6" style={{ animationDelay: "140ms" }}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0 space-y-2">
+              <p className={recommendSectionEyebrow}>Recommends</p>
+              <p
+                className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
+              >
+                Titles they loved after watching
+              </p>
+              <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                From Picks — marked Recommended on their profile. Only people they’re linked with can see this list.
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                isDarkMode ? "bg-emerald-500/15 text-emerald-100" : "bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              {partnerRecommendations.length} title{partnerRecommendations.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {partnerRecommendations.length === 0 ? (
+            <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              No recommendations to show yet — when they mark a watched title as Recommended, it will appear here.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {partnerRecommendations.map((movie, index) => {
+                const inMine = myAcceptedIds.has(movie.id);
+
+                return (
+                  <li
+                    key={`partner-rec-${movie.id}`}
+                    className="discover-toolbar-enter"
+                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+                  >
+                    <div
+                      className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
+                        isDarkMode
+                          ? "border-emerald-400/15 bg-emerald-500/[0.06] hover:border-emerald-400/30"
+                          : "border-emerald-200/80 bg-white hover:border-emerald-300 hover:shadow-sm"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMovieId(movie.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
+                      >
+                        <div
+                          className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
+                            isDarkMode ? "bg-slate-800" : "bg-slate-100"
+                          }`}
+                        >
+                          <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
+                          {!movie.poster.imageUrl ? (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                              CM
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                          >
+                            {movie.title}
+                          </p>
+                          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                            {movie.year}
+                            {inMine ? " · In your picks" : ""}
+                          </p>
+                        </div>
+                      </button>
+                      {linkEntry.status === "accepted" ? (
+                        inMine ? (
+                          <span
+                            className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                              isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            Yours
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={addingId === movie.id}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleAddPick(movie.id);
+                            }}
+                            aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
+                            className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+                              addingId === movie.id
+                                ? isDarkMode
+                                  ? "bg-violet-500/35"
+                                  : "bg-violet-400/90"
+                                : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
+                            }`}
+                          >
+                            {addingId === movie.id ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden />
+                            ) : (
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                className="h-5 w-5"
+                                aria-hidden
+                              >
+                                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </SurfaceCard>
 
