@@ -32,9 +32,10 @@ type MovieSwipeCardProps = {
   /** Discover: tap the Match % chip to explain why it fits your taste. */
   onMatchPercentClick?: () => void;
   /**
-   * Discover layout 2: warm honey/yellow “Bumble-like” chrome (round CTAs, cream card, no violet).
+   * Full-bleed poster: image fills the card; metadata and copy sit on the poster
+   * (no duplicate IMDb/runtime block below the image). Discover 2 only.
    */
-  visualVariant?: "default" | "bumble";
+  posterLayout?: "standard" | "immersive";
 };
 
 export function MovieSwipeCard({
@@ -49,9 +50,9 @@ export function MovieSwipeCard({
   swipeFeedback = null,
   suppressTrailerPlayButton = false,
   onMatchPercentClick,
-  visualVariant = "default",
+  posterLayout = "standard",
 }: MovieSwipeCardProps) {
-  const bumble = visualVariant === "bumble";
+  const immersive = posterLayout === "immersive";
   const {
     isDarkMode,
     acceptedMovies,
@@ -308,18 +309,322 @@ export function MovieSwipeCard({
 
   const statSvg = "h-6 w-6 shrink-0";
 
+  const trailerModal = isTrailerVisible ? (
+    <MovieTrailerModalLazy
+      movie={movie}
+      isDarkMode={isDarkMode}
+      isInteractionLocked={isInteractionLocked}
+      trailerUrl={trailerUrl}
+      isLoadingTrailer={isLoadingTrailer}
+      trailerError={trailerError}
+      runtimeLabel={runtimeLabel}
+      onClose={() => setIsTrailerVisible(false)}
+      onRetryTrailer={() => void fetchTrailerIfNeeded()}
+      onAccept={onAccept}
+      onReject={onReject}
+    />
+  ) : null;
+
+  if (immersive) {
+    return (
+      <>
+        <SurfaceCard
+          data-poster-layout="immersive"
+          shimmer={false}
+          className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+            isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
+          } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
+          style={{
+            transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {swipeFeedback ? (
+            <div className="pointer-events-none absolute inset-x-4 top-3 z-[var(--z-local)] flex justify-center sm:inset-x-6 sm:top-4">
+              <div
+                className={`discover-feedback-chip ${
+                  swipeFeedback === "accepted" ? "discover-feedback-accept" : "discover-feedback-reject"
+                }`}
+              >
+                {swipeFeedback === "accepted" ? "Added to picks" : "Passed for now"}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="flex h-full min-h-0 flex-1 flex-col">
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: movie.poster.imageUrl
+                    ? undefined
+                    : `linear-gradient(145deg, ${movie.poster.accentFrom}, ${movie.poster.accentTo})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+              <PosterBackdrop
+                imageUrl={movie.poster.imageUrl}
+                profile="hero"
+                objectFit="cover"
+                className="!absolute inset-0 h-full w-full"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.5),transparent_40%,rgba(2,6,23,0.2)_55%,rgba(2,6,23,0.75)_100%)]" />
+
+              <div className="absolute left-0 right-0 top-0 z-[2] flex min-w-0 items-start justify-between gap-2 p-3 pr-2 sm:p-3.5">
+                <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
+                  {movie.mediaType === "series" ? "Series" : "Movie"}
+                </span>
+                <div className="flex min-w-0 max-w-[min(100%,15rem)] flex-wrap items-center justify-end gap-1.5 sm:max-w-none sm:gap-2">
+                  <span className="ui-chip ui-chip--media-meta max-w-[4.5rem] shrink-0 truncate sm:max-w-none sm:px-2.5 sm:text-[11px]">
+                    {movie.year}
+                  </span>
+                  <span
+                    className="ui-chip ui-chip--media-meta max-w-[5.25rem] shrink-0 truncate sm:max-w-none sm:px-2.5 sm:text-[11px]"
+                    title={runtimeLabel}
+                  >
+                    {runtimeLabel}
+                  </span>
+                  <span className="ui-chip ui-chip--score-warm shrink-0 sm:px-2.5 sm:text-[11px]">
+                    {movie.rating.toFixed(1)} ★
+                  </span>
+                </div>
+              </div>
+
+              <div className="absolute inset-y-0 left-0 right-0 z-[1] flex items-center justify-between px-0">
+                <button
+                  type="button"
+                  onClick={onPrevious}
+                  disabled={!canGoPrevious}
+                  aria-label="Show previous title"
+                  className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
+                    canGoPrevious
+                      ? "opacity-100 hover:bg-black/28 active:scale-95"
+                      : "cursor-not-allowed opacity-35"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={onNext}
+                  disabled={!canGoNext}
+                  aria-label="Show next title"
+                  className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
+                    canGoNext ? "opacity-100 hover:bg-black/28 active:scale-95" : "cursor-not-allowed opacity-35"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden="true">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+
+              {!suppressTrailerPlayButton ? (
+                <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={handleOpenTrailer}
+                    disabled={!hasTrailer || isLoadingTrailer}
+                    aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
+                    className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border text-white shadow-[0_6px_28px_rgba(0,0,0,0.55)] transition ${
+                      hasTrailer
+                        ? "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
+                        : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="ml-1 h-6 w-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
+                      aria-hidden="true"
+                    >
+                      <path d="m8 5 11 7-11 7V5Z" />
+                    </svg>
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                className={`absolute bottom-0 left-0 right-0 z-[2] flex min-h-0 max-w-full flex-col ${
+                  isDescriptionExpanded ? "max-h-[min(58vh,80%)]" : ""
+                }`}
+              >
+                <div
+                  className="max-h-full overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-12 [scrollbar-gutter:stable] sm:px-3.5 sm:pt-14"
+                  style={isDescriptionExpanded ? { WebkitOverflowScrolling: "touch" } : undefined}
+                >
+                  <h2
+                    className={`min-w-0 max-w-full font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] sm:max-w-none ${titleSizeClass} ${
+                      movie.title.length > 24 ? "text-[0.9rem] sm:text-[1rem]" : "text-base sm:text-lg"
+                    }`}
+                  >
+                    {movie.title}
+                  </h2>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {movie.genre.slice(0, 3).map((genre) => (
+                      <span
+                        key={genre}
+                        className="rounded-lg border border-white/15 bg-white/8 px-2 py-0.5 text-[9px] font-semibold text-white/95 backdrop-blur-sm sm:px-2.5 sm:text-[10px]"
+                        title={genre}
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                  {onMatchPercentClick ? (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        disabled={isInteractionLocked}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMatchPercentClick();
+                        }}
+                        className="inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full border border-violet-400/45 bg-violet-500/25 px-2.5 py-1.5 text-left text-[11px] font-bold text-violet-100 shadow-sm backdrop-blur-sm transition enabled:hover:bg-violet-500/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={`Why ${matchScore}% match for your taste?`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-5 w-5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
+                          <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                          <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
+                        </svg>
+                        <span>
+                          {matchScore}% <span className="font-semibold text-violet-200/90">taste match</span>
+                        </span>
+                        <span className="ml-0.5 text-[10px] font-medium text-violet-200/80">Tap for why</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs font-bold text-violet-200/95">{matchScore}% match</p>
+                  )}
+
+                  {discoverPartnerNotes.length > 0 ? (
+                    <div className="mt-2.5 border-t border-white/12 pt-2" role="region" aria-label="What your connected friends did with this title">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/90">Your connections</p>
+                      <ul className="mt-1.5 max-h-24 space-y-1 overflow-y-auto text-[10px] font-medium leading-snug text-slate-100/90">
+                        {discoverPartnerNotes.map((row) => (
+                          <li key={row.id} title={row.displayName}>
+                            {row.label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  <div
+                    ref={descriptionSectionRef}
+                    className={`mt-2.5 border-t border-white/10 pt-2.5 ${
+                      isDescriptionExpanded ? "min-h-0" : ""
+                    }`}
+                    onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
+                    style={
+                      shouldClamp && !isDescriptionExpanded
+                        ? { cursor: "pointer" }
+                        : undefined
+                    }
+                  >
+                    {shouldClamp ? (
+                      isDescriptionExpanded ? (
+                        <>
+                          <p className="text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
+                          <div className="mt-1.5 flex justify-end">
+                            <button
+                              type="button"
+                              aria-label="Show less description"
+                              aria-expanded
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleDescription();
+                              }}
+                              className="min-h-9 rounded-lg px-1 text-violet-300"
+                              style={{ fontSize: "11px" }}
+                            >
+                              Less
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="relative min-h-0">
+                          <p className="line-clamp-3 pr-[3.2rem] text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
+                          <button
+                            type="button"
+                            aria-label="Show full description"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleDescription();
+                            }}
+                            className="absolute bottom-0 right-0 z-[1] min-h-9 text-violet-300"
+                            style={{ fontSize: "11px" }}
+                          >
+                            More
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <p className="text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={`shrink-0 border-t px-2.5 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-2 sm:px-3.5 ${
+                isDarkMode
+                  ? "border-white/10 bg-slate-950/[0.98]"
+                  : "border-slate-200/90 bg-white"
+              }`}
+            >
+              <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                <button
+                  type="button"
+                  onClick={onReject}
+                  disabled={isInteractionLocked}
+                  className={`min-h-11 min-w-0 rounded-md border px-2.5 py-2.5 text-[11px] font-semibold backdrop-blur-xl transition sm:px-3.5 sm:text-xs ${
+                    isDarkMode
+                      ? "border-white/22 bg-white/[0.12] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.18]"
+                      : "border-slate-300/80 bg-slate-50/95 text-slate-800 shadow-sm hover:bg-white/90"
+                  } disabled:cursor-not-allowed disabled:opacity-65`}
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  onClick={onAccept}
+                  disabled={isInteractionLocked}
+                  className="min-h-11 min-w-0 rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-2.5 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] backdrop-blur-xl transition enabled:hover:from-violet-500 enabled:hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 sm:px-3.5 sm:text-xs"
+                >
+                  Like
+                </button>
+              </div>
+            </div>
+          </div>
+        </SurfaceCard>
+        {trailerModal}
+      </>
+    );
+  }
+
   return (
     <>
       <SurfaceCard
-        data-visual-bumble={bumble ? "true" : undefined}
         shimmer={false}
-        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 [--swipe-y-gap:clamp(0.75rem,2.85vw,1.05rem)] sm:p-3.5 ${
-          bumble
-            ? isDarkMode
-              ? "!rounded-[28px] !border-2 !border-amber-400/25 !bg-zinc-950/98 !shadow-[0_20px_55px_rgba(0,0,0,0.5)]"
-              : "!rounded-[28px] !border-0 !bg-white !shadow-[0_18px_50px_rgba(255,189,60,0.2)]"
-            : "rounded-[24px]"
-        } ${
+        className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 [--swipe-y-gap:clamp(0.75rem,2.85vw,1.05rem)] sm:p-3.5 rounded-[24px] ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
@@ -344,9 +649,7 @@ export function MovieSwipeCard({
         ) : null}
 
         <div
-          className={`discover-hero-reveal relative shrink-0 overflow-hidden p-3.5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.1)] sm:p-4 ${
-            bumble ? "rounded-[22px] ring-1 ring-amber-400/20" : "rounded-[18px]"
-          }`}
+          className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.1)] sm:p-4"
           style={{
             backgroundImage: movie.poster.imageUrl
               ? undefined
@@ -364,13 +667,7 @@ export function MovieSwipeCard({
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),transparent_32%,rgba(15,23,42,0.42)_58%,rgba(3,7,18,0.82)_100%)]" />
           <div className="relative flex min-h-[10.25rem] flex-col justify-between gap-2 sm:min-h-[11.5rem]">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-              <span
-                className={
-                  bumble
-                    ? "shrink-0 rounded-full border-0 bg-amber-400 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.22em] text-slate-950 shadow-sm sm:px-3 sm:text-[10px] sm:tracking-[0.24em]"
-                    : "ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]"
-                }
-              >
+              <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                 {movie.mediaType === "series" ? "Series" : "Movie"}
               </span>
               <div className="flex min-w-0 max-w-[min(100%,14rem)] flex-wrap items-center justify-end gap-1.5 sm:max-w-none sm:gap-2">
@@ -394,11 +691,7 @@ export function MovieSwipeCard({
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
                 aria-label="Show previous title"
-                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
-                  bumble
-                    ? "border-amber-300/45 bg-gradient-to-b from-amber-400/25 to-amber-500/10 backdrop-blur-sm"
-                    : "border-white/35 bg-black/15"
-                } ${
+                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
                   canGoPrevious
                     ? "opacity-100 hover:bg-black/28 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -419,11 +712,7 @@ export function MovieSwipeCard({
                 onClick={onNext}
                 disabled={!canGoNext}
                 aria-label="Show next title"
-                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
-                  bumble
-                    ? "border-amber-300/45 bg-gradient-to-b from-amber-400/25 to-amber-500/10 backdrop-blur-sm"
-                    : "border-white/35 bg-black/15"
-                } ${
+                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
                   canGoNext
                     ? "opacity-100 hover:bg-black/28 active:scale-95"
                     : "cursor-not-allowed opacity-35"
@@ -449,18 +738,14 @@ export function MovieSwipeCard({
                   aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
                   className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border text-white shadow-[0_6px_28px_rgba(0,0,0,0.55)] transition ${
                     hasTrailer
-                      ? bumble
-                        ? "border-amber-300/90 bg-amber-400/95 text-slate-900 shadow-[0_8px_32px_rgba(251,191,36,0.45)] hover:brightness-105 active:scale-95"
-                        : "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
-                      : bumble
-                        ? "cursor-not-allowed border-amber-400/30 bg-amber-950/40 text-amber-200/50"
-                        : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
+                      ? "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
+                      : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
                   }`}
                 >
                   <svg
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className={`ml-1 h-6 w-6 ${bumble && hasTrailer ? "drop-shadow-none" : "drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"}`}
+                    className="ml-1 h-6 w-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
                     aria-hidden="true"
                   >
                     <path d="m8 5 11 7-11 7V5Z" />
@@ -491,27 +776,15 @@ export function MovieSwipeCard({
 
         <div
           className={`mt-[var(--swipe-y-gap)] grid shrink-0 grid-cols-3 gap-1 rounded-[18px] px-2 py-2.5 max-[380px]:gap-0.5 max-[380px]:px-1.5 sm:gap-2 sm:rounded-[20px] sm:px-3 sm:py-3 ${
-            bumble
-              ? isDarkMode
-                ? "border border-amber-500/20 bg-zinc-900/90"
-                : "border border-amber-200/60 bg-amber-50/90 shadow-sm"
-              : isDarkMode
-                ? "border border-white/14 bg-white/10"
-                : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
+            isDarkMode
+              ? "border border-white/14 bg-white/10"
+              : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
           }`}
         >
           <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
             <svg
               viewBox="0 0 24 24"
-              className={`${statSvg} shrink-0 ${
-                bumble
-                  ? isDarkMode
-                    ? "text-amber-300"
-                    : "text-amber-600"
-                  : isDarkMode
-                    ? "text-violet-300"
-                    : "text-violet-600"
-              }`}
+              className={`${statSvg} shrink-0 ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
               fill="currentColor"
               aria-hidden
             >
@@ -528,26 +801,12 @@ export function MovieSwipeCard({
           </div>
           <div
             className={`flex min-w-0 items-center justify-center gap-2 border-x px-0.5 sm:gap-2.5 sm:px-0 ${
-              bumble
-                ? isDarkMode
-                  ? "border-amber-500/20"
-                  : "border-amber-200/70"
-                : isDarkMode
-                  ? "border-white/12"
-                  : "border-black/6"
+              isDarkMode ? "border-white/12" : "border-black/6"
             }`}
           >
             <svg
               viewBox="0 0 24 24"
-              className={`${statSvg} shrink-0 ${
-                bumble
-                  ? isDarkMode
-                    ? "text-amber-200/90"
-                    : "text-amber-700/90"
-                  : isDarkMode
-                    ? "text-slate-200"
-                    : "text-slate-600"
-              }`}
+              className={`${statSvg} shrink-0 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -579,26 +838,14 @@ export function MovieSwipeCard({
               className={`flex h-full min-h-[2.75rem] w-full min-w-0 items-center justify-center gap-2 self-stretch rounded-xl px-1 touch-manipulation transition sm:gap-2.5 ${
                 isInteractionLocked
                   ? "cursor-not-allowed opacity-60"
-                  : bumble
-                    ? isDarkMode
-                      ? "cursor-pointer hover:bg-amber-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-400/80"
-                      : "cursor-pointer hover:bg-amber-100/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-amber-500/70"
-                    : isDarkMode
-                      ? "cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-400/80"
-                      : "cursor-pointer hover:bg-violet-50/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-500/70"
+                  : isDarkMode
+                    ? "cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-400/80"
+                    : "cursor-pointer hover:bg-violet-50/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-500/70"
               }`}
             >
               <svg
                 viewBox="0 0 24 24"
-                className={`${statSvg} shrink-0 ${
-                  bumble
-                    ? isDarkMode
-                      ? "text-amber-300"
-                      : "text-amber-600"
-                    : isDarkMode
-                      ? "text-emerald-400"
-                      : "text-emerald-600"
-                }`}
+                className={`${statSvg} shrink-0 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -628,15 +875,7 @@ export function MovieSwipeCard({
             <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
               <svg
                 viewBox="0 0 24 24"
-                className={`${statSvg} ${
-                  bumble
-                    ? isDarkMode
-                      ? "text-amber-300"
-                      : "text-amber-600"
-                    : isDarkMode
-                      ? "text-emerald-400"
-                      : "text-emerald-600"
-                }`}
+                className={`${statSvg} ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -666,26 +905,16 @@ export function MovieSwipeCard({
         {discoverPartnerNotes.length > 0 ? (
           <div
             className={`mt-[var(--swipe-y-gap)] shrink-0 rounded-[18px] border px-3 py-2.5 sm:px-3.5 ${
-              bumble
-                ? isDarkMode
-                  ? "border-amber-500/20 bg-amber-950/25"
-                  : "border-amber-200/70 bg-amber-50/80 shadow-sm"
-                : isDarkMode
-                  ? "border-white/14 bg-white/[0.07]"
-                  : "border-slate-200/90 bg-white/80 shadow-sm"
+              isDarkMode
+                ? "border-white/14 bg-white/[0.07]"
+                : "border-slate-200/90 bg-white/80 shadow-sm"
             }`}
             role="region"
             aria-label="What your connected friends did with this title"
           >
             <p
               className={`text-[10px] font-bold uppercase tracking-[0.12em] ${
-                bumble
-                  ? isDarkMode
-                    ? "text-amber-200/95"
-                    : "text-amber-700/95"
-                  : isDarkMode
-                    ? "text-violet-200/90"
-                    : "text-violet-600/90"
+                isDarkMode ? "text-violet-200/90" : "text-violet-600/90"
               }`}
             >
               Your connections
@@ -711,13 +940,9 @@ export function MovieSwipeCard({
             className={`flex w-full flex-col overflow-hidden rounded-[22px] text-left ${
               isDescriptionExpanded ? "min-h-0 flex-1" : "shrink-0"
             } ${
-              bumble
-                ? isDarkMode
-                  ? "bg-zinc-900/80"
-                  : "border border-amber-100/90 bg-amber-50/40 shadow-sm"
-                : isDarkMode
-                  ? "bg-white/10"
-                  : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
+              isDarkMode
+                ? "bg-white/10"
+                : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
             } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
             onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
           >
@@ -750,13 +975,7 @@ export function MovieSwipeCard({
                           handleToggleDescription();
                         }}
                         className={`min-h-11 rounded-lg px-1 leading-5 ${
-                          bumble
-                            ? isDarkMode
-                              ? "text-amber-300"
-                              : "text-amber-700"
-                            : isDarkMode
-                              ? "text-violet-300"
-                              : "text-violet-600"
+                          isDarkMode ? "text-violet-300" : "text-violet-600"
                         }`}
                         style={{ fontSize: "11px" }}
                       >
@@ -782,13 +1001,7 @@ export function MovieSwipeCard({
                         handleToggleDescription();
                       }}
                       className={`absolute bottom-0 right-0 z-[1] inline-flex min-h-11 items-end rounded-lg px-1 leading-5 ${
-                        bumble
-                          ? isDarkMode
-                            ? "text-amber-300"
-                            : "text-amber-700"
-                          : isDarkMode
-                            ? "text-violet-300"
-                            : "text-violet-600"
+                        isDarkMode ? "text-violet-300" : "text-violet-600"
                       }`}
                       style={{ fontSize: "11px" }}
                     >
@@ -815,52 +1028,26 @@ export function MovieSwipeCard({
               type="button"
               onClick={onReject}
               disabled={isInteractionLocked}
-              className={`min-h-12 min-w-0 border px-3 py-2.5 text-[11px] font-semibold backdrop-blur-xl transition max-[380px]:px-2.5 sm:px-3.5 sm:text-xs ${
-                bumble
-                  ? isDarkMode
-                    ? "rounded-full border-slate-600/80 bg-slate-900/90 text-slate-200 shadow-sm hover:bg-slate-800/90"
-                    : "rounded-full border-slate-200/90 bg-white text-slate-700 shadow-[0_4px_14px_rgba(15,23,42,0.08)] hover:bg-slate-50"
-                  : `rounded-md max-[380px]:px-2.5 sm:rounded-[10px] ${
-                      isDarkMode
-                        ? "border-white/22 bg-white/[0.12] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.18]"
-                        : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm hover:bg-white/70"
-                    }`
+              className={`min-h-11 min-w-0 rounded-md border px-3 py-2.5 text-[11px] font-semibold backdrop-blur-xl transition max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
+                isDarkMode
+                  ? "border-white/22 bg-white/[0.12] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.18]"
+                  : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm hover:bg-white/70"
               } disabled:cursor-not-allowed disabled:opacity-65`}
             >
-              {bumble ? "Pass" : "Reject"}
+              Reject
             </button>
             <button
               type="button"
               onClick={onAccept}
               disabled={isInteractionLocked}
-              className={`min-h-12 min-w-0 border px-3 py-2.5 text-[11px] font-semibold backdrop-blur-xl transition disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:px-3.5 sm:text-xs ${
-                bumble
-                  ? isDarkMode
-                    ? "rounded-full border-amber-400/50 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 shadow-[0_8px_26px_rgba(245,158,11,0.35)] hover:from-amber-300 hover:to-amber-500"
-                    : "rounded-full border-amber-300/80 bg-gradient-to-b from-amber-400 to-amber-500 text-slate-950 shadow-[0_8px_26px_rgba(245,158,11,0.3)] hover:from-amber-300 hover:to-amber-500"
-                  : "rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] hover:from-violet-500 hover:to-violet-600 sm:rounded-[10px]"
-              }`}
+              className="min-h-11 min-w-0 rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] backdrop-blur-xl transition hover:from-violet-500 hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs"
             >
               Like
             </button>
           </div>
         </div>
       </SurfaceCard>
-      {isTrailerVisible ? (
-        <MovieTrailerModalLazy
-          movie={movie}
-          isDarkMode={isDarkMode}
-          isInteractionLocked={isInteractionLocked}
-          trailerUrl={trailerUrl}
-          isLoadingTrailer={isLoadingTrailer}
-          trailerError={trailerError}
-          runtimeLabel={runtimeLabel}
-          onClose={() => setIsTrailerVisible(false)}
-          onRetryTrailer={() => void fetchTrailerIfNeeded()}
-          onAccept={onAccept}
-          onReject={onReject}
-        />
-      ) : null}
+      {trailerModal}
     </>
   );
 }

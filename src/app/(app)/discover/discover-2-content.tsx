@@ -995,9 +995,8 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-v2-bumble discover-page-stack flex h-full min-h-0 flex-col gap-[var(--discover-stack-gap)] overflow-visible"
+      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 flex-col gap-2 overflow-visible sm:gap-2.5"
       data-discover-ab="discover2"
-      data-discover2-bumble="true"
     >
       <ModalPortal open={!isOnboardingComplete}>
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
@@ -1223,18 +1222,18 @@ export function DiscoverPage2Content({
       ) : null}
 
       {!isSearchOpen ? (
-        <div className="shrink-0 space-y-2.5 sm:space-y-3.5">
+        <div className="shrink-0 space-y-2 sm:space-y-2.5">
           <div
-            className={`discover-v2-hero-slab mx-0.5 flex items-start justify-between gap-2 rounded-[24px] border px-2.5 py-2.5 sm:mx-1 sm:gap-3 sm:px-3.5 sm:py-3 ${
+            className={`discover-v2-hero-slab mx-0.5 flex items-start justify-between gap-2 rounded-[22px] border px-2.5 py-2 sm:mx-1 sm:gap-3 sm:px-3.5 sm:py-2.5 ${
               isDarkMode
-                ? "border-amber-500/25 bg-gradient-to-r from-amber-950/50 via-slate-950/95 to-zinc-950/90 shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
-                : "border-amber-200/80 bg-gradient-to-r from-amber-50/98 via-amber-100/70 to-amber-50/95 shadow-[0_10px_32px_rgba(251,191,36,0.18)]"
+                ? "border-violet-500/20 bg-gradient-to-r from-slate-950/95 via-violet-950/40 to-fuchsia-950/35 shadow-[0_10px_36px_rgba(0,0,0,0.4)]"
+                : "border-violet-200/80 bg-gradient-to-r from-white via-violet-50/95 to-fuchsia-50/80 shadow-sm"
             }`}
           >
             <div className="min-w-0 flex-1 pr-0.5">
               <p
                 className={`text-[0.65rem] font-bold uppercase tracking-[0.2em] ${
-                  isDarkMode ? "text-amber-200/95" : "text-amber-800/90"
+                  isDarkMode ? "text-fuchsia-300/90" : "text-violet-600/90"
                 }`}
               >
                 CineMatch
@@ -1256,8 +1255,8 @@ export function DiscoverPage2Content({
               <p className={`mt-1.5 text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                 <Link
                   href="/discover1"
-                  className={`font-semibold underline decoration-amber-500/50 underline-offset-2 ${
-                    isDarkMode ? "text-amber-200" : "text-amber-900/90"
+                  className={`font-semibold underline decoration-fuchsia-500/45 underline-offset-2 ${
+                    isDarkMode ? "text-fuchsia-200" : "text-violet-700"
                   }`}
                 >
                   Open layout 1 (original)
@@ -1276,10 +1275,10 @@ export function DiscoverPage2Content({
                   className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
                     isDarkMode
                       ? isMoreMenuOpen
-                        ? "bg-white/12 text-white ring-2 ring-amber-400/55"
+                        ? "bg-white/12 text-white ring-2 ring-violet-400/45"
                         : "text-slate-300 hover:bg-white/8"
                       : isMoreMenuOpen
-                        ? "bg-white text-slate-900 ring-2 ring-amber-400/60 shadow-sm"
+                        ? "bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
                         : "text-slate-700 hover:bg-black/5"
                   }`}
                 >
@@ -1576,7 +1575,7 @@ export function DiscoverPage2Content({
                 enterKeyHint="search"
                 placeholder="Search a movie or series"
                 aria-describedby="discover-search-hint"
-                className={`ui-input-shell w-full min-w-0 py-2 pl-9 text-[13px] outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-400/25 max-[380px]:text-[12px] sm:pl-10 ${
+                className={`ui-input-shell w-full min-w-0 py-2 pl-9 text-[13px] outline-none focus:border-violet-400 max-[380px]:text-[12px] sm:pl-10 ${
                   searchQuery.length > 0
                     ? "pr-10 max-[380px]:pr-9 sm:pr-11"
                     : "pr-3 max-[380px]:pr-2.5 sm:pr-4"
@@ -1646,7 +1645,7 @@ export function DiscoverPage2Content({
               </span>
               {selectedGenres.length > 0 ? (
                 <span
-                  className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-slate-950 ring-2 ${
+                  className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-semibold text-white ring-2 ${
                     isDarkMode ? "ring-slate-950/90" : "ring-white/90"
                   }`}
                 >
@@ -2200,14 +2199,14 @@ export function DiscoverPage2Content({
           <div
             className={`app-notify-banner pointer-events-auto relative w-full max-w-[min(100%,20rem)] overflow-hidden rounded-2xl border px-3 py-2.5 backdrop-blur-xl sm:max-w-md sm:rounded-[24px] sm:px-3.5 sm:py-3 ${
               isDarkMode
-                ? "border-amber-500/20 bg-slate-950/92 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.45)]"
-                : "border-amber-200/80 bg-white/95 text-slate-900 shadow-[0_10px_32px_rgba(245,158,11,0.2)]"
+                ? "border-white/12 bg-slate-950/92 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.42)]"
+                : "border-slate-200/85 bg-white/95 text-slate-900 shadow-[0_10px_32px_rgba(124,58,237,0.1)]"
             }`}
           >
             <div className="flex items-center gap-2.5 sm:gap-3">
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[1.05rem] leading-none shadow-[0_2px_14px_rgba(245,158,11,0.4)] sm:h-10 sm:w-10 sm:text-lg ${
-                  isDarkMode ? "bg-amber-400 text-slate-950" : "bg-amber-400 text-slate-950"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[1.05rem] leading-none shadow-[0_2px_10px_rgba(109,40,217,0.22)] sm:h-10 sm:w-10 sm:text-lg ${
+                  isDarkMode ? "bg-violet-500 text-white" : "bg-violet-600 text-white"
                 }`}
                 aria-hidden
               >
@@ -2216,7 +2215,7 @@ export function DiscoverPage2Content({
               <div className="min-w-0 flex-1">
                 <p
                   className={`text-[9px] font-semibold uppercase tracking-[0.18em] ${
-                    isDarkMode ? "text-amber-200/95" : "text-amber-800"
+                    isDarkMode ? "text-violet-300/95" : "text-violet-600"
                   }`}
                 >
                   Swipe recorded
@@ -2258,11 +2257,7 @@ export function DiscoverPage2Content({
         }`}
       >
         {movie ? (
-          <div
-            className={`mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] px-1.5 sm:px-2 ${
-              isDarkMode ? "" : "bg-gradient-to-b from-amber-50/35 via-transparent to-transparent"
-            }`}
-          >
+          <div className="mx-auto flex h-full w-full min-h-0 max-w-xl flex-1 flex-col overflow-hidden rounded-[24px] px-1 sm:px-1.5">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
@@ -2293,7 +2288,7 @@ export function DiscoverPage2Content({
                 swipeFeedback={swipeFeedback}
                 suppressTrailerPlayButton={!isOnboardingComplete}
                 onMatchPercentClick={currentUserId ? openMatchExplanation : undefined}
-                visualVariant="bumble"
+                posterLayout="immersive"
               />
             </div>
           </div>
