@@ -1412,6 +1412,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const client = supabase as any;
+          let anyUpsertError = false;
           for (const e of mine) {
             if (!active) {
               return;
@@ -1426,10 +1427,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               { onConflict: "user_id,movie_id" },
             );
             if (error) {
-              return;
+              anyUpsertError = true;
             }
           }
-          if (active) {
+          if (active && !anyUpsertError) {
             backfilledWatchedPicksKeyRef.current = fp;
             requestAccountDataRefresh();
           }
@@ -1606,23 +1607,31 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         applyHydratedAccountPayload(activeUserId, cachedPayload);
       }
 
-      let payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
+      /**
+       * Load account data from the server API first (service role, full rows).
+       * The browser Supabase client goes second: RLS on `watched_pick_reviews` can
+       * return an empty set or partial data for linked friends, while the profile
+       * owner still sees full reviews from local storage — that mismatch breaks
+       * "Recommends" on a friend’s profile.
+       */
+      let payload: AccountSyncPayload | null = null;
+      try {
+        const response = await fetch("/api/account-sync", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
+        });
+
+        if (response.ok) {
+          payload = (await response.json()) as AccountSyncPayload;
+        }
+      } catch {
+        payload = null;
+      }
 
       if (!payload) {
-        try {
-          const response = await fetch("/api/account-sync", {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-            cache: "no-store",
-          });
-
-          if (response.ok) {
-            payload = (await response.json()) as AccountSyncPayload;
-          }
-        } catch {
-          payload = null;
-        }
+        payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
       }
 
       if (!payload) {

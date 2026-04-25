@@ -284,9 +284,10 @@ export async function GET(request: NextRequest) {
     ]);
 
   const linkRows = (linksResult.data ?? []) as LinkRow[];
+  const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
   const partnerIds = Array.from(
     new Set(
-      linkRows.map((link) =>
+      acceptedLinks.map((link) =>
         link.requester_id === currentUserId ? link.target_id : link.requester_id,
       ),
     ),

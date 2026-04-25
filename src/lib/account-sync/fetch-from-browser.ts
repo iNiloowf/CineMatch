@@ -50,9 +50,10 @@ export async function fetchAccountSyncFromBrowser(
   }
 
   const linkRows = ((linksResult.data ?? []) as LinkRow[]) ?? [];
+  const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
   const partnerIds = Array.from(
     new Set(
-      linkRows.map((link) =>
+      acceptedLinks.map((link) =>
         link.requester_id === activeUserId ? link.target_id : link.requester_id,
       ),
     ),
