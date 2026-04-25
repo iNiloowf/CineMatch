@@ -192,7 +192,7 @@ export function MovieSwipeCard({
   }, [fetchTrailerIfNeeded]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked || isDescriptionExpanded) {
+    if (isInteractionLocked) {
       return;
     }
 
@@ -203,7 +203,7 @@ export function MovieSwipeCard({
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked || isDescriptionExpanded) {
+    if (isInteractionLocked) {
       return;
     }
 
@@ -223,7 +223,7 @@ export function MovieSwipeCard({
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (isInteractionLocked || isDescriptionExpanded) {
+    if (isInteractionLocked) {
       return;
     }
 
