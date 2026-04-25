@@ -385,12 +385,12 @@ export function MovieSwipeCard({
 
   if (immersive) {
     return (
-      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 flex-1 flex-col self-stretch">
+      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col self-stretch max-h-[calc(min(100dvh,100svh)-10.5rem)] sm:max-h-[calc(min(100dvh,100svh)-9.5rem)]">
         <SurfaceCard
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
-          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
@@ -413,7 +413,7 @@ export function MovieSwipeCard({
           ) : null}
 
           <div className="flex h-full min-h-0 w-full max-w-full flex-1 flex-col">
-            <div className="relative z-0 w-full min-w-0 flex-1 min-h-[min(52dvh,32rem)] overflow-hidden">
+            <div className="relative z-0 w-full min-w-0 min-h-0 flex-1 max-h-[min(52dvh,32rem)] overflow-hidden">
               <div
                 className="absolute inset-0 z-0"
                 style={{
@@ -455,7 +455,7 @@ export function MovieSwipeCard({
 
               {friendStripsForPoster.length > 0 ? (
                 <div
-                  className="absolute left-2.5 right-2.5 z-[3] max-h-[36%] overflow-y-auto sm:left-3 sm:right-3"
+                  className="absolute left-2.5 right-2.5 z-[3] max-h-[5rem] overflow-hidden sm:left-3 sm:right-3 sm:max-h-[5.5rem]"
                   style={{ top: "3.1rem" }}
                   data-friend-pick={friendRecStrips.length > 0 ? "live" : "preview"}
                 >
@@ -543,12 +543,16 @@ export function MovieSwipeCard({
               <div
                 className={`absolute bottom-0 left-0 right-0 z-[4] flex min-h-0 w-full max-w-full flex-col overflow-hidden ${
                   isDescriptionExpanded
-                    ? "max-h-[min(72dvh,85%)]"
-                    : "max-h-[min(40dvh,44%)]"
+                    ? "max-h-[min(50dvh,60%)]"
+                    : "max-h-[min(24dvh,32%)]"
                 }`}
               >
                 <div
-                  className="max-h-full min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-8 [scrollbar-gutter:stable] sm:px-3.5 sm:pt-10"
+                  className={`max-h-full min-h-0 flex-1 overflow-x-hidden overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-6 sm:px-3.5 sm:pt-8 ${
+                    isDescriptionExpanded
+                      ? "overflow-y-auto [scrollbar-gutter:stable] sm:pt-10"
+                      : "overflow-y-hidden"
+                  }`}
                   style={isDescriptionExpanded ? { WebkitOverflowScrolling: "touch" } : undefined}
                 >
                   <h2
@@ -611,9 +615,9 @@ export function MovieSwipeCard({
                   {discoverPartnerNotes.length > 0 ? (
                     <div className="mt-2.5 border-t border-white/12 pt-2" role="region" aria-label="What your connected friends did with this title">
                       <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/90">Your connections</p>
-                      <ul className="mt-1.5 max-h-24 space-y-1 overflow-y-auto text-[10px] font-medium leading-snug text-slate-100/90">
-                        {discoverPartnerNotes.map((row) => (
-                          <li key={row.id} title={row.displayName}>
+                      <ul className="mt-1.5 space-y-0.5 overflow-hidden text-[10px] font-medium leading-snug text-slate-100/90">
+                        {discoverPartnerNotes.slice(0, 2).map((row) => (
+                          <li key={row.id} className="line-clamp-2" title={row.displayName}>
                             {row.label}
                           </li>
                         ))}
