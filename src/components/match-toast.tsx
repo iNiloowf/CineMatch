@@ -42,7 +42,9 @@ export function MatchToast({ toast, isDarkMode, onClose }: MatchToastProps) {
     : "border border-emerald-200/90 bg-white/96 text-slate-900 shadow-[0_16px_44px_rgba(16,185,129,0.12)]";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 pt-[max(0.25rem,env(safe-area-inset-top,0px))]">
+    <div
+      className="pointer-events-none fixed inset-0 z-[var(--z-banner)] flex items-center justify-center px-4 [padding-top:max(0.75rem,env(safe-area-inset-top,0px))] [padding-bottom:max(0.75rem,env(safe-area-inset-bottom,0px))] sm:px-5"
+    >
       <div
         role="status"
         aria-live="polite"
