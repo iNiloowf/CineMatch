@@ -22,6 +22,11 @@ type SurfaceCardProps = {
   /** Optional poster/photo (e.g. profile header) — bare mode only, below themed background. */
   heroImageUrl?: string;
   /**
+   * Skip the default opaque / frosted card fill; border + shadow only. Use for full-bleed
+   * poster (Discover immersive) so the image is not covered by the shell background.
+   */
+  transparentShell?: boolean;
+  /**
    * Dark mode adds `.glass-shimmer` (animated ::after). On some full-bleed cards that can read as a stray shadow/overlay after theme toggles — disable for those surfaces.
    */
   shimmer?: boolean;
@@ -33,6 +38,7 @@ export function SurfaceCard({
   bare = false,
   backgroundClassName,
   heroImageUrl,
+  transparentShell = false,
   shimmer = true,
   ...props
 }: SurfaceCardProps) {
@@ -77,20 +83,24 @@ export function SurfaceCard({
   }
 
   /** Opaque dark fill — very transparent + backdrop-blur sampled stale frames (Discover → Settings, theme toggles). */
-  const darkShell = shimmer
-    ? "glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
-    : "border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
+  const darkShell = transparentShell
+    ? "border border-white/16 bg-transparent shadow-[0_18px_50px_rgba(0,0,0,0.4)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+    : shimmer
+      ? "glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
+      : "border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
+
+  const lightShell = transparentShell
+    ? "border border-slate-200/80 bg-transparent shadow-[0_12px_40px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.45)]"
+    : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]";
 
   return (
     <section
       {...props}
       className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] p-5 hover:-translate-y-0.5 ${
-        isDarkMode
-          ? darkShell
-          : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]"
+        isDarkMode ? darkShell : lightShell
       } ${className}`}
     >
-      {!isDarkMode ? (
+      {!isDarkMode && !transparentShell ? (
         <div
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit] bg-[radial-gradient(120%_80%_at_0%_0%,rgba(248,250,252,0.9),transparent_52%)]"
           aria-hidden

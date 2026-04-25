@@ -41,9 +41,9 @@ export function PosterBackdrop({
   if (isTmdb) {
     return (
       <div
-        className={`pointer-events-none absolute inset-0 min-h-0 min-w-0 ${className}`.trim()}
+        className={`pointer-events-none absolute inset-0 h-full w-full min-h-[1px] min-w-0 ${className}`.trim()}
       >
-        <div className="relative h-full w-full min-h-0 min-w-0">
+        <div className="relative h-full min-h-[1px] w-full">
           <Image
             src={src}
             alt=""

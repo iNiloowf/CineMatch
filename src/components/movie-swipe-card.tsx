@@ -389,6 +389,7 @@ export function MovieSwipeCard({
         <SurfaceCard
           data-poster-layout="immersive"
           shimmer={false}
+          transparentShell
           className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
@@ -411,8 +412,8 @@ export function MovieSwipeCard({
             </div>
           ) : null}
 
-          <div className="flex h-full w-full max-w-full min-h-0 flex-1 flex-col">
-            <div className="relative z-0 w-full min-h-0 min-w-0 flex-1 overflow-hidden">
+          <div className="flex h-full w-full max-w-full min-h-[min(56dvh,28rem)] flex-1 flex-col">
+            <div className="relative z-0 w-full min-h-[min(52dvh,32rem)] min-w-0 flex-1 overflow-hidden">
               <div
                 className="absolute inset-0 z-0"
                 style={{
