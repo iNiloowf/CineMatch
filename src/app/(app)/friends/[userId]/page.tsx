@@ -140,9 +140,7 @@ export default function FriendProfilePage() {
           ? isDarkMode
             ? "bg-[conic-gradient(from_200deg_at_50%_40%,rgba(251,113,133,0.35),rgba(253,224,71,0.3),rgba(52,211,153,0.32),rgba(56,189,248,0.34),rgba(129,140,248,0.32),rgba(232,121,249,0.34),rgba(251,113,133,0.35))] opacity-50"
             : "bg-[conic-gradient(from_200deg_at_50%_40%,rgba(251,113,133,0.28),rgba(253,224,71,0.24),rgba(45,212,191,0.22),rgba(56,189,248,0.26),rgba(129,140,248,0.24),rgba(232,121,249,0.24),rgba(251,113,133,0.28))] opacity-55"
-          : isDarkMode
-            ? "bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_2px,transparent_2px_12px)] opacity-70"
-            : "bg-[repeating-linear-gradient(90deg,rgba(100,116,139,0.12)_0_2px,transparent_2px_12px)] opacity-65";
+          : "";
 
   const handleAddPick = async (movieId: string) => {
     if (!currentUserId) {
@@ -201,6 +199,25 @@ export default function FriendProfilePage() {
 
   const inMineSelected = selectedMovie ? myAcceptedIds.has(selectedMovie.id) : false;
   const friendHeaderBgUrl = partner.profileHeaderMovie?.posterImageUrl;
+  const hasFriendHeroArt = Boolean(friendHeaderBgUrl);
+  const friendProfileCardShellClass =
+    "fade-up-enter !p-0 overflow-hidden shadow-[0_16px_48px_rgba(109,40,217,0.08)] transition-transform duration-300 hover:shadow-[0_20px_56px_rgba(109,40,217,0.12)]";
+  const friendNameClass = hasFriendHeroArt
+    ? "text-white"
+    : isDarkMode
+      ? "text-white"
+      : "text-slate-900";
+  const friendEmailClass = hasFriendHeroArt
+    ? "text-slate-200/90"
+    : isDarkMode
+      ? "text-slate-400"
+      : "text-slate-600";
+  const friendEyebrowInCard = hasFriendHeroArt
+    ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-200/90"
+    : sectionEyebrow;
+  const friendCardOuterClass = isDarkMode
+    ? "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[28px] border border-white/16"
+    : "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[28px] border border-slate-200/90";
 
   return (
     <div className="space-y-5 pb-2">
@@ -276,117 +293,177 @@ export default function FriendProfilePage() {
         />
       </div>
 
-      <SurfaceCard
-        className="fade-up-enter !p-0 overflow-hidden shadow-[0_16px_48px_rgba(109,40,217,0.08)] transition-transform duration-300 hover:shadow-[0_20px_56px_rgba(109,40,217,0.12)]"
-        style={{ animationDelay: "80ms" }}
-      >
-        <div
-          className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${friendHeaderStyleClass}${
-            friendHeaderBgUrl ? " min-h-[7.5rem]" : ""
-          } ${
-            partnerProfileStyle === "rainbow" ? " surface-rainbow-top-accent" : ""
-          }`}
+      {hasFriendHeroArt ? (
+        <section
+          className={`${friendCardOuterClass} ${friendProfileCardShellClass} hover:-translate-y-0.5`}
+          style={{ animationDelay: "80ms" }}
         >
-          {friendHeaderBgUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- TMDb poster
-            <img
-              src={friendHeaderBgUrl}
-              alt=""
-              className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
-            />
-          ) : null}
-          {friendHeaderBgUrl ? (
-            <span
-              className="pointer-events-none absolute inset-0 z-[1] h-full w-full bg-gradient-to-b from-slate-950/20 via-slate-950/15 to-slate-950/45"
-              aria-hidden
-            />
-          ) : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- TMDb poster */}
+          <img
+            src={friendHeaderBgUrl}
+            alt=""
+            className="pointer-events-none absolute inset-0 z-0 h-full w-full min-h-full object-cover"
+          />
           <span
-            className={`pointer-events-none absolute inset-0 z-[2] ${
-              friendHeaderBgUrl ? "opacity-88" : ""
-            } ${friendHeaderPatternClass}`}
+            className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-black/40 via-black/20 to-black/60"
             aria-hidden
           />
-          <div className="profile-avatar-pop relative z-[3] shrink-0">
-            <div
-              className={`rounded-full p-0.5 ${isDarkMode ? "bg-gradient-to-br from-violet-400/50 to-fuchsia-500/30" : "bg-gradient-to-br from-violet-400 to-fuchsia-400"}`}
-            >
-              <AvatarBadge
-                initials={partner.avatar}
-                imageUrl={partner.avatarImageUrl}
-                sizeClassName="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
-                textClassName="text-xl font-bold"
+          <div className="relative z-10">
+            <div className="relative flex items-center gap-4 border-b border-white/10 px-5 py-5 sm:px-6 sm:py-6">
+              <div className="profile-avatar-pop relative z-[3] shrink-0">
+                <div
+                  className="rounded-full p-0.5 bg-gradient-to-br from-violet-300/60 to-fuchsia-400/50"
+                >
+                  <AvatarBadge
+                    initials={partner.avatar}
+                    imageUrl={partner.avatarImageUrl}
+                    sizeClassName="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
+                    textClassName="text-xl font-bold text-white"
+                  />
+                </div>
+              </div>
+              <div className="relative z-[3] min-w-0 flex-1">
+                <p className={friendEyebrowInCard}>Linked friend</p>
+                <p className={`mt-1 truncate text-lg font-bold sm:text-xl ${friendNameClass}`}>
+                  {partner.name}
+                </p>
+                <p className={`mt-0.5 truncate text-sm ${friendEmailClass}`}>{partner.email}</p>
+              </div>
+            </div>
+            {partner.bio ? (
+              <p className="border-t border-white/10 bg-black/20 px-5 py-4 text-sm leading-6 text-slate-100/95 backdrop-blur-sm sm:px-6">
+                {partner.bio}
+              </p>
+            ) : null}
+            {partner.favoriteMovie ? (
+              <div className="border-t border-white/10 bg-black/20 px-5 py-4 backdrop-blur-sm sm:px-6">
+                <div className="flex items-center gap-3 rounded-[18px] border border-white/20 bg-white/10 p-3">
+                  <div
+                    className="relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] bg-white/8"
+                  >
+                    <PosterBackdrop
+                      imageUrl={partner.favoriteMovie.posterImageUrl}
+                      profile="search"
+                      objectFit="cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">
+                      {partner.favoriteMovie.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-200/80">
+                      {partner.favoriteMovie.year} •{" "}
+                      {partner.favoriteMovie.mediaType === "series" ? "Series" : "Movie"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : (
+        <SurfaceCard
+          className={friendProfileCardShellClass}
+          style={{ animationDelay: "80ms" }}
+        >
+          <div
+            className={`relative flex items-center gap-4 px-5 py-5 sm:px-6 sm:py-6 ${friendHeaderStyleClass} ${
+              partnerProfileStyle === "rainbow" ? " surface-rainbow-top-accent" : ""
+            }`}
+          >
+            {friendHeaderPatternClass ? (
+              <span
+                className={`pointer-events-none absolute inset-0 z-[2] ${friendHeaderPatternClass}`}
+                aria-hidden
               />
+            ) : null}
+            <div className="profile-avatar-pop relative z-[3] shrink-0">
+              <div
+                className={`rounded-full p-0.5 ${isDarkMode ? "bg-gradient-to-br from-violet-400/50 to-fuchsia-500/30" : "bg-gradient-to-br from-violet-400 to-fuchsia-400"}`}
+              >
+                <AvatarBadge
+                  initials={partner.avatar}
+                  imageUrl={partner.avatarImageUrl}
+                  sizeClassName="h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
+                  textClassName="text-xl font-bold"
+                />
+              </div>
+            </div>
+            <div className="relative z-[3] min-w-0 flex-1">
+              <p className={friendEyebrowInCard}>Linked friend</p>
+              <p
+                className={`mt-1 truncate text-lg font-bold sm:text-xl ${
+                  isDarkMode ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {partner.name}
+              </p>
+              <p
+                className={`mt-0.5 truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
+              >
+                {partner.email}
+              </p>
             </div>
           </div>
-          <div className="relative z-[3] min-w-0 flex-1">
-            <p className={sectionEyebrow}>Linked friend</p>
+          {partner.bio ? (
             <p
-              className={`mt-1 truncate text-lg font-bold sm:text-xl ${
-                isDarkMode ? "text-white" : "text-slate-900"
+              className={`px-5 py-4 text-sm leading-6 sm:px-6 ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
               }`}
             >
-              {partner.name}
+              {partner.bio}
             </p>
-            <p className={`mt-0.5 truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-              {partner.email}
-            </p>
-          </div>
-        </div>
-        {partner.bio ? (
-          <p
-            className={`px-5 py-4 text-sm leading-6 sm:px-6 ${
-              isDarkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            {partner.bio}
-          </p>
-        ) : null}
-        {partner.favoriteMovie ? (
-          <div
-            className={`px-5 py-4 sm:px-6 ${
-              partner.bio
-                ? isDarkMode
-                  ? "border-t border-white/10"
-                  : "border-t border-slate-200/85"
-                : ""
-            }`}
-          >
+          ) : null}
+          {partner.favoriteMovie ? (
             <div
-              className={`flex items-center gap-3 rounded-[18px] border p-3 ${
-                isDarkMode
-                  ? "border-white/12 bg-white/[0.05]"
-                  : "border-slate-200/90 bg-slate-50/80"
+              className={`px-5 py-4 sm:px-6 ${
+                partner.bio
+                  ? isDarkMode
+                    ? "border-t border-white/10"
+                    : "border-t border-slate-200/85"
+                  : ""
               }`}
             >
               <div
-                className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] ${
-                  isDarkMode ? "bg-white/8" : "bg-slate-200"
+                className={`flex items-center gap-3 rounded-[18px] border p-3 ${
+                  isDarkMode
+                    ? "border-white/12 bg-white/[0.05]"
+                    : "border-slate-200/90 bg-slate-50/80"
                 }`}
               >
-                <PosterBackdrop
-                  imageUrl={partner.favoriteMovie.posterImageUrl}
-                  profile="search"
-                  objectFit="cover"
-                />
-              </div>
-              <div className="min-w-0">
-                <p
-                  className={`truncate text-sm font-semibold ${
-                    isDarkMode ? "text-white" : "text-slate-900"
+                <div
+                  className={`relative h-16 w-12 shrink-0 overflow-hidden rounded-[10px] ${
+                    isDarkMode ? "bg-white/8" : "bg-slate-200"
                   }`}
                 >
-                  {partner.favoriteMovie.title}
-                </p>
-                <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  {partner.favoriteMovie.year} •{" "}
-                  {partner.favoriteMovie.mediaType === "series" ? "Series" : "Movie"}
-                </p>
+                  <PosterBackdrop
+                    imageUrl={partner.favoriteMovie.posterImageUrl}
+                    profile="search"
+                    objectFit="cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p
+                    className={`truncate text-sm font-semibold ${
+                      isDarkMode ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    {partner.favoriteMovie.title}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-xs ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    {partner.favoriteMovie.year} •{" "}
+                    {partner.favoriteMovie.mediaType === "series" ? "Series" : "Movie"}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
-      </SurfaceCard>
+          ) : null}
+        </SurfaceCard>
+      )}
 
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
         <div
