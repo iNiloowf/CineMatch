@@ -1027,11 +1027,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const serverWatchedPicks = (payload.watchedPickReviews ?? []).map(
         mapWatchedPickReviewRow,
       );
+      const reviewKey = (e: WatchedPickReview) => `${e.userId}:${e.movieId}`;
+      const serverReviewKeys = new Set(serverWatchedPicks.map(reviewKey));
+      const localForHydratedUsers = next.watchedPickReviews.filter((entry) =>
+        hydratedSwipeUserIds.includes(entry.userId),
+      );
+      /** If the DB was empty, keep legacy client-only rows instead of dropping them. */
+      const localOnlyWatchedPicks = localForHydratedUsers.filter(
+        (entry) => !serverReviewKeys.has(reviewKey(entry)),
+      );
       const mergedWatchedPickReviews: WatchedPickReview[] = [
         ...next.watchedPickReviews.filter(
           (entry) => !hydratedSwipeUserIds.includes(entry.userId),
         ),
         ...serverWatchedPicks,
+        ...localOnlyWatchedPicks,
       ];
 
       if (ownSettings) {
@@ -1340,6 +1350,86 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     enabled: Boolean(currentUserId),
     onRequestSync: requestAccountDataRefresh,
   });
+
+  const watchedPickBackfillFingerprint = useMemo(() => {
+    if (!currentUserId) {
+      return "";
+    }
+    return JSON.stringify(
+      data.watchedPickReviews
+        .filter((e) => e.userId === currentUserId)
+        .map((e) => [e.movieId, e.recommended, e.watchedAt] as const)
+        .sort((a, b) => a[0].localeCompare(b[0])),
+    );
+  }, [data.watchedPickReviews, currentUserId]);
+
+  const backfilledWatchedPicksKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!currentUserId || !watchedPickBackfillFingerprint) {
+      return;
+    }
+    if (watchedPickBackfillFingerprint.length <= 2) {
+      return;
+    }
+    if (backfilledWatchedPicksKeyRef.current === watchedPickBackfillFingerprint) {
+      return;
+    }
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase || !isSupabaseConfigured()) {
+      return;
+    }
+    const mine = data.watchedPickReviews.filter((e) => e.userId === currentUserId);
+    if (mine.length === 0) {
+      return;
+    }
+    const fp = watchedPickBackfillFingerprint;
+    let active = true;
+    const t = window.setTimeout(() => {
+      if (!active) {
+        return;
+      }
+      if (backfilledWatchedPicksKeyRef.current === fp) {
+        return;
+      }
+      void (async () => {
+        if (!active) {
+          return;
+        }
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const client = supabase as any;
+          for (const e of mine) {
+            if (!active) {
+              return;
+            }
+            const { error } = await client.from("watched_pick_reviews").upsert(
+              {
+                user_id: e.userId,
+                movie_id: e.movieId,
+                recommended: e.recommended,
+                watched_at: e.watchedAt,
+              },
+              { onConflict: "user_id,movie_id" },
+            );
+            if (error) {
+              return;
+            }
+          }
+          if (active) {
+            backfilledWatchedPicksKeyRef.current = fp;
+            requestAccountDataRefresh();
+          }
+        } catch {
+          // table missing or network — merge fix still keeps local rows; retry on next key change
+        }
+      })();
+    }, 1600);
+    return () => {
+      active = false;
+      window.clearTimeout(t);
+    };
+  }, [watchedPickBackfillFingerprint, currentUserId, data.watchedPickReviews, requestAccountDataRefresh]);
 
   useEffect(() => {
     let isMounted = true;
