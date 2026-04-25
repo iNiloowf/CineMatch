@@ -61,7 +61,10 @@ export function DiscoverCardSkeleton() {
     : "border border-slate-200/90 bg-slate-50/95 shadow-sm";
 
   return (
-    <SurfaceCard className="discover-skeleton-dissolve flex min-h-0 flex-1 flex-col gap-2.5 rounded-[30px] p-4">
+    <SurfaceCard
+      shimmer={false}
+      className="discover-skeleton-dissolve flex min-h-0 flex-1 flex-col gap-2.5 rounded-[30px] p-4"
+    >
       <Bone className="relative min-h-[11.125rem] shrink-0 rounded-[10px] sm:min-h-[12rem]" />
       <div className={`grid shrink-0 grid-cols-3 gap-1 rounded-[24px] px-2 py-2 sm:gap-2 sm:px-3 sm:py-2.5 ${statShell}`}>
         <div className="flex flex-col items-center justify-center gap-1 py-0.5">
