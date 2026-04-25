@@ -467,6 +467,21 @@ export default function PicksPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectedMovieId, pendingRemoveMovieId, pendingWatchedMovieId, isTrailerVisible]);
 
+  useLayoutEffect(() => {
+    if (!pendingWatchedMovieId && !pendingRemoveMovieId) {
+      return;
+    }
+    const el = document.getElementById("main-content");
+    if (!el) {
+      return;
+    }
+    const previous = el.style.overflow;
+    el.style.overflow = "hidden";
+    return () => {
+      el.style.overflow = previous;
+    };
+  }, [pendingWatchedMovieId, pendingRemoveMovieId]);
+
   const showShareToast = useCallback((message: string, variant: ShareToast["variant"]) => {
     if (shareToastTimerRef.current) {
       window.clearTimeout(shareToastTimerRef.current);
@@ -567,9 +582,13 @@ export default function PicksPage() {
   }, []);
 
   const requestRemovePick = useCallback((movieId: string) => {
+    setSelectedMovieId(null);
+    setIsTrailerVisible(false);
     setPendingRemoveMovieId(movieId);
   }, []);
   const requestMarkWatched = useCallback((movieId: string) => {
+    setSelectedMovieId(null);
+    setIsTrailerVisible(false);
     setPendingWatchedMovieId(movieId);
   }, []);
 
@@ -1346,7 +1365,7 @@ export default function PicksPage() {
 
       {pendingRemoveMovie && typeof document !== "undefined"
         ? createPortal(
-            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
                 aria-label="Close remove confirmation"
@@ -1422,7 +1441,7 @@ export default function PicksPage() {
         : null}
       {pendingWatchedMovie && typeof document !== "undefined"
         ? createPortal(
-            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
                 aria-label="Close watched confirmation"
@@ -1516,7 +1535,7 @@ export default function PicksPage() {
         : null}
       {isBuyProModalOpen && typeof document !== "undefined"
         ? createPortal(
-            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close buy pro modal"
@@ -1698,7 +1717,7 @@ export default function PicksPage() {
         : null}
       {isGiftPartnerPickerOpen && typeof document !== "undefined"
         ? createPortal(
-            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close"
