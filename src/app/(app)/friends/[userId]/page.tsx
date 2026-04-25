@@ -33,6 +33,10 @@ export default function FriendProfilePage() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addMessage, setAddMessage] = useState<string | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
+  /** Collapsible sections; default closed to keep the page short. */
+  const [tasteOpen, setTasteOpen] = useState(false);
+  const [recommendsOpen, setRecommendsOpen] = useState(false);
+  const [savedPicksOpen, setSavedPicksOpen] = useState(false);
 
   const linkEntry = useMemo(
     () => linkedUsers.find((entry) => entry.user.id === userId),
@@ -147,6 +151,9 @@ export default function FriendProfilePage() {
   const recommendSectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600/90";
+  const friendDisclosureRowClass = isDarkMode
+    ? "w-full text-left transition hover:bg-white/[0.04] active:bg-white/[0.06]"
+    : "w-full text-left transition hover:bg-slate-100/80 active:bg-slate-100";
   const partnerProfileStyle = partner?.profileStyle ?? "classic";
   const friendHeaderStyleClass =
     partnerProfileStyle === "glass"
@@ -503,331 +510,445 @@ export default function FriendProfilePage() {
       )}
 
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
-        <div
-          className={`border-b px-5 py-3.5 sm:px-6 ${isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/85 bg-slate-50/60"}`}
+        <button
+          type="button"
+          id="friend-taste-toggle"
+          aria-expanded={tasteOpen}
+          aria-controls="friend-taste-panel"
+          onClick={() => setTasteOpen((v) => !v)}
+          className={`${friendDisclosureRowClass} flex items-center justify-between gap-3 border-b px-5 py-3.5 sm:px-6 ${
+            isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/85 bg-slate-50/60"
+          }`}
         >
           <p className={sectionEyebrow}>Taste profile</p>
-        </div>
-        <div className="grid sm:grid-cols-2">
-          <div
-            className={`border-b px-5 py-4 sm:border-b-0 sm:border-e ${isDarkMode ? "border-white/10" : "border-slate-200/85"}`}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`h-5 w-5 shrink-0 text-slate-500 transition-transform duration-200 ${
+              tasteOpen ? "rotate-180" : ""
+            } ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+            aria-hidden
           >
-            <p
-              className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
-                isDarkMode ? "text-emerald-300/95" : "text-emerald-700"
-              }`}
+            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        {tasteOpen ? (
+          <div
+            id="friend-taste-panel"
+            role="region"
+            aria-labelledby="friend-taste-toggle"
+            className="grid sm:grid-cols-2"
+          >
+            <div
+              className={`border-b px-5 py-4 sm:border-b-0 sm:border-e ${isDarkMode ? "border-white/10" : "border-slate-200/85"}`}
             >
-              Likes
-            </p>
-            {partnerGenreInsights.liked.length === 0 ? (
-              <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {partnerGenreInsights.liked.slice(0, 10).map((genre) => (
-                  <span
-                    key={`liked-${genre.name}`}
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      isDarkMode
-                        ? "border border-emerald-400/30 bg-emerald-500/12 text-emerald-100"
-                        : "border border-emerald-200/90 bg-emerald-50/95 text-emerald-900"
-                    }`}
-                  >
-                    {genre.name}
-                    <span className="tabular-nums opacity-80"> · {genre.count}</span>
-                  </span>
-                ))}
-              </div>
-            )}
+              <p
+                className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                  isDarkMode ? "text-emerald-300/95" : "text-emerald-700"
+                }`}
+              >
+                Likes
+              </p>
+              {partnerGenreInsights.liked.length === 0 ? (
+                <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {partnerGenreInsights.liked.slice(0, 10).map((genre) => (
+                    <span
+                      key={`liked-${genre.name}`}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        isDarkMode
+                          ? "border border-emerald-400/30 bg-emerald-500/12 text-emerald-100"
+                          : "border border-emerald-200/90 bg-emerald-50/95 text-emerald-900"
+                      }`}
+                    >
+                      {genre.name}
+                      <span className="tabular-nums opacity-80"> · {genre.count}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-4">
+              <p
+                className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
+                  isDarkMode ? "text-rose-300/95" : "text-rose-700"
+                }`}
+              >
+                Skips
+              </p>
+              {partnerGenreInsights.disliked.length === 0 ? (
+                <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {partnerGenreInsights.disliked.slice(0, 10).map((genre) => (
+                    <span
+                      key={`disliked-${genre.name}`}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        isDarkMode
+                          ? "border border-rose-400/30 bg-rose-500/12 text-rose-100"
+                          : "border border-rose-200/90 bg-rose-50/95 text-rose-900"
+                      }`}
+                    >
+                      {genre.name}
+                      <span className="tabular-nums opacity-80"> · {genre.count}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="px-5 py-4">
-            <p
-              className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] ${
-                isDarkMode ? "text-rose-300/95" : "text-rose-700"
-              }`}
-            >
-              Skips
-            </p>
-            {partnerGenreInsights.disliked.length === 0 ? (
-              <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>—</p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {partnerGenreInsights.disliked.slice(0, 10).map((genre) => (
-                  <span
-                    key={`disliked-${genre.name}`}
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      isDarkMode
-                        ? "border border-rose-400/30 bg-rose-500/12 text-rose-100"
-                        : "border border-rose-200/90 bg-rose-50/95 text-rose-900"
-                    }`}
-                  >
-                    {genre.name}
-                    <span className="tabular-nums opacity-80"> · {genre.count}</span>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        ) : null}
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter !p-5 sm:!p-6" style={{ animationDelay: "140ms" }}>
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-            <div className="min-w-0 space-y-2">
-              <p className={recommendSectionEyebrow}>Recommends</p>
-              <p
-                className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
-              >
+      <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "140ms" }}>
+        <button
+          type="button"
+          id="friend-recommends-toggle"
+          aria-expanded={recommendsOpen}
+          aria-controls="friend-recommends-panel"
+          onClick={() => setRecommendsOpen((v) => !v)}
+          className={`${friendDisclosureRowClass} flex items-start justify-between gap-3 px-5 py-4 sm:px-6 ${
+            recommendsOpen
+              ? isDarkMode
+                ? "border-b border-white/10"
+                : "border-b border-slate-200/85"
+              : ""
+          } ${isDarkMode ? "hover:bg-white/[0.04]" : "hover:bg-slate-50/80"}`}
+        >
+          <div className="min-w-0 flex-1 space-y-1 text-left">
+            <p className={recommendSectionEyebrow}>Recommends</p>
+            {recommendsOpen ? (
+              <>
+                <p
+                  className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                >
+                  Titles they loved after watching
+                </p>
+                <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  From Picks — marked Recommended on their profile. Only people they’re linked with can see this
+                  list.
+                </p>
+              </>
+            ) : (
+              <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                 Titles they loved after watching
               </p>
-              <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                From Picks — marked Recommended on their profile. Only people they’re linked with can see this list.
-              </p>
-            </div>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-2 self-center">
             <span
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 isDarkMode ? "bg-emerald-500/15 text-emerald-100" : "bg-emerald-50 text-emerald-800"
               }`}
             >
               {partnerRecommendations.length} title{partnerRecommendations.length === 1 ? "" : "s"}
             </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`h-5 w-5 shrink-0 text-slate-500 transition-transform duration-200 ${
+                recommendsOpen ? "rotate-180" : ""
+              } ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+              aria-hidden
+            >
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
+        </button>
+        {recommendsOpen ? (
+          <div
+            id="friend-recommends-panel"
+            role="region"
+            aria-labelledby="friend-recommends-toggle"
+            className="px-5 pb-5 pt-0 sm:px-6"
+          >
+            {partnerRecommendations.length === 0 ? (
+              <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                No recommendations to show yet — when they mark a watched title as Recommended, it will appear
+                here.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {partnerRecommendations.map((movie, index) => {
+                  const inMine = myAcceptedIds.has(movie.id);
 
-          {partnerRecommendations.length === 0 ? (
-            <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              No recommendations to show yet — when they mark a watched title as Recommended, it will appear here.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {partnerRecommendations.map((movie, index) => {
-                const inMine = myAcceptedIds.has(movie.id);
-
-                return (
-                  <li
-                    key={`partner-rec-${movie.id}`}
-                    className="discover-toolbar-enter"
-                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                  >
-                    <div
-                      className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
-                        isDarkMode
-                          ? "border-emerald-400/15 bg-emerald-500/[0.06] hover:border-emerald-400/30"
-                          : "border-emerald-200/80 bg-white hover:border-emerald-300 hover:shadow-sm"
-                      }`}
+                  return (
+                    <li
+                      key={`partner-rec-${movie.id}`}
+                      className="discover-toolbar-enter"
+                      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setSelectedMovieId(movie.id)}
-                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
+                      <div
+                        className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
+                          isDarkMode
+                            ? "border-emerald-400/15 bg-emerald-500/[0.06] hover:border-emerald-400/30"
+                            : "border-emerald-200/80 bg-white hover:border-emerald-300 hover:shadow-sm"
+                        }`}
                       >
-                        <div
-                          className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
-                            isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMovieId(movie.id)}
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
                         >
-                          <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
-                          {!movie.poster.imageUrl ? (
-                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
-                              CM
-                            </div>
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                          >
-                            {movie.title}
-                          </p>
-                          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                            {movie.year}
-                            {inMine ? " · In your picks" : ""}
-                          </p>
-                        </div>
-                      </button>
-                      {linkEntry.status === "accepted" ? (
-                        inMine ? (
-                          <span
-                            className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                              isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                          <div
+                            className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
+                              isDarkMode ? "bg-slate-800" : "bg-slate-100"
                             }`}
                           >
-                            Yours
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={addingId === movie.id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleAddPick(movie.id);
-                            }}
-                            aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
-                            className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
-                              addingId === movie.id
-                                ? isDarkMode
-                                  ? "bg-violet-500/35"
-                                  : "bg-violet-400/90"
-                                : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
-                            }`}
-                          >
-                            {addingId === movie.id ? (
-                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden />
-                            ) : (
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                className="h-5 w-5"
-                                aria-hidden
-                              >
-                                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                              </svg>
-                            )}
-                          </button>
-                        )
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                            <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
+                            {!movie.poster.imageUrl ? (
+                              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                                CM
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                            >
+                              {movie.title}
+                            </p>
+                            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                              {movie.year}
+                              {inMine ? " · In your picks" : ""}
+                            </p>
+                          </div>
+                        </button>
+                        {linkEntry?.status === "accepted" ? (
+                          inMine ? (
+                            <span
+                              className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                                isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              Yours
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={addingId === movie.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleAddPick(movie.id);
+                              }}
+                              aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
+                              className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+                                addingId === movie.id
+                                  ? isDarkMode
+                                    ? "bg-violet-500/35"
+                                    : "bg-violet-400/90"
+                                  : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
+                              }`}
+                            >
+                              {addingId === movie.id ? (
+                                <span
+                                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                                  aria-hidden
+                                />
+                              ) : (
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  className="h-5 w-5"
+                                  aria-hidden
+                                >
+                                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                                </svg>
+                              )}
+                            </button>
+                          )
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        ) : null}
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter !p-5 sm:!p-6" style={{ animationDelay: "150ms" }}>
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-            <div className="min-w-0 space-y-2">
-              <p className={sectionEyebrow}>Saved picks</p>
+      <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "150ms" }}>
+        <button
+          type="button"
+          id="friend-saved-toggle"
+          aria-expanded={savedPicksOpen}
+          aria-controls="friend-saved-panel"
+          onClick={() => setSavedPicksOpen((v) => !v)}
+          className={`${friendDisclosureRowClass} flex items-start justify-between gap-3 px-5 py-4 sm:px-6 ${
+            savedPicksOpen
+              ? isDarkMode
+                ? "border-b border-white/10"
+                : "border-b border-slate-200/85"
+              : ""
+          } ${isDarkMode ? "hover:bg-white/[0.04]" : "hover:bg-slate-50/80"}`}
+        >
+          <div className="min-w-0 flex-1 space-y-1 text-left">
+            <p className={sectionEyebrow}>Saved picks</p>
+            {savedPicksOpen ? (
               <p
                 className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
               >
                 Tap a movie for details
               </p>
-            </div>
+            ) : (
+              <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                Tap a movie for details
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-2 self-center">
             <span
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-700"
               }`}
             >
               {savedMovies.length} title{savedMovies.length === 1 ? "" : "s"}
             </span>
-          </div>
-
-          {addMessage ? (
-            <p
-              className={`rounded-[14px] px-4 py-3 text-center text-sm font-medium leading-relaxed ${
-                isDarkMode ? "bg-violet-500/15 text-violet-100" : "bg-violet-50 text-violet-800"
-              }`}
-              role="status"
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`h-5 w-5 shrink-0 text-slate-500 transition-transform duration-200 ${
+                savedPicksOpen ? "rotate-180" : ""
+              } ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+              aria-hidden
             >
-              {addMessage}
-            </p>
-          ) : null}
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </button>
+        {savedPicksOpen ? (
+          <div
+            id="friend-saved-panel"
+            role="region"
+            aria-labelledby="friend-saved-toggle"
+            className="flex flex-col gap-6 px-5 pb-5 pt-0 sm:px-6"
+          >
+            {addMessage ? (
+              <p
+                className={`rounded-[14px] px-4 py-3 text-center text-sm font-medium leading-relaxed ${
+                  isDarkMode ? "bg-violet-500/15 text-violet-100" : "bg-violet-50 text-violet-800"
+                }`}
+                role="status"
+              >
+                {addMessage}
+              </p>
+            ) : null}
 
-          {savedMovies.length === 0 ? (
-            <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              No saved picks yet — when they accept movies in Discover, they’ll show up here.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {savedMovies.map((movie, index) => {
-                const inMine = myAcceptedIds.has(movie.id);
+            {savedMovies.length === 0 ? (
+              <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                No saved picks yet — when they accept movies in Discover, they’ll show up here.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {savedMovies.map((movie, index) => {
+                  const inMine = myAcceptedIds.has(movie.id);
 
-                return (
-                  <li
-                    key={movie.id}
-                    className="discover-toolbar-enter"
-                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                  >
-                    <div
-                      className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
-                        isDarkMode
-                          ? "border-white/10 bg-white/[0.03] hover:border-violet-400/25 hover:bg-white/[0.06]"
-                          : "border-slate-200/80 bg-white hover:border-violet-200 hover:shadow-sm"
-                      }`}
+                  return (
+                    <li
+                      key={movie.id}
+                      className="discover-toolbar-enter"
+                      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setSelectedMovieId(movie.id)}
-                        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
+                      <div
+                        className={`flex items-center gap-4 overflow-hidden rounded-[18px] border transition duration-200 ${
+                          isDarkMode
+                            ? "border-white/10 bg-white/[0.03] hover:border-violet-400/25 hover:bg-white/[0.06]"
+                            : "border-slate-200/80 bg-white hover:border-violet-200 hover:shadow-sm"
+                        }`}
                       >
-                        <div
-                          className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
-                            isDarkMode ? "bg-slate-800" : "bg-slate-100"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMovieId(movie.id)}
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left transition active:scale-[0.99]"
                         >
-                          <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
-                          {!movie.poster.imageUrl ? (
-                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
-                              CM
-                            </div>
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                          >
-                            {movie.title}
-                          </p>
-                          <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                            {movie.year}
-                            {inMine ? " · In your picks" : ""}
-                          </p>
-                        </div>
-                      </button>
-                      {linkEntry.status === "accepted" ? (
-                        inMine ? (
-                          <span
-                            className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                              isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                          <div
+                            className={`relative h-14 w-10 shrink-0 overflow-hidden rounded-lg ${
+                              isDarkMode ? "bg-slate-800" : "bg-slate-100"
                             }`}
                           >
-                            Yours
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={addingId === movie.id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleAddPick(movie.id);
-                            }}
-                            aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
-                            className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
-                              addingId === movie.id
-                                ? isDarkMode
-                                  ? "bg-violet-500/35"
-                                  : "bg-violet-400/90"
-                                : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
-                            }`}
-                          >
-                            {addingId === movie.id ? (
-                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden />
-                            ) : (
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                className="h-5 w-5"
-                                aria-hidden
-                              >
-                                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                              </svg>
-                            )}
-                          </button>
-                        )
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                            <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="search" />
+                            {!movie.poster.imageUrl ? (
+                              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                                CM
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`truncate text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                            >
+                              {movie.title}
+                            </p>
+                            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                              {movie.year}
+                              {inMine ? " · In your picks" : ""}
+                            </p>
+                          </div>
+                        </button>
+                        {linkEntry?.status === "accepted" ? (
+                          inMine ? (
+                            <span
+                              className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                                isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              Yours
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={addingId === movie.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleAddPick(movie.id);
+                              }}
+                              aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
+                              className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+                                addingId === movie.id
+                                  ? isDarkMode
+                                    ? "bg-violet-500/35"
+                                    : "bg-violet-400/90"
+                                  : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
+                              }`}
+                            >
+                              {addingId === movie.id ? (
+                                <span
+                                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                                  aria-hidden
+                                />
+                              ) : (
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  className="h-5 w-5"
+                                  aria-hidden
+                                >
+                                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                                </svg>
+                              )}
+                            </button>
+                          )
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        ) : null}
       </SurfaceCard>
 
       <SurfaceCard
