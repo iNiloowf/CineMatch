@@ -222,16 +222,50 @@ function parseTmdbMovieId(movieId: string) {
   const movieMatch = movieId.match(/^tmdb-(\d+)$/);
 
   if (movieMatch) {
-    return { mediaPath: "movie", tmdbId: Number(movieMatch[1]) } as const;
+    return { mediaPath: "movie" as const, tmdbId: Number(movieMatch[1]) };
   }
 
   const seriesMatch = movieId.match(/^tmdb-tv-(\d+)$/);
 
   if (seriesMatch) {
-    return { mediaPath: "tv", tmdbId: Number(seriesMatch[1]) } as const;
+    return { mediaPath: "tv" as const, tmdbId: Number(seriesMatch[1]) };
   }
 
   return null;
+}
+
+/**
+ * Resolve a CineMatch movie id to full {@link Movie} data via the TMDB details
+ * API (for ids not present in the local/merged discover catalog).
+ */
+export async function fetchTmdbMediaByPicksId(
+  movieId: string,
+): Promise<Movie | null> {
+  if (!isTmdbConfigured()) {
+    return null;
+  }
+
+  const parsed = parseTmdbMovieId(movieId);
+
+  if (!parsed) {
+    return null;
+  }
+
+  try {
+    if (parsed.mediaPath === "movie") {
+      const details = await tmdbFetch<TmdbMovieDetails>(
+        `/movie/${parsed.tmdbId}?language=en-US${getTmdbQueryParams()}`,
+      );
+      return mapTmdbMovie(details);
+    }
+
+    const details = await tmdbFetch<TmdbTvDetails>(
+      `/tv/${parsed.tmdbId}?language=en-US${getTmdbQueryParams()}`,
+    );
+    return mapTmdbSeries(details);
+  } catch {
+    return null;
+  }
 }
 
 function buildYoutubeEmbedUrl(videoKey: string) {

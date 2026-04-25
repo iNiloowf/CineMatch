@@ -1351,6 +1351,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     onRequestSync: requestAccountDataRefresh,
   });
 
+  const watchedReviewMovieIdsMissingFromCatalogKey = useMemo(() => {
+    const catalog = new Set(data.movies.map((m) => m.id));
+    return JSON.stringify(
+      [
+        ...new Set(
+          data.watchedPickReviews
+            .map((e) => e.movieId)
+            .filter((id) => !catalog.has(id)),
+        ),
+      ].sort(),
+    );
+  }, [data.movies, data.watchedPickReviews]);
+
   const watchedPickBackfillFingerprint = useMemo(() => {
     if (!currentUserId) {
       return "";
@@ -1430,6 +1443,55 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       window.clearTimeout(t);
     };
   }, [watchedPickBackfillFingerprint, currentUserId, data.watchedPickReviews, requestAccountDataRefresh]);
+
+  /** Fetches full movie records for any watched-pick / friend-review id not yet in the local catalog. */
+  useEffect(() => {
+    if (typeof window === "undefined" || !currentUserId) {
+      return;
+    }
+    if (watchedReviewMovieIdsMissingFromCatalogKey === "[]") {
+      return;
+    }
+    const missing: string[] = JSON.parse(
+      watchedReviewMovieIdsMissingFromCatalogKey,
+    ) as string[];
+    if (missing.length === 0) {
+      return;
+    }
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      void (async () => {
+        const found: Movie[] = [];
+        for (const movieId of missing) {
+          if (cancelled) {
+            return;
+          }
+          try {
+            const res = await fetch(
+              `/api/movies?movieId=${encodeURIComponent(movieId)}`,
+              { cache: "no-store" },
+            );
+            if (!res.ok) {
+              continue;
+            }
+            const payload = (await res.json()) as { movie?: Movie | null };
+            if (payload.movie) {
+              found.push(payload.movie);
+            }
+          } catch {
+            // ignore: offline or unparsable id
+          }
+        }
+        if (!cancelled && found.length > 0) {
+          setData((current) => mergeMoviesIntoData(current, found));
+        }
+      })();
+    }, 450);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [currentUserId, watchedReviewMovieIdsMissingFromCatalogKey, setData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -2553,6 +2615,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const movieForSupabase = data.movies.find((entry) => entry.id === movieId);
     const watchedAt = new Date().toISOString();
 
     setData((current) => {
@@ -2592,6 +2655,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = getSupabaseBrowserClient();
     if (supabase && isSupabaseConfigured()) {
+      if (movieForSupabase) {
+        await persistMovieToSupabase(movieForSupabase);
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from("watched_pick_reviews").upsert(
         {

@@ -6,7 +6,11 @@ import { Movie } from "@/lib/types";
 import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
-import { isTmdbConfigured, searchTmdbMedia } from "@/server/tmdb";
+import {
+  fetchTmdbMediaByPicksId,
+  isTmdbConfigured,
+  searchTmdbMedia,
+} from "@/server/tmdb";
 
 const moviesQuerySchema = z.object({
   userId: z.string().optional(),
@@ -38,10 +42,13 @@ export async function GET(request: NextRequest) {
 
   if (movieId) {
     const mergedMovies = await getMergedMovies();
-    const exactMovie =
+    let exactMovie =
       movies.find((movie) => movie.id === movieId) ??
       mergedMovies.find((movie) => movie.id === movieId) ??
       null;
+    if (!exactMovie) {
+      exactMovie = (await fetchTmdbMediaByPicksId(movieId)) ?? null;
+    }
 
     return apiJsonOk(
       {
