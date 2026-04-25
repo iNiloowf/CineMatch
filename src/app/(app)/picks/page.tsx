@@ -1344,172 +1344,179 @@ export default function PicksPage() {
         ) : null}
       </div>
 
-      {pendingRemoveMovie ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
-          <button
-            type="button"
-            aria-label="Close remove confirmation"
-            onClick={() => setPendingRemoveMovieId(null)}
-            className="absolute inset-0 cursor-default bg-transparent"
-          />
-          <div
-            className={`ui-shell ui-shell--dialog-sm relative z-10 flex max-h-[min(92dvh,26rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950 text-white"
-                : "border-white/80 bg-white text-slate-900"
-            }`}
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className="ui-shell-header !border-b-black/6 shrink-0">
-              <h3 className="min-w-0 flex-1 text-lg font-semibold">Remove from your picks?</h3>
+      {pendingRemoveMovie && typeof document !== "undefined"
+        ? createPortal(
+            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
+                aria-label="Close remove confirmation"
                 onClick={() => setPendingRemoveMovieId(null)}
-                aria-label="Close"
-                className={`ui-shell-close ${
-                  isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                className="absolute inset-0 cursor-default bg-transparent"
+              />
+              <div
+                className={`ui-shell ui-shell--dialog-sm relative z-10 flex max-h-[min(92dvh,26rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] ${
+                  isDarkMode
+                    ? "border-white/10 bg-slate-950 text-white"
+                    : "border-white/80 bg-white text-slate-900"
                 }`}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="ui-icon-md ui-icon-stroke"
-                  aria-hidden="true"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4">
-              <p
-                className={`text-sm leading-6 ${
-                  isDarkMode ? "text-slate-300" : "text-slate-500"
-                }`}
-              >
-                Are you sure you want to remove{" "}
-                <span className="font-semibold text-inherit">
-                  {pendingRemoveMovie.title}
-                </span>{" "}
-                from your list?
-              </p>
-            </div>
-            <div className={`ui-shell-footer !pt-4 shrink-0 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}>
-              <button
-                type="button"
-                onClick={() => setPendingRemoveMovieId(null)}
-                className="ui-btn ui-btn-secondary min-w-0 flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await removePick(pendingRemoveMovie.id);
-                  setPendingRemoveMovieId(null);
-                }}
-                className="ui-btn ui-btn-danger min-w-0 flex-1"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {pendingWatchedMovie ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
-          <button
-            type="button"
-            aria-label="Close watched confirmation"
-            onClick={() => setPendingWatchedMovieId(null)}
-            className="absolute inset-0 cursor-default bg-transparent"
-          />
-          <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-[min(100%,22rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:w-full ${
-              isDarkMode
-                ? "border-white/10 bg-slate-950 text-white"
-                : "border-white/80 bg-white text-slate-900"
-            }`}
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
-              <div className="min-w-0 flex-1 pr-2">
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-300/90" : "text-violet-600/90"}`}>
-                  Your take
-                </p>
-                <h3 id="picks-watched-dialog-title" className="mt-1 line-clamp-2 text-base font-semibold leading-snug sm:text-lg">
-                  {pendingWatchedMovie.title}
-                </h3>
+                <span className="ui-modal-accent-bar" aria-hidden />
+                <div className="ui-shell-header !border-b-black/6 shrink-0">
+                  <h3 className="min-w-0 flex-1 text-lg font-semibold">Remove from your picks?</h3>
+                  <button
+                    type="button"
+                    onClick={() => setPendingRemoveMovieId(null)}
+                    aria-label="Close"
+                    className={`ui-shell-close ${
+                      isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      className="ui-icon-md ui-icon-stroke"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="ui-shell-body !min-h-0 !flex-1 !overflow-y-auto !pt-4">
+                  <p
+                    className={`text-sm leading-6 ${
+                      isDarkMode ? "text-slate-300" : "text-slate-500"
+                    }`}
+                  >
+                    Are you sure you want to remove{" "}
+                    <span className="font-semibold text-inherit">
+                      {pendingRemoveMovie.title}
+                    </span>{" "}
+                    from your list?
+                  </p>
+                </div>
+                <div className={`ui-shell-footer !pt-4 shrink-0 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setPendingRemoveMovieId(null)}
+                    className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await removePick(pendingRemoveMovie.id);
+                      setPendingRemoveMovieId(null);
+                    }}
+                    className="ui-btn ui-btn-danger min-w-0 flex-1"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
+            </div>,
+            document.body,
+          )
+        : null}
+      {pendingWatchedMovie && typeof document !== "undefined"
+        ? createPortal(
+            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
+                aria-label="Close watched confirmation"
                 onClick={() => setPendingWatchedMovieId(null)}
-                aria-label="Close"
-                className={`ui-shell-close shrink-0 ${
-                  isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                className="absolute inset-0 cursor-default bg-transparent"
+              />
+              <div
+                className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-[min(100%,22rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:w-full ${
+                  isDarkMode
+                    ? "border-white/10 bg-slate-950 text-white"
+                    : "border-white/80 bg-white text-slate-900"
                 }`}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="ui-icon-md ui-icon-stroke"
-                  aria-hidden="true"
+                <span className="ui-modal-accent-bar" aria-hidden />
+                <div className={`ui-shell-header shrink-0 ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-violet-300/90" : "text-violet-600/90"}`}>
+                      Your take
+                    </p>
+                    <h3 id="picks-watched-dialog-title" className="mt-1 line-clamp-2 text-base font-semibold leading-snug sm:text-lg">
+                      {pendingWatchedMovie.title}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPendingWatchedMovieId(null)}
+                    aria-label="Close"
+                    className={`ui-shell-close shrink-0 ${
+                      isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      className="ui-icon-md ui-icon-stroke"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="ui-shell-body !pt-4">
+                  <p
+                    className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                    id="picks-watched-dialog-desc"
+                  >
+                    Would you recommend this to a friend?
+                  </p>
+                </div>
+                <div
+                  className={`ui-shell-footer !flex-col !gap-2 !pt-4 sm:!flex-row sm:!gap-3 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}
+                  role="group"
+                  aria-labelledby="picks-watched-dialog-title"
+                  aria-describedby="picks-watched-dialog-desc"
                 >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="ui-shell-body !pt-4">
-              <p
-                className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
-                id="picks-watched-dialog-desc"
-              >
-                Would you recommend this to a friend?
-              </p>
-            </div>
-            <div
-              className={`ui-shell-footer !flex-col !gap-2 !pt-4 sm:!flex-row sm:!gap-3 ${isDarkMode ? "bg-slate-950" : "bg-white"}`}
-              role="group"
-              aria-labelledby="picks-watched-dialog-title"
-              aria-describedby="picks-watched-dialog-desc"
-            >
-              <button
-                type="button"
-                onClick={async () => {
-                  await markPickWatched(pendingWatchedMovie.id, false);
-                  setPendingWatchedMovieId(null);
-                }}
-                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400/80 sm:min-w-0 sm:flex-1 ${
-                  isDarkMode
-                    ? "border-red-500/45 bg-red-950/25 text-red-200/95 hover:border-red-400/55 hover:bg-red-950/45"
-                    : "border-red-300/90 bg-red-50/40 text-red-800 hover:border-red-400 hover:bg-red-50/90"
-                }`}
-              >
-                Not for me
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await markPickWatched(pendingWatchedMovie.id, true);
-                  setPendingWatchedMovieId(null);
-                }}
-                className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400/80 sm:min-w-0 sm:flex-1 ${
-                  isDarkMode
-                    ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200/95 hover:border-emerald-400/50 hover:bg-emerald-950/40"
-                    : "border-emerald-300/90 bg-emerald-50/50 text-emerald-900 hover:border-emerald-400 hover:bg-emerald-50"
-                }`}
-              >
-                Recommend
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {isBuyProModalOpen ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await markPickWatched(pendingWatchedMovie.id, false);
+                      setPendingWatchedMovieId(null);
+                    }}
+                    className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400/80 sm:min-w-0 sm:flex-1 ${
+                      isDarkMode
+                        ? "border-red-500/45 bg-red-950/25 text-red-200/95 hover:border-red-400/55 hover:bg-red-950/45"
+                        : "border-red-300/90 bg-red-50/40 text-red-800 hover:border-red-400 hover:bg-red-50/90"
+                    }`}
+                  >
+                    Not for me
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await markPickWatched(pendingWatchedMovie.id, true);
+                      setPendingWatchedMovieId(null);
+                    }}
+                    className={`inline-flex min-h-11 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl border px-3 text-sm font-semibold transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400/80 sm:min-w-0 sm:flex-1 ${
+                      isDarkMode
+                        ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-200/95 hover:border-emerald-400/50 hover:bg-emerald-950/40"
+                        : "border-emerald-300/90 bg-emerald-50/50 text-emerald-900 hover:border-emerald-400 hover:bg-emerald-50"
+                    }`}
+                  >
+                    Recommend
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+      {isBuyProModalOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close buy pro modal"
@@ -1685,10 +1692,13 @@ export default function PicksPage() {
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
-      {isGiftPartnerPickerOpen ? (
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+        </div>,
+            document.body,
+          )
+        : null}
+      {isGiftPartnerPickerOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
             aria-label="Close"
@@ -1782,8 +1792,10 @@ export default function PicksPage() {
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div>,
+            document.body,
+          )
+        : null}
       {detailsModal}
       {shareToast && typeof document !== "undefined"
         ? createPortal(
