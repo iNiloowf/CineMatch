@@ -40,16 +40,22 @@ export function PosterBackdrop({
 
   if (isTmdb) {
     return (
-      <Image
-        src={src}
-        alt=""
-        aria-hidden
-        fill
-        sizes={sizes}
-        loading={eager ? "eager" : "lazy"}
-        fetchPriority={eager ? "high" : "low"}
-        className={`pointer-events-none ${fitClass} ${className}`}
-      />
+      <div
+        className={`pointer-events-none absolute inset-0 min-h-0 min-w-0 ${className}`.trim()}
+      >
+        <div className="relative h-full w-full min-h-0 min-w-0">
+          <Image
+            src={src}
+            alt=""
+            aria-hidden
+            fill
+            sizes={sizes}
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "low"}
+            className={`pointer-events-none ${fitClass}`}
+          />
+        </div>
+      </div>
     );
   }
 

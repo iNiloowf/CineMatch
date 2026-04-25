@@ -353,10 +353,10 @@ export function MovieSwipeCard({
             </div>
           ) : null}
 
-          <div className="flex h-full min-h-0 flex-1 flex-col">
-            <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+          <div className="flex h-full w-full max-w-full min-h-0 flex-1 flex-col">
+            <div className="relative z-0 min-h-[min(34dvh,10.5rem)] w-full min-w-0 flex-1 overflow-hidden">
               <div
-                className="absolute inset-0"
+                className="absolute inset-0 z-0"
                 style={{
                   backgroundImage: movie.poster.imageUrl
                     ? undefined
@@ -364,16 +364,17 @@ export function MovieSwipeCard({
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
+                aria-hidden
               />
               <PosterBackdrop
                 imageUrl={movie.poster.imageUrl}
                 profile="hero"
                 objectFit="cover"
-                className="!absolute inset-0 h-full w-full"
+                className="z-[1]"
               />
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.5),transparent_40%,rgba(2,6,23,0.2)_55%,rgba(2,6,23,0.75)_100%)]" />
+              <div className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(180deg,rgba(2,6,23,0.45),transparent_38%,rgba(2,6,23,0.12)_55%,rgba(2,6,23,0.7)_100%)]" />
 
-              <div className="absolute left-0 right-0 top-0 z-[2] flex min-w-0 items-start justify-between gap-2 p-3 pr-2 sm:p-3.5">
+              <div className="absolute left-0 right-0 top-0 z-[3] flex min-w-0 items-start justify-between gap-2 p-3 pr-2 sm:p-3.5">
                 <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                   {movie.mediaType === "series" ? "Series" : "Movie"}
                 </span>
@@ -393,7 +394,7 @@ export function MovieSwipeCard({
                 </div>
               </div>
 
-              <div className="absolute inset-y-0 left-0 right-0 z-[1] flex items-center justify-between px-0">
+              <div className="absolute inset-y-0 left-0 right-0 z-[3] flex items-center justify-between px-0">
                 <button
                   type="button"
                   onClick={onPrevious}
@@ -425,7 +426,7 @@ export function MovieSwipeCard({
               </div>
 
               {!suppressTrailerPlayButton ? (
-                <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center">
+                <div className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center">
                   <button
                     type="button"
                     onClick={handleOpenTrailer}
@@ -450,12 +451,14 @@ export function MovieSwipeCard({
               ) : null}
 
               <div
-                className={`absolute bottom-0 left-0 right-0 z-[2] flex min-h-0 max-w-full flex-col ${
-                  isDescriptionExpanded ? "max-h-[min(58vh,80%)]" : ""
+                className={`absolute bottom-0 left-0 right-0 z-[4] flex min-h-0 w-full max-w-full flex-col overflow-hidden ${
+                  isDescriptionExpanded
+                    ? "max-h-[min(75dvh,88%)]"
+                    : "max-h-[min(48dvh,50%)]"
                 }`}
               >
                 <div
-                  className="max-h-full overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-12 [scrollbar-gutter:stable] sm:px-3.5 sm:pt-14"
+                  className="max-h-full min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-8 [scrollbar-gutter:stable] sm:px-3.5 sm:pt-10"
                   style={isDescriptionExpanded ? { WebkitOverflowScrolling: "touch" } : undefined}
                 >
                   <h2
