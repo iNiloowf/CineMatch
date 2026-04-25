@@ -1245,21 +1245,14 @@ export function DiscoverPage2Content({
               >
                 Discover
               </h1>
-              <p
-                className={`mt-1 line-clamp-2 text-[11px] font-medium leading-snug sm:text-xs ${
-                  isDarkMode ? "text-slate-400" : "text-slate-600"
-                }`}
-              >
-                This is Discover variant 2 — A/B layout. Default is set in discover-ab.ts.
-              </p>
-              <p className={`mt-1.5 text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+              <p className={`mt-1.5 text-[10px] font-medium sm:text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                 <Link
                   href="/discover1"
                   className={`font-semibold underline decoration-fuchsia-500/45 underline-offset-2 ${
                     isDarkMode ? "text-fuchsia-200" : "text-violet-700"
                   }`}
                 >
-                  Open layout 1 (original)
+                  Open layout 1
                 </Link>
               </p>
             </div>
