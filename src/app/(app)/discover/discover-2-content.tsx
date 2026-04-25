@@ -90,6 +90,11 @@ type LastSwipeRecord = {
   focusedMovieId: string | null;
 };
 
+/**
+ * Discover variant 2: full-height flex layout so the swipe card grows with the viewport (less dead
+ * space under the header/search), swipe-app style density, and responsive gaps. Default route
+ * (`/discover`) is controlled by `DISCOVER_DEFAULT_VARIANT` in `src/lib/discover-ab.ts`.
+ */
 export function DiscoverPage2Content({
   currentUserId,
   discoverQueue,
@@ -1004,7 +1009,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md min-h-[calc(100dvh-15.5rem)] flex-1 flex-col gap-2 overflow-visible sm:min-h-[calc(100dvh-14.25rem)] sm:gap-2.5"
+      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md flex-1 flex-col gap-1.5 overflow-visible min-h-[calc(100dvh-10.5rem)] sm:min-h-[calc(100dvh-9.5rem)] sm:gap-2.5"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
@@ -1254,16 +1259,6 @@ export function DiscoverPage2Content({
               >
                 Discover
               </h1>
-              <p className={`mt-1.5 text-[10px] font-medium sm:text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                <Link
-                  href="/discover1"
-                  className={`font-semibold underline decoration-fuchsia-500/45 underline-offset-2 ${
-                    isDarkMode ? "text-fuchsia-200" : "text-violet-700"
-                  }`}
-                >
-                  Open layout 1
-                </Link>
-              </p>
             </div>
             <div className="flex shrink-0 pt-0.5">
               <div ref={menuRef} className="relative">
@@ -2254,12 +2249,12 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`flex min-h-0 min-h-[52dvh] flex-1 flex-col overflow-hidden ${
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
           isDarkMode ? "discover-card-viewport" : ""
         }`}
       >
         {movie ? (
-          <div className="mx-auto flex h-full min-h-[48dvh] w-full max-w-xl flex-1 flex-col overflow-hidden rounded-[24px] px-1 sm:px-1.5">
+          <div className="mx-auto flex h-full min-h-0 w-full max-w-xl flex-1 flex-col justify-stretch overflow-hidden rounded-[24px] px-1 sm:px-1.5">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"

@@ -1229,17 +1229,6 @@ export function DiscoverPage1Content({
               >
                 CineMatch
               </h1>
-              <p className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                Layout 1 (original) ·{" "}
-                <Link
-                  href="/discover2"
-                  className={`font-semibold underline decoration-violet-500/50 underline-offset-2 ${
-                    isDarkMode ? "text-violet-300" : "text-violet-700"
-                  }`}
-                >
-                  Open layout 2
-                </Link>
-              </p>
             </div>
             <div className="flex shrink-0">
               <div ref={menuRef} className="relative">

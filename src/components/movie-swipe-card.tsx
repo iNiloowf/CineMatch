@@ -412,8 +412,8 @@ export function MovieSwipeCard({
             </div>
           ) : null}
 
-          <div className="flex h-full w-full max-w-full min-h-[min(56dvh,28rem)] flex-1 flex-col">
-            <div className="relative z-0 w-full min-h-[min(52dvh,32rem)] min-w-0 flex-1 overflow-hidden">
+          <div className="flex h-full min-h-0 w-full max-w-full flex-1 flex-col">
+            <div className="relative z-0 w-full min-w-0 flex-1 min-h-[min(34dvh,20rem)] overflow-hidden">
               <div
                 className="absolute inset-0 z-0"
                 style={{
@@ -570,7 +570,7 @@ export function MovieSwipeCard({
                     ))}
                   </div>
                   {onMatchPercentClick ? (
-                    <div className="mt-2">
+                    <div className="mt-1.5 sm:mt-2">
                       <button
                         type="button"
                         disabled={isInteractionLocked}
@@ -578,12 +578,12 @@ export function MovieSwipeCard({
                           e.stopPropagation();
                           onMatchPercentClick();
                         }}
-                        className="inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full border border-violet-400/45 bg-violet-500/25 px-2.5 py-1.5 text-left text-[11px] font-bold text-violet-100 shadow-sm backdrop-blur-sm transition enabled:hover:bg-violet-500/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-8 min-w-0 max-w-full items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/22 px-2 py-1 text-left text-[9px] font-semibold leading-tight text-violet-100 shadow-sm backdrop-blur-sm transition sm:min-h-8 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-[10px] enabled:hover:bg-violet-500/32 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Why ${matchScore}% match for your taste?`}
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-5 w-5 shrink-0"
+                          className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -597,13 +597,15 @@ export function MovieSwipeCard({
                           <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
                         </svg>
                         <span>
-                          {matchScore}% <span className="font-semibold text-violet-200/90">taste match</span>
+                          {matchScore}% <span className="font-medium text-violet-200/88">taste match</span>
                         </span>
-                        <span className="ml-0.5 text-[10px] font-medium text-violet-200/80">Tap for why</span>
+                        <span className="ml-0.5 text-[8px] font-medium text-violet-200/75 sm:text-[9px]">Tap for why</span>
                       </button>
                     </div>
                   ) : (
-                    <p className="mt-2 text-xs font-bold text-violet-200/95">{matchScore}% match</p>
+                    <p className="mt-1.5 text-[9px] font-semibold text-violet-200/90 sm:mt-2 sm:text-[10px]">
+                      {matchScore}% match
+                    </p>
                   )}
 
                   {discoverPartnerNotes.length > 0 ? (
