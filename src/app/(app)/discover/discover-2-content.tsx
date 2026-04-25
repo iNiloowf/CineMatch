@@ -2254,9 +2254,9 @@ export function DiscoverPage2Content({
         }`}
       >
         {movie ? (
-          <div className="mx-auto flex h-full min-h-0 w-full max-w-xl flex-1 flex-col justify-stretch overflow-hidden rounded-[24px] px-1 sm:px-1.5">
+          <div className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-stretch overflow-hidden rounded-[24px] px-1 sm:px-1.5">
             <div
-              className={`discover-card-stage ${
+              className={`discover-card-stage flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-visible ${
                 transitionState === "idle"
                   ? ""
                   : transitionState === "out"
@@ -2266,7 +2266,7 @@ export function DiscoverPage2Content({
                     : transitionDirection === "next"
                       ? "discover-card-in-right"
                       : "discover-card-in-left"
-              } h-full overflow-visible`}
+              }`}
             >
               <MovieSwipeCard
                 key={movie.id}

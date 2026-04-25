@@ -385,12 +385,12 @@ export function MovieSwipeCard({
 
   if (immersive) {
     return (
-      <>
+      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 flex-1 flex-col self-stretch">
         <SurfaceCard
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
-          className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
@@ -679,11 +679,9 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`shrink-0 border-t px-2.5 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-2 sm:px-3.5 ${
-                isDarkMode
-                  ? "border-white/10 bg-slate-950/[0.98]"
-                  : "border-slate-200/90 bg-white"
-              }`}
+              className={`shrink-0 border-t px-2.5 pt-2 sm:px-3.5 ${isDarkMode
+                ? "border-white/10 bg-slate-950/[0.98]"
+                : "border-slate-200/90 bg-white"} pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))]`}
             >
               <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                 <button
@@ -711,7 +709,7 @@ export function MovieSwipeCard({
           </div>
         </SurfaceCard>
         {trailerModal}
-      </>
+      </div>
     );
   }
 

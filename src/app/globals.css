@@ -1209,7 +1209,8 @@ input[type="range"] {
  * bottom nav with only a hairline (card buttons still use their own safe-area).
  */
 [data-app-scroll-container="true"] .discover-v2-page-stack {
-  margin-bottom: calc(-1 * (var(--app-scroll-pad-bottom) - 0.125rem));
+  /* Sit the card stack on the bottom nav; card buttons keep their own safe padding */
+  margin-bottom: calc(-1 * var(--app-scroll-pad-bottom));
 }
 
 [data-app-shell-root][data-theme="dark"] #main-content {
