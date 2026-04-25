@@ -413,7 +413,7 @@ export function MovieSwipeCard({
           ) : null}
 
           <div className="flex h-full min-h-0 w-full max-w-full flex-1 flex-col">
-            <div className="relative z-0 w-full min-w-0 flex-1 min-h-[min(34dvh,20rem)] overflow-hidden">
+            <div className="relative z-0 w-full min-w-0 flex-1 min-h-[min(52dvh,32rem)] overflow-hidden">
               <div
                 className="absolute inset-0 z-0"
                 style={{
