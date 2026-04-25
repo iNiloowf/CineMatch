@@ -1126,6 +1126,31 @@ input[type="range"] {
   animation: discoverToolbarIn var(--motion-duration-enter) var(--motion-ease-standard) both;
 }
 
+/*
+ * Discover search row: frosted `ui-glass-panel` re-samples backdrop while the swipe card
+ * animates with `filter: blur()` — WebKit can flash a bright band under the toolbar. Use a
+ * nearly opaque dark fill and drop nested backdrop on inputs so compositing stays stable.
+ */
+[data-app-shell-root][data-theme="dark"] .discover-search-toolbar {
+  background: rgba(9, 7, 16, 0.97) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 26px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-app-shell-root][data-theme="dark"] .discover-search-toolbar .ui-input-shell,
+[data-app-shell-root][data-theme="dark"] .discover-search-toolbar .ui-icon-button,
+[data-app-shell-root][data-theme="dark"] .discover-search-toolbar .ui-soft-pill {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+[data-app-shell-root][data-theme="dark"] .discover-card-viewport {
+  background: rgba(8, 6, 15, 0.55);
+  border-radius: 1.35rem;
+}
+
 .discover-hero-reveal {
   animation: discoverHeroReveal var(--motion-duration-reveal) var(--motion-ease-standard) both;
 }

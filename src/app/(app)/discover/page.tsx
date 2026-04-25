@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DiscoverMatchExplainModal } from "@/components/discover-match-explain-modal";
+import { ModalPortal } from "@/components/modal-portal";
+import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import {
   shouldVirtualizeList,
@@ -184,6 +186,8 @@ function DiscoverPageContent({
       setOnboardingStep(0);
     }
   }, [isOnboardingComplete]);
+
+  useBodyScrollLock(isMoreMenuOpen);
 
   useEscapeToClose(isSearchOpen, () => {
     setSearchQuery("");
@@ -991,7 +995,7 @@ function DiscoverPageContent({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-[var(--discover-stack-gap)] overflow-visible">
-      {!isOnboardingComplete ? (
+      <ModalPortal open={!isOnboardingComplete}>
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
           <div
             className={`ui-shell ui-shell--dialog-md relative z-10 flex max-h-[min(90dvh,44rem)] flex-col overflow-hidden rounded-[28px] border ${
@@ -1169,7 +1173,7 @@ function DiscoverPageContent({
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalPortal>
       {sharedMovieId && sharedMovieFetch === "loading" ? (
         <div
           className="flex min-h-[min(70dvh,32rem)] flex-col space-y-3"
@@ -1509,7 +1513,7 @@ function DiscoverPageContent({
             hasActiveBrowse={Boolean(movie)}
             isOnboardingComplete={isOnboardingComplete}
           />
-          <div className="ui-glass-panel discover-toolbar-enter px-3 py-2.5 sm:px-3.5">
+          <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar px-3 py-2.5 sm:px-3.5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
@@ -1663,7 +1667,7 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      {isPasteInviteModalOpen ? (
+      <ModalPortal open={isPasteInviteModalOpen}>
         <div
           role="presentation"
           className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] flex items-end justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-16 backdrop-blur-md sm:items-center sm:px-4 sm:pb-8 ${
@@ -1743,9 +1747,9 @@ function DiscoverPageContent({
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalPortal>
 
-      {isSearchOpen ? (
+      <ModalPortal open={isSearchOpen}>
         <div
           role="presentation"
           className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] backdrop-blur-2xl ${
@@ -2029,9 +2033,9 @@ function DiscoverPageContent({
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalPortal>
 
-      {isFilterOpen ? (
+      <ModalPortal open={isFilterOpen}>
         <div
           role="presentation"
           className="ui-overlay ui-overlay--bottom z-[var(--z-sheet)] bg-slate-950/35 backdrop-blur-sm"
@@ -2149,7 +2153,7 @@ function DiscoverPageContent({
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalPortal>
 
       {lastSwipe ? (
         <div
@@ -2212,7 +2216,11 @@ function DiscoverPageContent({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div
+        className={`min-h-0 flex-1 overflow-hidden ${
+          isDarkMode ? "discover-card-viewport" : ""
+        }`}
+      >
         {movie ? (
           <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] px-1.5 sm:px-2">
             <div
@@ -2289,16 +2297,13 @@ function DiscoverPageContent({
         )}
       </div>
 
-      {typeof document !== "undefined" && matchExplanation
-        ? createPortal(
-            <DiscoverMatchExplainModal
-              explanation={matchExplanation}
-              isDarkMode={isDarkMode}
-              onClose={() => setMatchExplanation(null)}
-            />,
-            document.body,
-          )
-        : null}
+      {matchExplanation ? (
+        <DiscoverMatchExplainModal
+          explanation={matchExplanation}
+          isDarkMode={isDarkMode}
+          onClose={() => setMatchExplanation(null)}
+        />
+      ) : null}
     </div>
   );
 }
