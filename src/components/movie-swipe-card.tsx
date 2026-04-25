@@ -373,9 +373,9 @@ export function MovieSwipeCard({
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
                 aria-label="Show previous title"
-                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
                   canGoPrevious
-                    ? "opacity-100 hover:bg-black/32 active:scale-95"
+                    ? "opacity-100 hover:bg-black/28 active:scale-95"
                     : "cursor-not-allowed opacity-35"
                 }`}
               >
@@ -394,9 +394,9 @@ export function MovieSwipeCard({
                 onClick={onNext}
                 disabled={!canGoNext}
                 aria-label="Show next title"
-                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/20 bg-black/20 text-white backdrop-blur-md transition ${
+                className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-[999px] border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
                   canGoNext
-                    ? "opacity-100 hover:bg-black/32 active:scale-95"
+                    ? "opacity-100 hover:bg-black/28 active:scale-95"
                     : "cursor-not-allowed opacity-35"
                 }`}
               >
@@ -418,16 +418,16 @@ export function MovieSwipeCard({
                   onClick={handleOpenTrailer}
                   disabled={!hasTrailer || isLoadingTrailer}
                   aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                  className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-[999px] border border-white/25 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md transition ${
+                  className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-[999px] border text-white shadow-[0_6px_28px_rgba(0,0,0,0.55)] transition ${
                     hasTrailer
-                      ? "bg-black/24 text-white hover:bg-black/34"
-                      : "cursor-not-allowed bg-black/16 text-white/55"
+                      ? "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
+                      : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
                   }`}
                 >
                   <svg
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="ml-1 h-6 w-6"
+                    className="ml-1 h-6 w-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
                     aria-hidden="true"
                   >
                     <path d="m8 5 11 7-11 7V5Z" />
