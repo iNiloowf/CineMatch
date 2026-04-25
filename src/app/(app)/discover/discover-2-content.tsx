@@ -203,6 +203,15 @@ export function DiscoverPage2Content({
     [discoverQueue],
   );
 
+  /** `/discover2?friendPreview=recommends|not_for_them|pick` — preview friend strip when no live data. */
+  const friendRecommendationPreview = useMemo((): "recommends" | "not_for_them" | "pick" | null => {
+    const v = searchParams.get("friendPreview");
+    if (v === "recommends" || v === "not_for_them" || v === "pick") {
+      return v;
+    }
+    return null;
+  }, [searchParams]);
+
   useEffect(() => {
     if (!sharedMovieId) {
       setSharedMovieFetch("idle");
@@ -995,7 +1004,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 flex-col gap-2 overflow-visible sm:gap-2.5"
+      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md min-h-[calc(100dvh-15.5rem)] flex-1 flex-col gap-2 overflow-visible sm:min-h-[calc(100dvh-14.25rem)] sm:gap-2.5"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
@@ -2245,12 +2254,12 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`min-h-0 flex-1 overflow-hidden ${
+        className={`flex min-h-0 min-h-[52dvh] flex-1 flex-col overflow-hidden ${
           isDarkMode ? "discover-card-viewport" : ""
         }`}
       >
         {movie ? (
-          <div className="mx-auto flex h-full w-full min-h-0 max-w-xl flex-1 flex-col overflow-hidden rounded-[24px] px-1 sm:px-1.5">
+          <div className="mx-auto flex h-full min-h-[48dvh] w-full max-w-xl flex-1 flex-col overflow-hidden rounded-[24px] px-1 sm:px-1.5">
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
@@ -2282,6 +2291,7 @@ export function DiscoverPage2Content({
                 suppressTrailerPlayButton={!isOnboardingComplete}
                 onMatchPercentClick={currentUserId ? openMatchExplanation : undefined}
                 posterLayout="immersive"
+                friendRecommendationPreview={friendRecommendationPreview}
               />
             </div>
           </div>
