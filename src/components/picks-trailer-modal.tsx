@@ -5,6 +5,7 @@ import { useAppState } from "@/lib/app-state";
 import { defaultSettings } from "@/lib/mock-data";
 import { applyTrailerAutoplayPreference } from "@/lib/trailer-embed-url";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { ModalPortal } from "@/components/modal-portal";
 
 type PicksTrailerModalProps = {
   title: string;
@@ -72,6 +73,7 @@ export function PicksTrailerModal({
     variant === "nested" ? "z-[var(--z-modal-nested)]" : "z-[var(--z-modal)]";
 
   return (
+    <ModalPortal open>
     <div
       className={`ui-overlay ${zClass} bg-slate-950/38 backdrop-blur-[2px]`}
       onClick={onClose}
@@ -179,5 +181,6 @@ export function PicksTrailerModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

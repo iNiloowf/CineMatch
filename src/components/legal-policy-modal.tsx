@@ -4,6 +4,7 @@ import {
   PrivacyPolicyDocumentBody,
   TermsOfServiceDocumentBody,
 } from "@/components/legal-policy-document-bodies";
+import { ModalPortal } from "@/components/modal-portal";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type LegalPolicyModalVariant = "privacy" | "terms" | null;
@@ -22,7 +23,8 @@ export function LegalPolicyModal({ variant, isDarkMode, onClose }: LegalPolicyMo
   }
 
   return (
-    <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+    <ModalPortal open={true}>
+      <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
       <button
         type="button"
         aria-label="Close dialog"
@@ -89,5 +91,6 @@ export function LegalPolicyModal({ variant, isDarkMode, onClose }: LegalPolicyMo
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

@@ -6,6 +6,7 @@ import { defaultSettings } from "@/lib/mock-data";
 import { useAppState } from "@/lib/app-state";
 import { applyTrailerAutoplayPreference } from "@/lib/trailer-embed-url";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { ModalPortal } from "@/components/modal-portal";
 
 export type MovieTrailerModalProps = {
   movie: Movie;
@@ -49,6 +50,7 @@ export function MovieTrailerModal({
   );
 
   return (
+    <ModalPortal open>
     <div
       className="ui-overlay z-[var(--z-modal)] bg-slate-950/40 backdrop-blur-[3px]"
       onClick={onClose}
@@ -205,5 +207,6 @@ export function MovieTrailerModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

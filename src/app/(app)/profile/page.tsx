@@ -5,6 +5,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } fro
 import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
+import { ModalPortal } from "@/components/modal-portal";
 import { PageHeader } from "@/components/page-header";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteLoading } from "@/components/app-route-status";
@@ -802,7 +803,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-5">
-      {removePhotoModalOpen ? (
+      <ModalPortal open={removePhotoModalOpen}>
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
@@ -852,8 +853,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      ) : null}
-      {avatarPresetModalOpen ? (
+      </ModalPortal>
+      <ModalPortal open={avatarPresetModalOpen}>
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
@@ -956,10 +957,10 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      ) : null}
-      {discoverSkipsModalOpen && !discoverSkipDetailMovie ? (
+      </ModalPortal>
+      <ModalPortal open={discoverSkipsModalOpen && !discoverSkipDetailMovie}>
         <div
-          className="discover-skips-list-modal fixed inset-0 z-[var(--z-modal-backdrop)] box-border flex items-center justify-center bg-slate-950/50 backdrop-blur-md"
+          className="ui-overlay z-[var(--z-modal-backdrop)] box-border items-center justify-center bg-slate-950/50 backdrop-blur-md"
           style={{
             paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))",
             paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
@@ -1077,7 +1078,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalPortal>
       {discoverSkipDetailMovie ? (
         <MovieDetailsModal
           movie={discoverSkipDetailMovie}
@@ -1122,7 +1123,8 @@ export default function ProfilePage() {
           }}
         />
       ) : null}
-      {editingWatchedEntry ? (
+      <ModalPortal open={Boolean(editingWatchedEntry)}>
+        {editingWatchedEntry ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
@@ -1205,7 +1207,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      ) : null}
+        ) : null}
+      </ModalPortal>
 
       {saveFeedback === "saved" || saveFeedback === "error" ? (
         <div

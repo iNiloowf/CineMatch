@@ -7,6 +7,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import { AppRouteEmptyCard } from "@/components/app-route-status";
 import type { ConversationEntry } from "@/lib/support-ticket-conversation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ModalPortal } from "@/components/modal-portal";
 import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -260,7 +261,8 @@ export default function MyTicketsPage() {
         </ul>
       )}
 
-      {selected ? (
+      <ModalPortal open={Boolean(selected)}>
+        {selected ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
@@ -390,7 +392,8 @@ export default function MyTicketsPage() {
             )}
           </div>
         </div>
-      ) : null}
+        ) : null}
+      </ModalPortal>
     </div>
   );
 }

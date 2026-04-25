@@ -994,7 +994,7 @@ function DiscoverPageContent({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-[var(--discover-stack-gap)] overflow-visible">
+    <div className="discover-page-stack flex h-full min-h-0 flex-col gap-[var(--discover-stack-gap)] overflow-visible">
       <ModalPortal open={!isOnboardingComplete}>
         <div className="ui-overlay z-[var(--z-overlay)] bg-slate-950/55 backdrop-blur-md">
           <div

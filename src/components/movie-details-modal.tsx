@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
+import { ModalPortal } from "@/components/modal-portal";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { useAppState } from "@/lib/app-state";
@@ -134,11 +134,12 @@ export function MovieDetailsModal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [movie, isTrailerVisible, onClose]);
 
-  if (!movie || typeof document === "undefined") {
+  if (!movie) {
     return null;
   }
 
-  return createPortal(
+  return (
+    <ModalPortal open>
     <div className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]">
       <button
         type="button"
@@ -337,7 +338,7 @@ export function MovieDetailsModal({
           onRetry={() => void fetchTrailerForMovie()}
         />
       ) : null}
-    </div>,
-    document.body,
+    </div>
+    </ModalPortal>
   );
 }

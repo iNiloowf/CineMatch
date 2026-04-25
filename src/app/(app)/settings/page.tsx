@@ -15,6 +15,7 @@ import { defaultSettings } from "@/lib/mock-data";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { sanitizePartnerGiftCodeInput } from "@/lib/partner-gift-code";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ModalPortal } from "@/components/modal-portal";
 
 type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 
@@ -410,7 +411,8 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full min-w-0 space-y-4">
-      {isContactAdminModalOpen ? (
+      <ModalPortal open={isContactAdminModalOpen}>
+        {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
@@ -540,13 +542,15 @@ export default function SettingsPage() {
             </form>
           </div>
         </div>
-      ) : null}
+        ) : null}
+      </ModalPortal>
       <LegalPolicyModal
         variant={legalModal}
         isDarkMode={isDarkMode}
         onClose={() => setLegalModal(null)}
       />
-      {isGiftPartnerPickerOpen ? (
+      <ModalPortal open={isGiftPartnerPickerOpen}>
+        {isGiftPartnerPickerOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
@@ -642,8 +646,10 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      ) : null}
-      {isGiftRedeemModalOpen ? (
+        ) : null}
+      </ModalPortal>
+      <ModalPortal open={isGiftRedeemModalOpen}>
+        {isGiftRedeemModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
@@ -775,7 +781,8 @@ export default function SettingsPage() {
             </form>
           </div>
         </div>
-      ) : null}
+        ) : null}
+      </ModalPortal>
 
       <PageHeader
         eyebrow="Preferences"

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import { createPortal } from "react-dom";
+import { ModalPortal } from "@/components/modal-portal";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PageHeader } from "@/components/page-header";
@@ -163,8 +163,8 @@ export default function SharedWatchlistPage() {
         </div>
       </div>
 
-      {detailsMovie && typeof document !== "undefined"
-        ? createPortal(
+      <ModalPortal open={Boolean(detailsMovie)}>
+        {detailsMovie ? (
             <div
               className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]"
             >
@@ -362,10 +362,9 @@ export default function SharedWatchlistPage() {
                   </div>
                 </div>
               </div>
-            </div>,
-            document.body,
-          )
-        : null}
+            </div>
+        ) : null}
+      </ModalPortal>
     </>
   );
 }

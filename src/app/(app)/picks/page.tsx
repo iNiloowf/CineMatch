@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ModalPortal } from "@/components/modal-portal";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { matchPercentForMovie } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
@@ -687,9 +688,9 @@ export default function PicksPage() {
     });
   }, []);
 
-  const detailsModal =
-    selectedMovie && typeof document !== "undefined"
-      ? createPortal(
+  const detailsModal = (
+    <ModalPortal open={Boolean(selectedMovie)}>
+      {selectedMovie ? (
           <div className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]">
             <button
               type="button"
@@ -908,10 +909,10 @@ export default function PicksPage() {
                 onRetry={() => void fetchTrailerForSelected()}
               />
             ) : null}
-          </div>,
-          document.body,
-        )
-      : null;
+          </div>
+      ) : null}
+    </ModalPortal>
+  );
 
   const premiumInsightsBodyOpen =
     isPremiumInsightsExpanded &&
@@ -1363,8 +1364,8 @@ export default function PicksPage() {
         ) : null}
       </div>
 
-      {pendingRemoveMovie && typeof document !== "undefined"
-        ? createPortal(
+      <ModalPortal open={Boolean(pendingRemoveMovie)}>
+        {pendingRemoveMovie ? (
             <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
@@ -1435,12 +1436,11 @@ export default function PicksPage() {
                   </button>
                 </div>
               </div>
-            </div>,
-            document.body,
-          )
-        : null}
-      {pendingWatchedMovie && typeof document !== "undefined"
-        ? createPortal(
+            </div>
+        ) : null}
+      </ModalPortal>
+      <ModalPortal open={Boolean(pendingWatchedMovie)}>
+        {pendingWatchedMovie ? (
             <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
               <button
                 type="button"
@@ -1529,12 +1529,11 @@ export default function PicksPage() {
                   </button>
                 </div>
               </div>
-            </div>,
-            document.body,
-          )
-        : null}
-      {isBuyProModalOpen && typeof document !== "undefined"
-        ? createPortal(
+            </div>
+        ) : null}
+      </ModalPortal>
+      <ModalPortal open={isBuyProModalOpen}>
+        {isBuyProModalOpen ? (
             <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/45 backdrop-blur-md">
           <button
             type="button"
@@ -1711,12 +1710,11 @@ export default function PicksPage() {
               </button>
             </div>
           </div>
-        </div>,
-            document.body,
-          )
-        : null}
-      {isGiftPartnerPickerOpen && typeof document !== "undefined"
-        ? createPortal(
+        </div>
+        ) : null}
+      </ModalPortal>
+      <ModalPortal open={isGiftPartnerPickerOpen}>
+        {isGiftPartnerPickerOpen ? (
             <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
           <button
             type="button"
@@ -1811,10 +1809,9 @@ export default function PicksPage() {
               </button>
             </div>
           </div>
-        </div>,
-            document.body,
-          )
-        : null}
+        </div>
+        ) : null}
+      </ModalPortal>
       {detailsModal}
       {shareToast && typeof document !== "undefined"
         ? createPortal(

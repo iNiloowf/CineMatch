@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ConversationEntry } from "@/lib/support-ticket-conversation";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { ModalPortal } from "@/components/modal-portal";
 
 type DashboardStats = {
   users: number;
@@ -732,7 +733,8 @@ export default function AdminDesktopPage() {
   return (
     <main className={shell}>
       <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8">
-        {selectedTicket ? (
+        <ModalPortal open={Boolean(selectedTicket)}>
+          {selectedTicket ? (
           <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
             <button
               type="button"
@@ -959,8 +961,10 @@ export default function AdminDesktopPage() {
               </div>
             </div>
           </div>
-        ) : null}
+          ) : null}
+        </ModalPortal>
 
+        <ModalPortal open={Boolean(userPendingDelete)}>
         {userPendingDelete ? (
           <div className="ui-overlay z-[calc(var(--z-modal-backdrop)+1)] bg-slate-950/55 backdrop-blur-md">
             <button
@@ -1028,6 +1032,7 @@ export default function AdminDesktopPage() {
             </div>
           </div>
         ) : null}
+        </ModalPortal>
 
         <div className={`mb-6 rounded-[30px] border p-5 sm:p-6 ${glassPanel}`}>
           <div className="flex flex-wrap items-center justify-between gap-3">

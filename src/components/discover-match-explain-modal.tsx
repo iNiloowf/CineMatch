@@ -1,5 +1,6 @@
 "use client";
 
+import { ModalPortal } from "@/components/modal-portal";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import type { DiscoverSwipeMatchExplanation } from "@/lib/match-score";
 
@@ -21,6 +22,7 @@ export function DiscoverMatchExplainModal({
   }
 
   return (
+    <ModalPortal open={true}>
     <div className="ui-overlay z-[calc(var(--z-modal-backdrop)+2)] bg-slate-950/50 backdrop-blur-md">
       <button
         type="button"
@@ -96,6 +98,7 @@ export function DiscoverMatchExplainModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }
 

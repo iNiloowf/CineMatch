@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
+import { ModalPortal } from "@/components/modal-portal";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export default function FriendsPage() {
@@ -105,7 +106,8 @@ export default function FriendsPage() {
 
   return (
     <div className="space-y-5">
-      {pendingRemove ? (
+      <ModalPortal open={Boolean(pendingRemove)}>
+        {pendingRemove ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/32 backdrop-blur-md">
           <button
             type="button"
@@ -176,7 +178,8 @@ export default function FriendsPage() {
             </div>
           </div>
         </div>
-      ) : null}
+        ) : null}
+      </ModalPortal>
 
       {connectedPartnerName ? (
         <div className="fixed inset-x-4 top-6 z-[var(--z-banner)] mx-auto max-w-md">

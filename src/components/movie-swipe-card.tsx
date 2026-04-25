@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import {
   computeDiscoverSwipeMatchPercent,
@@ -306,6 +305,7 @@ export function MovieSwipeCard({
   return (
     <>
       <SurfaceCard
+        shimmer={false}
         className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-[24px] p-3 [--swipe-y-gap:clamp(0.75rem,2.85vw,1.05rem)] sm:p-3.5 ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
@@ -729,24 +729,21 @@ export function MovieSwipeCard({
           </div>
         </div>
       </SurfaceCard>
-      {isTrailerVisible && typeof document !== "undefined"
-        ? createPortal(
-            <MovieTrailerModalLazy
-              movie={movie}
-              isDarkMode={isDarkMode}
-              isInteractionLocked={isInteractionLocked}
-              trailerUrl={trailerUrl}
-              isLoadingTrailer={isLoadingTrailer}
-              trailerError={trailerError}
-              runtimeLabel={runtimeLabel}
-              onClose={() => setIsTrailerVisible(false)}
-              onRetryTrailer={() => void fetchTrailerIfNeeded()}
-              onAccept={onAccept}
-              onReject={onReject}
-            />,
-            document.body,
-          )
-        : null}
+      {isTrailerVisible ? (
+        <MovieTrailerModalLazy
+          movie={movie}
+          isDarkMode={isDarkMode}
+          isInteractionLocked={isInteractionLocked}
+          trailerUrl={trailerUrl}
+          isLoadingTrailer={isLoadingTrailer}
+          trailerError={trailerError}
+          runtimeLabel={runtimeLabel}
+          onClose={() => setIsTrailerVisible(false)}
+          onRetryTrailer={() => void fetchTrailerIfNeeded()}
+          onAccept={onAccept}
+          onReject={onReject}
+        />
+      ) : null}
     </>
   );
 }
