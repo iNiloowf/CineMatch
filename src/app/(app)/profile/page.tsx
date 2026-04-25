@@ -10,6 +10,7 @@ import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
+import { DEFAULT_PROFILE_AVATAR_PRESETS } from "@/lib/default-profile-avatar-presets";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
@@ -435,6 +436,15 @@ export default function ProfilePage() {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
+  const handleSelectPresetAvatar = (url: string) => {
+    if (avatarPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setAvatarFile(null);
+    setClearAvatarOnSave(false);
+    setAvatarPreview(url);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaveFeedback("saving");
@@ -445,7 +455,13 @@ export default function ProfilePage() {
       name: String(formData.get("name") ?? currentUser.name).trim() || currentUser.name,
       bio: String(formData.get("bio") ?? ""),
       city: "",
-      avatarImageUrl: clearAvatarOnSave ? null : currentUser.avatarImageUrl,
+      avatarImageUrl: clearAvatarOnSave
+        ? null
+        : avatarFile
+          ? currentUser.avatarImageUrl
+          : avatarPreview && !avatarPreview.startsWith("blob:")
+            ? avatarPreview
+            : currentUser.avatarImageUrl,
       avatarFile: clearAvatarOnSave ? null : avatarFile,
       favoriteMovie: favoriteMovieDraft,
       profileHeaderMovie: profileHeaderMovieDraft,
@@ -1243,67 +1259,133 @@ export default function ProfilePage() {
                     </span>
                   </button>
                   <div className={editSectionsOpen.basicInfo ? "" : "hidden"}>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <div className="flex shrink-0 flex-col items-center gap-3">
-                    <div className="relative">
-                      <AvatarBadge
-                        initials={currentUser.avatar}
-                        imageUrl={activeAvatarPreview}
-                        sizeClassName="h-20 w-20"
-                        textClassName="text-xl font-semibold"
-                      />
-                      {canRemovePhoto ? (
-                        <button
-                          type="button"
-                          onClick={() => setRemovePhotoModalOpen(true)}
-                          aria-label="Remove profile photo"
-                          title="Remove profile photo"
-                          className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
-                            isDarkMode
-                              ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
-                              : "border-white bg-rose-500 text-white hover:bg-rose-600"
+                  <div className="flex w-full min-w-0 flex-col gap-5 sm:flex-row sm:items-start">
+                    <div className="flex w-full min-w-0 flex-1 flex-col gap-4 sm:max-w-sm">
+                      <div className="flex shrink-0 flex-col items-center gap-3 sm:items-start">
+                        <div className="relative">
+                          <AvatarBadge
+                            initials={currentUser.avatar}
+                            imageUrl={activeAvatarPreview}
+                            sizeClassName="h-20 w-20"
+                            textClassName="text-xl font-semibold"
+                          />
+                          {canRemovePhoto ? (
+                            <button
+                              type="button"
+                              onClick={() => setRemovePhotoModalOpen(true)}
+                              aria-label="Remove profile photo"
+                              title="Remove profile photo"
+                              className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
+                                isDarkMode
+                                  ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
+                                  : "border-white bg-rose-500 text-white hover:bg-rose-600"
+                              }`}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="h-4 w-4"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                aria-hidden
+                              >
+                                <path d="M3 6h18" strokeLinecap="round" />
+                                <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M10 11v6M14 11v6" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          ) : null}
+                        </div>
+                        <p className={`w-full text-center text-[10px] font-semibold uppercase tracking-[0.14em] sm:text-left ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          From your device
+                        </p>
+                        <label
+                          className={`auth-primary-glow inline-flex cursor-pointer rounded-full px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                        >
+                          Choose from gallery or camera
+                          <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+                        </label>
+                        {clearAvatarOnSave ? (
+                          <p
+                            className={`max-w-[12rem] text-center text-[11px] font-medium sm:text-left ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}
+                          >
+                            Photo will be removed when you save.
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="space-y-2">
+                        <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          Or pick a famous title
+                        </p>
+                        <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          One-tap movie &amp; series posters. Same circle crop as a regular photo.
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-3">
+                          {DEFAULT_PROFILE_AVATAR_PRESETS.map((preset) => {
+                            const selected = avatarPreview === preset.imageUrl && !avatarFile;
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                onClick={() => handleSelectPresetAvatar(preset.imageUrl)}
+                                className={`relative aspect-[2/3] overflow-hidden rounded-lg ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
+                                  selected
+                                    ? isDarkMode
+                                      ? "ring-2 ring-violet-300 ring-offset-1 ring-offset-slate-900"
+                                      : "ring-2 ring-violet-500 ring-offset-1 ring-offset-slate-50"
+                                    : isDarkMode
+                                      ? "ring-white/12 hover:ring-violet-400/40"
+                                      : "ring-slate-200 hover:ring-violet-300"
+                                } ${isDarkMode ? "bg-white/5" : "bg-slate-100"}`}
+                                title={preset.label}
+                                aria-label={preset.label}
+                                aria-pressed={selected}
+                              >
+                                <span className="sr-only">{preset.label}</span>
+                                {/* eslint-disable-next-line @next/next/no-img-element -- TMDb static preset */}
+                                <img
+                                  src={preset.imageUrl}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                  sizes="(max-width: 640px) 33vw, 120px"
+                                />
+                                <span
+                                  className="pointer-events-none absolute inset-x-0 bottom-0 line-clamp-1 bg-gradient-to-t from-black/70 to-transparent px-0.5 py-1.5 text-center text-[8px] font-medium text-white"
+                                  aria-hidden
+                                >
+                                  {preset.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    {avatarPreview ? (
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <p
+                          className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                        >
+                          Preview
+                        </p>
+                        <div
+                          className={`relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-[28px] shadow-inner sm:mx-0 ${
+                            isDarkMode ? "ring-2 ring-violet-400/25" : "ring-2 ring-violet-200/80"
                           }`}
                         >
-                          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                            <path d="M3 6h18" strokeLinecap="round" />
-                            <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M10 11v6M14 11v6" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      ) : null}
-                    </div>
-                    <label
-                      className={`auth-primary-glow inline-flex cursor-pointer rounded-full px-4 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
-                    >
-                      Choose photo
-                      <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-                    </label>
-                    {clearAvatarOnSave ? (
-                      <p className={`max-w-[12rem] text-center text-[11px] font-medium ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}>
-                        Photo will be removed when you save.
-                      </p>
+                          {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob or TMDb preset */}
+                          <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
+                        </div>
+                        <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                          {avatarPreview.startsWith("blob:")
+                            ? "Shown as a circle; center the subject in your photo."
+                            : "Poster art is cropped to a circle like any profile photo."}
+                        </p>
+                      </div>
                     ) : null}
                   </div>
-                  {avatarPreview ? (
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        Crop preview
-                      </p>
-                      <div
-                        className={`relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-[28px] shadow-inner sm:mx-0 ${
-                          isDarkMode ? "ring-2 ring-violet-400/25" : "ring-2 ring-violet-200/80"
-                        }`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob preview */}
-                        <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
-                      </div>
-                      <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        Shown as a circle in the app; center the subject when you pick a photo.
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
 
                 <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:max-w-xl">
                   <label className={`block space-y-2 ${labelClass}`}>
