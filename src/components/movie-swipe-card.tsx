@@ -52,6 +52,8 @@ export function MovieSwipeCard({
     acceptedMovies,
     onboardingPreferences,
     currentUserId,
+    data,
+    linkedUsers,
     discoverGenreAffinity,
     discoverRejectedGenreWeights,
     discoverTasteYear,
@@ -109,6 +111,38 @@ export function MovieSwipeCard({
         acceptedGenres,
         onboarding: onboardingPreferences,
       });
+
+  const discoverPartnerNotes = useMemo(() => {
+    if (!currentUserId) {
+      return [];
+    }
+    const accepted = linkedUsers.filter((l) => l.status === "accepted");
+    if (accepted.length === 0) {
+      return [];
+    }
+    return accepted.map((linked) => {
+      const partnerId = linked.user.id;
+      const displayName = linked.user.name.trim();
+      const shortName = displayName.split(/\s+/)[0] || displayName;
+      const hasPick = data.swipes.some(
+        (s) => s.userId === partnerId && s.movieId === movie.id && s.decision === "accepted",
+      );
+      const review = data.watchedPickReviews.find(
+        (r) => r.userId === partnerId && r.movieId === movie.id,
+      );
+      let label: string;
+      if (review) {
+        label = review.recommended
+          ? `${shortName} added this to picks · Recommends it`
+          : `${shortName} added this to picks · Marked not for them`;
+      } else if (hasPick) {
+        label = `${shortName} added this to picks · No review yet`;
+      } else {
+        label = `${shortName} hasn’t added this to their picks`;
+      }
+      return { id: partnerId, label, displayName };
+    });
+  }, [currentUserId, data, linkedUsers, movie.id]);
   const handleToggleDescription = () => {
     if (!shouldClamp) {
       return;
@@ -548,6 +582,39 @@ export function MovieSwipeCard({
             </div>
           )}
         </div>
+
+        {discoverPartnerNotes.length > 0 ? (
+          <div
+            className={`mt-[var(--swipe-y-gap)] shrink-0 rounded-[18px] border px-3 py-2.5 sm:px-3.5 ${
+              isDarkMode
+                ? "border-white/14 bg-white/[0.07]"
+                : "border-slate-200/90 bg-white/80 shadow-sm"
+            }`}
+            role="region"
+            aria-label="What your connected friends did with this title"
+          >
+            <p
+              className={`text-[10px] font-bold uppercase tracking-[0.12em] ${
+                isDarkMode ? "text-violet-200/90" : "text-violet-600/90"
+              }`}
+            >
+              Your connections
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {discoverPartnerNotes.map((row) => (
+                <li
+                  key={row.id}
+                  className={`text-[11px] font-medium leading-snug ${
+                    isDarkMode ? "text-slate-200" : "text-slate-700"
+                  }`}
+                  title={row.displayName}
+                >
+                  {row.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-[var(--swipe-y-gap)] flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
