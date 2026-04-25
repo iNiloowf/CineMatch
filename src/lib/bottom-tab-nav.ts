@@ -30,5 +30,11 @@ export function resolveBottomNavHighlight(pathname: string) {
       return { pillIndex: profileIndex, activeHref: "/profile" };
     }
   }
+  if (pathname === "/discover1" || pathname === "/discover2") {
+    const discoverIndex = items.findIndex((item) => item.href === "/discover");
+    if (discoverIndex >= 0) {
+      return { pillIndex: discoverIndex, activeHref: "/discover" };
+    }
+  }
   return { pillIndex: -1, activeHref: null as string | null };
 }
