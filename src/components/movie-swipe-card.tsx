@@ -120,7 +120,7 @@ export function MovieSwipeCard({
     if (accepted.length === 0) {
       return [];
     }
-    return accepted.map((linked) => {
+    return accepted.flatMap((linked) => {
       const partnerId = linked.user.id;
       const displayName = linked.user.name.trim();
       const shortName = displayName.split(/\s+/)[0] || displayName;
@@ -130,17 +130,18 @@ export function MovieSwipeCard({
       const review = data.watchedPickReviews.find(
         (r) => r.userId === partnerId && r.movieId === movie.id,
       );
+      if (!hasPick && !review) {
+        return [];
+      }
       let label: string;
       if (review) {
         label = review.recommended
           ? `${shortName} added this to picks · Recommends it`
           : `${shortName} added this to picks · Marked not for them`;
-      } else if (hasPick) {
-        label = `${shortName} added this to picks · No review yet`;
       } else {
-        label = `${shortName} hasn’t added this to their picks`;
+        label = `${shortName} added this to picks · No review yet`;
       }
-      return { id: partnerId, label, displayName };
+      return [{ id: partnerId, label, displayName }];
     });
   }, [currentUserId, data, linkedUsers, movie.id]);
   const handleToggleDescription = () => {
