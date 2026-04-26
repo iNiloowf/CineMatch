@@ -79,6 +79,20 @@ export async function POST(request: NextRequest) {
   }
 
   const { supabaseAdmin, currentUserId } = authResult;
+
+  const createRate = checkRateLimit({
+    key: `swipe:post:${currentUserId}`,
+    max: SWIPE_MAX,
+    windowMs: SWIPE_WINDOW_MS,
+  });
+  if (!createRate.ok) {
+    return apiJsonError(429, "Too many swipes. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(createRate.retryAfterSec) },
+      request,
+    });
+  }
+
   const parsedBody = await parseJsonBody(request, createSwipeBodySchema);
   if (!parsedBody.ok) {
     return parsedBody.response;

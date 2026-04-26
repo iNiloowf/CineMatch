@@ -28,7 +28,9 @@ export function AuthCallbackClient() {
     }
 
     if (urlError) {
-      setPhase("error");
+      queueMicrotask(() => {
+        setPhase("error");
+      });
       return;
     }
 

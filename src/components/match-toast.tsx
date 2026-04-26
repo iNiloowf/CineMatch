@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { MutualMatchToastPayload } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -12,7 +12,9 @@ type MatchToastProps = {
 
 export function MatchToast({ toast, isDarkMode, onClose }: MatchToastProps) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEscapeToClose(Boolean(toast), onClose);
 

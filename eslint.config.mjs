@@ -22,6 +22,16 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "warn",
     },
   },
+  /* Dynamic poster URLs (TMDB) + blur layer — not a good fit for `next/image` without a custom loader. */
+  {
+    files: ["src/components/poster-backdrop.tsx"],
+    rules: { "@next/next/no-img-element": "off" },
+  },
+  /* TanStack Virtual API is intentionally “incompatible” with React Compiler heuristics; safe to ignore. */
+  {
+    files: ["src/components/virtual-scroll-list.tsx"],
+    rules: { "react-hooks/incompatible-library": "off" },
+  },
 ]);
 
 export default eslintConfig;

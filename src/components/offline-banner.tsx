@@ -19,11 +19,15 @@ export function OfflineBanner() {
     }
 
     if (prev === true && isOnline === false) {
-      setDismissed(false);
+      queueMicrotask(() => {
+        setDismissed(false);
+      });
     }
 
     if (prev === false && isOnline === true) {
-      setDismissed(false);
+      queueMicrotask(() => {
+        setDismissed(false);
+      });
       if (currentUserId) {
         queueMicrotask(() => {
           retryAccountSync();

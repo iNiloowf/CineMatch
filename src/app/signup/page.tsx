@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LegalPolicyModal } from "@/components/legal-policy-modal";
 import { PasswordInput } from "@/components/password-input";
@@ -61,18 +61,20 @@ export default function SignUpPage() {
   const [authError, setAuthError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const skipLoggedInRedirectRef = useRef(false);
+  const [skipAutoRedirect, setSkipAutoRedirect] = useState(false);
 
   useEffect(() => {
     if (!isReady || !currentUserId) {
       return;
     }
-    if (skipLoggedInRedirectRef.current) {
+    if (skipAutoRedirect) {
       return;
     }
     router.replace("/discover");
-  }, [currentUserId, isReady, router]);
+  }, [currentUserId, isReady, router, skipAutoRedirect]);
 
+  // Debounced public-handle check: all setState here derives from `publicHandle` and fetch results.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isSupabaseConfigured()) {
       setHandleAvailability("idle");
@@ -107,6 +109,7 @@ export default function SignUpPage() {
       window.clearTimeout(t);
     };
   }, [publicHandle]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const pageBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
@@ -287,7 +290,7 @@ export default function SignUpPage() {
     setFieldErrors({});
 
     if (result.shouldRedirect) {
-      skipLoggedInRedirectRef.current = true;
+      setSkipAutoRedirect(true);
       setSuccess(result.message ?? "Account created! Taking you to Discover…");
       window.setTimeout(() => {
         router.push("/discover");
@@ -301,7 +304,7 @@ export default function SignUpPage() {
     );
   };
 
-  const visitorAlreadySignedIn = Boolean(isReady && currentUserId && !skipLoggedInRedirectRef.current);
+  const visitorAlreadySignedIn = Boolean(isReady && currentUserId && !skipAutoRedirect);
 
   if (!isReady || visitorAlreadySignedIn) {
     return (

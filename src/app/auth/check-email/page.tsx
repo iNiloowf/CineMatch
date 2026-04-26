@@ -42,7 +42,9 @@ export default function CheckEmailPage() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
-    setPending(readSignupPendingEmail());
+    queueMicrotask(() => {
+      setPending(readSignupPendingEmail());
+    });
   }, []);
 
   useEffect(() => {
@@ -61,8 +63,11 @@ export default function CheckEmailPage() {
   }, [resendCooldown]);
 
   useEffect(() => {
-    if (pending && typeof pending.resendCooldownSeconds === "number" && pending.resendCooldownSeconds > 0) {
-      setResendCooldown(pending.resendCooldownSeconds);
+    const sec = pending?.resendCooldownSeconds;
+    if (typeof sec === "number" && sec > 0) {
+      queueMicrotask(() => {
+        setResendCooldown(sec);
+      });
     }
   }, [pending]);
 

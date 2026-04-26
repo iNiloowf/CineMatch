@@ -174,7 +174,6 @@ export function TermsOfServiceDocumentBody({
   crossLinkTarget = "_self",
 }: BodyProps) {
   const p = isDarkMode ? "text-slate-300" : "text-slate-700";
-  const muted = isDarkMode ? "text-slate-400" : "text-slate-600";
   const h2 = `mt-8 text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`;
   const ul = `mt-2 list-inside list-disc space-y-1.5 ${p}`;
   const linkRel = crossLinkTarget === "_blank" ? "noopener noreferrer" : undefined;

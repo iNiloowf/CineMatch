@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { FriendLinkNotifyPayload } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -15,7 +15,9 @@ const AUTO_DISMISS_MS = 14_000;
 
 export function FriendLinkToast({ toast, isDarkMode, onClose }: FriendLinkToastProps) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEscapeToClose(Boolean(toast), onClose);
 

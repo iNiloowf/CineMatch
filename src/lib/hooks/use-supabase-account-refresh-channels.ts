@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Row = Record<string, string | undefined>;
@@ -14,7 +14,9 @@ export function useSupabaseAccountRefreshChannels(
   onRefresh: () => void,
 ) {
   const onRefreshRef = useRef(onRefresh);
-  onRefreshRef.current = onRefresh;
+  useLayoutEffect(() => {
+    onRefreshRef.current = onRefresh;
+  }, [onRefresh]);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();

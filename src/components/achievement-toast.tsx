@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Achievement } from "@/lib/types";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -17,23 +17,29 @@ export function AchievementToast({
   onClose,
 }: AchievementToastProps) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEscapeToClose(Boolean(achievement), onClose);
 
-  useEffect(() => {
-    if (!achievement) {
-      return;
-    }
+  useEffect(
+    () => {
+      if (!achievement) {
+        return;
+      }
 
-    playWaterDropletChime();
+      playWaterDropletChime();
 
-    const timeout = window.setTimeout(() => {
-      onCloseRef.current();
-    }, 15000);
+      const timeout = window.setTimeout(() => {
+        onCloseRef.current();
+      }, 15000);
 
-    return () => window.clearTimeout(timeout);
-  }, [achievement?.id]);
+      return () => window.clearTimeout(timeout);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run per achievement id, not object identity
+    [achievement?.id],
+  );
 
   if (!achievement) {
     return null;

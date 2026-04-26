@@ -9,7 +9,6 @@ import type { DiscoverAbVariant } from "@/lib/discover-ab";
 export function useDiscoverPageContentProps(): DiscoverPageContentProps {
   const {
     currentUserId,
-    currentUser,
     discoverQueue,
     discoverSessionKey,
     discoverStartOffset,
@@ -45,7 +44,6 @@ export function useDiscoverPageContentProps(): DiscoverPageContentProps {
     isDarkMode,
     toggleDarkMode,
     logout,
-    currentUserName: currentUser?.name ?? null,
     onboardingPreferences,
     isOnboardingComplete,
     completeOnboarding,

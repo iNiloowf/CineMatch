@@ -45,7 +45,9 @@ export function PicksTrailerModal({
   );
 
   useEffect(() => {
-    setPlayerReady(false);
+    queueMicrotask(() => {
+      setPlayerReady(false);
+    });
     if (!trailerUrl) {
       return;
     }

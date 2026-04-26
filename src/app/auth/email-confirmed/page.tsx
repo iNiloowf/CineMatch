@@ -18,7 +18,9 @@ export default function EmailConfirmedPage() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      setHasSession(false);
+      queueMicrotask(() => {
+        setHasSession(false);
+      });
       return;
     }
     void supabase.auth.getSession().then(({ data }) => {

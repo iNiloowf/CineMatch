@@ -30,7 +30,6 @@ import {
   type DiscoverSwipeMatchExplanation,
 } from "@/lib/match-score";
 import type { Movie } from "@/lib/types";
-import { useAppState } from "@/lib/app-state";
 
 const ONBOARDING_STEP_COUNT = 3;
 
@@ -46,7 +45,6 @@ export type DiscoverPageContentProps = {
   isDarkMode: boolean;
   toggleDarkMode: () => Promise<void>;
   logout: () => Promise<void>;
-  currentUserName: string | null;
   onboardingPreferences: {
     favoriteGenres: string[];
     dislikedGenres: string[];
@@ -90,7 +88,6 @@ export function DiscoverPage1Content({
   isDarkMode,
   toggleDarkMode,
   logout,
-  currentUserName,
   onboardingPreferences,
   isOnboardingComplete,
   completeOnboarding,
@@ -119,11 +116,6 @@ export function DiscoverPage1Content({
   const [moreMenuCoords, setMoreMenuCoords] = useState<{
     top: number;
     right: number;
-  } | null>(null);
-  const [menuBanner, setMenuBanner] = useState<{
-    message: string;
-    variant: "success" | "error";
-    onRetry?: () => void;
   } | null>(null);
   type SearchFetchState = "idle" | "loading" | "ready" | "empty" | "error";
   const [searchFetchState, setSearchFetchState] = useState<SearchFetchState>("idle");
@@ -893,27 +885,6 @@ export function DiscoverPage1Content({
     setFocusedMovieId(restoredSwipe.focusedMovieId);
   };
 
-  const showMenuBanner = useCallback(
-    (
-      result: { ok: boolean; message: string },
-      retry?: () => void,
-    ) => {
-      const showRetry = !result.ok && Boolean(retry);
-      setMenuBanner({
-        message: result.message,
-        variant: result.ok ? "success" : "error",
-        onRetry: showRetry ? retry : undefined,
-      });
-      const dismissMs = showRetry ? 9000 : 3600;
-      window.setTimeout(() => {
-        setMenuBanner((current) =>
-          current?.message === result.message ? null : current,
-        );
-      }, dismissMs);
-    },
-    [],
-  );
-
   const persistOnboarding = async (skipSelection: boolean) => {
     setIsSavingOnboarding(true);
     const favoriteGenres = skipSelection
@@ -1552,40 +1523,6 @@ export function DiscoverPage1Content({
             </div>
           ) : null}
         </div>
-        </div>
-      ) : null}
-
-      {menuBanner ? (
-        <div
-          className={`fixed inset-x-0 z-[200] flex justify-center px-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))] ${
-            menuBanner.onRetry ? "pointer-events-auto" : "pointer-events-none"
-          }`}
-        >
-          <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:items-center">
-            <div
-              role="status"
-              className={`mx-auto w-full max-w-sm rounded-2xl px-4 py-3 text-center text-sm font-semibold leading-snug shadow-[0_20px_50px_rgba(0,0,0,0.45)] sm:text-base ${
-                menuBanner.variant === "error"
-                  ? isDarkMode
-                    ? "border border-rose-400/50 bg-rose-950/95 text-rose-50 ring-1 ring-rose-400/20"
-                    : "border border-rose-200 bg-rose-50 text-rose-900 ring-1 ring-rose-200/60"
-                  : menuBanner.variant === "success"
-                    ? isDarkMode
-                      ? "border border-emerald-400/45 bg-slate-950/95 text-white ring-1 ring-white/10"
-                      : "border border-emerald-200 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-200/70"
-                    : isDarkMode
-                      ? "border border-white/20 bg-slate-950/95 text-white ring-1 ring-white/10"
-                      : "border border-slate-200 bg-white text-slate-900 ring-1 ring-slate-200/80"
-              }`}
-            >
-              {menuBanner.message}
-            </div>
-            {menuBanner.onRetry ? (
-              <button type="button" onClick={menuBanner.onRetry} className="ui-btn ui-btn-primary text-xs">
-                Try again
-              </button>
-            ) : null}
-          </div>
         </div>
       ) : null}
 

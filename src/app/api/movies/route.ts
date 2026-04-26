@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { passesDiscoverListEligibility } from "@/lib/discover-quality";
-import { Movie } from "@/lib/types";
 import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";

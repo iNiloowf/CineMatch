@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 export type UseAccountSyncTriggersOptions = {
   enabled: boolean;
@@ -16,7 +16,9 @@ export function useAccountSyncTriggers({
   onRequestSync,
 }: UseAccountSyncTriggersOptions) {
   const onRequestSyncRef = useRef(onRequestSync);
-  onRequestSyncRef.current = onRequestSync;
+  useLayoutEffect(() => {
+    onRequestSyncRef.current = onRequestSync;
+  }, [onRequestSync]);
 
   useEffect(() => {
     if (!enabled) {

@@ -2178,6 +2178,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const firstIncoming = candidates.find((c) => c.kind === "incoming_request");
       setFriendLinkNotifyToast(firstIncoming ?? candidates[0]!);
     }
+    // `data` is not listed: `friendLinksForNotify` already tracks `data.links`; listing full `data` would notify on every swipe/movie change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isReady,
     currentUserId,

@@ -66,8 +66,8 @@ export async function PATCH(request: NextRequest) {
     return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
   }
 
-  const { userId: _userId, ...patch } = body;
-  const settings = updateSettings(body.userId, patch);
+  const { userId, ...patch } = body;
+  const settings = updateSettings(userId, patch);
 
   if (!settings) {
     return apiJsonError(404, "Settings not found.", {

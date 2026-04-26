@@ -17,7 +17,9 @@ export function ModalPortal({ open, children }: ModalPortalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => {
+      setMounted(true);
+    });
   }, []);
 
   useBodyScrollLock(open);
