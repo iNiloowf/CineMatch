@@ -2254,7 +2254,8 @@ export function DiscoverPage2Content({
         }`}
       >
         {movie ? (
-          <div className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-stretch overflow-hidden rounded-[24px] px-1 sm:px-1.5">
+          /* Swipe card uses full width of the same max-w-md column as the page (no extra px-1 — aligns with search toolbar). */
+          <div className="discover2-main-card flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[22px] sm:rounded-[24px]">
             <div
               className={`discover-card-stage flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-visible ${
                 transitionState === "idle"

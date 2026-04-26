@@ -390,7 +390,7 @@ export function MovieSwipeCard({
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
-          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[22px] sm:rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
@@ -433,7 +433,7 @@ export function MovieSwipeCard({
               />
               <div className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(180deg,rgba(2,6,23,0.45),transparent_38%,rgba(2,6,23,0.12)_55%,rgba(2,6,23,0.7)_100%)]" />
 
-              <div className="absolute left-0 right-0 top-0 z-[3] flex min-w-0 items-start justify-between gap-2 p-3 pr-2 sm:p-3.5">
+              <div className="absolute left-0 right-0 top-0 z-[3] flex min-w-0 w-full max-w-full items-start justify-between gap-2 px-3 pt-3 sm:px-3.5 sm:pt-3.5">
                 <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                   {movie.mediaType === "series" ? "Series" : "Movie"}
                 </span>
@@ -541,16 +541,16 @@ export function MovieSwipeCard({
               ) : null}
 
               <div
-                className={`absolute bottom-0 left-0 right-0 z-[4] flex min-h-0 w-full max-w-full flex-col overflow-hidden ${
+                className={`absolute inset-x-0 bottom-0 z-[4] flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden ${
                   isDescriptionExpanded
                     ? "max-h-[min(50dvh,60%)]"
                     : "max-h-[min(24dvh,32%)]"
                 }`}
               >
                 <div
-                  className={`max-h-full min-h-0 flex-1 overflow-x-hidden overscroll-contain rounded-t-[20px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1 pt-6 sm:px-3.5 sm:pt-8 ${
+                  className={`max-h-full min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overscroll-contain rounded-t-[18px] bg-gradient-to-t from-slate-950/98 via-slate-950/88 to-slate-950/25 px-3 pb-1.5 pt-5 sm:rounded-t-[20px] sm:px-3.5 sm:pt-7 ${
                     isDescriptionExpanded
-                      ? "overflow-y-auto [scrollbar-gutter:stable] sm:pt-10"
+                      ? "overflow-y-auto [scrollbar-gutter:stable] sm:pt-9"
                       : "overflow-y-hidden"
                   }`}
                   style={isDescriptionExpanded ? { WebkitOverflowScrolling: "touch" } : undefined}
@@ -683,7 +683,7 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`shrink-0 border-t px-2.5 pt-2 sm:px-3.5 ${isDarkMode
+              className={`shrink-0 w-full min-w-0 max-w-full border-t px-3 pt-2.5 sm:px-3.5 ${isDarkMode
                 ? "border-white/10 bg-slate-950/[0.98]"
                 : "border-slate-200/90 bg-white"} pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))]`}
             >
