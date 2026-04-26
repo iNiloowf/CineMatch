@@ -1250,8 +1250,16 @@ export default function ProfilePage() {
           <span className={`pointer-events-none absolute inset-0 z-0 ${proHeaderPatternClass}`} aria-hidden />
         ) : null}
         <form className="relative z-10 w-full min-w-0 space-y-4 bg-transparent" onSubmit={handleSubmit}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-4">
+          <div
+            className={`flex items-start justify-between gap-3 sm:gap-4 ${
+              isEditing
+                ? isDarkMode
+                  ? "rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4"
+                  : "rounded-2xl border border-slate-200/90 bg-white/55 p-3 shadow-sm sm:p-4"
+                : ""
+            }`}
+          >
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
               <div className="profile-avatar-pop relative flex shrink-0 flex-col items-center self-start">
                 <div
                   className={`flex h-16 w-16 shrink-0 items-center justify-center ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 [animation-delay:40ms] sm:ring-offset-4 ${
@@ -1347,40 +1355,49 @@ export default function ProfilePage() {
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
                 </p>
-                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
-                  <p
-                    className={`min-w-0 text-xs font-medium leading-snug tracking-tight ${
-                      isDarkMode ? "text-slate-300" : "text-slate-600"
-                    }`}
-                  >
-                    <span className={isDarkMode ? "text-slate-500" : "text-slate-500"}>User ID </span>
-                    <span className={`font-semibold ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
-                      {currentUser.publicHandle}
-                    </span>
-                  </p>
-                  <button
-                    type="button"
-                    disabled={copyIdBusy}
-                    onClick={() => void handleCopyUserId()}
-                    aria-label="Copy User ID"
-                    title="Copy User ID"
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                <div className="mt-2 min-w-0 max-w-full">
+                  <div
+                    className={`flex max-w-full min-w-0 flex-nowrap items-center gap-2 rounded-xl border px-2 py-1 ${
                       isDarkMode
-                        ? "border-white/15 bg-white/[0.06] text-slate-200 hover:border-white/25 hover:bg-white/10"
-                        : "border-slate-200/90 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-white/10 bg-white/[0.06]"
+                        : "border-slate-200/90 bg-white/80"
                     }`}
                   >
-                    {copyIdBusy ? (
-                      <span className={`text-xs font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`} aria-hidden>
-                        …
+                    <p
+                      className={`min-w-0 flex-1 truncate text-xs font-medium leading-tight ${
+                        isDarkMode ? "text-slate-300" : "text-slate-600"
+                      }`}
+                      title={currentUser.publicHandle}
+                    >
+                      <span className={isDarkMode ? "text-slate-500" : "text-slate-500"}>User ID </span>
+                      <span className={`font-semibold ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
+                        {currentUser.publicHandle}
                       </span>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2" aria-hidden>
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
+                    </p>
+                    <button
+                      type="button"
+                      disabled={copyIdBusy}
+                      onClick={() => void handleCopyUserId()}
+                      aria-label="Copy User ID"
+                      title="Copy User ID"
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                        isDarkMode
+                          ? "border-white/15 bg-white/[0.08] text-slate-200 hover:border-white/25 hover:bg-white/12"
+                          : "border-slate-200/90 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      {copyIdBusy ? (
+                        <span className={`text-[11px] font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`} aria-hidden>
+                          …
+                        </span>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-3.5 w-3.5" strokeWidth="2" aria-hidden>
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
