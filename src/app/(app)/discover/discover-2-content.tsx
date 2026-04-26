@@ -143,6 +143,7 @@ export function DiscoverPage2Content({
   const discoverSessionSaveTimerRef = useRef<number | null>(null);
   const discoverSessionSnapshotRef = useRef<DiscoverSessionSnapshotV1 | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
+  const skipNextDiscoverSessionSnapshotRestore = useRef(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -204,6 +205,7 @@ export function DiscoverPage2Content({
       setFocusedMovieId(existingMovie.id);
       setIsSearchSheetOpen(false);
       setSharedMovieFetch("idle");
+      skipNextDiscoverSessionSnapshotRestore.current = true;
       router.replace("/discover", { scroll: false });
       return;
     }
@@ -248,6 +250,7 @@ export function DiscoverPage2Content({
         setFocusedMovieId(payload.movie.id);
         setIsSearchSheetOpen(false);
         setSharedMovieFetch("idle");
+        skipNextDiscoverSessionSnapshotRestore.current = true;
         router.replace("/discover", { scroll: false });
       } catch {
         if (!active) {
@@ -483,6 +486,11 @@ export function DiscoverPage2Content({
 
   useEffect(() => {
     if (typeof window === "undefined" || sharedMovieId) {
+      return;
+    }
+
+    if (skipNextDiscoverSessionSnapshotRestore.current) {
+      skipNextDiscoverSessionSnapshotRestore.current = false;
       return;
     }
 
@@ -791,10 +799,13 @@ export function DiscoverPage2Content({
     }
 
     const swipedMovie = movie;
+    const positionOfSwiped = filteredQueue.findIndex((m) => m.id === swipedMovie.id);
     const nextBrowseIndex =
       filteredQueue.length <= 1
         ? 0
-        : Math.min(safeBrowseIndex, filteredQueue.length - 2);
+        : positionOfSwiped >= 0
+          ? Math.min(positionOfSwiped, filteredQueue.length - 2)
+          : Math.min(safeBrowseIndex, filteredQueue.length - 2);
 
     setSwipeFeedback(decision);
     setFocusedMovieId(null);
