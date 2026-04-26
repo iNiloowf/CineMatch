@@ -134,7 +134,7 @@ export function PicksTrailerModal({
                   {showPlayerLoading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/82 px-6 text-center text-white backdrop-blur-[2px]">
                       <div
-                        className="h-11 w-11 animate-spin rounded-full border-2 border-white/25 border-t-violet-300"
+                        className="ui-loading-spinner ui-loading-spinner--lg ui-loading-spinner--on-media"
                         aria-hidden
                       />
                       <div>

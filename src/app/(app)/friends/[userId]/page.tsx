@@ -213,9 +213,11 @@ export default function FriendProfilePage() {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4">
         <div
-          className={`h-10 w-10 animate-spin rounded-full border-2 border-t-transparent ${
-            isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-          }`}
+          className={
+            isDarkMode
+              ? "ui-loading-spinner ui-loading-spinner--on-dark"
+              : "ui-loading-spinner"
+          }
           aria-hidden
         />
         <p className={`text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
@@ -747,7 +749,7 @@ export default function FriendProfilePage() {
                             >
                               {addingId === movie.id ? (
                                 <span
-                                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                                  className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
                                   aria-hidden
                                 />
                               ) : (
@@ -923,7 +925,7 @@ export default function FriendProfilePage() {
                             >
                               {addingId === movie.id ? (
                                 <span
-                                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                                  className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
                                   aria-hidden
                                 />
                               ) : (

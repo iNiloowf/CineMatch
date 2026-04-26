@@ -637,9 +637,11 @@ export default function AdminDesktopPage() {
               aria-label="Checking session"
             >
               <div
-                className={`mx-auto h-10 w-10 animate-spin rounded-full border-2 border-t-transparent ${
-                  isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-                }`}
+                className={
+                  isDarkMode
+                    ? "ui-loading-spinner ui-loading-spinner--on-dark"
+                    : "ui-loading-spinner"
+                }
                 aria-hidden
               />
               <p className={`mt-4 text-sm font-medium ${softText}`}>Checking your session…</p>

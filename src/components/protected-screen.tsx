@@ -83,9 +83,11 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
           aria-label="Redirecting to sign in"
         >
           <div
-            className={`h-10 w-10 shrink-0 animate-spin rounded-full border-2 border-t-transparent ${
-              isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-            }`}
+            className={
+              isDarkMode
+                ? "ui-loading-spinner ui-loading-spinner--on-dark"
+                : "ui-loading-spinner"
+            }
             aria-hidden
           />
           <p

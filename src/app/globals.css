@@ -45,7 +45,9 @@
   --motion-duration-shimmer-skeleton: 2s;
   --motion-duration-soft-pulse: 4.8s;
   /** Bottom tab route: horizontal slide between main tabs */
-  --motion-duration-tab-route: 280ms;
+  --motion-duration-tab-route: 300ms;
+  /** In-out for tab + screen transitions (subtle “snap”) */
+  --motion-ease-tab-route: cubic-bezier(0.32, 0.72, 0, 1);
 
   --motion-ease-standard: var(--ease-soft);
   --motion-ease-emphasized: cubic-bezier(0.2, 0.9, 0.25, 1);
@@ -356,8 +358,10 @@ textarea {
   font: inherit;
 }
 
-button:active {
+/* Default press — .ui-btn overrides with its own micro-interaction */
+button:not([disabled]):not([aria-disabled="true"]):not(.ui-btn):active {
   transform: scale(0.98);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 /* Keyboard focus — :focus-visible avoids mouse-click halos */
@@ -726,10 +730,20 @@ input[type="range"] {
   background: var(--color-surface-glass);
   color: var(--color-text-muted);
   backdrop-filter: blur(12px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-ui) var(--motion-ease-standard),
+    border-color var(--motion-duration-ui) var(--motion-ease-standard);
 }
 
 .ui-icon-button:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--color-border-input-hover);
+}
+
+.ui-icon-button:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.96);
 }
 
 .ui-icon-button:disabled,
@@ -1044,21 +1058,27 @@ input[type="range"] {
   font-size: 0.875rem;
   font-weight: 600;
   border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition:
     transform var(--motion-duration-ui) var(--motion-ease-standard),
     background-color var(--motion-duration-ui) var(--motion-ease-standard),
     border-color var(--motion-duration-ui) var(--motion-ease-standard),
     color var(--motion-duration-ui) var(--motion-ease-standard),
     box-shadow var(--motion-duration-ui) var(--motion-ease-standard),
+    filter var(--motion-duration-ui) var(--motion-ease-standard),
     opacity var(--motion-duration-ui) var(--motion-ease-standard);
 }
 
-.ui-btn:hover {
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .ui-btn:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(-1px);
+  }
 }
 
-.ui-btn:active {
-  transform: scale(0.98);
+.ui-btn:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.97);
+  transition-duration: var(--motion-duration-fast);
 }
 
 .ui-btn:disabled,
@@ -1122,10 +1142,17 @@ input[type="range"] {
   filter: brightness(1.03);
 }
 
+/** Cards (Surface) — smooth lift + shadow handoff (hover from Tailwind `hover:-translate-y-0.5`) */
+.ui-motion-surface {
+  transition:
+    transform var(--motion-duration-ui) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-reveal) var(--motion-ease-standard);
+}
+
 /*
   Reduce extra-curvy utility buttons globally while preserving
   pills/chips that intentionally use dedicated ui-chip classes.
-*/
+ */
 :where(button, a, [role="button"]).rounded-full {
   border-radius: var(--radius-button) !important;
 }
@@ -1491,7 +1518,7 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(12px);
   }
 
   to {
@@ -1894,8 +1921,8 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 
 @keyframes discoverSkeletonIn {
   from {
-    opacity: 0.45;
-    transform: translateY(10px);
+    opacity: 0;
+    transform: translateY(6px);
   }
 
   to {
@@ -1967,6 +1994,94 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
   );
 }
 
+/** App-wide route / status spinners (replaces ad-hoc `animate-spin` blocks) */
+@keyframes uiLoadingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes uiLoadingBreathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.ui-loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(15, 23, 42, 0.1);
+  border-top-color: #7c3aed;
+  background: transparent;
+  animation: uiLoadingSpin 0.7s linear infinite;
+}
+
+/** Compact inline spinners (search, row actions) */
+.ui-loading-spinner--sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+/** Network block “compact” / icon toolbars (~32px) */
+.ui-loading-spinner--compact {
+  width: 2rem;
+  height: 2rem;
+  border-width: 2px;
+}
+
+.ui-loading-spinner--on-dark {
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: #c4b5fd;
+}
+
+/** On dark stills / modals (trailers, light text on image) */
+.ui-loading-spinner--on-media {
+  border-color: rgba(255, 255, 255, 0.28);
+  border-top-color: #ddd6fe;
+}
+
+.ui-loading-spinner--lg {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.ui-loading-spinner--md {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+html[data-reduce-motion="true"] .ui-loading-spinner {
+  animation: uiLoadingBreathe 1.15s var(--motion-ease-shimmer) infinite;
+  border-color: #7c3aed;
+  border-top-color: #7c3aed;
+  opacity: 0.9;
+}
+
+html[data-reduce-motion="true"] .ui-loading-spinner--on-dark {
+  animation: uiLoadingBreathe 1.15s var(--motion-ease-shimmer) infinite;
+  border-color: #c4b5fd;
+  border-top-color: #c4b5fd;
+  opacity: 0.9;
+}
+
+html[data-reduce-motion="true"] .ui-loading-spinner--on-media {
+  animation: uiLoadingBreathe 1.15s var(--motion-ease-shimmer) infinite;
+  border-color: #ddd6fe;
+  border-top-color: #ddd6fe;
+  opacity: 0.88;
+}
+
 @keyframes softPulse {
   0%,
   100% {
@@ -2002,8 +2117,8 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 /* Bottom tab routes — slide in sync with tab index (Discover → … → Settings) */
 @keyframes tabRouteEnterForward {
   from {
-    opacity: 0.92;
-    transform: translate3d(12%, 0, 0);
+    opacity: 0.2;
+    transform: translate3d(8%, 4px, 0);
   }
 
   to {
@@ -2014,8 +2129,8 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 
 @keyframes tabRouteEnterBack {
   from {
-    opacity: 0.92;
-    transform: translate3d(-12%, 0, 0);
+    opacity: 0.2;
+    transform: translate3d(-8%, 4px, 0);
   }
 
   to {
@@ -2026,11 +2141,13 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 
 @keyframes tabRouteEnterFade {
   from {
-    opacity: 0.88;
+    opacity: 0.2;
+    transform: translateY(3px);
   }
 
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -2043,18 +2160,18 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 }
 
 .tab-route-enter--forward {
-  animation: tabRouteEnterForward var(--motion-duration-tab-route) var(--motion-ease-standard) both;
+  animation: tabRouteEnterForward var(--motion-duration-tab-route) var(--motion-ease-tab-route) both;
   will-change: transform, opacity;
 }
 
 .tab-route-enter--back {
-  animation: tabRouteEnterBack var(--motion-duration-tab-route) var(--motion-ease-standard) both;
+  animation: tabRouteEnterBack var(--motion-duration-tab-route) var(--motion-ease-tab-route) both;
   will-change: transform, opacity;
 }
 
 .tab-route-enter--fade {
-  animation: tabRouteEnterFade calc(var(--motion-duration-tab-route) * 0.85) var(--motion-ease-standard) both;
-  will-change: opacity;
+  animation: tabRouteEnterFade calc(var(--motion-duration-tab-route) * 0.9) var(--motion-ease-tab-route) both;
+  will-change: transform, opacity;
 }
 
 /*
@@ -2078,7 +2195,8 @@ html[data-reduce-motion="true"]
 }
 
 html[data-reduce-motion="true"] :where(button:active),
-html[data-reduce-motion="true"] .ui-btn:active {
+html[data-reduce-motion="true"] .ui-btn:active,
+html[data-reduce-motion="true"] .ui-icon-button:active {
   transform: none !important;
 }
 

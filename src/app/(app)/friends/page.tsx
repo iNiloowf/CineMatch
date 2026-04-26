@@ -426,7 +426,11 @@ export default function FriendsPage() {
           >
             {searchBusy ? (
               <span
-                className={`inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-violet-500`}
+                className={
+                  isDarkMode
+                    ? "ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-dark"
+                    : "ui-loading-spinner ui-loading-spinner--sm"
+                }
                 aria-hidden
               />
             ) : (

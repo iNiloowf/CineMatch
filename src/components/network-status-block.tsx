@@ -31,9 +31,9 @@ function StatusIcon({
   if (variant === "loading") {
     return (
       <div
-        className={`mx-auto ${iconSm} shrink-0 rounded-full border-2 border-t-transparent animate-spin ${
-          isDarkMode ? "border-white/18 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-        }`}
+        className={`mx-auto shrink-0 ui-loading-spinner ${
+          compact ? "ui-loading-spinner--compact" : ""
+        } ${isDarkMode ? "ui-loading-spinner--on-dark" : ""}`}
         aria-hidden
       />
     );

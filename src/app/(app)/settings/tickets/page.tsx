@@ -171,9 +171,11 @@ export default function MyTicketsPage() {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4">
         <div
-          className={`h-10 w-10 animate-spin rounded-full border-2 border-t-transparent ${
-            isDarkMode ? "border-white/20 border-t-violet-300" : "border-slate-200 border-t-violet-600"
-          }`}
+          className={
+            isDarkMode
+              ? "ui-loading-spinner ui-loading-spinner--on-dark"
+              : "ui-loading-spinner"
+          }
           aria-hidden
         />
         <p className={`text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>

@@ -489,9 +489,7 @@ export function ProfileAvatarEditorModal({
                               aria-hidden
                             >
                               <span
-                                className={`h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white ${
-                                  isDarkMode ? "opacity-95" : "opacity-95"
-                                }`}
+                                className="ui-loading-spinner ui-loading-spinner--compact ui-loading-spinner--on-media opacity-95"
                               />
                             </span>
                           ) : null}
