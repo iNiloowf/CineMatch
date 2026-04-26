@@ -10,6 +10,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "release:check": "npm run lint && npm run test && npm run build",
     "cap:sync": "npx cap sync android",
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android"

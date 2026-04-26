@@ -17,7 +17,13 @@ const supabaseMediaHost = (() => {
   }
 })();
 
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
+  /** Drop noisy `console.log` in production; keep `error` / `warn` for monitoring + Sentry. */
+  compiler: {
+    removeConsole: isProd ? { exclude: ["error", "warn"] } : false,
+  },
   images: {
     /** Edge/CDN cache for optimized poster URLs (TMDB + Supabase); faster repeat views. */
     minimumCacheTTL: 60 * 60 * 24 * 7,
