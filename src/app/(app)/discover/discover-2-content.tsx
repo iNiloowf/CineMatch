@@ -1228,13 +1228,7 @@ export function DiscoverPage2Content({
 
       {!isSearchOpen ? (
         <div className="shrink-0 space-y-2 sm:space-y-2.5">
-          <div
-            className={`mx-0.5 flex items-center justify-between gap-2 rounded-[20px] border px-3 py-2.5 sm:mx-1 sm:gap-3 ${
-              isDarkMode
-                ? "border-white/12 bg-slate-950/75 shadow-[0_6px_24px_rgba(0,0,0,0.35)]"
-                : "border-slate-200/90 bg-white/90 shadow-sm"
-            }`}
-          >
+          <div className="mx-0.5 flex items-center justify-between gap-2 px-0.5 py-0.5 sm:mx-1 sm:gap-3 sm:py-1">
             <div className="min-w-0 flex-1 pr-0.5">
               <p
                 className={`text-[14px] font-bold uppercase tracking-[0.18em] ${
