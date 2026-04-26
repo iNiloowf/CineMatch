@@ -157,6 +157,7 @@ export function DiscoverPage2Content({
   const swipeTimeoutRef = useRef<number | null>(null);
   const undoToastTimeoutRef = useRef<number | null>(null);
   const discoverSessionSaveTimerRef = useRef<number | null>(null);
+  const discoverSessionSnapshotRef = useRef<DiscoverSessionSnapshotV1 | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
@@ -543,6 +544,29 @@ export function DiscoverPage2Content({
     });
   }, [filteredQueue.length]);
 
+  useLayoutEffect(() => {
+    discoverSessionSnapshotRef.current = {
+      v: 1,
+      searchQuery,
+      selectedGenres,
+      browseIndex,
+      focusedMovieId,
+      isSearchSheetOpen,
+      deckShuffleSeed: discoverSessionKey,
+      deckStartOffset: discoverStartOffset,
+      deckVisibilityTimestamp: discoverVisibilityTimestamp,
+    };
+  }, [
+    searchQuery,
+    selectedGenres,
+    browseIndex,
+    focusedMovieId,
+    isSearchSheetOpen,
+    discoverSessionKey,
+    discoverStartOffset,
+    discoverVisibilityTimestamp,
+  ]);
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -553,23 +577,20 @@ export function DiscoverPage2Content({
     }
 
     discoverSessionSaveTimerRef.current = window.setTimeout(() => {
-      const payload: DiscoverSessionSnapshotV1 = {
-        v: 1,
-        searchQuery,
-        selectedGenres,
-        browseIndex,
-        focusedMovieId,
-        isSearchSheetOpen,
-        deckShuffleSeed: discoverSessionKey,
-        deckStartOffset: discoverStartOffset,
-        deckVisibilityTimestamp: discoverVisibilityTimestamp,
-      };
-      saveDiscoverSession(currentUserId, payload);
+      const payload = discoverSessionSnapshotRef.current;
+      if (payload) {
+        saveDiscoverSession(currentUserId, payload);
+      }
     }, 450);
 
     return () => {
       if (discoverSessionSaveTimerRef.current) {
         window.clearTimeout(discoverSessionSaveTimerRef.current);
+        discoverSessionSaveTimerRef.current = null;
+      }
+      const payload = discoverSessionSnapshotRef.current;
+      if (payload) {
+        saveDiscoverSession(currentUserId, payload);
       }
     };
   }, [
@@ -583,6 +604,27 @@ export function DiscoverPage2Content({
     searchQuery,
     selectedGenres,
   ]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
+      const payload = discoverSessionSnapshotRef.current;
+      if (payload) {
+        saveDiscoverSession(currentUserId, payload);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
     return () => {
