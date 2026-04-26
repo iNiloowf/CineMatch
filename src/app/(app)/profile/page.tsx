@@ -189,6 +189,7 @@ export default function ProfilePage() {
       cancelled = true;
       window.clearTimeout(t);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid `currentUser` referential churn; id + handle cover meaningful edits.
   }, [publicHandleEdit, isEditing, currentUserId, currentUser?.id, currentUser?.publicHandle]);
 
   useEffect(() => {
@@ -1251,18 +1252,18 @@ export default function ProfilePage() {
         <form className="relative z-10 w-full min-w-0 space-y-4 bg-transparent" onSubmit={handleSubmit}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="profile-avatar-pop relative shrink-0">
+              <div className="profile-avatar-pop relative flex shrink-0 flex-col items-center self-start">
                 <div
-                  className={`ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 [animation-delay:40ms] sm:ring-offset-4 ${
+                  className={`flex h-16 w-16 shrink-0 items-center justify-center ring-violet-400/35 animate-[discoverHeroReveal_0.45s_ease-out_both] rounded-full ring-2 ring-offset-2 [animation-delay:40ms] sm:ring-offset-4 ${
                     isDarkMode ? "ring-offset-transparent" : "ring-offset-slate-50"
                   }`}
                 >
                   {isEditing ? (
-                    <div className="relative">
+                    <div className="relative h-16 w-16 shrink-0">
                       <button
                         type="button"
                         onClick={() => setAvatarEditorModalOpen(true)}
-                        className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                        className="group relative flex h-full w-full min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-full p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                         aria-label="Change profile photo"
                         title="Change profile photo"
                       >
@@ -1346,25 +1347,39 @@ export default function ProfilePage() {
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
                 </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
                   <p
-                    className={`font-mono text-xs font-semibold tracking-tight ${
-                      isDarkMode ? "text-slate-200" : "text-slate-800"
+                    className={`min-w-0 text-xs font-medium leading-snug tracking-tight ${
+                      isDarkMode ? "text-slate-300" : "text-slate-600"
                     }`}
                   >
-                    User ID: {currentUser.publicHandle}
+                    <span className={isDarkMode ? "text-slate-500" : "text-slate-500"}>User ID </span>
+                    <span className={`font-semibold ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
+                      {currentUser.publicHandle}
+                    </span>
                   </p>
                   <button
                     type="button"
                     disabled={copyIdBusy}
                     onClick={() => void handleCopyUserId()}
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    aria-label="Copy User ID"
+                    title="Copy User ID"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition enabled:active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                       isDarkMode
-                        ? "bg-white/10 text-slate-200 hover:bg-white/15"
-                        : "bg-slate-200/90 text-slate-800 hover:bg-slate-200"
+                        ? "border-white/15 bg-white/[0.06] text-slate-200 hover:border-white/25 hover:bg-white/10"
+                        : "border-slate-200/90 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50"
                     }`}
                   >
-                    {copyIdBusy ? "…" : "Copy ID"}
+                    {copyIdBusy ? (
+                      <span className={`text-xs font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`} aria-hidden>
+                        …
+                      </span>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2" aria-hidden>
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>

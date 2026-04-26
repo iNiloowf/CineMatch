@@ -18,7 +18,7 @@ export function AvatarBadge({
   if (imageUrl) {
     return (
       <div
-        className={`overflow-hidden rounded-full bg-violet-100 ${sizeClassName}`}
+        className={`aspect-square shrink-0 overflow-hidden rounded-full bg-violet-100 ${sizeClassName}`}
       >
         <Image
           src={imageUrl}
@@ -34,7 +34,7 @@ export function AvatarBadge({
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-violet-100 text-violet-700 ${sizeClassName} ${textClassName}`}
+      className={`flex aspect-square shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700 ${sizeClassName} ${textClassName}`}
     >
       {initials}
     </div>
