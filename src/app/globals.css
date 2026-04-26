@@ -30,9 +30,10 @@
   --motion-duration-menu-pop: 380ms;
   --motion-duration-discover-out: 190ms;
   --motion-duration-discover-in: 260ms;
-  --motion-duration-discover-swipe-accept: 380ms;
+  /** Longer so keyframes can hold the card in place while heart + green read; then exit. */
+  --motion-duration-discover-swipe-accept: 900ms;
   --motion-duration-discover-swipe-reject: 300ms;
-  --motion-duration-discover-accept-burst: 450ms;
+  --motion-duration-discover-accept-burst: 500ms;
   --motion-duration-discover-feedback: 260ms;
   --motion-duration-toast-pop: 560ms;
   --motion-duration-banner-in: 420ms;
@@ -1693,6 +1694,7 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
   }
 }
 
+/* ~56% (~504ms with 900ms duration) card stays: matches burst 500ms + 40ms heart delay; then exit. */
 @keyframes discoverCardSwipeAccept {
   0% {
     opacity: 1;
@@ -1700,17 +1702,19 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
     filter: saturate(1) blur(0);
   }
 
-  12% {
-    transform: translateX(6px) rotate(0.5deg) scale(1.012);
+  10% {
+    transform: translateX(0) rotate(0deg) scale(1.025);
   }
 
-  32% {
-    transform: translateX(18px) rotate(2.1deg) scale(1.028);
+  56% {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg) scale(1.02);
+    filter: saturate(1) blur(0);
   }
 
   100% {
     opacity: 0;
-    transform: translateX(104px) rotate(9deg) scale(0.9);
+    transform: translateX(110px) rotate(9deg) scale(0.9);
     filter: saturate(1.18) blur(5px);
   }
 }
