@@ -60,9 +60,8 @@ type DiscoverPageByVariantProps = {
 
 export function DiscoverPageByVariant({ variant }: DiscoverPageByVariantProps) {
   const shellProps = useDiscoverPageContentProps();
-  const routeKey = shellProps.currentUserId ?? "guest";
   if (variant === "discover2") {
-    return <DiscoverPage2Content key={routeKey} {...shellProps} />;
+    return <DiscoverPage2Content {...shellProps} />;
   }
-  return <DiscoverPage1Content key={routeKey} {...shellProps} />;
+  return <DiscoverPage1Content {...shellProps} />;
 }

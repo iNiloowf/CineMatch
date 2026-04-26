@@ -133,6 +133,8 @@ export function DiscoverPage1Content({
   const discoverSessionSnapshotRef = useRef<DiscoverSessionSnapshotV1 | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const skipNextDiscoverSessionSnapshotRestore = useRef(false);
+  /** Stops the share-link effect re-running (unstable `registerMovies` or Strict Mode) after success for the same URL attempt. */
+  const lastResolvedShareParamRef = useRef<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -187,7 +189,13 @@ export function DiscoverPage1Content({
   /** Do not depend on `discoverQueue` here — it changes every swipe and was re-firing with a stale `movieId` in the URL, re-pinning the shared title. */
   useEffect(() => {
     if (!sharedMovieId) {
+      lastResolvedShareParamRef.current = null;
       setSharedMovieFetch("idle");
+      return;
+    }
+
+    const attemptKey = `${sharedMovieId}:${String(sharedMovieRetryKey)}`;
+    if (lastResolvedShareParamRef.current === attemptKey) {
       return;
     }
 
@@ -204,6 +212,7 @@ export function DiscoverPage1Content({
       setFocusedMovieId(existingMovie.id);
       setIsSearchSheetOpen(false);
       setSharedMovieFetch("idle");
+      lastResolvedShareParamRef.current = attemptKey;
       skipNextDiscoverSessionSnapshotRestore.current = true;
       router.replace("/discover", { scroll: false });
       return;
@@ -249,6 +258,7 @@ export function DiscoverPage1Content({
         setFocusedMovieId(payload.movie.id);
         setIsSearchSheetOpen(false);
         setSharedMovieFetch("idle");
+        lastResolvedShareParamRef.current = attemptKey;
         skipNextDiscoverSessionSnapshotRestore.current = true;
         router.replace("/discover", { scroll: false });
       } catch {

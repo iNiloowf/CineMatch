@@ -144,6 +144,7 @@ export function DiscoverPage2Content({
   const discoverSessionSnapshotRef = useRef<DiscoverSessionSnapshotV1 | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const skipNextDiscoverSessionSnapshotRestore = useRef(false);
+  const lastResolvedShareParamRef = useRef<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
@@ -198,7 +199,13 @@ export function DiscoverPage2Content({
   /** Do not depend on `discoverQueue` here — it changes every swipe and was re-firing with a stale `movieId` in the URL, re-pinning the shared title. */
   useEffect(() => {
     if (!sharedMovieId) {
+      lastResolvedShareParamRef.current = null;
       setSharedMovieFetch("idle");
+      return;
+    }
+
+    const attemptKey = `${sharedMovieId}:${String(sharedMovieRetryKey)}`;
+    if (lastResolvedShareParamRef.current === attemptKey) {
       return;
     }
 
@@ -215,6 +222,7 @@ export function DiscoverPage2Content({
       setFocusedMovieId(existingMovie.id);
       setIsSearchSheetOpen(false);
       setSharedMovieFetch("idle");
+      lastResolvedShareParamRef.current = attemptKey;
       skipNextDiscoverSessionSnapshotRestore.current = true;
       router.replace("/discover", { scroll: false });
       return;
@@ -260,6 +268,7 @@ export function DiscoverPage2Content({
         setFocusedMovieId(payload.movie.id);
         setIsSearchSheetOpen(false);
         setSharedMovieFetch("idle");
+        lastResolvedShareParamRef.current = attemptKey;
         skipNextDiscoverSessionSnapshotRestore.current = true;
         router.replace("/discover", { scroll: false });
       } catch {

@@ -2572,9 +2572,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setAccountRefreshKey((current) => current + 1);
   };
 
-  const registerMovies = (movies: Movie[]) => {
+  const registerMovies = useCallback((movies: Movie[]) => {
     setData((current) => mergeMoviesIntoData(current, movies));
-  };
+  }, []);
 
   const collectMutualPartnerNamesBeforeUserAccepts = (
     prevData: AppData,
