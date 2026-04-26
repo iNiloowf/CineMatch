@@ -393,8 +393,13 @@ export default function FriendsPage() {
             role="tab"
             aria-selected={tab === id}
             onClick={() => setTab(id)}
-            className={tabItemClass(tab === id, isDarkMode)}
+            className={`${tabItemClass(tab === id, isDarkMode)} relative`}
             title={hint}
+            aria-label={
+              id === "requests" && receivedPending.length > 0
+                ? `${label}, ${receivedPending.length} pending request${receivedPending.length === 1 ? "" : "s"}`
+                : undefined
+            }
           >
             <span
               className="text-base leading-none sm:text-lg"
@@ -402,6 +407,14 @@ export default function FriendsPage() {
             >
               {id === "search" ? "🔍" : id === "requests" ? "💬" : "👥"}
             </span>
+            {id === "requests" && receivedPending.length > 0 ? (
+              <span
+                className={`pointer-events-none absolute right-1 top-1 z-10 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ${
+                  isDarkMode ? "ring-slate-950" : "ring-white"
+                }`}
+                aria-hidden
+              />
+            ) : null}
             <span className="w-full leading-tight">{label}</span>
             <span
               className={`hidden w-full text-[8px] font-medium uppercase leading-none tracking-wide sm:block ${

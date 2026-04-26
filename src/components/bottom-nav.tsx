@@ -32,7 +32,7 @@ function NavIcon({ href }: { href: string }) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { isDarkMode, data, currentUserId } = useAppState();
+  const { isDarkMode, data, currentUserId, linkedUsers } = useAppState();
   const panelRef = useRef<HTMLDivElement>(null);
 
   const reduceMotion = useMemo(() => {
@@ -41,6 +41,16 @@ export function BottomNav() {
     }
     return data.settings[currentUserId]?.reduceMotion ?? false;
   }, [currentUserId, data.settings]);
+
+  const incomingFriendRequestCount = useMemo(
+    () =>
+      currentUserId
+        ? linkedUsers.filter(
+            (entry) => entry.status === "pending" && entry.requesterId !== currentUserId,
+          ).length
+        : 0,
+    [currentUserId, linkedUsers],
+  );
 
   const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
   const hasTabMatch = pillIndex >= 0 && activeHref !== null;
@@ -103,19 +113,33 @@ export function BottomNav() {
                     ? "text-slate-300 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/[0.06]"
                     : "text-slate-500 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-slate-900/[0.05]"
               }`}
-              aria-label={item.label}
+              aria-label={
+                item.href === "/friends" && incomingFriendRequestCount > 0
+                  ? `${item.label}, ${incomingFriendRequestCount} pending friend request${
+                      incomingFriendRequestCount === 1 ? "" : "s"
+                    }`
+                  : item.label
+              }
               title={item.label}
             >
               <span
                 data-bottom-nav-icon="true"
                 aria-hidden="true"
-                className={`flex h-6 min-h-6 w-6 min-w-6 items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none ${
+                className={`relative flex h-6 min-h-6 w-6 min-w-6 items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none ${
                   visualActive
                     ? "scale-110 motion-reduce:scale-100"
                     : "opacity-90 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
                 }`}
               >
                 <NavIcon href={item.href} />
+                {item.href === "/friends" && incomingFriendRequestCount > 0 ? (
+                  <span
+                    className={`pointer-events-none absolute -right-0.5 -top-0.5 z-10 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ${
+                      isDarkMode ? "ring-[#0f0b1a]" : "ring-white"
+                    }`}
+                    aria-hidden
+                  />
+                ) : null}
               </span>
               <span
                 aria-hidden="true"
