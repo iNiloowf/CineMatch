@@ -294,12 +294,16 @@ export default function FriendsPage() {
     ? "border-white/12 bg-white/[0.04] hover:border-white/18"
     : "border-slate-200/90 bg-white hover:border-slate-300/90";
 
+  /** Matches bottom nav inner panel: `px-1.5 sm:px-2` inside `max-w-md` (see `bottom-nav.tsx`). */
+  const navWidthMatch = "px-1.5 sm:px-2";
+
   return (
     <div
-      className={`mx-auto w-full max-w-md min-h-0 space-y-4 px-[var(--app-page-px)] py-4 pb-24 ${
+      className={`mx-auto w-full max-w-md min-h-0 px-[var(--app-page-px)] py-4 pb-24 ${
         isDarkMode ? "text-slate-100" : "text-slate-900"
       }`}
     >
+      <div className={`w-full min-w-0 space-y-4 ${navWidthMatch}`}>
       <PageHeader
         eyebrow="People"
         title="Friends"
@@ -320,8 +324,8 @@ export default function FriendsPage() {
       <div
         className={`grid w-full grid-cols-3 gap-1 p-1 sm:gap-1.5 sm:p-1.5 ${
           isDarkMode
-            ? "rounded-[20px] bg-slate-950/60 ring-1 ring-white/10"
-            : "rounded-[20px] bg-slate-200/80 ring-1 ring-slate-200/60"
+            ? "rounded-[26px] bg-slate-950/60 ring-1 ring-white/10"
+            : "rounded-[26px] bg-slate-200/80 ring-1 ring-slate-200/60"
         }`}
         role="tablist"
         aria-label="Friends sections"
@@ -641,7 +645,8 @@ export default function FriendsPage() {
       {tab === "friends" ? (
         <SurfaceCard className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
           <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Tap name or photo to open their profile. Trash removes them (you’ll confirm first).
+            Tap the left side to open their profile. The trash column on the right removes them (confirm
+            first).
           </p>
           {friendsAccepted.length === 0 ? (
             <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -654,9 +659,9 @@ export default function FriendsPage() {
                 return (
                   <li
                     key={l.linkId}
-                    className={`overflow-hidden rounded-2xl border transition ${listShell}`}
+                    className={`flex min-h-[3.5rem] items-stretch overflow-hidden rounded-2xl border transition ${listShell}`}
                   >
-                    <div className="p-2.5 sm:p-3">
+                    <div className="min-w-0 flex-1 p-2.5 pr-2 sm:p-3 sm:pr-2">
                       <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
                         <Link
                           href={href}
@@ -664,59 +669,59 @@ export default function FriendsPage() {
                         >
                           {l.user.name}
                         </Link>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                        <div className="mt-0.5">
                           <Link
                             href={href}
-                            className={`font-mono ${
+                            className={`block w-fit max-w-full truncate text-left font-mono text-xs hover:underline ${
                               isDarkMode ? "text-slate-400" : "text-slate-500"
-                            } hover:underline`}
+                            }`}
                           >
                             @{l.user.publicHandle}
                           </Link>
-                          <span
-                            className={isDarkMode ? "text-slate-500" : "text-slate-300"}
-                            aria-hidden
-                          >
-                            ·
-                          </span>
-                          <button
-                            type="button"
-                            aria-label={`Remove ${l.user.name} as friend`}
-                            className={`inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full outline-offset-2 transition hover:bg-rose-500/12 active:scale-95 ${
-                              isDarkMode ? "text-rose-400" : "text-rose-600"
-                            }`}
-                            onClick={async (e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (
-                                !window.confirm(
-                                  `Remove ${l.user.name} (@${l.user.publicHandle}) from your friends?`,
-                                )
-                              ) {
-                                return;
-                              }
-                              const res = await unlinkUser(l.user.id);
-                              setActionMessage(res.message);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              className="h-[1.1rem] w-[1.1rem]"
-                              aria-hidden
-                            >
-                              <path d="M3 6h18" />
-                              <path d="M8 6V4h8v2" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                            </svg>
-                          </button>
                         </div>
                       </UserProfileLinks>
+                    </div>
+                    <div
+                      className={`flex w-12 shrink-0 items-center justify-center self-stretch border-l sm:w-[3.25rem] ${
+                        isDarkMode ? "border-white/10" : "border-slate-200/90"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`Remove ${l.user.name} as friend`}
+                        className={`flex h-full w-full min-h-11 items-center justify-center outline-offset-2 transition hover:bg-rose-500/15 active:scale-95 ${
+                          isDarkMode ? "text-rose-400" : "text-rose-600"
+                        }`}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (
+                            !window.confirm(
+                              `Remove ${l.user.name} (@${l.user.publicHandle}) from your friends?`,
+                            )
+                          ) {
+                            return;
+                          }
+                          const res = await unlinkUser(l.user.id);
+                          setActionMessage(res.message);
+                        }}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          className="h-5 w-5"
+                          aria-hidden
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M19 6l-1 14H6L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                        </svg>
+                      </button>
                     </div>
                   </li>
                 );
@@ -725,6 +730,7 @@ export default function FriendsPage() {
           )}
         </SurfaceCard>
       ) : null}
+      </div>
     </div>
   );
 }
