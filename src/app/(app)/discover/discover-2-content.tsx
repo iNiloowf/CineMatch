@@ -33,8 +33,14 @@ import type { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
 const ONBOARDING_STEP_COUNT = 3;
-/** Time to run swipe-out + heart overlay before advancing queue (matches CSS, ~1 frame for paint). */
-const DISCOVER2_SWIPE_COMMIT_MS = 340;
+/**
+ * How long the current card + feedback stay before we advance the queue. Must be ≥ the longest
+ * Discover CSS: `--motion-duration-discover-accept-burst` (450ms) + heart `animation-delay` (40ms),
+ * and ≥ `--motion-duration-discover-swipe-accept` (380ms) so the like moment isn’t cut off.
+ */
+const DISCOVER2_SWIPE_ACCEPT_COMMIT_MS = 520;
+/** Reject only needs swipe-out + pass overlay; shorter than accept. */
+const DISCOVER2_SWIPE_REJECT_COMMIT_MS = 340;
 
 export type DiscoverPageContentProps = {
   currentUserId: string | null;
@@ -828,7 +834,11 @@ export function DiscoverPage2Content({
       }, 5200);
 
       void swipeMovie(swipedMovie.id, decision);
-    }, DISCOVER2_SWIPE_COMMIT_MS);
+    },
+      decision === "accepted"
+        ? DISCOVER2_SWIPE_ACCEPT_COMMIT_MS
+        : DISCOVER2_SWIPE_REJECT_COMMIT_MS,
+    );
   }, [
     movie,
     transitionState,
