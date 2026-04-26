@@ -2062,14 +2062,6 @@ export default function ProfilePage() {
                 </Link>
               ))}
             </div>
-            <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/friends"
-                className={`ui-btn ui-btn-primary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold sm:w-auto`}
-              >
-                Friends
-              </Link>
-            </div>
           </>
         ) : null}
         </form>

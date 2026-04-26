@@ -233,7 +233,7 @@ export default function FriendProfilePage() {
           <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
             This person isn’t in your linked friends, or the link isn’t available yet.
           </p>
-          <Link href="/linked" className="ui-btn ui-btn-primary inline-flex justify-center">
+          <Link href="/friends" className="ui-btn ui-btn-primary inline-flex justify-center">
             Back to friends
           </Link>
         </SurfaceCard>

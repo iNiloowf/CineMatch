@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { getClientAccessToken } from "@/lib/get-access-token";
@@ -12,31 +12,52 @@ import type { User } from "@/lib/types";
 
 type TabId = "search" | "requests" | "friends";
 
-function tabClass(active: boolean, isDarkMode: boolean) {
+function tabItemClass(
+  active: boolean,
+  isDarkMode: boolean,
+  compact?: boolean,
+) {
   return [
-    "min-h-10 flex-1 rounded-full px-2 py-2 text-center text-xs font-semibold transition sm:px-3 sm:text-sm",
+    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[16px] px-1.5 py-2 text-center font-semibold transition sm:px-2",
+    compact ? "text-[10px] sm:text-xs" : "text-[11px] sm:text-sm",
     active
       ? isDarkMode
-        ? "bg-violet-500/25 text-white"
-        : "bg-violet-100 text-violet-900"
+        ? "bg-violet-500/30 text-white shadow-sm ring-1 ring-white/15"
+        : "bg-white text-violet-900 shadow-sm ring-1 ring-violet-200/80"
       : isDarkMode
-        ? "text-slate-400 hover:text-white"
-        : "text-slate-600 hover:text-slate-900",
+        ? "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
+        : "text-slate-500 hover:bg-white/60 hover:text-slate-800",
   ].join(" ");
 }
 
-function UserRowLine({
+const TAB_META: {
+  id: TabId;
+  label: string;
+  hint: string;
+}[] = [
+  { id: "search", label: "Search", hint: "Find" },
+  { id: "requests", label: "Requests", hint: "In & out" },
+  { id: "friends", label: "Friends", hint: "Yours" },
+];
+
+function UserProfileLinks({
   user,
   isDarkMode,
-  prefix,
+  children,
+  href,
 }: {
   user: User;
   isDarkMode: boolean;
-  prefix?: string;
+  children: ReactNode;
+  href: string;
 }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
+      <Link
+        href={href}
+        className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full outline-none ring-violet-400/40 transition hover:ring-2 focus-visible:ring-2"
+        aria-label={`View ${user.name}’s profile`}
+      >
         {user.avatarImageUrl ? (
           <Image src={user.avatarImageUrl} alt="" fill className="object-cover" sizes="44px" />
         ) : (
@@ -48,16 +69,8 @@ function UserRowLine({
             {user.avatar?.slice(0, 2) ?? "—"}
           </div>
         )}
-      </div>
-      <div className="min-w-0">
-        {prefix ? (
-          <p className={`text-[10px] font-semibold uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-            {prefix}
-          </p>
-        ) : null}
-        <p className="truncate font-semibold">{user.name}</p>
-        <p className={`truncate text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>@{user.publicHandle}</p>
-      </div>
+      </Link>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
@@ -228,16 +241,20 @@ export default function FriendsPage() {
     return <div className="p-6">Loading…</div>;
   }
 
+  const listShell = isDarkMode
+    ? "border-white/12 bg-white/[0.04] hover:border-white/18"
+    : "border-slate-200/90 bg-white hover:border-slate-300/90";
+
   return (
     <div
-      className={`min-h-0 w-full min-w-0 space-y-4 px-4 py-4 pb-24 sm:px-5 ${
+      className={`mx-auto w-full max-w-md min-h-0 space-y-4 px-[var(--app-page-px)] py-4 pb-24 ${
         isDarkMode ? "text-slate-100" : "text-slate-900"
       }`}
     >
       <PageHeader
         eyebrow="People"
         title="Friends"
-        description="Search by User ID, handle requests, and see friends you’ve accepted."
+        description="Search by User ID, answer incoming requests, and keep your list here. In Requests: accept or decline; Sent shows people you’re waiting on."
       />
 
       {actionMessage ? (
@@ -252,19 +269,15 @@ export default function FriendsPage() {
       ) : null}
 
       <div
-        className={`flex max-w-lg gap-1 rounded-2xl p-1 ${
-          isDarkMode ? "bg-white/5" : "bg-slate-100"
+        className={`grid w-full grid-cols-3 gap-1 p-1 sm:gap-1.5 sm:p-1.5 ${
+          isDarkMode
+            ? "rounded-[20px] bg-slate-950/60 ring-1 ring-white/10"
+            : "rounded-[20px] bg-slate-200/80 ring-1 ring-slate-200/60"
         }`}
         role="tablist"
         aria-label="Friends sections"
       >
-        {(
-          [
-            ["search", "Search"] as const,
-            ["requests", "Requests"] as const,
-            ["friends", "Friends"] as const,
-          ] as const
-        ).map(([id, label]) => (
+        {TAB_META.map(({ id, label, hint }) => (
           <Link
             key={id}
             href={`/friends?tab=${id}`}
@@ -272,17 +285,41 @@ export default function FriendsPage() {
             role="tab"
             aria-selected={tab === id}
             onClick={() => setTab(id)}
-            className={tabClass(tab === id, isDarkMode)}
+            className={tabItemClass(tab === id, isDarkMode)}
+            title={hint}
           >
-            {label}
+            <span
+              className="text-base leading-none sm:text-lg"
+              aria-hidden
+            >
+              {id === "search" ? "🔍" : id === "requests" ? "💬" : "👥"}
+            </span>
+            <span className="w-full leading-tight">{label}</span>
+            <span
+              className={`hidden w-full text-[8px] font-medium uppercase leading-none tracking-wide sm:block ${
+                tab === id
+                  ? isDarkMode
+                    ? "text-violet-200/80"
+                    : "text-violet-700/80"
+                  : isDarkMode
+                    ? "text-slate-500"
+                    : "text-slate-500"
+              }`}
+            >
+              {hint}
+            </span>
           </Link>
         ))}
       </div>
 
       {tab === "search" ? (
-        <SurfaceCard className="space-y-4 p-4 sm:p-5">
-          <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Search the directory by User ID — full or partial.
+        <SurfaceCard
+          className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}
+        >
+          <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Type part or all of someone’s public User ID (e.g. <span className="font-mono">alex</span> or{" "}
+            <span className="font-mono">user_4</span>). You can add them with the button, or open their
+            profile if you’re already connected.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
@@ -322,115 +359,210 @@ export default function FriendsPage() {
             ) : null}
             {searchResults.map((row) => {
               const already = linkedUsers.some((l) => l.user.id === row.id);
+              const profileHref = `/friends/${row.id}`;
+              const searchUser: User = {
+                id: row.id,
+                publicHandle: row.publicHandle,
+                name: row.displayName,
+                email: "",
+                avatar: row.avatarText?.slice(0, 2) ?? "—",
+                avatarImageUrl: row.avatarImageUrl ?? undefined,
+                bio: "",
+                city: "",
+              };
               return (
                 <li
                   key={row.id}
-                  className={`flex items-center gap-3 rounded-2xl border px-3 py-2 ${
-                    isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white"
-                  }`}
+                  className={`flex items-center gap-2 rounded-2xl border p-2.5 sm:p-3 transition ${listShell}`}
                 >
-                  <div className="relative h-11 w-11 overflow-hidden rounded-full">
-                    {row.avatarImageUrl ? (
-                      <Image
-                        src={row.avatarImageUrl}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="44px"
-                      />
+                  <div className="min-w-0 flex-1">
+                    {already ? (
+                      <UserProfileLinks user={searchUser} isDarkMode={isDarkMode} href={profileHref}>
+                        <Link
+                          href={profileHref}
+                          className="block w-fit max-w-full truncate font-semibold text-left outline-offset-2 hover:underline"
+                        >
+                          {row.displayName}
+                        </Link>
+                        <div className="mt-0.5">
+                          <Link
+                            href={profileHref}
+                            className={`inline font-mono text-xs ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                            } hover:underline`}
+                          >
+                            @{row.publicHandle}
+                          </Link>
+                        </div>
+                      </UserProfileLinks>
                     ) : (
-                      <div
-                        className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
-                          isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
-                        }`}
-                      >
-                        {row.avatarText?.slice(0, 2) ?? "—"}
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
+                          {row.avatarImageUrl ? (
+                            <Image
+                              src={row.avatarImageUrl}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="44px"
+                            />
+                          ) : (
+                            <div
+                              className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
+                                isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
+                              }`}
+                            >
+                              {row.avatarText?.slice(0, 2) ?? "—"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{row.displayName}</p>
+                          <p
+                            className={`truncate font-mono text-xs ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                            }`}
+                          >
+                            @{row.publicHandle}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{row.displayName}</p>
-                    <p className={`truncate text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      @{row.publicHandle}
-                    </p>
-                  </div>
                   <button
                     type="button"
-                    disabled={actionBusy || already || currentUser?.publicHandle === row.publicHandle}
+                    disabled={
+                      actionBusy ||
+                      already ||
+                      currentUser?.publicHandle === row.publicHandle
+                    }
                     onClick={() => void addFriend(row.publicHandle)}
-                    className="shrink-0 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="shrink-0 rounded-full bg-violet-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {already ? "Sent / friends" : "Add"}
+                    {already ? "Added" : "Add"}
                   </button>
                 </li>
               );
             })}
-          </ul>
-        </SurfaceCard>
+  </ul>
+  </SurfaceCard>
       ) : null}
 
       {tab === "requests" ? (
         <div className="space-y-4">
-          <SurfaceCard className="space-y-3 p-4 sm:p-5">
-            <h2 className="text-base font-semibold">Received</h2>
+          <SurfaceCard className={`space-y-3 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
+            <h2
+              className={`text-sm font-bold uppercase tracking-[0.12em] ${
+                isDarkMode ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
+              Received
+            </h2>
+            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              When someone looks you up and sends a request, it shows up here. Accept to become friends, or
+              decline to dismiss.
+            </p>
             {receivedPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 No incoming friend requests.
               </p>
             ) : (
               <ul className="space-y-2">
-                {receivedPending.map((l) => (
-                  <li
-                    key={l.linkId}
-                    className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-3 ${
-                      isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <UserRowLine user={l.user} isDarkMode={isDarkMode} />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled={actionBusy}
-                        onClick={() => void respond(l.linkId, true)}
-                        className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        type="button"
-                        disabled={actionBusy}
-                        onClick={() => void respond(l.linkId, false)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                          isDarkMode ? "border-white/20 text-white" : "border-slate-300 text-slate-800"
-                        }`}
-                      >
-                        Decline
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {receivedPending.map((l) => {
+                  const href = `/friends/${l.user.id}`;
+                  return (
+                    <li
+                      key={l.linkId}
+                      className={`flex flex-col gap-2 rounded-2xl border p-2.5 transition sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3 ${listShell}`}
+                    >
+                      <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
+                        <Link
+                          href={href}
+                          className="block w-fit max-w-full truncate font-semibold text-left outline-offset-2 hover:underline"
+                        >
+                          {l.user.name}
+                        </Link>
+                        <p
+                          className={`mt-0.5 w-fit max-w-full truncate text-left font-mono text-xs hover:underline ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                        >
+                          <Link href={href} className="text-inherit">
+                            @{l.user.publicHandle}
+                          </Link>
+                        </p>
+                      </UserProfileLinks>
+                      <div className="flex w-full gap-2 sm:w-auto sm:shrink-0">
+                        <button
+                          type="button"
+                          disabled={actionBusy}
+                          onClick={() => void respond(l.linkId, true)}
+                          className="min-h-10 min-w-0 flex-1 rounded-full bg-emerald-600 px-3 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:flex-none"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionBusy}
+                          onClick={() => void respond(l.linkId, false)}
+                          className={`min-h-10 min-w-0 flex-1 rounded-full border px-3 text-xs font-semibold sm:min-w-[5.5rem] sm:flex-none ${
+                            isDarkMode ? "border-white/20 text-white" : "border-slate-300 text-slate-800"
+                          }`}
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </SurfaceCard>
 
-          <SurfaceCard className="space-y-3 p-4 sm:p-5">
-            <h2 className="text-base font-semibold">Sent</h2>
+          <SurfaceCard className={`space-y-3 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
+            <h2
+              className={`text-sm font-bold uppercase tracking-[0.12em] ${
+                isDarkMode ? "text-slate-400" : "text-slate-500"
+              }`}
+            >
+              Sent
+            </h2>
+            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              People you’ve requested. They can accept in their Received tab, or the link stays here until
+              you’re connected.
+            </p>
             {sentPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 No pending outgoing requests.
               </p>
             ) : (
               <ul className="space-y-2">
-                {sentPending.map((l) => (
-                  <li
-                    key={l.linkId}
-                    className={`flex rounded-2xl border p-3 ${
-                      isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <UserRowLine user={l.user} isDarkMode={isDarkMode} />
-                  </li>
-                ))}
+                {sentPending.map((l) => {
+                  const href = `/friends/${l.user.id}`;
+                  return (
+                    <li
+                      key={l.linkId}
+                      className={`flex items-center gap-2 rounded-2xl border p-2.5 transition sm:p-3 ${listShell}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
+                          <Link
+                            href={href}
+                            className="block w-fit max-w-full truncate font-semibold text-left outline-offset-2 hover:underline"
+                          >
+                            {l.user.name}
+                          </Link>
+                          <Link
+                            href={href}
+                            className={`mt-0.5 block w-fit max-w-full truncate text-left font-mono text-xs hover:underline ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                            }`}
+                          >
+                            @{l.user.publicHandle}
+                          </Link>
+                        </UserProfileLinks>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </SurfaceCard>
@@ -438,33 +570,65 @@ export default function FriendsPage() {
       ) : null}
 
       {tab === "friends" ? (
-        <SurfaceCard className="space-y-3 p-4 sm:p-5">
+        <SurfaceCard className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
+          <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Tap a row to open their full profile. <span className="font-semibold text-rose-500">Remove</span>{" "}
+            unfriends them only — you can add them again from Search later.
+          </p>
           {friendsAccepted.length === 0 ? (
             <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              No friends yet. Open Search to find people by User ID.
+              No friends yet. Use Search to find people by their User ID.
             </p>
           ) : (
             <ul className="space-y-2">
-              {friendsAccepted.map((l) => (
-                <li
-                  key={l.linkId}
-                  className={`flex items-center justify-between gap-2 rounded-2xl border p-3 ${
-                    isDarkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <UserRowLine user={l.user} isDarkMode={isDarkMode} />
-                  <button
-                    type="button"
-                    className="shrink-0 text-xs font-semibold text-rose-500"
-                    onClick={async () => {
-                      const res = await unlinkUser(l.user.id);
-                      setActionMessage(res.message);
-                    }}
+              {friendsAccepted.map((l) => {
+                const href = `/friends/${l.user.id}`;
+                return (
+                  <li
+                    key={l.linkId}
+                    className={`overflow-hidden rounded-2xl border transition ${listShell}`}
                   >
-                    Remove
-                  </button>
-                </li>
-              ))}
+                    <div className="p-2.5 sm:p-3">
+                      <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
+                        <Link
+                          href={href}
+                          className="block w-fit max-w-full truncate text-left text-base font-semibold outline-offset-2 hover:underline"
+                        >
+                          {l.user.name}
+                        </Link>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                          <Link
+                            href={href}
+                            className={`font-mono ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                            } hover:underline`}
+                          >
+                            @{l.user.publicHandle}
+                          </Link>
+                          <span
+                            className={isDarkMode ? "text-slate-500" : "text-slate-300"}
+                            aria-hidden
+                          >
+                            ·
+                          </span>
+                          <button
+                            type="button"
+                            className="min-h-8 text-xs font-semibold text-rose-500 outline-offset-2 hover:underline"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const res = await unlinkUser(l.user.id);
+                              setActionMessage(res.message);
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </UserProfileLinks>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </SurfaceCard>
