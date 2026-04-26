@@ -7,68 +7,26 @@ import { useAppState } from "@/lib/app-state";
 import { bottomTabNavItems, resolveBottomNavHighlight } from "@/lib/bottom-tab-nav";
 import { useBottomNavPillDrag } from "@/lib/use-bottom-nav-pill-drag";
 
+/** Tab icons as emoji (experiment; keeps labels for accessibility). */
+const BOTTOM_TAB_EMOJI: Record<string, string> = {
+  "/discover": "🎬",
+  "/picks": "💜",
+  "/shared": "🤝",
+  "/friends": "👥",
+  "/profile": "👤",
+  "/settings": "⚙️",
+};
+
 function NavIcon({ href }: { href: string }) {
-  if (href === "/discover") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-        <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
-        <path d="m4 7 8 4 8-4" />
-        <path d="M12 11v10" />
-      </svg>
-    );
-  }
-
-  if (href === "/picks") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-        <path d="m12 20-6.2-3.6A4.4 4.4 0 0 1 3.6 12c0-2.4 1.9-4.4 4.3-4.4 1.5 0 2.9.8 3.6 2 0 0 .8-2 3.6-2 2.4 0 4.3 2 4.3 4.4 0 1.8-.9 3.4-2.2 4.4L12 20Z" />
-      </svg>
-    );
-  }
-
-  if (href === "/shared") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-        <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-        <path d="M17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-        <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
-        <path d="M13 19a4.5 4.5 0 0 1 7.5-3.3" />
-      </svg>
-    );
-  }
-
-  if (href === "/friends") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-        <path d="M16.5 11.5a3.5 3.5 0 1 0-7.22-.79c-.1.5-.1 1.02.02 1.52a6 6 0 0 0-1.1.69 4 4 0 0 0 5.47 5.7 3.4 3.4 0 0 0 .83-1.1z" />
-        <path d="M8.5 11.5a2.5 2.5 0 1 0-5 0c0 1.13.5 1.6 1.5 2.1s2 1.15 2 2.4v.5" />
-        <path d="M3 19.5a5.5 5.5 0 0 1 7.5-5.1" />
-        <path d="M9 19.5a5.5 5.5 0 0 1 10 0" />
-      </svg>
-    );
-  }
-
-  if (href === "/profile") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-        <path d="M4 20a8 8 0 0 1 16 0" />
-      </svg>
-    );
-  }
-
+  const char = BOTTOM_TAB_EMOJI[href] ?? "◆";
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-      <path d="M12 3v3" />
-      <path d="M18.4 5.6 16.3 7.7" />
-      <path d="M21 12h-3" />
-      <path d="m18.4 18.4-2.1-2.1" />
-      <path d="M12 21v-3" />
-      <path d="m7.7 16.3-2.1 2.1" />
-      <path d="M6 12H3" />
-      <path d="m7.7 7.7-2.1-2.1" />
-      <circle cx="12" cy="12" r="3.2" />
-    </svg>
+    <span
+      className="select-none text-[1.15rem] leading-none [filter:drop-shadow(0_1px_0_rgba(0,0,0,0.12))] max-[380px]:text-[1.05rem] sm:text-[1.2rem]"
+      role="img"
+      aria-hidden
+    >
+      {char}
+    </span>
   );
 }
 
@@ -151,12 +109,10 @@ export function BottomNav() {
               <span
                 data-bottom-nav-icon="true"
                 aria-hidden="true"
-                className={`flex h-6 w-6 items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none ${
+                className={`flex h-6 min-h-6 w-6 min-w-6 items-center justify-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none ${
                   visualActive
-                    ? "scale-110 text-white motion-reduce:scale-100"
-                    : isDarkMode
-                      ? "text-slate-300 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
-                      : "text-slate-500 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
+                    ? "scale-110 motion-reduce:scale-100"
+                    : "opacity-90 group-active:scale-95 [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-105"
                 }`}
               >
                 <NavIcon href={item.href} />
