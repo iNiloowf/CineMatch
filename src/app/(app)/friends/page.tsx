@@ -261,7 +261,7 @@ export default function FriendsPage() {
       <PageHeader
         eyebrow="People"
         title="Friends"
-        description="Search by User ID, answer incoming requests, and keep your list here. In Requests: accept or decline; Sent shows people you’re waiting on."
+        description="Search by ID, handle requests, view your list."
       />
 
       {actionMessage ? (
@@ -323,10 +323,8 @@ export default function FriendsPage() {
         <SurfaceCard
           className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}
         >
-          <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Type part or all of someone’s public User ID (e.g. <span className="font-mono">alex</span> or{" "}
-            <span className="font-mono">user_4</span>). You can add them with the button, or open their
-            profile if you’re already connected.
+          <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Enter a User ID (or part of it) → Search → Add, or open their profile if you’re already linked.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
@@ -361,7 +359,7 @@ export default function FriendsPage() {
           <ul className="space-y-2">
             {searchResults.length === 0 && !searchBusy && q.trim().length >= 2 && !searchError ? (
               <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No results. Try a different part of their User ID.
+                No results — try another search.
               </li>
             ) : null}
             {searchResults.map((row) => {
@@ -466,13 +464,12 @@ export default function FriendsPage() {
             >
               Received
             </h2>
-            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              When someone looks you up and sends a request, it shows up here. Accept to become friends, or
-              decline to dismiss.
+            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              Inbox — accept or decline.
             </p>
             {receivedPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No incoming friend requests.
+                None yet.
               </p>
             ) : (
               <ul className="space-y-2">
@@ -533,13 +530,12 @@ export default function FriendsPage() {
             >
               Sent
             </h2>
-            <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              People you’ve requested. They can accept in their Received tab, or the link stays here until
-              you’re connected.
+            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              Outbox — waiting on them to accept.
             </p>
             {sentPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No pending outgoing requests.
+                None pending.
               </p>
             ) : (
               <ul className="space-y-2">
@@ -579,13 +575,12 @@ export default function FriendsPage() {
 
       {tab === "friends" ? (
         <SurfaceCard className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
-          <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Tap a row to open their full profile. <span className="font-semibold text-rose-500">Remove</span>{" "}
-            unfriends them only — you can add them again from Search later.
+          <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            Tap name or photo to open their profile. Trash removes them (you’ll confirm first).
           </p>
           {friendsAccepted.length === 0 ? (
             <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              No friends yet. Use Search to find people by their User ID.
+              No friends yet — use Search.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -621,15 +616,39 @@ export default function FriendsPage() {
                           </span>
                           <button
                             type="button"
-                            className="min-h-8 text-xs font-semibold text-rose-500 outline-offset-2 hover:underline"
+                            aria-label={`Remove ${l.user.name} as friend`}
+                            className={`inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-full outline-offset-2 transition hover:bg-rose-500/12 active:scale-95 ${
+                              isDarkMode ? "text-rose-400" : "text-rose-600"
+                            }`}
                             onClick={async (e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              if (
+                                !window.confirm(
+                                  `Remove ${l.user.name} (@${l.user.publicHandle}) from your friends?`,
+                                )
+                              ) {
+                                return;
+                              }
                               const res = await unlinkUser(l.user.id);
                               setActionMessage(res.message);
                             }}
                           >
-                            Remove
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              className="h-[1.1rem] w-[1.1rem]"
+                              aria-hidden
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                            </svg>
                           </button>
                         </div>
                       </UserProfileLinks>
