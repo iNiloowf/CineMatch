@@ -32,6 +32,7 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
         message="Starting CineMatch…"
         isDarkMode={isDarkMode}
         visual="skeleton"
+        slowHintMessage="This is taking a while. Check that you are online, then try refreshing the page if needed."
       />
     );
   }
@@ -67,6 +68,7 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
         }
         isDarkMode={isDarkMode}
         visual="skeleton"
+        slowHintMessage="Still syncing… A slow or offline connection can delay this. We’ll show your data as soon as it’s ready."
       />
     );
   }

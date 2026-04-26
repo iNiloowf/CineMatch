@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
 import { DiscoverCardSkeleton } from "@/components/ui-skeleton";
 
+const DEFAULT_SLOW_HINT =
+  "Still working… If this takes a long time, check your internet connection and try again.";
+
 /**
  * Shared layout for route-level loading (Discover shell, profile gate, etc.).
+ * Optional slow hint (after a delay) covers flaky networks and cold starts.
  */
 export function AppRouteLoading({
   message,
@@ -15,6 +20,9 @@ export function AppRouteLoading({
   isDarkMode,
   visual = "skeleton",
   frameClassName,
+  slowHintMessage = DEFAULT_SLOW_HINT,
+  /** Show the slow hint after this many ms; set `0` or omit `slowHintMessage` to disable. */
+  slowHintAfterMs = 7000,
 }: {
   message: string;
   ariaLabel: string;
@@ -22,7 +30,24 @@ export function AppRouteLoading({
   visual?: "skeleton" | "spinner";
   /** Outer wrapper; default fills the protected route shell. */
   frameClassName?: string;
+  slowHintMessage?: string | null;
+  slowHintAfterMs?: number;
 }) {
+  const [showSlowHint, setShowSlowHint] = useState(false);
+
+  useEffect(() => {
+    if (!slowHintMessage || slowHintAfterMs <= 0) {
+      return undefined;
+    }
+    const id = window.setTimeout(() => {
+      setShowSlowHint(true);
+    }, slowHintAfterMs);
+    return () => {
+      window.clearTimeout(id);
+      setShowSlowHint(false);
+    };
+  }, [message, slowHintMessage, slowHintAfterMs]);
+
   return (
     <div
       className={frameClassName ?? "app-safe-x flex min-w-0 flex-1 items-center justify-center py-8"}
@@ -52,6 +77,15 @@ export function AppRouteLoading({
         >
           {message}
         </p>
+        {showSlowHint && slowHintMessage ? (
+          <p
+            className={`text-center text-xs leading-relaxed ${
+              isDarkMode ? "text-slate-400" : "text-slate-500"
+            }`}
+          >
+            {slowHintMessage}
+          </p>
+        ) : null}
       </div>
     </div>
   );

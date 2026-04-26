@@ -63,8 +63,9 @@ export function OfflineBanner() {
         </svg>
       </span>
       <p className="min-w-0 flex-1 leading-snug">
-        <span className="font-semibold">You&apos;re offline.</span> Some actions may not sync until
-        you&apos;re back online.
+        <span className="font-semibold">You&apos;re offline.</span> Picks, friends, and other changes
+        may not save until you reconnect. When you&apos;re back online, we try to sync your account
+        automatically; you can also use Retry on any error you see.
       </p>
       <button
         type="button"

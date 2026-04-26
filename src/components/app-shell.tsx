@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { usePathname } from "next/navigation";
+import { AccountSyncErrorBanner } from "@/components/account-sync-error-banner";
 import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
 import { FriendLinkToast } from "@/components/friend-link-toast";
@@ -79,6 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
           <OfflineBanner />
+          <AccountSyncErrorBanner />
           <div
             id="main-content"
             data-app-scroll-container="true"

@@ -17,6 +17,8 @@ import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { getClientAccessToken } from "@/lib/get-access-token";
 import { useAppState } from "@/lib/app-state";
+import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { getUserMessageForFailedFetch, getUserMessageForSearchFailure } from "@/lib/user-facing-errors";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import type { User } from "@/lib/types";
 
@@ -93,6 +95,7 @@ function UserProfileLinks({
 
 export default function FriendsPage() {
   const searchParams = useSearchParams();
+  const isOnline = useOnlineStatus();
   const { isDarkMode, currentUserId, currentUser, linkedUsers, unlinkUser, refreshAccountData, isReady } =
     useAppState();
 
@@ -166,14 +169,16 @@ export default function FriendsPage() {
           return;
         }
         if (!res.ok) {
-          setSearchError(payload.error ?? "Search failed.");
+          setSearchError(
+            getUserMessageForSearchFailure(isOnline, res.status, payload.error),
+          );
           setSearchResults([]);
           return;
         }
         setSearchResults(payload.results ?? []);
       } catch {
         if (myRequest === searchRequestIdRef.current) {
-          setSearchError("Couldn’t search right now.");
+          setSearchError(getUserMessageForFailedFetch(isOnline));
           setSearchResults([]);
         }
       } finally {
@@ -182,7 +187,7 @@ export default function FriendsPage() {
         }
       }
     },
-    [currentUserId],
+    [currentUserId, isOnline],
   );
 
   useEffect(() => {
@@ -348,10 +353,11 @@ export default function FriendsPage() {
     return (
       <AppRouteLoading
         ariaLabel="Loading friends"
-        message="Loading…"
+        message="Loading friends and requests…"
         isDarkMode={isDarkMode}
         visual="spinner"
         frameClassName="flex min-h-[40vh] w-full flex-1 flex-col items-center justify-center"
+        slowHintMessage="If this is stuck, check your connection or pull to refresh after a moment."
       />
     );
   }

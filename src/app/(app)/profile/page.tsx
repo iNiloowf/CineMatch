@@ -444,6 +444,7 @@ export default function ProfilePage() {
         isDarkMode={isDarkMode}
         visual="spinner"
         frameClassName="flex min-h-[50vh] w-full flex-1 flex-col items-center justify-center px-4 py-4"
+        slowHintMessage="A slow network can make this take longer. Check your connection if it doesn’t finish."
       />
     );
   }

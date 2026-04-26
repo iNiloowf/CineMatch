@@ -119,6 +119,8 @@ type AppStateContextValue = {
   isSyncingAccountData: boolean;
   accountSyncError: string | null;
   retryAccountSync: () => void;
+  /** Clears the sync error banner; data may still be stale until the next successful sync. */
+  dismissAccountSyncError: () => void;
   /** Soft refresh (e.g. tab focus); does not clear sync error state */
   refreshAccountData: () => void;
   achievements: Achievement[];
@@ -3428,6 +3430,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setAccountRefreshKey((current) => current + 1);
   }, []);
 
+  const dismissAccountSyncError = useCallback(() => {
+    setAccountSyncError(null);
+  }, []);
+
   useEffect(() => {
     if (!currentUserId) {
       queueMicrotask(() => {
@@ -3449,6 +3455,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         isSyncingAccountData,
         accountSyncError,
         retryAccountSync,
+        dismissAccountSyncError,
         refreshAccountData: requestAccountDataRefresh,
         achievements,
         unlockedAchievement,
