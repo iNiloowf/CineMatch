@@ -380,11 +380,7 @@ export default function FriendsPage() {
       ) : null}
 
       <div
-        className={`grid w-full grid-cols-3 gap-1 p-1 sm:gap-1.5 sm:p-1.5 ${
-          isDarkMode
-            ? "rounded-[var(--radius-surface)] bg-slate-950/60 ring-1 ring-white/10"
-            : "rounded-[var(--radius-surface)] bg-slate-200/80 ring-1 ring-slate-200/60"
-        }`}
+        className="grid w-full grid-cols-3 gap-1.5 p-0 sm:gap-2"
         role="tablist"
         aria-label="Friends sections"
       >
