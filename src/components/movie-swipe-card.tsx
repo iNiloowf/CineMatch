@@ -404,13 +404,20 @@ export function MovieSwipeCard({
                   onClick={onPrevious}
                   disabled={!canGoPrevious}
                   aria-label="Show previous title"
-                  className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-black/40 text-white shadow-[0_4px_20px_rgba(0,0,0,0.45)] ring-0 backdrop-blur-sm transition ${
+                  className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-white shadow-none ring-0 transition ${
                     canGoPrevious
-                      ? "opacity-100 hover:bg-black/55 active:scale-95"
+                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] opacity-100 hover:bg-white/10 active:scale-95"
                       : "cursor-not-allowed opacity-35"
                   }`}
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    className="ui-icon-md ui-icon-stroke drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+                    strokeWidth="2.25"
+                    aria-hidden="true"
+                  >
                     <path d="m15 18-6-6 6-6" />
                   </svg>
                 </button>
@@ -419,11 +426,20 @@ export function MovieSwipeCard({
                   onClick={onNext}
                   disabled={!canGoNext}
                   aria-label="Show next title"
-                  className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-black/40 text-white shadow-[0_4px_20px_rgba(0,0,0,0.45)] ring-0 backdrop-blur-sm transition ${
-                    canGoNext ? "opacity-100 hover:bg-black/55 active:scale-95" : "cursor-not-allowed opacity-35"
+                  className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-white shadow-none ring-0 transition ${
+                    canGoNext
+                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] opacity-100 hover:bg-white/10 active:scale-95"
+                      : "cursor-not-allowed opacity-35"
                   }`}
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    className="ui-icon-md ui-icon-stroke drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+                    strokeWidth="2.25"
+                    aria-hidden="true"
+                  >
                     <path d="m9 18 6-6-6-6" />
                   </svg>
                 </button>
@@ -436,16 +452,16 @@ export function MovieSwipeCard({
                     onClick={handleOpenTrailer}
                     disabled={!hasTrailer || isLoadingTrailer}
                     aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                    className={`pointer-events-auto flex aspect-square h-16 w-16 shrink-0 items-center justify-center rounded-full border-0 text-white shadow-[0_8px_32px_rgba(0,0,0,0.55)] ring-0 transition outline-none ${
+                    className={`pointer-events-auto flex aspect-square h-16 w-16 shrink-0 items-center justify-center rounded-full border-0 text-white ring-0 transition outline-none ${
                       hasTrailer
-                        ? "bg-white/25 backdrop-blur-sm hover:bg-white/35 active:scale-95"
-                        : "cursor-not-allowed bg-black/30 text-white/50"
+                        ? "bg-transparent shadow-none hover:bg-white/10 active:scale-95"
+                        : "cursor-not-allowed bg-transparent text-white/50 shadow-none"
                     }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="ml-0.5 h-7 w-7 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
+                      className="ml-0.5 h-7 w-7 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
                       aria-hidden="true"
                     >
                       <path d="m8 5 11 7-11 7V5Z" />
@@ -496,12 +512,12 @@ export function MovieSwipeCard({
                           e.stopPropagation();
                           onMatchPercentClick();
                         }}
-                        className="inline-flex min-h-6 min-w-0 max-w-full items-center gap-0.5 rounded-full border border-violet-400/40 bg-violet-500/22 px-1.5 py-0.5 text-left text-[7px] font-medium leading-tight text-violet-100/95 shadow-sm backdrop-blur-sm transition sm:min-h-7 sm:gap-1 sm:px-2 sm:py-0.5 sm:text-[8px] enabled:hover:bg-violet-500/32 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-5 min-w-0 max-w-full items-center gap-0.5 rounded-full border border-violet-400/35 bg-violet-500/10 px-1.5 py-0.5 text-left text-[5.5px] font-medium leading-tight text-violet-100/90 shadow-sm transition [backdrop-filter:none] sm:min-h-6 sm:gap-0.5 sm:px-1.5 sm:py-0.5 sm:text-[6px] enabled:hover:bg-violet-500/22 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Why ${matchScore}% match for your taste?`}
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
+                          className="h-2 w-2 shrink-0 sm:h-2.5 sm:w-2.5"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -515,13 +531,13 @@ export function MovieSwipeCard({
                           <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
                         </svg>
                         <span>
-                          {matchScore}% <span className="font-medium text-violet-200/85">match</span>
+                          {matchScore}% <span className="font-medium text-violet-200/80">match</span>
                         </span>
-                        <span className="ml-0.5 text-[6.5px] font-medium text-violet-200/70 sm:text-[7.5px]">Why</span>
+                        <span className="ml-0.5 text-[5px] font-medium text-violet-200/70 sm:text-[5.5px]">Why</span>
                       </button>
                     </div>
                   ) : (
-                    <p className="mt-1.5 text-[7px] font-medium text-violet-200/88 sm:mt-1.5 sm:text-[8px]">
+                    <p className="mt-1.5 text-[5.5px] font-medium text-violet-200/80 sm:mt-1.5 sm:text-[6px]">
                       {matchScore}% match
                     </p>
                   )}
