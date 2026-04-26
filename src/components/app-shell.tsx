@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+import { usePathname } from "next/navigation";
 import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
 import { FriendLinkToast } from "@/components/friend-link-toast";
@@ -9,6 +11,9 @@ import { TabScreenTransition } from "@/components/tab-screen-transition";
 import { useAppState } from "@/lib/app-state";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  /** Discover1/2 both use `/discover` — keep their compact bottom inset (no edits in discover-2-content). */
+  const isDiscoverRoute = pathname === "/discover";
   const {
     isDarkMode,
     unlockedAchievement,
@@ -23,6 +28,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div
       data-app-shell-root="true"
       data-theme={isDarkMode ? "dark" : "light"}
+      data-discover-tab={isDiscoverRoute ? "true" : "false"}
+      style={
+        {
+          "--app-main-pad-bottom": isDiscoverRoute
+            ? "var(--app-scroll-pad-bottom-discover)"
+            : "var(--app-scroll-pad-bottom)",
+        } as CSSProperties
+      }
       className={`app-safe-x relative flex h-[100dvh] max-h-[100dvh] min-h-0 flex-col overflow-x-clip overflow-y-hidden pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
@@ -70,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             id="main-content"
             data-app-scroll-container="true"
             tabIndex={-1}
-            className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-main-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             <TabScreenTransition>{children}</TabScreenTransition>
           </div>

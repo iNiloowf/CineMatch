@@ -80,20 +80,28 @@
   --discover-stack-gap: clamp(0.75rem, 2.75vw, 1.125rem);
 
   /**
-   * Fixed bottom nav (pill) height + home indicator — scroll padding so content clears the bar.
-   * Keep in sync with `bottom-nav.tsx` (py-2, ~44px targets, safe-area padding on nav).
+   * Fixed bottom nav (pill) — most tab routes: generous clearance (Profile, Settings, Friends, …).
+   * Discover uses the compact token via `--app-main-pad-bottom` in AppShell; do not change discover2 TSX.
    */
   --app-bottom-nav-overlay: calc(
+    env(safe-area-inset-bottom, 0px) + 0.85rem + clamp(6.75rem, 28vmin, 8.75rem)
+  );
+  --app-bottom-nav-overlay-compact: calc(
     env(safe-area-inset-bottom, 0px) + 0.5rem + clamp(5.5rem, 22vmin, 7rem)
   );
 
-  /**
-   * End of #main-content: card curve/shadow clearance + space under fixed bottom nav overlay.
-   * Extra middle term so last actions on Profile / Settings / Friends stay above the pill + gradient.
-   */
+  /* Default main scroll inset (set on shell as --app-main-pad-bottom for all routes except /discover) */
   --app-scroll-pad-bottom: calc(
-    var(--discover-stack-gap) + clamp(1.5rem, 5vmin, 3rem) + var(--app-bottom-nav-overlay)
+    var(--discover-stack-gap) + clamp(2.5rem, 7vmin, 4.25rem) + var(--app-bottom-nav-overlay)
   );
+
+  /** /discover only (Discover1 + Discover2): keeps swipe stack geometry; set via `AppShell` */
+  --app-scroll-pad-bottom-discover: calc(
+    var(--discover-stack-gap) + clamp(1.5rem, 5vmin, 3rem) + var(--app-bottom-nav-overlay-compact)
+  );
+
+  /* Overridden on `[data-app-shell-root]`; inherited by #main-content */
+  --app-main-pad-bottom: var(--app-scroll-pad-bottom);
 
   /* Radius by role */
   --radius-control: 1rem; /* icon buttons, compact controls */
@@ -152,7 +160,7 @@
 }
 
 [data-app-scroll-container="true"] {
-  scroll-padding-bottom: var(--app-scroll-pad-bottom);
+  scroll-padding-bottom: var(--app-main-pad-bottom);
   overscroll-behavior-y: contain;
 }
 
@@ -1415,8 +1423,8 @@ input[type="range"] {
  * bottom nav with only a hairline (card buttons still use their own safe-area).
  */
 [data-app-scroll-container="true"] .discover-v2-page-stack {
-  /* Sit the card stack on the bottom edge; action bar uses .discover-immersive-action-bar for safe inset */
-  margin-bottom: calc(-1 * var(--app-scroll-pad-bottom));
+  /* Must match /discover main padding only — not the large Profile padding */
+  margin-bottom: calc(-1 * var(--app-scroll-pad-bottom-discover));
 }
 
 /*
@@ -1435,7 +1443,7 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
   padding-top: 0.375rem;
   padding-bottom: max(
     0.65rem,
-    var(--app-bottom-nav-overlay),
+    var(--app-bottom-nav-overlay-compact),
     calc(env(safe-area-inset-bottom, 0px) + 5.1rem)
   );
 }
