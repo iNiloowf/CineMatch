@@ -913,6 +913,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     discoverVisibilityTimestamp,
     refreshDiscoverShuffle,
   } = useDiscoverDeckSession();
+  /** Used in `onAuthStateChange` to avoid reshuffling when `SIGNED_IN` replays (e.g. app resume). */
+  const currentUserIdForAuthRef = useRef<string | null>(null);
+  useEffect(() => {
+    currentUserIdForAuthRef.current = currentUserId;
+  }, [currentUserId]);
   const {
     unlockedAchievement,
     mutualMatchToast,
@@ -1314,7 +1319,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const skipDiscoverReshuffle = event === "INITIAL_SESSION";
+        const skipDiscoverReshuffle =
+          event === "INITIAL_SESSION" ||
+          (event === "SIGNED_IN" &&
+            currentUserIdForAuthRef.current === activeSessionUser.id);
 
         setData((current) =>
           ensureLocalUser(current, {
