@@ -83,9 +83,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             id="main-content"
             data-app-scroll-container="true"
             tabIndex={-1}
-            className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-main-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             <TabScreenTransition>{children}</TabScreenTransition>
+            {/**
+             * Scroll-end inset as a real flex child (not padding on the scrollport): in WebKit/embedded
+             * webviews, bottom padding on a flex+scroll main often does not add reliable scrollable space.
+             */}
+            <div
+              aria-hidden
+              className="w-full shrink-0"
+              style={{ minHeight: "var(--app-main-pad-bottom)" } satisfies CSSProperties}
+            />
           </div>
         </div>
       </div>

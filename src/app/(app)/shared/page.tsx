@@ -77,13 +77,23 @@ export default function SharedWatchlistPage() {
                     onClick={() =>
                       setOpenPartnerId((current) => (current === group.partner.id ? null : group.partner.id))
                     }
-                    className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-[18px] px-2 py-2 text-left transition sm:px-3"
+                    className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-[18px] px-2 py-2 text-left transition sm:gap-3 sm:px-3"
                   >
-                    <div className="min-w-0">
-                      <p className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    <div className="min-w-0 flex-1 text-left">
+                      <p
+                        className={`truncate text-base font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                        title={group.partner.name}
+                      >
                         {group.partner.name}
                       </p>
-                      <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                      <p
+                        className={`truncate text-xs ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
+                        title={
+                          group.movies.length > 0
+                            ? `${group.movies.filter((movie) => movie.shared).length} titles you both picked`
+                            : "No shared picks yet"
+                        }
+                      >
                         {group.movies.length > 0
                           ? `${group.movies.filter((movie) => movie.shared).length} titles you both picked`
                           : "No shared picks yet"}
