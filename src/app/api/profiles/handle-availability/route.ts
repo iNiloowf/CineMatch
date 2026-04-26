@@ -47,7 +47,14 @@ export async function GET(request: NextRequest) {
     .select("id")
     .eq("public_handle", handle)
     .maybeSingle();
-  const row = readResult.data as { id: string } | null;
+  const rowPayload = readResult.data as unknown;
+  const profileId =
+    rowPayload &&
+    typeof rowPayload === "object" &&
+    "id" in rowPayload &&
+    typeof (rowPayload as { id: unknown }).id === "string"
+      ? (rowPayload as { id: string }).id
+      : null;
   const error = readResult.error;
 
   if (error) {
@@ -58,9 +65,9 @@ export async function GET(request: NextRequest) {
   }
 
   const ownedByCurrentUser = Boolean(
-    row && excludeId.length > 0 && row.id === excludeId,
+    profileId && excludeId.length > 0 && profileId === excludeId,
   );
-  const available = !row || ownedByCurrentUser;
+  const available = !profileId || ownedByCurrentUser;
 
   return apiJsonOk({ available, handle }, request);
 }

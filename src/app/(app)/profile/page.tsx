@@ -189,7 +189,7 @@ export default function ProfilePage() {
       cancelled = true;
       window.clearTimeout(t);
     };
-  }, [publicHandleEdit, isEditing, currentUserId, currentUser?.publicHandle, currentUser]);
+  }, [publicHandleEdit, isEditing, currentUserId, currentUser?.id, currentUser?.publicHandle]);
 
   useEffect(() => {
     return () => {
