@@ -776,8 +776,8 @@ export default function PicksPage() {
                       profile="hero"
                       objectFit="cover"
                     />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.05),transparent_38%,rgba(15,23,42,0.46)_100%)]" />
-                    <div className="relative flex min-h-[13rem] flex-col justify-between sm:min-h-[14rem]">
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.7)_0%,rgba(15,23,42,0.1)_45%,rgba(15,23,42,0.4)_100%)]" />
+                    <div className="relative z-[1] flex min-h-[12.5rem] flex-col items-stretch justify-start gap-2.5 sm:min-h-[13.5rem] sm:gap-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="rounded-full bg-violet-600/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white">
                           {selectedMovie.mediaType === "series" ? "Series" : "Movie"}
@@ -792,17 +792,15 @@ export default function PicksPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-2 pt-6">
-                        <p className="text-xs font-medium text-white/90">
-                          {selectedMovie.genre.slice(0, 3).join(" • ")}
-                        </p>
-                        <h2
-                          id="picks-details-title"
-                          className="text-[1.65rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] sm:text-[1.8rem]"
-                        >
-                          {selectedMovie.title}
-                        </h2>
-                      </div>
+                      <p className="text-xs font-medium text-white/90">
+                        {selectedMovie.genre.slice(0, 3).join(" • ")}
+                      </p>
+                      <h2
+                        id="picks-details-title"
+                        className="text-[1.6rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:text-[1.75rem]"
+                      >
+                        {selectedMovie.title}
+                      </h2>
                     </div>
                   </div>
 

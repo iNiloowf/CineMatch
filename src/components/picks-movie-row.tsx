@@ -66,22 +66,22 @@ export const PicksMovieRow = memo(function PicksMovieRow({
         >
           <PosterBackdrop imageUrl={movie.poster.imageUrl} profile="list" objectFit="cover" />
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),transparent_42%,rgba(15,23,42,0.72)_100%)]" />
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-3.5">
-          <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 backdrop-blur-sm ring-1 ring-white/15">
-            {movie.mediaType === "series" ? "Series" : "Movie"}
-          </span>
-          <div className="flex shrink-0 gap-1.5">
-            <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">
-              {movie.year}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.78)_0%,rgba(15,23,42,0.1)_40%,rgba(15,23,42,0.2)_100%)]" />
+        <div className="absolute inset-x-0 top-0 z-[1] flex flex-col items-stretch gap-2.5 p-3 sm:gap-3 sm:p-3.5">
+          <div className="flex items-start justify-between gap-2">
+            <span className="rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/95 backdrop-blur-sm ring-1 ring-white/15">
+              {movie.mediaType === "series" ? "Series" : "Movie"}
             </span>
-            <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">
-              {formatRuntimeForDisplay(movie.runtime)}
-            </span>
+            <div className="flex shrink-0 gap-1.5">
+              <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">
+                {movie.year}
+              </span>
+              <span className="rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white/92 backdrop-blur-sm ring-1 ring-white/15">
+                {formatRuntimeForDisplay(movie.runtime)}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5">
-          <h2 className="line-clamp-2 text-lg font-bold leading-tight tracking-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)] sm:text-xl">
+          <h2 className="line-clamp-2 text-lg font-bold leading-tight tracking-tight text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] sm:text-xl">
             {movie.title}
           </h2>
         </div>
