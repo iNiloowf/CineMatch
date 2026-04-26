@@ -831,7 +831,12 @@ export function DiscoverPage1Content({
             })();
 
     setSwipeFeedback(decision);
-    setFocusedMovieId(null);
+    // Shared-link card is shown via overlay + focus; clearing focus here would swap
+    // `movie` to `filteredQueue[safeBrowseIndex]` (wrong card) mid-animation and can
+    // desync the deck index.
+    if (!isSharedLinkCard) {
+      setFocusedMovieId(null);
+    }
     triggerHaptic(decision);
 
     if (undoToastTimeoutRef.current) {
@@ -844,6 +849,9 @@ export function DiscoverPage1Content({
       setSharedLinkOverlayMovie((current) =>
         current?.id === swipedMovie.id ? null : current,
       );
+      if (isSharedLinkCard) {
+        setFocusedMovieId(null);
+      }
       setLastSwipe({
         movie: swipedMovie,
         decision,
@@ -1137,24 +1145,6 @@ export function DiscoverPage1Content({
           </div>
         </div>
       </ModalPortal>
-      {sharedMovieId && sharedMovieFetch === "loading" ? (
-        <div
-          className="mx-auto flex w-full max-w-md flex-col items-center gap-3 py-5"
-          role="status"
-          aria-live="polite"
-        >
-          <p
-            className={`text-center text-sm font-medium ${
-              isDarkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            Opening shared title…
-          </p>
-          <div className="h-52 w-full sm:h-56">
-            <DiscoverCardSkeleton />
-          </div>
-        </div>
-      ) : null}
 
       {sharedMovieId && (sharedMovieFetch === "error" || sharedMovieFetch === "missing") ? (
         <NetworkStatusBlock
@@ -2042,7 +2032,24 @@ export function DiscoverPage1Content({
           isDarkMode ? "discover-card-viewport" : ""
         }`}
       >
-        {movie ? (
+        {sharedMovieId && sharedMovieFetch === "loading" ? (
+          <div
+            className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col items-center justify-center gap-3 overflow-hidden rounded-[26px] px-3 sm:px-2"
+            role="status"
+            aria-live="polite"
+          >
+            <p
+              className={`text-center text-sm font-medium ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              Opening shared title…
+            </p>
+            <div className="h-48 w-full max-w-sm sm:h-52">
+              <DiscoverCardSkeleton />
+            </div>
+          </div>
+        ) : movie ? (
           <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] px-1.5 sm:px-2">
             <div
               className={`discover-card-stage ${

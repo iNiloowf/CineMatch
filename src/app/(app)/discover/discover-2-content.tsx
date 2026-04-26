@@ -839,7 +839,9 @@ export function DiscoverPage2Content({
             })();
 
     setSwipeFeedback(decision);
-    setFocusedMovieId(null);
+    if (!isSharedLinkCard) {
+      setFocusedMovieId(null);
+    }
     triggerHaptic(decision);
 
     if (undoToastTimeoutRef.current) {
@@ -852,6 +854,9 @@ export function DiscoverPage2Content({
       setSharedLinkOverlayMovie((current) =>
         current?.id === swipedMovie.id ? null : current,
       );
+      if (isSharedLinkCard) {
+        setFocusedMovieId(null);
+      }
       setLastSwipe({
         movie: swipedMovie,
         decision,
@@ -1152,24 +1157,6 @@ export function DiscoverPage2Content({
           </div>
         </div>
       </ModalPortal>
-      {sharedMovieId && sharedMovieFetch === "loading" ? (
-        <div
-          className="mx-auto flex w-full max-w-md flex-col items-center gap-3 py-5"
-          role="status"
-          aria-live="polite"
-        >
-          <p
-            className={`text-center text-sm font-medium ${
-              isDarkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
-            Opening shared title…
-          </p>
-          <div className="h-52 w-full sm:h-56">
-            <DiscoverCardSkeleton />
-          </div>
-        </div>
-      ) : null}
 
       {sharedMovieId && (sharedMovieFetch === "error" || sharedMovieFetch === "missing") ? (
         <NetworkStatusBlock
@@ -2063,7 +2050,24 @@ export function DiscoverPage2Content({
             : "mt-0.5 rounded-[1.75rem] border border-slate-200/80 bg-gradient-to-b from-slate-100/90 to-white shadow-[0_1px_0_rgba(15,23,42,0.06)]"
         }`}
       >
-        {movie ? (
+        {sharedMovieId && sharedMovieFetch === "loading" ? (
+          <div
+            className="flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col items-center justify-center gap-3 self-stretch overflow-hidden rounded-[28px] px-3 sm:rounded-[32px] sm:px-4"
+            role="status"
+            aria-live="polite"
+          >
+            <p
+              className={`text-center text-sm font-medium ${
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              Opening shared title…
+            </p>
+            <div className="h-48 w-full max-w-sm sm:h-52">
+              <DiscoverCardSkeleton />
+            </div>
+          </div>
+        ) : movie ? (
           /* Fills space between header and bottom nav; width follows app column (max-w-md). */
           <div
             className={`discover2-main-card flex h-full min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[28px] sm:rounded-[32px] ring-1 ${
