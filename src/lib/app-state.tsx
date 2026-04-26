@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { isAchievementComplete } from "@/lib/achievement-utils";
 import { computeAchievements } from "@/lib/achievements";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
 import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
@@ -425,6 +426,68 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
     subscriptionTier: settings.subscription_tier === "pro" ? "pro" : "free",
     adminModeSimulatePro: settings.admin_mode_simulate_pro ?? false,
   };
+}
+
+/**
+ * JWT app_metadata (and fresh logins) can carry Pro before/without settings sync; merge so new devices show the right tier.
+ */
+function mergeAppMetadataSubscriptionIntoData(
+  current: AppData,
+  userId: string,
+  appMetadata: Record<string, unknown> | undefined,
+): AppData {
+  if (!appMetadata) {
+    return current;
+  }
+  const prev = current.settings[userId] ?? { ...defaultSettings };
+  const isProInMetadata =
+    appMetadata.subscription_tier === "pro" || appMetadata.subscriptionTier === "pro";
+  const adminInMetadata =
+    appMetadata.admin_mode_simulate_pro === true ||
+    appMetadata.adminModeSimulatePro === true;
+  if (!isProInMetadata && !adminInMetadata) {
+    return current;
+  }
+  const nextTier = isProInMetadata ? "pro" : prev.subscriptionTier;
+  const nextAdmin = adminInMetadata ? true : prev.adminModeSimulatePro;
+  if (nextTier === prev.subscriptionTier && nextAdmin === prev.adminModeSimulatePro) {
+    return current;
+  }
+  return {
+    ...current,
+    settings: {
+      ...current.settings,
+      [userId]: {
+        ...prev,
+        subscriptionTier: nextTier,
+        adminModeSimulatePro: nextAdmin,
+      },
+    },
+  };
+}
+
+/**
+ * New devices have an empty "seen" list; after server hydrate, mark all already-earned achievements as seen so toasts do not replay.
+ */
+function seedSeenAchievementsFromHydratedData(userId: string, data: AppData) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const list = computeAchievements(data, userId);
+  const key = `${ACHIEVEMENT_STORAGE_PREFIX}-${userId}`;
+  const seen = new Set<string>(
+    JSON.parse(window.localStorage.getItem(key) ?? "[]") as string[],
+  );
+  let changed = false;
+  for (const achievement of list) {
+    if (isAchievementComplete(achievement) && !seen.has(achievement.id)) {
+      seen.add(achievement.id);
+      changed = true;
+    }
+  }
+  if (changed) {
+    window.localStorage.setItem(key, JSON.stringify(Array.from(seen)));
+  }
 }
 
 function mapSwipeRow(swipe: SwipeRow) {
@@ -1102,7 +1165,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const autoplayTrailersResolved =
           getStoredUserAutoplayTrailers(activeUserId) ?? mapped.autoplayTrailers;
 
-        return {
+        const merged: AppData = {
           ...next,
           swipes: currentSwipes,
           links: currentLinks,
@@ -1117,9 +1180,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             },
           },
         };
+        seedSeenAchievementsFromHydratedData(activeUserId, merged);
+        return merged;
       }
 
-      return {
+      const mergedNoSettings: AppData = {
         ...next,
         swipes: currentSwipes,
         links: currentLinks,
@@ -1128,6 +1193,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         watchedPickReviews: mergedWatchedPickReviews,
         settings: next.settings,
       };
+      seedSeenAchievementsFromHydratedData(activeUserId, mergedNoSettings);
+      return mergedNoSettings;
     });
 
     if (payload.settings) {
@@ -1275,14 +1342,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         "CineMatch User";
 
       setData((current) =>
-        ensureLocalUser(current, {
-          id: sessionUser.id,
-          name: fullName,
-          email: sessionUser.email ?? "",
-          avatarImageUrl:
-            (sessionUser.user_metadata.avatar_image_url as string | undefined) ??
-            undefined,
-        }),
+        mergeAppMetadataSubscriptionIntoData(
+          ensureLocalUser(current, {
+            id: sessionUser.id,
+            name: fullName,
+            email: sessionUser.email ?? "",
+            avatarImageUrl:
+              (sessionUser.user_metadata.avatar_image_url as string | undefined) ??
+              undefined,
+          }),
+          sessionUser.id,
+          sessionUser.app_metadata as Record<string, unknown> | undefined,
+        ),
       );
       setCurrentUserId(sessionUser.id);
       setAccountRefreshKey((current) => current + 1);
@@ -1341,14 +1412,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
         if (event === "USER_UPDATED") {
           setData((current) =>
-            ensureLocalUser(current, {
-              id: activeSessionUser.id,
-              name: fullName,
-              email: activeSessionUser.email ?? "",
-              avatarImageUrl:
-                (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
-                undefined,
-            }),
+            mergeAppMetadataSubscriptionIntoData(
+              ensureLocalUser(current, {
+                id: activeSessionUser.id,
+                name: fullName,
+                email: activeSessionUser.email ?? "",
+                avatarImageUrl:
+                  (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
+                  undefined,
+              }),
+              activeSessionUser.id,
+              activeSessionUser.app_metadata as Record<string, unknown> | undefined,
+            ),
           );
           setCurrentUserId(activeSessionUser.id);
           setPreferredDarkMode(
@@ -1364,14 +1439,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             currentUserIdForAuthRef.current === activeSessionUser.id);
 
         setData((current) =>
-          ensureLocalUser(current, {
-            id: activeSessionUser.id,
-            name: fullName,
-            email: activeSessionUser.email ?? "",
-            avatarImageUrl:
-              (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
-              undefined,
-          }),
+          mergeAppMetadataSubscriptionIntoData(
+            ensureLocalUser(current, {
+              id: activeSessionUser.id,
+              name: fullName,
+              email: activeSessionUser.email ?? "",
+              avatarImageUrl:
+                (activeSessionUser.user_metadata.avatar_image_url as string | undefined) ??
+                undefined,
+            }),
+            activeSessionUser.id,
+            activeSessionUser.app_metadata as Record<string, unknown> | undefined,
+          ),
         );
         setCurrentUserId(activeSessionUser.id);
         if (!skipDiscoverReshuffle) {
@@ -2179,15 +2258,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           authUser.email?.split("@")[0] ??
           "CineMatch User";
 
+        const { data: postLoginUser } = await supabase.auth.getUser();
+        const appMetadata =
+          (postLoginUser.user?.app_metadata as Record<string, unknown> | undefined) ??
+          undefined;
+
         setData((current) =>
-          ensureLocalUser(current, {
-            id: authUser.id,
-            name: fullName,
-            email: authUser.email ?? email,
-            avatarImageUrl:
-              (authUser.user_metadata?.avatar_image_url as string | undefined) ??
-              undefined,
-          }),
+          mergeAppMetadataSubscriptionIntoData(
+            ensureLocalUser(current, {
+              id: authUser.id,
+              name: fullName,
+              email: authUser.email ?? email,
+              avatarImageUrl:
+                (authUser.user_metadata?.avatar_image_url as string | undefined) ??
+                undefined,
+            }),
+            authUser.id,
+            appMetadata,
+          ),
         );
         setCurrentUserId(authUser.id);
         refreshDiscoverShuffle(authUser.id);
@@ -2292,11 +2380,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const authUser = authData.user;
 
       setData((current) =>
-        ensureLocalUser(current, {
-          id: authUser.id,
-          name,
-          email: authUser.email ?? email,
-        }),
+        mergeAppMetadataSubscriptionIntoData(
+          ensureLocalUser(current, {
+            id: authUser.id,
+            name,
+            email: authUser.email ?? email,
+          }),
+          authUser.id,
+          authUser.app_metadata as Record<string, unknown> | undefined,
+        ),
       );
 
       if (authData.session) {

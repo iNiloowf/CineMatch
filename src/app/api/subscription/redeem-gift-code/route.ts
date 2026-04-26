@@ -160,6 +160,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const existingUserResult = await supabaseAdmin.auth.admin.getUserById(auth.userId);
+  const existingAppMetadata = (existingUserResult.data.user?.app_metadata ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const appMetadataResult = await supabaseAdmin.auth.admin.updateUserById(auth.userId, {
+    app_metadata: {
+      ...existingAppMetadata,
+      subscription_tier: "pro",
+      admin_mode_simulate_pro: false,
+    },
+  });
+  if (appMetadataResult.error) {
+    console.error(
+      "redeem-gift-code: could not sync subscription to app_metadata",
+      appMetadataResult.error,
+    );
+  }
+
   const markRedeemedResult = await supabaseAdmin
     .from("subscription_partner_gift_codes")
     .update({

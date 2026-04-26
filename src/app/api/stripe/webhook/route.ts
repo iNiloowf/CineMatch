@@ -102,6 +102,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const existingUserResult = await supabaseAdmin.auth.admin.getUserById(
+      checkoutIntent.purchaser_user_id,
+    );
+    const existingAppMetadata = (existingUserResult.data.user?.app_metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const appMetadataResult = await supabaseAdmin.auth.admin.updateUserById(
+      checkoutIntent.purchaser_user_id,
+      {
+        app_metadata: {
+          ...existingAppMetadata,
+          subscription_tier: "pro",
+          admin_mode_simulate_pro: false,
+        },
+      },
+    );
+    if (appMetadataResult.error) {
+      // Settings row is Pro; metadata sync is best-effort for JWTs on new devices.
+      console.error(
+        "Stripe webhook: could not sync subscription to app_metadata",
+        appMetadataResult.error,
+      );
+    }
+
     if (checkoutIntent.plan_type === "pro_partner_gift") {
       const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
       const code = createOneTimeGiftCode();
