@@ -26,6 +26,50 @@ const EXPORT_SIZE = 640;
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 2.85;
 
+function isLikelyImageBlob(blob: Blob): boolean {
+  if (!blob.type) {
+    return true;
+  }
+  if (blob.type.startsWith("image/")) {
+    return true;
+  }
+  if (blob.type === "application/octet-stream") {
+    return true;
+  }
+  if (blob.type.startsWith("text/") || blob.type.includes("json")) {
+    return false;
+  }
+  return true;
+}
+
+/** Client fetch to TMDb can fail (CORS / WebView); same-origin API mirrors the poster. */
+async function fetchPresetImageBlob(imageUrl: string, signal: AbortSignal): Promise<Blob | null> {
+  try {
+    const res = await fetch(imageUrl, { mode: "cors", credentials: "omit", signal });
+    if (res.ok) {
+      const b = await res.blob();
+      if (b.size && isLikelyImageBlob(b)) {
+        return b;
+      }
+    }
+  } catch {
+    // CORS or network
+  }
+  try {
+    const api = `/api/avatar-preset-image?url=${encodeURIComponent(imageUrl)}`;
+    const res = await fetch(api, { signal, credentials: "same-origin" });
+    if (res.ok) {
+      const b = await res.blob();
+      if (b.size && isLikelyImageBlob(b)) {
+        return b;
+      }
+    }
+  } catch {
+    // 
+  }
+  return null;
+}
+
 async function exportCircularAvatarJpeg(
   image: HTMLImageElement,
   zoom: number,
@@ -139,6 +183,9 @@ export function ProfileAvatarEditorModal({
     setLoadError(false);
   }, [sourceUrl]);
 
+  const goToAdjustRef = useRef(goToAdjust);
+  goToAdjustRef.current = goToAdjust;
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) {
@@ -155,31 +202,15 @@ export function ProfileAvatarEditorModal({
     setPresetLoadingId(presetId);
     setLoadError(false);
     try {
-      const res = await fetch(imageUrl, {
-        mode: "cors",
-        credentials: "omit",
-        signal: ac.signal,
-      });
+      const blob = await fetchPresetImageBlob(imageUrl, ac.signal);
       if (ac.signal.aborted) {
         return;
       }
-      if (!res.ok) {
+      if (!blob) {
         setLoadError(true);
         return;
       }
-      const blob = await res.blob();
-      if (ac.signal.aborted) {
-        return;
-      }
-      if (!blob.size) {
-        setLoadError(true);
-        return;
-      }
-      if (blob.type && !blob.type.startsWith("image/")) {
-        setLoadError(true);
-        return;
-      }
-      goToAdjust(URL.createObjectURL(blob));
+      goToAdjustRef.current(URL.createObjectURL(blob));
     } catch (e: unknown) {
       const aborted =
         (e instanceof DOMException && e.name === "AbortError") ||
