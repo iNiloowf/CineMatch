@@ -1,47 +1,12 @@
 /**
- * Bearer JWT decode + expiry check only (no signature verification).
- * Prefer {@link verifyBearerFromRequest} in API routes when `SUPABASE_SERVICE_ROLE_KEY` is set.
+ * Parse `Authorization: Bearer <access_token>` only. Does not validate the JWT; callers must use
+ * Supabase admin `auth.getUser(token)` for signature and session validation.
  */
-function decodeBase64Url(value: string) {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
-  return Buffer.from(`${normalized}${padding}`, "base64").toString("utf8");
-}
-
-export function getUserIdFromBearerToken(authorizationHeader: string) {
-  const accessToken = authorizationHeader.startsWith("Bearer ")
-    ? authorizationHeader.slice(7).trim()
-    : "";
-
-  if (!accessToken) {
+export function getBearerAccessToken(authorizationHeader: string): string | null {
+  if (!authorizationHeader.startsWith("Bearer ")) {
     return null;
   }
 
-  const parts = accessToken.split(".");
-
-  if (parts.length < 2) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(decodeBase64Url(parts[1])) as {
-      sub?: string;
-      exp?: number;
-    };
-
-    if (!payload.sub) {
-      return null;
-    }
-
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return null;
-    }
-
-    return {
-      accessToken,
-      userId: payload.sub,
-    };
-  } catch {
-    return null;
-  }
+  const accessToken = authorizationHeader.slice(7).trim();
+  return accessToken || null;
 }
