@@ -13,7 +13,6 @@ import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { ProfileAvatarEditorModal } from "@/components/profile-avatar-editor-modal";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
-import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
 import type { FavoriteMovieSummary, Movie, ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -33,7 +32,6 @@ export default function ProfilePage() {
     watchedPickReviews,
     achievements,
     completeOnboarding,
-    createInviteLink,
     updateProfile,
     markPickWatched,
     registerMovies,
@@ -106,7 +104,7 @@ export default function ProfilePage() {
   const [discoverSkipDetailMovie, setDiscoverSkipDetailMovie] = useState<Movie | null>(null);
   const [watchedReviewTab, setWatchedReviewTab] = useState<"recommended" | "notRecommended">("recommended");
   const [editingWatchedMovieId, setEditingWatchedMovieId] = useState<string | null>(null);
-  const [copyInviteBusy, setCopyInviteBusy] = useState(false);
+  const [copyIdBusy, setCopyIdBusy] = useState(false);
   const editingWatchedEntry = useMemo(
     () =>
       editingWatchedMovieId
@@ -333,29 +331,27 @@ export default function ProfilePage() {
     [registerMovies, undoSwipe],
   );
 
-  const handleCopyInviteFromProfile = useCallback(async () => {
-    if (!currentUser) {
+  const handleCopyUserId = useCallback(async () => {
+    if (!currentUser?.publicHandle) {
       return;
     }
-    setCopyInviteBusy(true);
+    setCopyIdBusy(true);
     try {
-      const created = await createInviteLink();
-      if (!created.ok) {
-        setSaveFeedback("error");
-        setSaveMessage(created.message);
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(currentUser.publicHandle);
+        setSaveFeedback("saved");
+        setSaveMessage("User ID copied.");
         return;
       }
-      const out = await shareOrCopyInviteMessage(created.url, currentUser.name, {
-        preferCopy: true,
-      });
-      setSaveFeedback(out.ok ? "saved" : "error");
-      setSaveMessage(
-        out.message || (out.ok ? "Done." : "Couldn’t copy. Try again."),
-      );
+      setSaveFeedback("error");
+      setSaveMessage("Couldn’t copy. Select and copy manually.");
+    } catch {
+      setSaveFeedback("error");
+      setSaveMessage("Couldn’t copy. Try again.");
     } finally {
-      setCopyInviteBusy(false);
+      setCopyIdBusy(false);
     }
-  }, [createInviteLink, currentUser]);
+  }, [currentUser]);
 
   if (!isReady) {
     return (
@@ -1163,13 +1159,74 @@ export default function ProfilePage() {
                     isDarkMode ? "ring-offset-transparent" : "ring-offset-slate-50"
                   }`}
                 >
-                  <AvatarBadge
-                    initials={currentUser.avatar}
-                    imageUrl={activeAvatarPreview}
-                    sizeClassName="h-16 w-16"
-                    textClassName="text-lg font-semibold"
-                  />
+                  {isEditing ? (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setAvatarEditorModalOpen(true)}
+                        className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                        aria-label="Change profile photo"
+                        title="Change profile photo"
+                      >
+                        <AvatarBadge
+                          initials={currentUser.avatar}
+                          imageUrl={activeAvatarPreview}
+                          sizeClassName="h-16 w-16"
+                          textClassName="text-lg font-semibold"
+                        />
+                        <span
+                          className={`pointer-events-none absolute inset-0 rounded-full opacity-0 ring-2 ring-inset transition group-hover:opacity-100 ${
+                            isDarkMode ? "ring-white/25 bg-black/20" : "ring-slate-900/15 bg-black/10"
+                          }`}
+                          aria-hidden
+                        />
+                      </button>
+                      {canRemovePhoto ? (
+                        <button
+                          type="button"
+                          onClick={() => setRemovePhotoModalOpen(true)}
+                          aria-label="Remove profile photo"
+                          title="Remove profile photo"
+                          className={`absolute -right-0.5 -top-0.5 z-[1] flex h-8 w-8 items-center justify-center rounded-full border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
+                            isDarkMode
+                              ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
+                              : "border-white bg-rose-500 text-white hover:bg-rose-600"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            className="h-3.5 w-3.5"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                          >
+                            <path d="M3 6h18" strokeLinecap="round" />
+                            <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M10 11v6M14 11v6" strokeLinecap="round" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <AvatarBadge
+                      initials={currentUser.avatar}
+                      imageUrl={activeAvatarPreview}
+                      sizeClassName="h-16 w-16"
+                      textClassName="text-lg font-semibold"
+                    />
+                  )}
                 </div>
+                {isEditing ? (
+                  <p
+                    className={`mt-1.5 max-w-[5.5rem] text-center text-[9px] font-medium leading-tight sm:max-w-[6rem] ${
+                      isDarkMode ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Tap photo to change
+                  </p>
+                ) : null}
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1191,6 +1248,27 @@ export default function ProfilePage() {
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
                 </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p
+                    className={`font-mono text-xs font-semibold tracking-tight ${
+                      isDarkMode ? "text-slate-200" : "text-slate-800"
+                    }`}
+                  >
+                    User ID: {currentUser.publicHandle}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={copyIdBusy}
+                    onClick={() => void handleCopyUserId()}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                      isDarkMode
+                        ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                        : "bg-slate-200/90 text-slate-800 hover:bg-slate-200"
+                    }`}
+                  >
+                    {copyIdBusy ? "…" : "Copy ID"}
+                  </button>
+                </div>
               </div>
             </div>
             {isEditing ? (
@@ -1237,6 +1315,15 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
+          {isEditing && clearAvatarOnSave ? (
+            <p
+              className={`rounded-2xl px-3 py-2.5 text-xs font-medium leading-snug ${
+                isDarkMode ? "bg-amber-500/15 text-amber-100" : "bg-amber-50 text-amber-900 ring-1 ring-amber-200/80"
+              }`}
+            >
+              Photo will be removed when you save. Tap your profile photo to choose a new one, or save to confirm.
+            </p>
+          ) : null}
           <div className="space-y-3 sm:space-y-4">
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
@@ -1259,101 +1346,6 @@ export default function ProfilePage() {
                     </span>
                   </button>
                   <div className={editSectionsOpen.basicInfo ? "" : "hidden"}>
-                  <div className="flex w-full min-w-0 flex-col gap-5 sm:flex-row sm:items-start">
-                    <div className="flex w-full min-w-0 flex-1 flex-col gap-4 sm:max-w-sm">
-                      <div className="flex shrink-0 flex-col items-center gap-3 sm:items-start">
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setAvatarEditorModalOpen(true)}
-                            className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-                            aria-label="Change profile photo"
-                            title="Change profile photo"
-                          >
-                            <AvatarBadge
-                              initials={currentUser.avatar}
-                              imageUrl={activeAvatarPreview}
-                              sizeClassName="h-20 w-20"
-                              textClassName="text-xl font-semibold"
-                            />
-                            <span
-                              className={`pointer-events-none absolute inset-0 rounded-full opacity-0 ring-2 ring-inset transition group-hover:opacity-100 ${
-                                isDarkMode ? "ring-white/25 bg-black/20" : "ring-slate-900/15 bg-black/10"
-                              }`}
-                              aria-hidden
-                            />
-                          </button>
-                          {canRemovePhoto ? (
-                            <button
-                              type="button"
-                              onClick={() => setRemovePhotoModalOpen(true)}
-                              aria-label="Remove profile photo"
-                              title="Remove profile photo"
-                              className={`absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full border-2 shadow-[0_6px_16px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
-                                isDarkMode
-                                  ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
-                                  : "border-white bg-rose-500 text-white hover:bg-rose-600"
-                              }`}
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                className="h-4 w-4"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                                aria-hidden
-                              >
-                                <path d="M3 6h18" strokeLinecap="round" />
-                                <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M10 11v6M14 11v6" strokeLinecap="round" />
-                              </svg>
-                            </button>
-                          ) : null}
-                        </div>
-                        <p
-                          className={`w-full text-center text-[10px] font-semibold uppercase tracking-[0.14em] sm:text-left ${
-                            isDarkMode ? "text-slate-500" : "text-slate-500"
-                          }`}
-                        >
-                          Profile photo
-                        </p>
-                        <p className={`max-w-[14rem] text-center text-[11px] leading-snug sm:text-left ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                          Tap your photo to upload, pick a default poster, and adjust crop before you save your profile.
-                        </p>
-                        {clearAvatarOnSave ? (
-                          <p
-                            className={`max-w-[12rem] text-center text-[11px] font-medium sm:text-left ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}
-                          >
-                            Photo will be removed when you save.
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                    {avatarPreview ? (
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <p
-                          className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
-                        >
-                          Preview
-                        </p>
-                        <div
-                          className={`relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-[28px] shadow-inner sm:mx-0 ${
-                            isDarkMode ? "ring-2 ring-violet-400/25" : "ring-2 ring-violet-200/80"
-                          }`}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element -- user-selected blob or TMDb preset */}
-                          <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
-                        </div>
-                        <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          {avatarPreview.startsWith("blob:")
-                            ? "Shown as a circle; center the subject in your photo."
-                            : "Poster art is cropped to a circle like any profile photo."}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-
                 <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:max-w-xl">
                   <label className={`block space-y-2 ${labelClass}`}>
                     Username
@@ -1901,7 +1893,7 @@ export default function ProfilePage() {
                   {
                     value: linkedUsers.filter((user) => user.status === "accepted").length,
                     label: "Friends",
-                    href: "/shared" as const,
+                    href: "/friends" as const,
                   },
                   {
                     value: profileWatchedTotal,
@@ -1933,19 +1925,11 @@ export default function ProfilePage() {
             </div>
             <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Link
-                href="/connect"
+                href="/friends"
                 className={`ui-btn ui-btn-primary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold sm:w-auto`}
               >
-                Connect
+                Friends
               </Link>
-              <button
-                type="button"
-                disabled={copyInviteBusy}
-                onClick={() => void handleCopyInviteFromProfile()}
-                className={`ui-btn ui-btn-secondary flex min-h-11 w-full items-center justify-center px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto`}
-              >
-                {copyInviteBusy ? "Preparing…" : "Copy my link"}
-              </button>
             </div>
           </>
         ) : null}
