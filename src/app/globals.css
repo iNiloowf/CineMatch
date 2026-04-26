@@ -81,17 +81,18 @@
 
   /**
    * Fixed bottom nav (pill) height + home indicator — scroll padding so content clears the bar.
+   * Keep in sync with `bottom-nav.tsx` (py-2, ~44px targets, safe-area padding on nav).
    */
-  /* +0.25rem: gap above physical home indicator / bottom edge (see BottomNav padding) */
   --app-bottom-nav-overlay: calc(
-    env(safe-area-inset-bottom, 0px) + 0.25rem + clamp(4.5rem, 20vmin, 6rem)
+    env(safe-area-inset-bottom, 0px) + 0.5rem + clamp(5.5rem, 22vmin, 7rem)
   );
 
   /**
    * End of #main-content: card curve/shadow clearance + space under fixed bottom nav overlay.
+   * Extra middle term so last actions on Profile / Settings / Friends stay above the pill + gradient.
    */
   --app-scroll-pad-bottom: calc(
-    var(--discover-stack-gap) + clamp(1.25rem, 4vmin, 2.5rem) + var(--app-bottom-nav-overlay)
+    var(--discover-stack-gap) + clamp(1.5rem, 5vmin, 3rem) + var(--app-bottom-nav-overlay)
   );
 
   /* Radius by role */
