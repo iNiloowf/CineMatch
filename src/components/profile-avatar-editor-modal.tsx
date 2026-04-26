@@ -84,13 +84,14 @@ export function ProfileAvatarEditorModal({
   const [tab, setTab] = useState<TabId>("upload");
   const [step, setStep] = useState<"pick" | "adjust">("pick");
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
-  const [sourceKind, setSourceKind] = useState<"file" | "url" | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [imageReady, setImageReady] = useState(false);
   const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 });
   const [exportBusy, setExportBusy] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [presetLoadingId, setPresetLoadingId] = useState<string | null>(null);
+  const presetFetchGenerationRef = useRef(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -99,6 +100,7 @@ export function ProfileAvatarEditorModal({
   );
 
   const resetInternal = useCallback(() => {
+    presetFetchGenerationRef.current += 1;
     setStep("pick");
     setTab("upload");
     setZoom(1);
@@ -107,11 +109,11 @@ export function ProfileAvatarEditorModal({
     setNaturalSize({ w: 1, h: 1 });
     setLoadError(false);
     setExportBusy(false);
+    setPresetLoadingId(null);
     if (sourceUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(sourceUrl);
     }
     setSourceUrl(null);
-    setSourceKind(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -122,12 +124,12 @@ export function ProfileAvatarEditorModal({
     onClose();
   });
 
-  const goToAdjust = useCallback((url: string, kind: "file" | "url") => {
+  /** `objectUrl` is always a blob: URL (upload or prefetched remote poster) so the canvas is never tainted. */
+  const goToAdjust = useCallback((objectUrl: string) => {
     if (sourceUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(sourceUrl);
     }
-    setSourceUrl(url);
-    setSourceKind(kind);
+    setSourceUrl(objectUrl);
     setStep("adjust");
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -142,11 +144,44 @@ export function ProfileAvatarEditorModal({
       return;
     }
     const objectUrl = URL.createObjectURL(file);
-    goToAdjust(objectUrl, "file");
+    goToAdjust(objectUrl);
   };
 
-  const handlePickPreset = (url: string) => {
-    goToAdjust(url, "url");
+  const handlePickPreset = async (presetId: string, imageUrl: string) => {
+    const generation = ++presetFetchGenerationRef.current;
+    setPresetLoadingId(presetId);
+    setLoadError(false);
+    try {
+      const res = await fetch(imageUrl, { mode: "cors", credentials: "omit" });
+      if (generation !== presetFetchGenerationRef.current) {
+        return;
+      }
+      if (!res.ok) {
+        setLoadError(true);
+        return;
+      }
+      const blob = await res.blob();
+      if (generation !== presetFetchGenerationRef.current) {
+        return;
+      }
+      if (!blob.size) {
+        setLoadError(true);
+        return;
+      }
+      if (blob.type && !blob.type.startsWith("image/")) {
+        setLoadError(true);
+        return;
+      }
+      goToAdjust(URL.createObjectURL(blob));
+    } catch {
+      if (generation === presetFetchGenerationRef.current) {
+        setLoadError(true);
+      }
+    } finally {
+      if (generation === presetFetchGenerationRef.current) {
+        setPresetLoadingId(null);
+      }
+    }
   };
 
   const handleBackFromAdjust = () => {
@@ -160,7 +195,6 @@ export function ProfileAvatarEditorModal({
       URL.revokeObjectURL(sourceUrl);
     }
     setSourceUrl(null);
-    setSourceKind(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -194,13 +228,6 @@ export function ProfileAvatarEditorModal({
       // fall through
     } finally {
       setExportBusy(false);
-    }
-
-    if (sourceKind === "url") {
-      onApply(null, sourceUrl);
-      resetInternal();
-      onClose();
-      return;
     }
 
     setLoadError(true);
@@ -379,14 +406,17 @@ export function ProfileAvatarEditorModal({
                     {DEFAULT_PROFILE_AVATAR_PRESETS.map((preset) => {
                       const selected =
                         isPresetSelection && avatarPreviewUrl === preset.imageUrl;
+                      const busy = presetLoadingId === preset.id;
                       return (
                         <button
                           key={preset.id}
                           type="button"
                           role="option"
                           aria-selected={selected}
-                          onClick={() => handlePickPreset(preset.imageUrl)}
-                          className={`relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
+                          disabled={Boolean(presetLoadingId)}
+                          aria-busy={busy}
+                          onClick={() => void handlePickPreset(preset.id, preset.imageUrl)}
+                          className={`relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-wait disabled:opacity-60 ${
                             selected
                               ? isDarkMode
                                 ? "ring-2 ring-violet-300 ring-offset-2 ring-offset-slate-950"
@@ -406,6 +436,18 @@ export function ProfileAvatarEditorModal({
                             decoding="async"
                             sizes="(max-width: 640px) 50vw, 150px"
                           />
+                          {busy ? (
+                            <span
+                              className="absolute inset-0 flex items-center justify-center bg-slate-950/45"
+                              aria-hidden
+                            >
+                              <span
+                                className={`h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white ${
+                                  isDarkMode ? "opacity-95" : "opacity-95"
+                                }`}
+                              />
+                            </span>
+                          ) : null}
                           <span className="pointer-events-none absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/80 to-transparent px-1.5 py-2 text-left text-[9px] font-semibold leading-tight text-white">
                             {preset.label}
                           </span>
@@ -413,6 +455,16 @@ export function ProfileAvatarEditorModal({
                       );
                     })}
                   </div>
+                  {loadError && step === "pick" ? (
+                    <p
+                      className={`mt-3 text-center text-xs ${
+                        isDarkMode ? "text-rose-300" : "text-rose-700"
+                      }`}
+                      role="alert"
+                    >
+                      Couldn’t open that poster. Check your connection, try another, or use Upload.
+                    </p>
+                  ) : null}
                 </div>
               )}
             </>
@@ -491,12 +543,12 @@ export function ProfileAvatarEditorModal({
 
                 {loadError ? (
                   <p className={`text-center text-xs ${isDarkMode ? "text-rose-300" : "text-rose-700"}`}>
-                    Could not load this image. Try another file or poster.
+                    Couldn’t apply your crop. Try a different file or another poster, then tap “Use photo” again.
                   </p>
                 ) : (
                   <p className={`text-center text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                    Drag the preview to frame your face or subject. Export may fall back to the original poster if the
-                    browser blocks editing.
+                    Drag the preview to frame your face or subject, then use “Use photo” — your zoom and position are
+                    applied to the saved profile image.
                   </p>
                 )}
 
