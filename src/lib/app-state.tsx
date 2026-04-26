@@ -73,6 +73,10 @@ import {
   WatchedPickReview,
 } from "@/lib/types";
 import { getEffectiveSubscriptionTier, type SubscriptionTier } from "@/lib/subscription-tier";
+import {
+  describePublicHandleValidationError,
+  normalizePublicHandleInput,
+} from "@/lib/public-handle";
 
 const STORAGE_KEY = "cinematch-demo-state-v5";
 const ACHIEVEMENT_STORAGE_PREFIX = "cinematch-achievements";
@@ -165,6 +169,8 @@ type AppStateContextValue = {
     name: string;
     bio: string;
     city: string;
+    /** If set, updates the unique public User ID (validated server-side). */
+    publicHandle?: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
     favoriteMovie?: FavoriteMovieSummary | null;
@@ -2915,6 +2921,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     name,
     bio,
     city,
+    publicHandle: publicHandleInput,
     avatarImageUrl,
     avatarFile,
     favoriteMovie,
@@ -2925,6 +2932,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     name: string;
     bio: string;
     city: string;
+    publicHandle?: string;
     avatarImageUrl?: string | null;
     avatarFile?: File | null;
     favoriteMovie?: FavoriteMovieSummary | null;
@@ -2934,6 +2942,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }): Promise<{ ok: boolean; message?: string }> => {
     if (!currentUserId) {
       return { ok: false, message: "You need to be signed in to update your profile." };
+    }
+
+    let resolvedPublicHandle: string | undefined;
+    if (publicHandleInput !== undefined) {
+      const normalized = normalizePublicHandleInput(publicHandleInput);
+      const formatError = describePublicHandleValidationError(normalized);
+      if (formatError) {
+        return { ok: false, message: formatError };
+      }
+      if (
+        normalized !== currentUser?.publicHandle &&
+        !isSupabaseConfigured() &&
+        data.users.some(
+          (u) => u.id !== currentUserId && u.publicHandle === normalized,
+        )
+      ) {
+        return {
+          ok: false,
+          message: "That User ID is already taken. Try another one.",
+        };
+      }
+      resolvedPublicHandle = normalized;
     }
 
     let retriedProfileWithoutHeader = false;
@@ -3015,6 +3045,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } else if (typeof nextAvatarImageUrl === "string" && nextAvatarImageUrl.length > 0) {
         profilePatch.avatar_image_url = nextAvatarImageUrl;
       }
+      if (resolvedPublicHandle !== undefined) {
+        profilePatch.public_handle = resolvedPublicHandle;
+      }
 
       const { error: profileError } = await supabase
         .from("profiles")
@@ -3038,9 +3071,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           }
           retriedProfileWithoutHeader = true;
         } else {
+          const code = (profileError as { code?: string })?.code;
+          const msg = profileError.message ?? "";
+          const looksLikeHandleConflict =
+            publicHandleInput !== undefined &&
+            (code === "23505" ||
+              msg.toLowerCase().includes("public_handle") ||
+              (msg.toLowerCase().includes("unique") && msg.toLowerCase().includes("public")));
+          if (looksLikeHandleConflict) {
+            return {
+              ok: false,
+              message: "That User ID is already taken. Try another one.",
+            };
+          }
           return {
             ok: false,
-            message: profileError.message ?? "Couldn’t save your profile to the server.",
+            message: msg || "Couldn’t save your profile to the server.",
           };
         }
       }
@@ -3052,6 +3098,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         user.id === currentUserId
           ? {
               ...user,
+              publicHandle:
+                publicHandleInput !== undefined
+                  ? (resolvedPublicHandle as string)
+                  : user.publicHandle,
               name,
               avatar: getAvatarText(name, user.email),
               bio,

@@ -35,17 +35,20 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const raw = searchParams.get("handle") ?? "";
+  const excludeId = searchParams.get("exclude")?.trim() ?? "";
   const handle = normalizePublicHandleInput(raw);
   const formatError = describePublicHandleValidationError(handle);
   if (formatError) {
     return apiJsonOk({ available: false, reason: formatError }, request);
   }
 
-  const { data, error } = await supabase
+  const readResult = await supabase
     .from("profiles")
     .select("id")
     .eq("public_handle", handle)
     .maybeSingle();
+  const row = readResult.data as { id: string } | null;
+  const error = readResult.error;
 
   if (error) {
     return apiJsonError(500, "Couldn’t check that User ID right now.", {
@@ -54,5 +57,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return apiJsonOk({ available: !data, handle }, request);
+  const ownedByCurrentUser = Boolean(
+    row && excludeId.length > 0 && row.id === excludeId,
+  );
+  const available = !row || ownedByCurrentUser;
+
+  return apiJsonOk({ available, handle }, request);
 }

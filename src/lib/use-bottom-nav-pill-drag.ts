@@ -273,7 +273,7 @@ export function useBottomNavPillDrag(opts: {
   const transitionEasing = reduceMotion ? "ease" : "cubic-bezier(0.34, 1.35, 0.64, 1)";
 
   const pillTransformStyle = {
-    width: "calc((100% - 12px) / 5)" as const,
+    width: `calc((100% - ${PILL_TRACK_PADDING_PX}px) / ${tabCount})` as const,
     transform: `translateX(calc(${visualIndexForPill} * 100%))`,
     transition: isDragging ? "none" : `transform ${transitionMs}ms ${transitionEasing}`,
   };

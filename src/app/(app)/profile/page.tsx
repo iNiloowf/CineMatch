@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
@@ -14,6 +14,8 @@ import { partitionAchievements } from "@/lib/achievement-utils";
 import { ProfileAvatarEditorModal } from "@/components/profile-avatar-editor-modal";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import { useAppState } from "@/lib/app-state";
+import { describePublicHandleValidationError, normalizePublicHandleInput, publicHandleFormatHint } from "@/lib/public-handle";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { FavoriteMovieSummary, Movie, ProProfileStyle } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -105,6 +107,11 @@ export default function ProfilePage() {
   const [watchedReviewTab, setWatchedReviewTab] = useState<"recommended" | "notRecommended">("recommended");
   const [editingWatchedMovieId, setEditingWatchedMovieId] = useState<string | null>(null);
   const [copyIdBusy, setCopyIdBusy] = useState(false);
+  const [publicHandleEdit, setPublicHandleEdit] = useState("");
+  const [handleEditAvailability, setHandleEditAvailability] = useState<
+    "idle" | "checking" | "available" | "taken" | "invalid"
+  >("idle");
+  const prevIsEditing = useRef(false);
   const editingWatchedEntry = useMemo(
     () =>
       editingWatchedMovieId
@@ -117,6 +124,72 @@ export default function ProfilePage() {
   useEscapeToClose(Boolean(editingWatchedEntry), () => setEditingWatchedMovieId(null));
   useEscapeToClose(discoverSkipsModalOpen && !discoverSkipDetailMovie, () => setDiscoverSkipsModalOpen(false));
   useEscapeToClose(Boolean(discoverSkipDetailMovie), () => setDiscoverSkipDetailMovie(null));
+
+  useEffect(() => {
+    if (isEditing && !prevIsEditing.current) {
+      setEditSectionsOpen((prev) => ({ ...prev, basicInfo: true }));
+    }
+    prevIsEditing.current = isEditing;
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditing && currentUser) {
+      setPublicHandleEdit(currentUser.publicHandle);
+    }
+  }, [isEditing, currentUser]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setHandleEditAvailability("idle");
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (!isEditing || !currentUserId || !currentUser) {
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      const normalized = normalizePublicHandleInput(publicHandleEdit);
+      setHandleEditAvailability(
+        describePublicHandleValidationError(normalized) ? "invalid" : "available",
+      );
+      return;
+    }
+    const normalized = normalizePublicHandleInput(publicHandleEdit);
+    if (normalized === currentUser.publicHandle) {
+      setHandleEditAvailability("available");
+      return;
+    }
+    const formatErr = describePublicHandleValidationError(normalized);
+    if (formatErr) {
+      setHandleEditAvailability("invalid");
+      return;
+    }
+    let cancelled = false;
+    setHandleEditAvailability("checking");
+    const t = window.setTimeout(async () => {
+      try {
+        const qs = new URLSearchParams({
+          handle: normalized,
+          exclude: currentUserId,
+        });
+        const res = await fetch(`/api/profiles/handle-availability?${qs.toString()}`);
+        const payload = (await res.json()) as { available?: boolean };
+        if (cancelled) {
+          return;
+        }
+        setHandleEditAvailability(payload.available ? "available" : "taken");
+      } catch {
+        if (!cancelled) {
+          setHandleEditAvailability("idle");
+        }
+      }
+    }, 450);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [publicHandleEdit, isEditing, currentUserId, currentUser?.publicHandle, currentUser]);
 
   useEffect(() => {
     return () => {
@@ -433,11 +506,36 @@ export default function ProfilePage() {
     setSaveFeedback("saving");
     setSaveMessage("");
     const formData = new FormData(event.currentTarget);
+    const publicHandleRaw = String(formData.get("publicHandle") ?? "");
+    const publicHandleNorm = normalizePublicHandleInput(publicHandleRaw);
+    const phFormatErr = describePublicHandleValidationError(publicHandleNorm);
+    if (phFormatErr) {
+      setSaveFeedback("error");
+      setSaveMessage(phFormatErr);
+      return;
+    }
+    if (isSupabaseConfigured() && publicHandleNorm !== currentUser.publicHandle) {
+      if (handleEditAvailability === "checking") {
+        setSaveFeedback("error");
+        setSaveMessage("Wait for the User ID check to finish, then try again.");
+        return;
+      }
+      if (handleEditAvailability === "taken" || handleEditAvailability === "invalid") {
+        setSaveFeedback("error");
+        setSaveMessage(
+          handleEditAvailability === "taken"
+            ? "That User ID is already taken. Pick another one."
+            : "That User ID isn’t valid. Use the format hint under the field.",
+        );
+        return;
+      }
+    }
 
     const result = await updateProfile({
       name: String(formData.get("name") ?? currentUser.name).trim() || currentUser.name,
       bio: String(formData.get("bio") ?? ""),
       city: "",
+      publicHandle: publicHandleRaw,
       avatarImageUrl: clearAvatarOnSave
         ? null
         : avatarFile
@@ -1351,6 +1449,32 @@ export default function ProfilePage() {
                     Username
                     <input name="name" defaultValue={currentUser.name} className={inputClass} autoComplete="username" />
                   </label>
+                  <div className="space-y-2">
+                    <label className={`block space-y-2 ${labelClass}`} htmlFor="profile-public-handle">
+                      User ID
+                    </label>
+                    <input
+                      id="profile-public-handle"
+                      name="publicHandle"
+                      value={publicHandleEdit}
+                      onChange={(e) => setPublicHandleEdit(e.target.value)}
+                      className={inputClass}
+                      autoComplete="off"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                    <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                      {publicHandleFormatHint()}{" "}
+                      {isSupabaseConfigured() && handleEditAvailability === "checking" ? "Checking…" : null}
+                      {isSupabaseConfigured() && handleEditAvailability === "available" && normalizePublicHandleInput(publicHandleEdit) ? (
+                        <span className={isDarkMode ? "text-emerald-400" : "text-emerald-700"}>· Available</span>
+                      ) : null}
+                      {isSupabaseConfigured() && handleEditAvailability === "taken" ? (
+                        <span className={isDarkMode ? "text-rose-400" : "text-rose-700"}>· Already taken</span>
+                      ) : null}
+                    </p>
+                  </div>
                   <label className={`block space-y-2 ${labelClass}`}>
                     Bio
                     <textarea name="bio" defaultValue={currentUser.bio} rows={4} className={`${inputClass} min-h-[5.5rem] resize-y`} />
