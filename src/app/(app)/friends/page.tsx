@@ -20,7 +20,7 @@ import { useAppState } from "@/lib/app-state";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import type { User } from "@/lib/types";
 
-type TabId = "search" | "requests" | "friends";
+type TabId = "requests" | "friends";
 
 function tabItemClass(
   active: boolean,
@@ -45,9 +45,8 @@ const TAB_META: {
   label: string;
   hint: string;
 }[] = [
-  { id: "search", label: "Search", hint: "Find" },
-  { id: "requests", label: "Requests", hint: "In & out" },
   { id: "friends", label: "Friends", hint: "Yours" },
+  { id: "requests", label: "Requests", hint: "In & out" },
 ];
 
 function UserProfileLinks({
@@ -97,10 +96,12 @@ export default function FriendsPage() {
   const { isDarkMode, currentUserId, currentUser, linkedUsers, unlinkUser, refreshAccountData, isReady } =
     useAppState();
 
-  const initialTab = (searchParams.get("tab") as TabId | null) ?? "search";
-  const [tab, setTab] = useState<TabId>(
-    initialTab === "requests" || initialTab === "friends" ? initialTab : "search",
-  );
+  const tabFromUrl = searchParams.get("tab");
+  const initialTab: TabId =
+    tabFromUrl === "requests" || tabFromUrl === "friends"
+      ? tabFromUrl
+      : "friends";
+  const [tab, setTab] = useState<TabId>(initialTab);
   const [q, setQ] = useState("");
   const [searchBusy, setSearchBusy] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -185,7 +186,7 @@ export default function FriendsPage() {
   );
 
   useEffect(() => {
-    if (tab !== "search" || !currentUserId) {
+    if (tab !== "friends" || !currentUserId) {
       return;
     }
     const query = q.trim();
@@ -201,9 +202,11 @@ export default function FriendsPage() {
   }, [q, tab, currentUserId, executeSearch]);
 
   useEffect(() => {
-    const t = (searchParams.get("tab") as TabId | null) ?? "search";
-    if (t === "search" || t === "requests" || t === "friends") {
+    const t = searchParams.get("tab");
+    if (t === "requests" || t === "friends") {
       setTab(t);
+    } else {
+      setTab("friends");
     }
   }, [searchParams]);
 
@@ -365,7 +368,7 @@ export default function FriendsPage() {
       <PageHeader
         eyebrow="People"
         title="Friends"
-        description="Search by ID, handle requests, view your list."
+        description="Search by User ID on the Friends tab, and manage invite requests on Requests."
       />
 
       {actionMessage ? (
@@ -380,7 +383,7 @@ export default function FriendsPage() {
       ) : null}
 
       <div
-        className="grid w-full grid-cols-3 gap-1.5 p-0 sm:gap-2"
+        className="grid w-full grid-cols-2 gap-1.5 p-0 sm:gap-2"
         role="tablist"
         aria-label="Friends sections"
       >
@@ -404,7 +407,7 @@ export default function FriendsPage() {
               className="text-base leading-none sm:text-lg"
               aria-hidden
             >
-              {id === "search" ? "🔍" : id === "requests" ? "💬" : "👥"}
+              {id === "friends" ? "👥" : "💬"}
             </span>
             {id === "requests" && receivedPending.length > 0 ? (
               <span
@@ -432,170 +435,256 @@ export default function FriendsPage() {
         ))}
       </div>
 
-      {tab === "search" ? (
-        <SurfaceCard className="space-y-5">
-          <p className="app-body-muted leading-relaxed">
-            Type a User ID (or a fragment). After two characters, matches load as you type — or tap
-            Search / press Enter to refresh. Add someone, or open their profile if you’re already linked.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  void runSearchNow();
-                }
-              }}
-              placeholder="e.g. alex or user_4"
-              autoComplete="off"
-              className={`min-h-12 w-full flex-1 rounded-2xl border px-4 py-2.5 text-sm ${
-                isDarkMode
-                  ? "border-white/10 bg-white/5 text-white placeholder:text-slate-500"
-                  : "border-slate-200 bg-white text-slate-900"
-              }`}
-            />
-            <button
-              type="button"
-              disabled={searchBusy}
-              onClick={() => void runSearchNow()}
-              className="ui-btn ui-btn-primary min-h-12 w-full shrink-0 px-5 text-sm font-semibold sm:min-w-[6.5rem] sm:w-auto"
-            >
-              {searchBusy ? "Searching…" : "Search"}
-            </button>
-          </div>
-          {searchError ? (
-            <p className="pt-0.5 text-sm text-rose-500" role="alert">
-              {searchError}
+      {tab === "friends" ? (
+        <div className="space-y-[var(--app-section-gap)]">
+          <SurfaceCard className="space-y-5">
+            <h2 className="app-section-label">Find people</h2>
+            <p className="app-body-muted leading-relaxed">
+              Type a User ID (or a fragment). After two characters, matches load as you type — or tap
+              Search / press Enter. Add someone, or open their profile if you’re already linked.
             </p>
-          ) : null}
-          <ul className="space-y-3 border-t border-transparent pt-1 sm:pt-2">
-            {q.trim().length > 0 && q.trim().length < 2 && !searchBusy ? (
-              <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                Add one more character to search.
-              </li>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    void runSearchNow();
+                  }
+                }}
+                placeholder="e.g. alex or user_4"
+                autoComplete="off"
+                className={`min-h-12 w-full flex-1 rounded-2xl border px-4 py-2.5 text-sm ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                    : "border-slate-200 bg-white text-slate-900"
+                }`}
+              />
+              <button
+                type="button"
+                disabled={searchBusy}
+                onClick={() => void runSearchNow()}
+                className="ui-btn ui-btn-primary min-h-12 w-full shrink-0 px-5 text-sm font-semibold sm:min-w-[6.5rem] sm:w-auto"
+              >
+                {searchBusy ? "Searching…" : "Search"}
+              </button>
+            </div>
+            {searchError ? (
+              <p className="pt-0.5 text-sm text-rose-500" role="alert">
+                {searchError}
+              </p>
             ) : null}
-            {searchResults.length === 0 && !searchBusy && q.trim().length >= 2 && !searchError ? (
-              <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No results — try another part of the User ID.
-              </li>
-            ) : null}
-            {searchResults.map((row) => {
-              const link = linkedUsers.find((l) => l.user.id === row.id);
-              const profileHref = `/friends/${row.id}`;
-              const searchUser: User = {
-                id: row.id,
-                publicHandle: row.publicHandle,
-                name: row.displayName,
-                email: "",
-                avatar: row.avatarText?.slice(0, 2) ?? "—",
-                avatarImageUrl: row.avatarImageUrl ?? undefined,
-                bio: "",
-                city: "",
-              };
-              if (link) {
-                const isAccepted = link.status === "accepted";
-                const isOutgoingRequest =
-                  link.status === "pending" && link.requesterId === currentUserId;
-                const statusMessage = isAccepted
-                  ? "Already a friend — tap to open their profile"
-                  : isOutgoingRequest
-                    ? "Friend request sent — tap to open their profile"
-                    : "Request pending — open the Requests tab to respond";
+            <ul className="space-y-3 border-t border-transparent pt-1 sm:pt-2">
+              {q.trim().length > 0 && q.trim().length < 2 && !searchBusy ? (
+                <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Add one more character to search.
+                </li>
+              ) : null}
+              {searchResults.length === 0 && !searchBusy && q.trim().length >= 2 && !searchError ? (
+                <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  No results — try another part of the User ID.
+                </li>
+              ) : null}
+              {searchResults.map((row) => {
+                const link = linkedUsers.find((l) => l.user.id === row.id);
+                const profileHref = `/friends/${row.id}`;
+                const searchUser: User = {
+                  id: row.id,
+                  publicHandle: row.publicHandle,
+                  name: row.displayName,
+                  email: "",
+                  avatar: row.avatarText?.slice(0, 2) ?? "—",
+                  avatarImageUrl: row.avatarImageUrl ?? undefined,
+                  bio: "",
+                  city: "",
+                };
+                if (link) {
+                  const isAccepted = link.status === "accepted";
+                  const isOutgoingRequest =
+                    link.status === "pending" && link.requesterId === currentUserId;
+                  const statusMessage = isAccepted
+                    ? "Already a friend — tap to open their profile"
+                    : isOutgoingRequest
+                      ? "Friend request sent — tap to open their profile"
+                      : "Request pending — check the Requests tab to respond";
+                  return (
+                    <li
+                      key={row.id}
+                      className={`rounded-2xl border p-3.5 sm:p-4 ${listShell}`}
+                    >
+                      <UserProfileLinks user={searchUser} isDarkMode={isDarkMode} href={profileHref}>
+                        <Link
+                          href={profileHref}
+                          className="block w-fit max-w-full truncate text-base font-semibold text-left outline-offset-2 hover:underline"
+                        >
+                          {row.displayName}
+                        </Link>
+                        <div className="mt-1.5">
+                          <Link
+                            href={profileHref}
+                            className={`inline font-mono text-xs ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                            } hover:underline`}
+                          >
+                            @{row.publicHandle}
+                          </Link>
+                        </div>
+                        <p
+                          className={`mt-2.5 text-xs font-medium ${
+                            isAccepted
+                              ? isDarkMode
+                                ? "text-emerald-400/90"
+                                : "text-emerald-700"
+                              : isDarkMode
+                                ? "text-amber-200/90"
+                                : "text-amber-800"
+                          }`}
+                        >
+                          {statusMessage}
+                        </p>
+                      </UserProfileLinks>
+                    </li>
+                  );
+                }
+
                 return (
                   <li
                     key={row.id}
-                    className={`rounded-2xl border p-3.5 sm:p-4 ${listShell}`}
+                    className={`flex flex-col gap-3.5 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3.5 sm:pr-3.5 sm:pl-4 ${listShell}`}
                   >
-                    <UserProfileLinks user={searchUser} isDarkMode={isDarkMode} href={profileHref}>
-                      <Link
-                        href={profileHref}
-                        className="block w-fit max-w-full truncate text-base font-semibold text-left outline-offset-2 hover:underline"
-                      >
-                        {row.displayName}
-                      </Link>
-                      <div className="mt-1.5">
-                        <Link
-                          href={profileHref}
-                          className={`inline font-mono text-xs ${
-                            isDarkMode ? "text-slate-400" : "text-slate-500"
-                          } hover:underline`}
-                        >
-                          @{row.publicHandle}
-                        </Link>
-                      </div>
-                      <p
-                        className={`mt-2.5 text-xs font-medium ${
-                          isAccepted
-                            ? isDarkMode
-                              ? "text-emerald-400/90"
-                              : "text-emerald-700"
-                            : isDarkMode
-                              ? "text-amber-200/90"
-                              : "text-amber-800"
-                        }`}
-                      >
-                        {statusMessage}
-                      </p>
-                    </UserProfileLinks>
-                  </li>
-                );
-              }
-
-              return (
-                <li
-                  key={row.id}
-                  className={`flex flex-col gap-3.5 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3.5 sm:pr-3.5 sm:pl-4 ${listShell}`}
-                >
-                  <div className="min-w-0 flex-1 sm:pr-1">
-                    <div className="flex min-w-0 items-center gap-3.5">
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
-                        {row.avatarImageUrl ? (
-                          <Image
-                            src={row.avatarImageUrl}
-                            alt=""
-                            fill
-                            unoptimized
-                            className="object-cover"
-                            sizes="44px"
-                          />
-                        ) : (
-                          <div
-                            className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
-                              isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
+                    <div className="min-w-0 flex-1 sm:pr-1">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
+                          {row.avatarImageUrl ? (
+                            <Image
+                              src={row.avatarImageUrl}
+                              alt=""
+                              fill
+                              unoptimized
+                              className="object-cover"
+                              sizes="44px"
+                            />
+                          ) : (
+                            <div
+                              className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
+                                isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
+                              }`}
+                            >
+                              {row.avatarText?.slice(0, 2) ?? "—"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="truncate font-semibold leading-snug">{row.displayName}</p>
+                          <p
+                            className={`truncate font-mono text-xs ${
+                              isDarkMode ? "text-slate-400" : "text-slate-500"
                             }`}
                           >
-                            {row.avatarText?.slice(0, 2) ?? "—"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="truncate font-semibold leading-snug">{row.displayName}</p>
-                        <p
-                          className={`truncate font-mono text-xs ${
-                            isDarkMode ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          @{row.publicHandle}
-                        </p>
+                            @{row.publicHandle}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="shrink-0 self-stretch pt-1.5 sm:pt-0">
-                    <button
-                      type="button"
-                      disabled={actionBusy || currentUser?.publicHandle === row.publicHandle}
-                      onClick={() => void addFriend(row.publicHandle)}
-                      className="w-full min-h-11 rounded-full bg-violet-600 px-4 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:px-5 disabled:cursor-not-allowed disabled:opacity-50"
+                    <div className="shrink-0 self-stretch pt-1.5 sm:pt-0">
+                      <button
+                        type="button"
+                        disabled={actionBusy || currentUser?.publicHandle === row.publicHandle}
+                        onClick={() => void addFriend(row.publicHandle)}
+                        className="w-full min-h-11 rounded-full bg-violet-600 px-4 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:px-5 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </SurfaceCard>
+
+          <SurfaceCard className="space-y-4">
+            <h2 className="app-section-label">Your friends</h2>
+            <p className="app-body-muted">
+              Tap a row to open their profile. Trash on the right opens a dialog to remove someone.
+            </p>
+            {friendsAccepted.length === 0 ? (
+              <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                No friends yet — use the search above to find people.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {friendsAccepted.map((l) => {
+                  const href = `/friends/${l.user.id}`;
+                  return (
+                    <li
+                      key={l.linkId}
+                      className={`flex min-h-[3.5rem] items-stretch overflow-hidden rounded-2xl border transition ${listShell}`}
                     >
-                      Add
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </SurfaceCard>
+                      <div className="min-w-0 flex-1 p-2.5 pr-2 sm:p-3 sm:pr-2">
+                        <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
+                          <Link
+                            href={href}
+                            className="block w-fit max-w-full truncate text-left text-base font-semibold outline-offset-2 hover:underline"
+                          >
+                            {l.user.name}
+                          </Link>
+                          <div className="mt-0.5">
+                            <Link
+                              href={href}
+                              className={`block w-fit max-w-full truncate text-left font-mono text-xs hover:underline ${
+                                isDarkMode ? "text-slate-400" : "text-slate-500"
+                              }`}
+                            >
+                              @{l.user.publicHandle}
+                            </Link>
+                          </div>
+                        </UserProfileLinks>
+                      </div>
+                      <div
+                        className={`flex w-12 shrink-0 items-center justify-center self-stretch border-l sm:w-[3.25rem] ${
+                          isDarkMode ? "border-white/10" : "border-slate-200/90"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          aria-label={`Remove ${l.user.name} as friend`}
+                          className={`flex h-full w-full min-h-11 items-center justify-center outline-offset-2 transition hover:bg-rose-500/15 active:scale-95 ${
+                            isDarkMode ? "text-rose-400" : "text-rose-600"
+                          }`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setUnfriendConfirm({
+                              userId: l.user.id,
+                              name: l.user.name,
+                              publicHandle: l.user.publicHandle,
+                            });
+                          }}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            className="h-5 w-5"
+                            aria-hidden
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </SurfaceCard>
+        </div>
       ) : null}
 
       {tab === "requests" ? (
@@ -704,90 +793,6 @@ export default function FriendsPage() {
           </SurfaceCard>
         </div>
       ) : null}
-
-      {tab === "friends" ? (
-        <SurfaceCard className="space-y-4">
-          <p className="app-body-muted">
-            Tap the left to open a profile. Trash on the right opens a dialog to remove someone.
-          </p>
-          {friendsAccepted.length === 0 ? (
-            <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              No friends yet — use Search.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {friendsAccepted.map((l) => {
-                const href = `/friends/${l.user.id}`;
-                return (
-                  <li
-                    key={l.linkId}
-                    className={`flex min-h-[3.5rem] items-stretch overflow-hidden rounded-2xl border transition ${listShell}`}
-                  >
-                    <div className="min-w-0 flex-1 p-2.5 pr-2 sm:p-3 sm:pr-2">
-                      <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
-                        <Link
-                          href={href}
-                          className="block w-fit max-w-full truncate text-left text-base font-semibold outline-offset-2 hover:underline"
-                        >
-                          {l.user.name}
-                        </Link>
-                        <div className="mt-0.5">
-                          <Link
-                            href={href}
-                            className={`block w-fit max-w-full truncate text-left font-mono text-xs hover:underline ${
-                              isDarkMode ? "text-slate-400" : "text-slate-500"
-                            }`}
-                          >
-                            @{l.user.publicHandle}
-                          </Link>
-                        </div>
-                      </UserProfileLinks>
-                    </div>
-                    <div
-                      className={`flex w-12 shrink-0 items-center justify-center self-stretch border-l sm:w-[3.25rem] ${
-                        isDarkMode ? "border-white/10" : "border-slate-200/90"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        aria-label={`Remove ${l.user.name} as friend`}
-                        className={`flex h-full w-full min-h-11 items-center justify-center outline-offset-2 transition hover:bg-rose-500/15 active:scale-95 ${
-                          isDarkMode ? "text-rose-400" : "text-rose-600"
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setUnfriendConfirm({
-                            userId: l.user.id,
-                            name: l.user.name,
-                            publicHandle: l.user.publicHandle,
-                          });
-                        }}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          className="h-5 w-5"
-                          aria-hidden
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M8 6V4h8v2" />
-                          <path d="M19 6l-1 14H6L5 6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                        </svg>
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </SurfaceCard>
-      ) : null}
     </div>
 
     <ModalPortal open={unfriendConfirm !== null}>
@@ -826,7 +831,7 @@ export default function FriendsPage() {
               <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                 Remove <span className="font-semibold text-inherit">{unfriendConfirm.name}</span> (
                 <span className="font-mono">@{unfriendConfirm.publicHandle}</span>) from your friends? You can
-                send a new request from Search later.
+                send a new request with the find-people search later.
               </p>
             ) : null}
           </div>
