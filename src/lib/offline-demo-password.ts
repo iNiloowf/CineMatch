@@ -1,17 +1,20 @@
 import type { AuthUser } from "@/lib/types";
 
 /**
- * Offline / in-memory users may omit `password`; optional env
- * `NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD` can unlock legacy seeded accounts (local dev only).
- * Users created via offline signup keep a per-account `password`.
+ * Client-side checks for in-memory users that store a password in app data (offline signup).
+ * A shared demo password for legacy seeded users is **never** read in the browser; use
+ * `POST /api/dev/offline-demo-auth` in development only (see `login` in app-state).
  */
-export function verifyOfflineDemoPassword(user: AuthUser, password: string): boolean {
-  if (user.password != null && user.password !== "") {
-    return user.password === password;
-  }
-  const shared = process.env.NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD?.trim();
-  if (!shared) {
+export function hasPerAccountOfflinePassword(user: AuthUser): boolean {
+  return user.password != null && user.password !== "";
+}
+
+export function verifyPerAccountOfflinePassword(
+  user: AuthUser,
+  password: string,
+): boolean {
+  if (!hasPerAccountOfflinePassword(user)) {
     return false;
   }
-  return password === shared;
+  return user.password === password;
 }

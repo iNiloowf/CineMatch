@@ -2,6 +2,7 @@ import path from "path";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import { getContentSecurityPolicy } from "./src/lib/csp";
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
 
@@ -49,6 +50,24 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     root: path.join(__dirname),
+  },
+  /**
+   * Strict Content-Security-Policy (no inline script in prod; `src/lib/csp.ts`).
+   * Capacitor loads the same deployment via `server.url`, so the webview receives
+   * these headers from your origin. Use `CSP_*` envs for local/LAN or native quirks.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: getContentSecurityPolicy(),
+          },
+        ],
+      },
+    ];
   },
 };
 

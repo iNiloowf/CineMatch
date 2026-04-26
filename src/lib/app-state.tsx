@@ -16,7 +16,10 @@ import {
 import { isAchievementComplete } from "@/lib/achievement-utils";
 import { computeAchievements } from "@/lib/achievements";
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
-import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
+import {
+  hasPerAccountOfflinePassword,
+  verifyPerAccountOfflinePassword,
+} from "@/lib/offline-demo-password";
 import { useAccountSyncTriggers } from "@/lib/hooks/use-account-sync-triggers";
 import { useSupabaseAccountRefreshChannels } from "@/lib/hooks/use-supabase-account-refresh-channels";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
@@ -2432,9 +2435,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     const match = data.users.find(
-      (user) =>
-        user.email.toLowerCase() === email.toLowerCase() &&
-        verifyOfflineDemoPassword(user, password),
+      (user) => user.email.toLowerCase() === email.toLowerCase(),
     );
 
     if (!match) {
@@ -2442,6 +2443,47 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ok: false,
         message: "Invalid email or password.",
       };
+    }
+
+    if (hasPerAccountOfflinePassword(match)) {
+      if (!verifyPerAccountOfflinePassword(match, password)) {
+        return {
+          ok: false,
+          message: "Invalid email or password.",
+        };
+      }
+    } else {
+      if (process.env.NODE_ENV !== "development") {
+        return {
+          ok: false,
+          message: "Invalid email or password.",
+        };
+      }
+      try {
+        const devDemoResponse = await fetch("/api/dev/offline-demo-auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        });
+        if (!devDemoResponse.ok) {
+          return {
+            ok: false,
+            message: "Invalid email or password.",
+          };
+        }
+        const devPayload = (await devDemoResponse.json()) as { ok?: boolean };
+        if (!devPayload.ok) {
+          return {
+            ok: false,
+            message: "Invalid email or password.",
+          };
+        }
+      } catch {
+        return {
+          ok: false,
+          message: "Invalid email or password.",
+        };
+      }
     }
 
     setCurrentUserId(match.id);

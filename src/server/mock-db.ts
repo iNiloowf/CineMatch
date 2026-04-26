@@ -1,6 +1,6 @@
 import { defaultSettings, initialAppData } from "@/lib/mock-data";
-import { verifyOfflineDemoPassword } from "@/lib/offline-demo-password";
 import { AppData, ProfileSettings } from "@/lib/types";
+import { verifyServerOfflineDemoPassword } from "@/server/offline-demo-password";
 import { fetchTmdbMediaPool, isTmdbConfigured } from "@/server/tmdb";
 
 // This module acts like a tiny in-memory database for local development.
@@ -60,7 +60,7 @@ export function loginUser(email: string, password: string) {
     (entry) => entry.email.toLowerCase() === email.toLowerCase(),
   );
 
-  if (!user || !verifyOfflineDemoPassword(user, password)) {
+  if (!user || !verifyServerOfflineDemoPassword(user, password)) {
     return null;
   }
 

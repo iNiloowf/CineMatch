@@ -57,7 +57,8 @@ Create **`.env.local`** in the project root (never commit real secrets). Common 
 | `TMDB_API_READ_ACCESS_TOKEN` **or** `TMDB_API_KEY` | [TMDB](https://developer.themoviedb.org/) catalog + images |
 | `NEXT_PUBLIC_APP_ICON_URL` | Optional HTTPS PNG (≥512 recommended) for PWA / home-screen icon |
 | `ADMIN_ENTRY_PATH` | Secret URL path that opens the admin dashboard (see below); **set your own value in production** |
-| Stripe / checkout URLs | As needed for subscription flows (`NEXT_PUBLIC_PRO_CHECKOUT_*` patterns in server code) |
+| Stripe / checkout URLs | As needed for subscription flows (`NEXT_PUBLIC_PRO_CHECKOUT_*` patterns in server code) — public redirect URLs, not API secrets. |
+| `OFFLINE_DEMO_PASSWORD` | **Server-only** (never `NEXT_PUBLIC_*`). When running `next dev` without Supabase, use with seeded in-memory users that have no per-account password. Do not set in production. |
 
 Without TMDB, the app still runs using built-in / mock paths; with TMDB, Discover and search enrich from the live catalog.
 

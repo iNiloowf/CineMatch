@@ -22,7 +22,7 @@ This runs `lint` → `test` → `build`. Fix any failures before deploy.
 - [ ] `RESEND_API_KEY` / `RESEND_FROM_EMAIL` for production; **`RESEND_TEST_MODE=false`** (or unset) for real delivery.
 - [ ] TMDB token or key set if movie catalog / search should work.
 - [ ] **Stripe** webhook secret and price IDs match the Stripe dashboard (live mode when going live).
-- [ ] **Do not** set `NEXT_PUBLIC_OFFLINE_DEMO_PASSWORD` in production (offline demo is for no-Supabase local use only).
+- [ ] **Do not** set `OFFLINE_DEMO_PASSWORD` in production; offline shared-password demo is `next dev` only. Never commit `NEXT_PUBLIC_*` values that act like secrets.
 
 ## Data & app behavior
 
