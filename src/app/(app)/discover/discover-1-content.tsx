@@ -177,15 +177,25 @@ export function DiscoverPage1Content({
     [discoverQueue],
   );
 
+  const discoverQueueRef = useRef(discoverQueue);
+  const searchResultsRef = useRef(searchResults);
+  useLayoutEffect(() => {
+    discoverQueueRef.current = discoverQueue;
+    searchResultsRef.current = searchResults;
+  });
+
+  /** Do not depend on `discoverQueue` here — it changes every swipe and was re-firing with a stale `movieId` in the URL, re-pinning the shared title. */
   useEffect(() => {
     if (!sharedMovieId) {
       setSharedMovieFetch("idle");
       return;
     }
 
+    const q = discoverQueueRef.current;
+    const s = searchResultsRef.current;
     const existingMovie =
-      discoverQueue.find((entry) => entry.id === sharedMovieId) ??
-      searchResults.find((entry) => entry.id === sharedMovieId);
+      q.find((entry) => entry.id === sharedMovieId) ??
+      s.find((entry) => entry.id === sharedMovieId);
 
     if (existingMovie) {
       registerMovies([existingMovie]);
@@ -253,14 +263,7 @@ export function DiscoverPage1Content({
       active = false;
       controller.abort();
     };
-  }, [
-    discoverQueue,
-    registerMovies,
-    router,
-    searchResults,
-    sharedMovieId,
-    sharedMovieRetryKey,
-  ]);
+  }, [registerMovies, router, sharedMovieId, sharedMovieRetryKey]);
 
   useEffect(() => {
     if (normalizedSearchQuery.length < 2) {
@@ -469,9 +472,22 @@ export function DiscoverPage1Content({
 
   useEffect(() => {
     setBrowseIndex(0);
+  }, [discoverSessionKey]);
+
+  const lastDiscoverUserIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (lastDiscoverUserIdRef.current === undefined) {
+      lastDiscoverUserIdRef.current = currentUserId;
+      return;
+    }
+    if (lastDiscoverUserIdRef.current === currentUserId) {
+      return;
+    }
+    lastDiscoverUserIdRef.current = currentUserId;
+    setBrowseIndex(0);
     setFocusedMovieId(null);
     setSharedLinkOverlayMovie(null);
-  }, [discoverSessionKey]);
+  }, [currentUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || sharedMovieId) {
