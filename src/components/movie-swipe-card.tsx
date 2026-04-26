@@ -413,7 +413,9 @@ export function MovieSwipeCard({
           ) : null}
 
           <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col">
-            <div className="relative z-0 w-full min-w-0 min-h-0 flex-1 overflow-hidden [min-height:max(12rem,min(45dvh,50svh))] max-h-[min(64dvh,40rem)]">
+            <div
+              className="discover-immersive-poster-slot relative z-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(12.5rem,min(42dvh,52svh))] max-h-[min(66dvh,40rem)]"
+            >
               <div
                 className="absolute inset-0 z-0"
                 style={{

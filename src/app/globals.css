@@ -1213,6 +1213,16 @@ input[type="range"] {
   margin-bottom: calc(-1 * var(--app-scroll-pad-bottom));
 }
 
+/*
+ * Immersive poster: the slot only contains position:absolute layers (image, gradients, overlays).
+ * With flex, `min-h-0` on that slot or missing min-height can collapse the box to 0, so
+ * `next/image` + fill have no size — the poster "disappears". Keep a floor in CSS and TSX.
+ */
+section[data-poster-layout="immersive"] .discover-immersive-poster-slot {
+  min-height: max(12.5rem, min(42dvh, 52svh));
+  flex: 1 1 auto;
+}
+
 [data-app-shell-root][data-theme="dark"] #main-content {
   background-color: var(--bg-scroll);
 }
