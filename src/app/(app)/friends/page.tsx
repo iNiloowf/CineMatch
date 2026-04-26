@@ -59,7 +59,14 @@ function UserProfileLinks({
         aria-label={`View ${user.name}’s profile`}
       >
         {user.avatarImageUrl ? (
-          <Image src={user.avatarImageUrl} alt="" fill className="object-cover" sizes="44px" />
+          <Image
+            src={user.avatarImageUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="44px"
+          />
         ) : (
           <div
             className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
@@ -403,6 +410,7 @@ export default function FriendsPage() {
                               src={row.avatarImageUrl}
                               alt=""
                               fill
+                              unoptimized
                               className="object-cover"
                               sizes="44px"
                             />
