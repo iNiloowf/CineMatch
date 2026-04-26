@@ -1000,7 +1000,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 w-full max-w-md min-w-0 flex-1 flex-col gap-1 overflow-x-hidden sm:gap-2"
+      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 w-full max-w-md min-w-0 flex-1 flex-col gap-1.5 overflow-x-hidden sm:gap-2"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
@@ -1227,12 +1227,18 @@ export function DiscoverPage2Content({
       ) : null}
 
       {!isSearchOpen ? (
-        <div className="shrink-0 space-y-1.5 sm:space-y-2">
-          <div className="mx-0.5 flex items-center justify-between gap-2 px-0.5 py-0 sm:mx-1 sm:gap-3 sm:py-0.5">
+        <div className="shrink-0 space-y-2 sm:space-y-2.5">
+          <div
+            className={`mx-0.5 flex items-center justify-between gap-2 rounded-[20px] border px-3 py-2.5 sm:mx-1 sm:gap-3 ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950/75 shadow-[0_6px_24px_rgba(0,0,0,0.35)]"
+                : "border-slate-200/90 bg-white/90 shadow-sm"
+            }`}
+          >
             <div className="min-w-0 flex-1 pr-0.5">
               <p
-                className={`text-[0.65rem] font-bold uppercase tracking-[0.2em] ${
-                  isDarkMode ? "text-fuchsia-300/90" : "text-violet-600/90"
+                className={`text-[14px] font-bold uppercase tracking-[0.18em] ${
+                  isDarkMode ? "text-fuchsia-200" : "text-violet-700"
                 }`}
               >
                 CineMatch
@@ -1523,7 +1529,11 @@ export function DiscoverPage2Content({
             hasActiveBrowse={Boolean(movie)}
             isOnboardingComplete={isOnboardingComplete}
           />
-          <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar px-3 py-2 sm:px-3.5">
+          <div
+            className={`ui-glass-panel discover-toolbar-enter discover-search-toolbar rounded-[22px] border px-3 py-2 sm:px-3.5 ${
+              isDarkMode ? "border-white/12" : "border-slate-200/90"
+            }`}
+          >
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
@@ -2227,10 +2237,10 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`discover2-swipe-viewport flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible px-0.5 py-1 sm:px-0.5 sm:py-1.5 ${
+        className={`discover2-swipe-viewport relative z-0 flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible px-0.5 pt-1.5 pb-1 sm:px-0.5 sm:pt-2 sm:pb-1.5 ${
           isDarkMode
-            ? "discover-card-viewport"
-            : "rounded-[1.75rem] bg-gradient-to-b from-transparent to-white/40"
+            ? "discover-card-viewport border-t border-white/12"
+            : "mt-0.5 rounded-[1.75rem] border border-slate-200/80 bg-gradient-to-b from-slate-100/90 to-white shadow-[0_1px_0_rgba(15,23,42,0.06)]"
         }`}
       >
         {movie ? (
