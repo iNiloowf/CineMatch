@@ -512,12 +512,12 @@ export function MovieSwipeCard({
                           e.stopPropagation();
                           onMatchPercentClick();
                         }}
-                        className="inline-flex min-h-0 min-w-0 max-w-full items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/15 px-2 py-1 text-left text-[14px] font-medium leading-none text-violet-100/95 shadow-sm transition [backdrop-filter:none] enabled:hover:bg-violet-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-0 min-w-0 max-w-full items-center gap-0.5 rounded-full border border-violet-400/40 bg-violet-500/15 px-2 py-0.5 text-left text-[9px] font-semibold leading-tight text-violet-100/95 shadow-sm transition [backdrop-filter:none] sm:gap-1 sm:px-2.5 sm:text-[10px] enabled:hover:bg-violet-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Why ${matchScore}% match for your taste?`}
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="size-[14px] shrink-0"
+                          className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -530,14 +530,14 @@ export function MovieSwipeCard({
                           <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
                           <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
                         </svg>
-                        <span className="text-[14px] font-medium leading-none text-violet-100/95">
+                        <span className="text-[9px] font-semibold leading-tight sm:text-[10px]">
                           {matchScore}% match
                         </span>
-                        <span className="text-[14px] font-medium leading-none text-violet-200/90">Why</span>
+                        <span className="text-[9px] font-semibold leading-tight text-violet-200/90 sm:text-[10px]">Why</span>
                       </button>
                     </div>
                   ) : (
-                    <p className="mt-1.5 text-[14px] font-medium leading-snug text-violet-200/90 sm:mt-1.5">
+                    <p className="mt-1.5 text-[9px] font-semibold leading-tight text-violet-200/90 sm:mt-1.5 sm:text-[10px]">
                       {matchScore}% match
                     </p>
                   )}
