@@ -19,6 +19,11 @@ const supabaseMediaHost = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    /** Edge/CDN cache for optimized poster URLs (TMDB + Supabase); faster repeat views. */
+    minimumCacheTTL: 60 * 60 * 24 * 7,
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [400, 640, 750, 828, 1080, 1200],
+    imageSizes: [32, 48, 64, 96, 120, 180, 256, 320],
     remotePatterns: [
       {
         protocol: "https",

@@ -30,10 +30,11 @@ export function posterSizesAttr(profile: PosterDisplayProfile): string {
   switch (profile) {
     case "hero":
       return "(max-width: 480px) 100vw, 420px";
+    /** Picks / lists: full-width card strip — avoid overserving w342 when only ~360px wide. */
     case "list":
-      return "120px";
+      return "(max-width: 480px) 100vw, (max-width: 1024px) 50vw, 400px";
     case "search":
-      return "72px";
+      return "80px";
     default:
       return "100vw";
   }

@@ -38,6 +38,8 @@ export function PosterBackdrop({
   const sizes = posterSizesAttr(profile);
   const isTmdb = src.includes(TMDB_HOST);
 
+  const imageQuality = profile === "search" ? 60 : profile === "list" ? 68 : 78;
+
   if (isTmdb) {
     return (
       <div
@@ -50,6 +52,7 @@ export function PosterBackdrop({
             aria-hidden
             fill
             sizes={sizes}
+            quality={imageQuality}
             loading={eager ? "eager" : "lazy"}
             fetchPriority={eager ? "high" : "low"}
             className={`pointer-events-none ${fitClass}`}

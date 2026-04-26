@@ -1852,63 +1852,75 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, [accountRefreshKey, currentUserId]);
 
-  const currentUser =
-    currentUserId
-      ? data.users.find((user) => user.id === currentUserId) ?? null
-      : null;
-
-  const acceptedIds = new Set(
-    data.swipes
-      .filter(
-        (swipe) =>
-          swipe.userId === currentUserId && swipe.decision === "accepted",
-      )
-      .map((swipe) => swipe.movieId),
+  const currentUser = useMemo(
+    () =>
+      currentUserId
+        ? data.users.find((user) => user.id === currentUserId) ?? null
+        : null,
+    [currentUserId, data.users],
   );
 
-  const acceptedMovies = data.movies.filter((movie) => acceptedIds.has(movie.id));
-  const watchedPickReviews = currentUserId
-    ? data.watchedPickReviews
-        .filter((entry) => entry.userId === currentUserId)
-        .map((entry) => ({
-          movie: data.movies.find((movie) => movie.id === entry.movieId),
-          recommended: entry.recommended,
-          watchedAt: entry.watchedAt,
-        }))
+  const acceptedMovies = useMemo(() => {
+    const acceptedIds = new Set(
+      data.swipes
         .filter(
-          (
-            entry,
-          ): entry is {
-            movie: Movie;
-            recommended: boolean;
-            watchedAt: string;
-          } => Boolean(entry.movie),
+          (swipe) =>
+            swipe.userId === currentUserId && swipe.decision === "accepted",
         )
-        .sort(
-          (left, right) =>
-            new Date(right.watchedAt).getTime() - new Date(left.watchedAt).getTime(),
-        )
-    : [];
-  const acceptedGenreCounts = acceptedMovies.reduce<Map<string, number>>(
-    (counts, movie) => {
-      movie.genre.forEach((entry) => {
-        const normalized = entry.trim().toLowerCase();
+        .map((swipe) => swipe.movieId),
+    );
+    return data.movies.filter((movie) => acceptedIds.has(movie.id));
+  }, [data.movies, data.swipes, currentUserId]);
 
-        if (
-          !normalized ||
-          normalized === "movie" ||
-          normalized === "series"
-        ) {
-          return;
-        }
-
-        counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
-      });
-
-      return counts;
-    },
-    new Map<string, number>(),
+  const watchedPickReviews = useMemo(
+    () =>
+      currentUserId
+        ? data.watchedPickReviews
+            .filter((entry) => entry.userId === currentUserId)
+            .map((entry) => ({
+              movie: data.movies.find((movie) => movie.id === entry.movieId),
+              recommended: entry.recommended,
+              watchedAt: entry.watchedAt,
+            }))
+            .filter(
+              (
+                entry,
+              ): entry is {
+                movie: Movie;
+                recommended: boolean;
+                watchedAt: string;
+              } => Boolean(entry.movie),
+            )
+            .sort(
+              (left, right) =>
+                new Date(right.watchedAt).getTime() - new Date(left.watchedAt).getTime(),
+            )
+        : [],
+    [currentUserId, data.watchedPickReviews, data.movies],
   );
+
+  const acceptedGenreCounts = useMemo(() => {
+    return acceptedMovies.reduce<Map<string, number>>(
+      (counts, movie) => {
+        movie.genre.forEach((entry) => {
+          const normalized = entry.trim().toLowerCase();
+
+          if (
+            !normalized ||
+            normalized === "movie" ||
+            normalized === "series"
+          ) {
+            return;
+          }
+
+          counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+        });
+
+        return counts;
+      },
+      new Map<string, number>(),
+    );
+  }, [acceptedMovies]);
 
   const moviesByIdForTaste = useMemo(
     () => new Map(data.movies.map((m) => [m.id, m])),
@@ -1991,126 +2003,154 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     );
   }, [currentUserId, data.swipes, discoverPickEngagement.length]);
 
-  const discoverQueue = buildDiscoverQueue({
-    movies: data.movies,
-    swipes: data.swipes,
-    currentUserId,
-    discoverShuffleSeed,
-    discoverStartOffset,
-    discoverVisibilityTimestamp,
-    onboardingPreferences,
-    pickEngagement: discoverPickEngagement,
-  });
+  const discoverQueue = useMemo(
+    () =>
+      buildDiscoverQueue({
+        movies: data.movies,
+        swipes: data.swipes,
+        currentUserId,
+        discoverShuffleSeed,
+        discoverStartOffset,
+        discoverVisibilityTimestamp,
+        onboardingPreferences,
+        pickEngagement: discoverPickEngagement,
+      }),
+    [
+      data.movies,
+      data.swipes,
+      currentUserId,
+      discoverShuffleSeed,
+      discoverStartOffset,
+      discoverVisibilityTimestamp,
+      onboardingPreferences,
+      discoverPickEngagement,
+    ],
+  );
 
-  const sharedMovies: SharedMovieView[] = currentUserId
-    ? data.links
-        .filter(
-          (link) =>
-            link.status === "accepted" && link.users.includes(currentUserId),
-        )
-        .flatMap((link) => {
-          const partnerId = link.users.find((id) => id !== currentUserId);
-          const partner = data.users.find((user) => user.id === partnerId);
+  const sharedMovies: SharedMovieView[] = useMemo(
+    () =>
+      currentUserId
+        ? data.links
+            .filter(
+              (link) =>
+                link.status === "accepted" && link.users.includes(currentUserId),
+            )
+            .flatMap((link) => {
+              const partnerId = link.users.find((id) => id !== currentUserId);
+              const partner = data.users.find((user) => user.id === partnerId);
 
-          if (!partnerId || !partner) {
-            return [];
-          }
+              if (!partnerId || !partner) {
+                return [];
+              }
 
-          const partnerInfo: User = {
-            id: partner.id,
-            publicHandle: partner.publicHandle,
-            name: partner.name,
-            email: partner.email,
-            avatar: partner.avatar,
-            avatarImageUrl: partner.avatarImageUrl,
-            bio: partner.bio,
-            city: partner.city,
-            favoriteMovie: partner.favoriteMovie,
-            profileHeaderMovie: partner.profileHeaderMovie,
-            profileStyle: partner.profileStyle,
-          };
+              const partnerInfo: User = {
+                id: partner.id,
+                publicHandle: partner.publicHandle,
+                name: partner.name,
+                email: partner.email,
+                avatar: partner.avatar,
+                avatarImageUrl: partner.avatarImageUrl,
+                bio: partner.bio,
+                city: partner.city,
+                favoriteMovie: partner.favoriteMovie,
+                profileHeaderMovie: partner.profileHeaderMovie,
+                profileStyle: partner.profileStyle,
+              };
 
-          const partnerAccepted = new Set(
-            data.swipes
-              .filter(
-                (swipe) =>
-                  swipe.userId === partnerId && swipe.decision === "accepted",
-              )
-              .map((swipe) => swipe.movieId),
-          );
-
-          return acceptedMovies
-            .filter((movie) => partnerAccepted.has(movie.id))
-            .map((movie) => {
-              const isHidden = data.sharedHiddenMovies.some(
-                (hidden) => hidden.pairKey === link.id && hidden.movieId === movie.id,
+              const partnerAccepted = new Set(
+                data.swipes
+                  .filter(
+                    (swipe) =>
+                      swipe.userId === partnerId && swipe.decision === "accepted",
+                  )
+                  .map((swipe) => swipe.movieId),
               );
-              const savedState = data.sharedWatch.find(
-                (item) =>
-                  item.pairKey === link.id &&
-                  item.movieId === movie.id,
-              );
+
+              return acceptedMovies
+                .filter((movie) => partnerAccepted.has(movie.id))
+                .map((movie) => {
+                  const isHidden = data.sharedHiddenMovies.some(
+                    (hidden) => hidden.pairKey === link.id && hidden.movieId === movie.id,
+                  );
+                  const savedState = data.sharedWatch.find(
+                    (item) =>
+                      item.pairKey === link.id &&
+                      item.movieId === movie.id,
+                  );
+
+                  return {
+                    linkId: link.id,
+                    partner: partnerInfo,
+                    movie,
+                    shared: !isHidden,
+                    watched: savedState?.watched ?? false,
+                    progress: savedState?.progress ?? 0,
+                  };
+                });
+            })
+        : [],
+    [
+      currentUserId,
+      data.links,
+      data.swipes,
+      data.sharedHiddenMovies,
+      data.sharedWatch,
+      data.users,
+      acceptedMovies,
+    ],
+  );
+
+  const linkedUsers = useMemo(
+    () =>
+      currentUserId
+        ? data.links
+            .filter((link) => link.users.includes(currentUserId))
+            .map((link) => {
+              const partnerId = link.users.find((id) => id !== currentUserId);
+              const partner = data.users.find((user) => user.id === partnerId);
+
+              if (!partner) {
+                return null;
+              }
+
+              const partnerInfo: User = {
+                id: partner.id,
+                publicHandle: partner.publicHandle,
+                name: partner.name,
+                email: partner.email,
+                avatar: partner.avatar,
+                avatarImageUrl: partner.avatarImageUrl,
+                bio: partner.bio,
+                city: partner.city,
+                favoriteMovie: partner.favoriteMovie,
+                profileHeaderMovie: partner.profileHeaderMovie,
+                profileStyle: partner.profileStyle,
+              };
 
               return {
+                user: partnerInfo,
                 linkId: link.id,
-                partner: partnerInfo,
-                movie,
-                shared: !isHidden,
-                watched: savedState?.watched ?? false,
-                progress: savedState?.progress ?? 0,
+                requesterId: link.requesterId ?? link.users[0],
+                status: link.status,
+                sharedCount: sharedMovies.filter(
+                  (movie) => movie.partner.id === partnerInfo.id,
+                ).length,
               };
-            });
-        })
-    : [];
-
-  const linkedUsers =
-    currentUserId
-      ? data.links
-          .filter((link) => link.users.includes(currentUserId))
-          .map((link) => {
-            const partnerId = link.users.find((id) => id !== currentUserId);
-            const partner = data.users.find((user) => user.id === partnerId);
-
-            if (!partner) {
-              return null;
-            }
-
-            const partnerInfo: User = {
-              id: partner.id,
-              publicHandle: partner.publicHandle,
-              name: partner.name,
-              email: partner.email,
-              avatar: partner.avatar,
-              avatarImageUrl: partner.avatarImageUrl,
-              bio: partner.bio,
-              city: partner.city,
-              favoriteMovie: partner.favoriteMovie,
-              profileHeaderMovie: partner.profileHeaderMovie,
-              profileStyle: partner.profileStyle,
-            };
-
-            return {
-              user: partnerInfo,
-              linkId: link.id,
-              requesterId: link.requesterId ?? link.users[0],
-              status: link.status,
-              sharedCount: sharedMovies.filter(
-                (movie) => movie.partner.id === partnerInfo.id,
-              ).length,
-            };
-          })
-          .filter(
-            (
-              item,
-            ): item is {
-              user: User;
-              linkId: string;
-              requesterId: string;
-              status: "accepted" | "pending";
-              sharedCount: number;
-            } => Boolean(item),
-          )
-      : [];
+            })
+            .filter(
+              (
+                item,
+              ): item is {
+                user: User;
+                linkId: string;
+                requesterId: string;
+                status: "accepted" | "pending";
+                sharedCount: number;
+              } => Boolean(item),
+            )
+        : [],
+    [currentUserId, data.links, data.users, sharedMovies],
+  );
 
   const friendLinksForNotify = useMemo(
     () =>
@@ -2202,19 +2242,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setFriendLinkNotifyToast,
   ]);
 
-  const sharedMovieGroups: SharedMovieGroup[] = linkedUsers
-    .filter((linked) => linked.status === "accepted")
-    .map((linked) => {
-      const sharedEntries = sharedMovies.filter(
-        (entry) => entry.partner.id === linked.user.id,
-      );
+  const sharedMovieGroups: SharedMovieGroup[] = useMemo(
+    () =>
+      linkedUsers
+        .filter((linked) => linked.status === "accepted")
+        .map((linked) => {
+          const sharedEntries = sharedMovies.filter(
+            (entry) => entry.partner.id === linked.user.id,
+          );
 
-      return {
-        linkId: sharedEntries[0]?.linkId ?? `link-${linked.user.id}`,
-        partner: linked.user,
-        movies: sharedEntries,
-      };
-    });
+          return {
+            linkId: sharedEntries[0]?.linkId ?? `link-${linked.user.id}`,
+            partner: linked.user,
+            movies: sharedEntries,
+          };
+        }),
+    [linkedUsers, sharedMovies],
+  );
 
   const ongoingMovies: SharedMovieView[] = [];
   const achievements: Achievement[] = useMemo(() => {
