@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPublicHandleFormat, normalizePublicHandleInput } from "@/lib/public-handle";
 
 /** Login / existing accounts — keep lenient for users who signed up before stricter signup rules. */
 export const MIN_AUTH_PASSWORD_LEN = 6;
@@ -29,12 +30,23 @@ export const loginFormSchema = z.object({
     .min(MIN_AUTH_PASSWORD_LEN, `Use at least ${MIN_AUTH_PASSWORD_LEN} characters.`),
 });
 
+export const signupPublicHandleFieldSchema = z
+  .string()
+  .trim()
+  .min(1, "Choose a User ID.")
+  .transform((v) => normalizePublicHandleInput(v))
+  .refine((v) => isValidPublicHandleFormat(v), {
+    message:
+      "User ID: 3–32 characters, start with a letter, use letters, numbers, or underscores only.",
+  });
+
 export const signupFormSchema = z.object({
   name: z
     .string()
     .trim()
     .min(1, "Enter your name.")
     .min(2, "Use at least 2 characters for your name."),
+  publicHandle: signupPublicHandleFieldSchema,
   email: z
     .string()
     .trim()

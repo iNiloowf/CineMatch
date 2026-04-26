@@ -20,6 +20,8 @@ export type Movie = {
 
 export type User = {
   id: string;
+  /** Public User ID (lowercase); search, invites, and profile copy. */
+  publicHandle: string;
   name: string;
   email: string;
   avatar: string;
@@ -64,6 +66,7 @@ export type SwipeRecord = {
 export type LinkedUser = {
   id: string;
   users: [string, string];
+  requesterId: string;
   status: "accepted" | "pending";
   createdAt: string;
 };

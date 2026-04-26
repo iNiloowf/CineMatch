@@ -2,12 +2,10 @@ export const bottomTabNavItems = [
   { href: "/discover", label: "Discover" },
   { href: "/picks", label: "Picks" },
   { href: "/shared", label: "Shared" },
+  { href: "/friends", label: "Friends" },
   { href: "/profile", label: "Profile" },
   { href: "/settings", label: "Settings" },
 ] as const;
-
-/** Connect lives outside the 5 tabs; highlight Profile while finishing an invite there. */
-export const CONNECT_AS_PROFILE_TAB = /^\/connect(\/|$)/;
 
 export function resolveBottomNavHighlight(pathname: string) {
   const items = bottomTabNavItems;
@@ -24,16 +22,16 @@ export function resolveBottomNavHighlight(pathname: string) {
       return { pillIndex: settingsIndex, activeHref: "/settings" };
     }
   }
-  if (CONNECT_AS_PROFILE_TAB.test(pathname)) {
-    const profileIndex = items.findIndex((item) => item.href === "/profile");
-    if (profileIndex >= 0) {
-      return { pillIndex: profileIndex, activeHref: "/profile" };
-    }
-  }
   if (pathname === "/discover1" || pathname === "/discover2") {
     const discoverIndex = items.findIndex((item) => item.href === "/discover");
     if (discoverIndex >= 0) {
       return { pillIndex: discoverIndex, activeHref: "/discover" };
+    }
+  }
+  if (pathname === "/connect" || pathname.startsWith("/connect/") || pathname === "/linked") {
+    const friendsIndex = items.findIndex((item) => item.href === "/friends");
+    if (friendsIndex >= 0) {
+      return { pillIndex: friendsIndex, activeHref: "/friends" };
     }
   }
   return { pillIndex: -1, activeHref: null as string | null };

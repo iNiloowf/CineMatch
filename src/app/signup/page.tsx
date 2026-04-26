@@ -11,11 +11,16 @@ import {
   MIN_SIGNUP_PASSWORD_LEN,
   signupFormSchema,
 } from "@/lib/auth-form-schemas";
+import {
+  describePublicHandleValidationError,
+  normalizePublicHandleInput,
+} from "@/lib/public-handle";
 import { writeSignupPendingEmail } from "@/lib/signup-pending-email";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 type FieldErrors = {
   name?: string;
+  publicHandle?: string;
   email?: string;
   password?: string;
   acceptedLegal?: string;
@@ -46,6 +51,8 @@ export default function SignUpPage() {
   const router = useRouter();
   const { signup, isDarkMode, currentUserId, isReady } = useAppState();
   const [name, setName] = useState("");
+  const [publicHandle, setPublicHandle] = useState("");
+  const [handleAvailability, setHandleAvailability] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedLegal, setAcceptedLegal] = useState(false);
@@ -65,6 +72,41 @@ export default function SignUpPage() {
     }
     router.replace("/discover");
   }, [currentUserId, isReady, router]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setHandleAvailability("idle");
+      return;
+    }
+    const normalized = normalizePublicHandleInput(publicHandle);
+    const formatErr = describePublicHandleValidationError(normalized);
+    if (formatErr) {
+      setHandleAvailability("invalid");
+      return;
+    }
+    let cancelled = false;
+    setHandleAvailability("checking");
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/profiles/handle-availability?handle=${encodeURIComponent(normalized)}`,
+        );
+        const payload = (await res.json()) as { available?: boolean };
+        if (cancelled) {
+          return;
+        }
+        setHandleAvailability(payload.available ? "available" : "taken");
+      } catch {
+        if (!cancelled) {
+          setHandleAvailability("idle");
+        }
+      }
+    }, 450);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [publicHandle]);
 
   const pageBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
@@ -118,7 +160,12 @@ export default function SignUpPage() {
     | { ok: true; message?: string; retryAfterSeconds: number }
     | { ok: false; error: string; retryAfterSeconds?: number };
 
-  async function sendSignupEmailRequest(body: { name: string; email: string; password: string }): Promise<SendSignupEmailResult> {
+  async function sendSignupEmailRequest(body: {
+    name: string;
+    publicHandle: string;
+    email: string;
+    password: string;
+  }): Promise<SendSignupEmailResult> {
     const response = await fetch("/api/auth/send-signup-email", {
       method: "POST",
       headers: {
@@ -155,16 +202,42 @@ export default function SignUpPage() {
     setAuthError("");
     setSuccess("");
 
-    const parsed = signupFormSchema.safeParse({ name, email, password, acceptedLegal });
+    const parsed = signupFormSchema.safeParse({
+      name,
+      publicHandle,
+      email,
+      password,
+      acceptedLegal,
+    });
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
       setFieldErrors({
         name: flat.name?.[0],
+        publicHandle: flat.publicHandle?.[0],
         email: flat.email?.[0],
         password: flat.password?.[0],
         acceptedLegal: flat.acceptedLegal?.[0],
       });
       return;
+    }
+    if (isSupabaseConfigured()) {
+      if (handleAvailability === "taken") {
+        setFieldErrors((prev) => ({
+          ...prev,
+          publicHandle: "That User ID is already taken. Try another one.",
+        }));
+        return;
+      }
+      if (handleAvailability === "checking" || handleAvailability === "invalid") {
+        setFieldErrors((prev) => ({
+          ...prev,
+          publicHandle:
+            handleAvailability === "invalid"
+              ? "Fix your User ID before continuing."
+              : "Wait for the ID check to finish.",
+        }));
+        return;
+      }
     }
     setFieldErrors({});
 
@@ -173,6 +246,7 @@ export default function SignUpPage() {
     if (isSupabaseConfigured()) {
       const sent = await sendSignupEmailRequest({
         name: parsed.data.name,
+        publicHandle: parsed.data.publicHandle,
         email: parsed.data.email,
         password: parsed.data.password,
       });
@@ -185,6 +259,7 @@ export default function SignUpPage() {
       setAuthError("");
       writeSignupPendingEmail({
         name: parsed.data.name,
+        publicHandle: parsed.data.publicHandle,
         email: parsed.data.email,
         password: parsed.data.password,
         resendCooldownSeconds: sent.retryAfterSeconds,
@@ -195,6 +270,7 @@ export default function SignUpPage() {
 
     const result = await signup({
       name: parsed.data.name,
+      publicHandle: parsed.data.publicHandle,
       email: parsed.data.email,
       password: parsed.data.password,
     });
@@ -309,6 +385,62 @@ export default function SignUpPage() {
                   className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition ${inputBase(Boolean(fieldErrors.name))}`}
                 />
                 {fieldErrors.name ? fieldHint(fieldErrors.name) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="signup-user-id"
+                  className={`block text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}
+                >
+                  User ID
+                </label>
+                <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  Your public handle: friends add you with this. Letters and numbers, e.g. alex_21
+                </p>
+                <input
+                  id="signup-user-id"
+                  name="publicHandle"
+                  autoComplete="off"
+                  value={publicHandle}
+                  onChange={(event) => {
+                    setPublicHandle(event.target.value);
+                    setFieldErrors((prev) => ({ ...prev, publicHandle: undefined }));
+                    setAuthError("");
+                  }}
+                  placeholder="e.g. sam_rivera"
+                  aria-invalid={Boolean(fieldErrors.publicHandle) || undefined}
+                  className={`w-full rounded-[20px] border px-4 py-3 text-sm outline-none transition ${inputBase(
+                    Boolean(fieldErrors.publicHandle),
+                  )}`}
+                />
+                {isSupabaseConfigured() ? (
+                  <p
+                    className={`text-xs font-medium ${
+                      handleAvailability === "available"
+                        ? isDarkMode
+                          ? "text-emerald-300"
+                          : "text-emerald-700"
+                        : handleAvailability === "taken"
+                          ? isDarkMode
+                            ? "text-rose-300"
+                            : "text-rose-600"
+                          : isDarkMode
+                            ? "text-slate-500"
+                            : "text-slate-500"
+                    }`}
+                  >
+                    {handleAvailability === "checking"
+                      ? "Checking availability…"
+                      : handleAvailability === "available"
+                        ? "This User ID is available."
+                        : handleAvailability === "taken"
+                          ? "That User ID is already taken."
+                          : handleAvailability === "invalid"
+                            ? "Use 3+ characters, start with a letter."
+                            : null}
+                  </p>
+                ) : null}
+                {fieldErrors.publicHandle ? fieldHint(fieldErrors.publicHandle) : null}
               </div>
 
               <div className="space-y-1.5">

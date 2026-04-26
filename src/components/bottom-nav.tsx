@@ -37,6 +37,17 @@ function NavIcon({ href }: { href: string }) {
     );
   }
 
+  if (href === "/friends") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+        <path d="M16.5 11.5a3.5 3.5 0 1 0-7.22-.79c-.1.5-.1 1.02.02 1.52a6 6 0 0 0-1.1.69 4 4 0 0 0 5.47 5.7 3.4 3.4 0 0 0 .83-1.1z" />
+        <path d="M8.5 11.5a2.5 2.5 0 1 0-5 0c0 1.13.5 1.6 1.5 2.1s2 1.15 2 2.4v.5" />
+        <path d="M3 19.5a5.5 5.5 0 0 1 7.5-5.1" />
+        <path d="M9 19.5a5.5 5.5 0 0 1 10 0" />
+      </svg>
+    );
+  }
+
   if (href === "/profile") {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">

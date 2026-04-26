@@ -2,6 +2,7 @@ const STORAGE_KEY = "cinematch_signup_pending";
 
 export type SignupPendingPayload = {
   name: string;
+  publicHandle: string;
   email: string;
   password: string;
   /** Cooldown from API (seconds) after last send */
@@ -32,7 +33,8 @@ export function readSignupPendingEmail(): SignupPendingPayload | null {
     if (
       typeof parsed?.email !== "string" ||
       typeof parsed?.name !== "string" ||
-      typeof parsed?.password !== "string"
+      typeof parsed?.password !== "string" ||
+      typeof parsed?.publicHandle !== "string"
     ) {
       return null;
     }

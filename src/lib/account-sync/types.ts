@@ -4,6 +4,8 @@ import type { SwipeDecision } from "@/lib/types";
 export type ProfileRow = {
   id: string;
   email: string;
+  /** Present once `public_handle` migration has run; app treats missing as empty. */
+  public_handle?: string;
   full_name: string;
   avatar_text: string;
   avatar_image_url?: string | null;

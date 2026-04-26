@@ -26,11 +26,6 @@ import {
 } from "@/lib/discover-session";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import {
-  parseInviteTokenFromPaste,
-  resolvePastedInviteToToken,
-  shareOrCopyInviteMessage,
-} from "@/lib/invite-link-utils";
-import {
   explainDiscoverSwipeMatch,
   type DiscoverSwipeMatchExplanation,
 } from "@/lib/match-score";
@@ -50,13 +45,6 @@ export type DiscoverPageContentProps = {
   undoSwipe: (movieId: string) => Promise<void>;
   isDarkMode: boolean;
   toggleDarkMode: () => Promise<void>;
-  createInviteLink: () => Promise<
-    | { ok: true; url: string }
-    | { ok: false; message: string }
-  >;
-  acceptInviteToken: (
-    token: string,
-  ) => Promise<{ ok: boolean; message: string; partnerName?: string }>;
   logout: () => Promise<void>;
   currentUserName: string | null;
   onboardingPreferences: {
@@ -101,8 +89,6 @@ export function DiscoverPage1Content({
   undoSwipe,
   isDarkMode,
   toggleDarkMode,
-  createInviteLink,
-  acceptInviteToken,
   logout,
   currentUserName,
   onboardingPreferences,
@@ -156,11 +142,6 @@ export function DiscoverPage1Content({
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
-  const pasteInviteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [isPasteInviteModalOpen, setIsPasteInviteModalOpen] = useState(false);
-  const [pasteInviteDraft, setPasteInviteDraft] = useState("");
-  const [invitePasteBusy, setInvitePasteBusy] = useState(false);
-  const [copyInviteBusy, setCopyInviteBusy] = useState(false);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
@@ -197,7 +178,6 @@ export function DiscoverPage1Content({
   });
   useEscapeToClose(isFilterOpen, () => setIsFilterOpen(false));
   useEscapeToClose(isMoreMenuOpen, () => setIsMoreMenuOpen(false));
-  useEscapeToClose(isPasteInviteModalOpen, () => setIsPasteInviteModalOpen(false));
 
   const visibleDiscoverIds = useMemo(
     () => new Set(discoverQueue.map((movie) => movie.id)),
@@ -934,80 +914,6 @@ export function DiscoverPage1Content({
     [],
   );
 
-  const openPasteInviteModal = useCallback(() => {
-    setIsMoreMenuOpen(false);
-    setPasteInviteDraft("");
-    setIsPasteInviteModalOpen(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isPasteInviteModalOpen) {
-      return;
-    }
-    queueMicrotask(() => {
-      pasteInviteTextareaRef.current?.focus();
-    });
-  }, [isPasteInviteModalOpen]);
-
-  const handleSubmitPastedInvite = useCallback(async () => {
-    const token = await resolvePastedInviteToToken(pasteInviteDraft);
-    if (!token) {
-      showMenuBanner({
-        ok: false,
-        message:
-          "Couldn’t find a valid invite. Paste a connect link, a short /c/… link, or a token that starts with invite-.",
-      });
-      return;
-    }
-
-    setInvitePasteBusy(true);
-    try {
-      const result = await acceptInviteToken(token);
-      const message = result.ok
-        ? `Connected with ${result.partnerName ?? "your match"}.`
-        : result.message;
-      showMenuBanner({ ok: result.ok, message }, () => void handleSubmitPastedInvite());
-      if (result.ok) {
-        setIsPasteInviteModalOpen(false);
-        setPasteInviteDraft("");
-      }
-    } finally {
-      setInvitePasteBusy(false);
-    }
-  }, [acceptInviteToken, pasteInviteDraft, showMenuBanner]);
-
-  const handleCopyMyLink = useCallback(async () => {
-    setCopyInviteBusy(true);
-    try {
-      const created = await createInviteLink();
-      if (!created.ok) {
-        setIsMoreMenuOpen(false);
-        showMenuBanner(
-          { ok: false, message: created.message },
-          () => void handleCopyMyLink(),
-        );
-        return;
-      }
-      // Copy/share while the menu is still open so the click counts as a user gesture
-      // for the Clipboard API (after await, activation is often lost on some browsers).
-      const shared = await shareOrCopyInviteMessage(created.url, currentUserName, {
-        preferCopy: true,
-      });
-      setIsMoreMenuOpen(false);
-      showMenuBanner(
-        {
-          ok: shared.ok,
-          message:
-            shared.message ||
-            (shared.ok ? "Done." : "Couldn’t copy. Try again."),
-        },
-        shared.ok ? undefined : () => void handleCopyMyLink(),
-      );
-    } finally {
-      setCopyInviteBusy(false);
-    }
-  }, [createInviteLink, currentUserName, showMenuBanner]);
-
   const persistOnboarding = async (skipSelection: boolean) => {
     setIsSavingOnboarding(true);
     const favoriteGenres = skipSelection
@@ -1391,18 +1297,17 @@ export function DiscoverPage1Content({
                               isDarkMode ? "text-slate-500" : "text-slate-500"
                             }`}
                           >
-                            Connect
+                            Friends
                           </p>
                           <div className="space-y-0.5">
-                            <button
-                              type="button"
-                              disabled={copyInviteBusy}
-                              onClick={() => void handleCopyMyLink()}
-                              className="ui-menu-item flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 text-left font-medium disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                            <Link
+                              href="/friends"
+                              onClick={() => setIsMoreMenuOpen(false)}
+                              className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
                             >
                               <span
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                                  isDarkMode ? "bg-emerald-500/15 text-emerald-200" : "bg-emerald-100 text-emerald-700"
+                                  isDarkMode ? "bg-violet-500/15 text-violet-200" : "bg-violet-100 text-violet-700"
                                 }`}
                               >
                                 <svg
@@ -1414,48 +1319,21 @@ export function DiscoverPage1Content({
                                   strokeLinejoin="round"
                                   aria-hidden
                                 >
-                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                                </svg>
-                              </span>
-                              <span className="min-w-0">
-                                {copyInviteBusy ? "Preparing link…" : "Copy my link"}
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={openPasteInviteModal}
-                              className="ui-menu-item flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 text-left font-medium"
-                            >
-                              <span
-                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                                  isDarkMode ? "bg-amber-500/15 text-amber-200" : "bg-amber-100 text-amber-800"
-                                }`}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  className="ui-icon-md ui-icon-stroke"
-                                  strokeWidth="1.75"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  aria-hidden
-                                >
-                                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                  <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                                  <path d="M17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                                 </svg>
                               </span>
                               <div className="min-w-0 text-left">
-                                <span className="block">Paste link</span>
+                                <span className="block">Friends & search</span>
                                 <span
                                   className={`mt-0.5 block text-xs font-normal ${
                                     isDarkMode ? "text-slate-500" : "text-slate-500"
                                   }`}
                                 >
-                                  Add someone’s invite
+                                  Add people by User ID
                                 </span>
                               </div>
-                            </button>
+                            </Link>
                           </div>
                           <div
                             className={`mt-2 flex w-full items-center justify-between gap-3 rounded-[0.9rem] px-2.5 py-2.5 ${
@@ -1710,88 +1588,6 @@ export function DiscoverPage1Content({
           </div>
         </div>
       ) : null}
-
-      <ModalPortal open={isPasteInviteModalOpen}>
-        <div
-          role="presentation"
-          className={`ui-overlay ui-overlay--fill z-[var(--z-overlay)] flex items-end justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-16 backdrop-blur-md sm:items-center sm:px-4 sm:pb-8 ${
-            isDarkMode ? "bg-slate-950/72" : "bg-slate-950/45"
-          }`}
-          onClick={() => setIsPasteInviteModalOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="paste-invite-dialog-title"
-            className={`ui-popup-motion relative z-10 w-full max-w-md overflow-hidden rounded-[26px] border shadow-[0_24px_80px_rgba(15,23,42,0.35)] ${
-              isDarkMode
-                ? "border-white/12 bg-slate-950 text-slate-100"
-                : "border-slate-200/90 bg-white text-slate-900"
-            }`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className={`ui-shell-header shrink-0 ${isDarkMode ? "border-white/10" : "border-slate-200/80"}`}>
-              <div className="min-w-0 flex-1">
-                <h2
-                  id="paste-invite-dialog-title"
-                  className={`text-lg font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                >
-                  Paste an invite
-                </h2>
-                <p className={`mt-1 text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Paste the message or link you received. We’ll find the invite token.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsPasteInviteModalOpen(false)}
-                aria-label="Close"
-                className={`ui-shell-close ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="space-y-3 px-5 pb-5 pt-2">
-              <textarea
-                ref={pasteInviteTextareaRef}
-                value={pasteInviteDraft}
-                onChange={(event) => setPasteInviteDraft(event.target.value)}
-                rows={5}
-                placeholder="Optional note + https://…/connect?invite=…"
-                disabled={invitePasteBusy}
-                className={`w-full resize-y rounded-[18px] border px-4 py-3 text-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 disabled:opacity-60 ${
-                  isDarkMode
-                    ? "border-white/14 bg-white/[0.06] text-slate-100 placeholder:text-slate-500"
-                    : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
-                }`}
-              />
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsPasteInviteModalOpen(false)}
-                  className="ui-btn ui-btn-secondary min-h-11 w-full sm:w-auto"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={invitePasteBusy}
-                  onClick={() => void handleSubmitPastedInvite()}
-                  className="ui-btn ui-btn-primary min-h-11 w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {invitePasteBusy ? "Connecting…" : "Connect"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ModalPortal>
 
       <ModalPortal open={isSearchOpen}>
         <div

@@ -72,6 +72,7 @@ export default function CheckEmailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: payload.name,
+        publicHandle: payload.publicHandle,
         email: payload.email,
         password: payload.password,
       }),

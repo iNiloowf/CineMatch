@@ -28,8 +28,6 @@ import {
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { CURRENT_USER_KEY } from "@/lib/app-state/constants";
-import { MAX_LINKED_FRIENDS } from "@/lib/invite-link-utils";
-import { publicAppOriginForInviteLinks } from "@/lib/public-app-origin";
 import { useAppToasts } from "@/lib/hooks/use-app-toasts";
 import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
 import {
@@ -50,7 +48,6 @@ import {
 } from "@/lib/account-sync/snapshot-storage";
 import type {
   AccountSyncPayload,
-  InviteRow,
   LinkRow,
   MovieRow,
   ProfileRow,
@@ -110,10 +107,6 @@ type AuthResult =
       message: string;
     };
 
-type InviteLinkResult =
-  | { ok: true; url: string }
-  | { ok: false; message: string };
-
 type SupabaseErrorLike = {
   message?: string;
   code?: string;
@@ -142,6 +135,7 @@ type AppStateContextValue = {
     name: string;
     email: string;
     password: string;
+    publicHandle: string;
   }) => Promise<AuthResult>;
   logout: () => Promise<void>;
   completeOnboarding: (
@@ -160,12 +154,7 @@ type AppStateContextValue = {
     movieId: string,
     shared: boolean,
   ) => Promise<void>;
-  linkUser: (targetUserId: string) => Promise<void>;
   unlinkUser: (targetUserId: string) => Promise<{ ok: boolean; message: string }>;
-  createInviteLink: () => Promise<InviteLinkResult>;
-  acceptInviteToken: (
-    token: string,
-  ) => Promise<{ ok: boolean; message: string; partnerName?: string }>;
   toggleWatched: (
     partnerId: string,
     movieId: string,
@@ -216,6 +205,8 @@ type AppStateContextValue = {
   discoverPersonalizationWeight: number;
   linkedUsers: {
     user: User;
+    linkId: string;
+    requesterId: string;
     status: "accepted" | "pending";
     sharedCount: number;
   }[];
@@ -266,8 +257,22 @@ function normalizeAppDataFromStorage(parsed: AppData): AppData {
   for (const [userId, row] of Object.entries(parsed.settings ?? {})) {
     settings[userId] = mergeProfileSettings(row as Partial<ProfileSettings>);
   }
+  const users: AuthUser[] = (parsed.users ?? []).map((user) => {
+    const row = user as AuthUser;
+    const handle = row.publicHandle?.trim();
+    return {
+      ...row,
+      publicHandle: handle && handle.length > 0 ? handle : placeholderPublicHandle(row.id),
+    };
+  });
+  const links = (parsed.links ?? []).map((l) => ({
+    ...l,
+    requesterId: l.requesterId ?? l.users[0],
+  }));
   return {
     ...parsed,
+    users,
+    links,
     settings,
     watchedPickReviews: parsed.watchedPickReviews ?? [],
   };
@@ -295,10 +300,38 @@ function getAvatarText(name: string, email: string) {
   return email.slice(0, 2).toUpperCase() || "CM";
 }
 
+function placeholderPublicHandle(userId: string): string {
+  const compact =
+    userId
+      .replace(/^user-/, "")
+      .replace(/-/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || "member";
+  const suffix = compact.slice(0, 22);
+  return `cm_${suffix}`.slice(0, 28);
+}
+
+function uniquePublicHandleFromEmail(users: AuthUser[], email: string): string {
+  const rawLocal = (email.split("@")[0] ?? "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "") || "user";
+  const base = rawLocal.slice(0, 22);
+  let handle = base;
+  let n = 0;
+  while (users.some((entry) => entry.publicHandle.toLowerCase() === handle.toLowerCase())) {
+    n += 1;
+    handle = `${base.slice(0, 16)}_${n}`;
+  }
+  return handle.toLowerCase();
+}
+
 function ensureLocalUser(
   current: AppData,
   payload: {
     id: string;
+    publicHandle?: string;
     name: string;
     email: string;
     avatar?: string;
@@ -311,14 +344,20 @@ function ensureLocalUser(
   },
 ) {
   const existingUser = current.users.find((user) => user.id === payload.id);
+  const incomingHandle = payload.publicHandle?.trim();
 
   if (existingUser) {
+    const nextHandle =
+      incomingHandle && incomingHandle.length > 0
+        ? incomingHandle
+        : existingUser.publicHandle;
     return {
       ...current,
       users: current.users.map((user) =>
         user.id === payload.id
           ? {
               ...user,
+              publicHandle: nextHandle,
               name: payload.name,
               email: payload.email,
               avatar: payload.avatar ?? user.avatar,
@@ -342,6 +381,10 @@ function ensureLocalUser(
 
   const nextUser: AuthUser = {
     id: payload.id,
+    publicHandle:
+      incomingHandle && incomingHandle.length > 0
+        ? incomingHandle
+        : placeholderPublicHandle(payload.id),
     name: payload.name,
     email: payload.email,
     password: "",
@@ -401,18 +444,9 @@ function mapLinkRow(link: LinkRow) {
   return {
     id: link.id,
     users: [link.requester_id, link.target_id] as [string, string],
+    requesterId: link.requester_id,
     status: link.status,
     createdAt: link.created_at,
-  };
-}
-
-function mapInviteRow(invite: InviteRow) {
-  return {
-    id: invite.id,
-    inviterId: invite.inviter_id,
-    token: invite.token,
-    createdAt: invite.created_at,
-    usedAt: invite.used_at,
   };
 }
 
@@ -961,17 +995,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     persistAccountSnapshot(activeUserId, payload);
 
     const linkRows = payload.links ?? [];
-    const partnerIds = Array.from(
+    const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
+    const acceptedPartnerIds = Array.from(
       new Set(
-        linkRows.map((link) =>
+        acceptedLinks.map((link) =>
           link.requester_id === activeUserId ? link.target_id : link.requester_id,
         ),
       ),
     );
     const hydratedSwipeUserIds = Array.from(
-      new Set([activeUserId, ...partnerIds]),
+      new Set([activeUserId, ...acceptedPartnerIds]),
     );
-    const sharedLinkIds = linkRows.map((link) => link.id);
+    const sharedLinkIds = acceptedLinks.map((link) => link.id);
     const swipeRows = payload.swipes ?? [];
 
     setData((current) => {
@@ -986,6 +1021,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       for (const profile of allProfiles) {
         next = ensureLocalUser(next, {
           id: profile.id,
+          publicHandle: profile.public_handle,
           name: profile.full_name,
           email: profile.email,
           avatar: profile.avatar_text,
@@ -1011,10 +1047,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ...next.links.filter((link) => !link.users.includes(activeUserId)),
         ...linkRows.map(mapLinkRow),
       ];
-      const currentInvites = [
-        ...next.invites.filter((invite) => invite.inviterId !== activeUserId),
-        ...(payload.invites ?? []).map(mapInviteRow),
-      ];
+      const currentInvites: AppData["invites"] = [];
       const currentSharedWatch = [
         ...next.sharedWatch.filter(
           (item) => !sharedLinkIds.includes(item.pairKey),
@@ -1669,6 +1702,49 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       applyHydratedAccountPayload(activeUserId, payload);
       syncRetryCountRef.current = 0;
       setIsSyncingAccountData(false);
+
+      void (async () => {
+        if (!active) {
+          return;
+        }
+        try {
+          const res = await fetch("/api/profiles/ensure-public-handle", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (!res.ok || !active) {
+            return;
+          }
+          const body = (await res.json()) as { publicHandle?: string };
+          if (!body.publicHandle) {
+            return;
+          }
+          setData((current) => {
+            const u = current.users.find((x) => x.id === activeUserId);
+            if (!u) {
+              return current;
+            }
+            if (u.publicHandle === body.publicHandle) {
+              return current;
+            }
+            return ensureLocalUser(current, {
+              id: activeUserId,
+              publicHandle: body.publicHandle,
+              name: u.name,
+              email: u.email,
+              avatar: u.avatar,
+              avatarImageUrl: u.avatarImageUrl,
+              bio: u.bio,
+              city: u.city,
+              favoriteMovie: u.favoriteMovie,
+              profileHeaderMovie: u.profileHeaderMovie,
+              profileStyle: u.profileStyle,
+            });
+          });
+        } catch {
+          // Legacy handle backfill is best-effort.
+        }
+      })();
     }
 
     void loadSupabaseAppData().catch(() => {
@@ -1849,6 +1925,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
           const partnerInfo: User = {
             id: partner.id,
+            publicHandle: partner.publicHandle,
             name: partner.name,
             email: partner.email,
             avatar: partner.avatar,
@@ -1907,6 +1984,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
             const partnerInfo: User = {
               id: partner.id,
+              publicHandle: partner.publicHandle,
               name: partner.name,
               email: partner.email,
               avatar: partner.avatar,
@@ -1920,6 +1998,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
             return {
               user: partnerInfo,
+              linkId: link.id,
+              requesterId: link.requesterId ?? link.users[0],
               status: link.status,
               sharedCount: sharedMovies.filter(
                 (movie) => movie.partner.id === partnerInfo.id,
@@ -1931,6 +2011,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               item,
             ): item is {
               user: User;
+              linkId: string;
+              requesterId: string;
               status: "accepted" | "pending";
               sharedCount: number;
             } => Boolean(item),
@@ -2252,6 +2334,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const nextUser: AuthUser = {
       id: `user-${crypto.randomUUID()}`,
+      publicHandle: uniquePublicHandleFromEmail(data.users, email),
       name,
       email,
       password,
@@ -2463,72 +2546,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           !(swipe.userId === currentUserId && swipe.movieId === movieId),
       ),
     }));
-  };
-
-  const linkUser = async (targetUserId: string) => {
-    if (!currentUserId || currentUserId === targetUserId) {
-      return;
-    }
-
-    const supabase = getSupabaseBrowserClient();
-
-    if (supabase && isSupabaseConfigured()) {
-      const existing = data.links.some(
-        (link) =>
-          link.users.includes(currentUserId) && link.users.includes(targetUserId),
-      );
-
-      if (existing) {
-        return;
-      }
-
-      const createdAt = new Date().toISOString();
-      const linkPayload = {
-        requester_id: currentUserId,
-        target_id: targetUserId,
-        status: "accepted",
-        created_at: createdAt,
-        accepted_at: createdAt,
-      };
-      const { data: insertedLink, error } = await supabase
-        .from("linked_users")
-        .insert(linkPayload as never)
-        .select("id, requester_id, target_id, status, created_at")
-        .single();
-
-      if (!error && insertedLink) {
-        setData((current) => ({
-          ...current,
-          links: [...current.links, mapLinkRow(insertedLink as LinkRow)],
-        }));
-        setAccountRefreshKey((current) => current + 1);
-        return;
-      }
-    }
-
-    setData((current) => {
-      const exists = current.links.some(
-        (link) =>
-          link.users.includes(currentUserId) && link.users.includes(targetUserId),
-      );
-
-      if (exists) {
-        return current;
-      }
-
-      return {
-        ...current,
-        links: [
-          ...current.links,
-          {
-            id: `link-${crypto.randomUUID()}`,
-            users: [currentUserId, targetUserId],
-            status: "accepted",
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      };
-    });
   };
 
   const unlinkUser = async (
@@ -2769,249 +2786,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ],
       };
     });
-  };
-
-  const createInviteLink = async (): Promise<InviteLinkResult> => {
-    if (!currentUserId || typeof window === "undefined") {
-      return { ok: false, message: "Log in first to create a connect link." };
-    }
-
-    const supabase = getSupabaseBrowserClient();
-
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        const sessionResult = await supabase.auth.getSession();
-        const accessToken = sessionResult.data.session?.access_token;
-
-        if (!accessToken) {
-          return {
-            ok: false,
-            message: "Your login session is missing. Please sign in again.",
-          };
-        }
-
-        const response = await fetch("/api/invite-links", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        const payload = (await response.json()) as {
-          error?: string;
-          url?: string;
-          invite?: InviteRow;
-        };
-
-        const insertedInvite = payload.invite;
-        const inviteUrl = payload.url;
-
-        if (response.ok && insertedInvite && inviteUrl) {
-          setData((current) => ({
-            ...current,
-            invites: [
-              ...current.invites.filter(
-                (invite) => invite.inviterId !== currentUserId,
-              ),
-              mapInviteRow(insertedInvite),
-            ],
-          }));
-
-          return {
-            ok: true,
-            url: inviteUrl,
-          };
-        }
-
-        return {
-          ok: false,
-          message:
-            payload.error ??
-            "We couldn’t save this invite in the database yet.",
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          message:
-            error instanceof Error &&
-            error.message.toLowerCase().includes("failed to fetch")
-              ? "The app couldn’t reach Supabase right now. Check your internet, Supabase project status, and browser/network blockers, then try again."
-              : "We couldn’t reach the invite service right now.",
-        };
-      }
-    }
-
-    const myInviterInvites = data.invites.filter(
-      (invite) => invite.inviterId === currentUserId,
-    );
-    if (myInviterInvites.length > 0) {
-      const latest = myInviterInvites.reduce((a, b) =>
-        a.createdAt >= b.createdAt ? a : b,
-      );
-      return {
-        ok: true,
-        url: `${publicAppOriginForInviteLinks(window.location.origin)}/connect?invite=${latest.token}`,
-      };
-    }
-
-    const token = `invite-${crypto.randomUUID()}`;
-    const createdAt = new Date().toISOString();
-    setData((current) => ({
-      ...current,
-      invites: [
-        ...current.invites.filter(
-          (invite) => invite.inviterId !== currentUserId,
-        ),
-        {
-          id: `invite-${crypto.randomUUID()}`,
-          inviterId: currentUserId,
-          token,
-          createdAt,
-          usedAt: null,
-        },
-      ],
-    }));
-
-    return {
-      ok: true,
-      url: `${publicAppOriginForInviteLinks(window.location.origin)}/connect?invite=${token}`,
-    };
-  };
-
-  const acceptInviteToken = async (token: string) => {
-    if (!currentUserId) {
-      return { ok: false, message: "Log in first to use an invite link." };
-    }
-
-    const accessToken = await getCurrentAccessToken();
-
-    if (accessToken) {
-      try {
-        const response = await fetch("/api/invite-links/accept", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
-        });
-
-        const payload = (await response.json()) as {
-          error?: string;
-          link?: LinkRow;
-          partnerProfile?: ProfileRow | null;
-          invite?: InviteRow;
-        };
-
-        if (!response.ok || !payload.link) {
-          return {
-            ok: false,
-            message: payload.error ?? "We couldn’t connect these accounts yet.",
-          };
-        }
-
-        const acceptedLink = payload.link;
-        const partnerProfile = payload.partnerProfile ?? null;
-        const partnerName =
-          partnerProfile?.full_name ??
-          data.users.find((user) => user.id === acceptedLink.target_id)?.name ??
-          "your match";
-
-        setData((current) => ({
-          ...ensureLocalUser(current, {
-            id: partnerProfile?.id ?? acceptedLink.target_id,
-            name: partnerName,
-            email: partnerProfile?.email ?? "",
-            avatar: partnerProfile?.avatar_text ?? getAvatarText(partnerName, ""),
-            avatarImageUrl: partnerProfile?.avatar_image_url ?? undefined,
-            bio: partnerProfile?.bio ?? "Connected on CineMatch.",
-            city: partnerProfile?.city ?? "",
-            favoriteMovie: partnerProfile
-              ? mapProfileFavoriteMovie(partnerProfile)
-              : undefined,
-            profileHeaderMovie: partnerProfile
-              ? mapProfileHeaderMovie(partnerProfile)
-              : undefined,
-            profileStyle: partnerProfile?.profile_style ?? "classic",
-          }),
-          links: [
-            ...current.links.filter((link) => link.id !== acceptedLink.id),
-            mapLinkRow(acceptedLink),
-          ],
-          invites: payload.invite
-            ? current.invites.map((entry) =>
-                entry.id === payload.invite?.id
-                  ? mapInviteRow(payload.invite)
-                  : entry,
-              )
-            : current.invites,
-        }));
-        setAccountRefreshKey((current) => current + 1);
-
-        return {
-          ok: true,
-          message: "You’re connected now.",
-          partnerName,
-        };
-      } catch {
-        return {
-          ok: false,
-          message: "We couldn’t reach the connection service right now.",
-        };
-      }
-    }
-
-    const invite = data.invites.find((entry) => entry.token === token);
-
-    if (!invite) {
-      return { ok: false, message: "This invite link is invalid." };
-    }
-
-    if (invite.inviterId === currentUserId) {
-      return { ok: false, message: "You can’t use your own invite link." };
-    }
-
-    const alreadyLinked = data.links.some(
-      (link) =>
-        link.users.includes(currentUserId) &&
-        link.users.includes(invite.inviterId),
-    );
-
-    if (alreadyLinked) {
-      return { ok: false, message: "You’re already connected with this person." };
-    }
-
-    const linkCountForUser = (userId: string) =>
-      data.links.filter((link) => link.users.includes(userId)).length;
-
-    if (linkCountForUser(currentUserId) >= MAX_LINKED_FRIENDS) {
-      return {
-        ok: false,
-        message: `You can link up to ${MAX_LINKED_FRIENDS} friends. Remove a connection before accepting a new one.`,
-      };
-    }
-
-    if (linkCountForUser(invite.inviterId) >= MAX_LINKED_FRIENDS) {
-      return {
-        ok: false,
-        message: "This person already has the maximum number of friend links.",
-      };
-    }
-
-    setData((current) => ({
-      ...current,
-      links: [
-        ...current.links,
-        {
-          id: `link-${crypto.randomUUID()}`,
-          users: [currentUserId, invite.inviterId],
-          status: "accepted",
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    }));
-
-    return { ok: true, message: "You’re connected now." };
   };
 
   const toggleWatched = async (
@@ -3465,10 +3239,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         markPickWatched,
         unmarkPickWatched,
         toggleSharedMovie,
-        linkUser,
         unlinkUser,
-        createInviteLink,
-        acceptInviteToken,
         toggleWatched,
         updateProgress,
         updateProfile,

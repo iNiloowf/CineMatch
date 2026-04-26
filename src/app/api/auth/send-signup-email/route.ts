@@ -9,11 +9,12 @@ import {
   isResendTestModeEnabled,
 } from "@/server/resend";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { signupPasswordFieldSchema } from "@/lib/auth-form-schemas";
+import { signupPasswordFieldSchema, signupPublicHandleFieldSchema } from "@/lib/auth-form-schemas";
 import { z } from "zod";
 
 const sendSignupEmailBodySchema = z.object({
   name: z.string().trim().min(1, "Please fill in your name first."),
+  publicHandle: signupPublicHandleFieldSchema,
   email: z.string().trim().email("Please enter a valid email address."),
   password: signupPasswordFieldSchema,
 });
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
   const body = parsedBody.data;
 
   const name = body.name?.trim() ?? "";
+  const publicHandle = body.publicHandle;
   const email = body.email?.trim().toLowerCase() ?? "";
   const password = body.password ?? "";
 
@@ -48,6 +50,19 @@ export async function POST(request: NextRequest) {
       "Email sending is not configured yet. Add your Supabase service role key and Resend settings first.",
       { code: API_ERROR_CODES.INTERNAL, request },
     );
+  }
+
+  const { data: handleOwner } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("public_handle", publicHandle)
+    .maybeSingle();
+
+  if (handleOwner) {
+    return apiJsonError(409, "That User ID is already taken. Pick another one.", {
+      code: API_ERROR_CODES.CONFLICT,
+      request,
+    });
   }
 
   const cooldown = checkEmailCooldown(`signup:${email}`);
@@ -71,6 +86,7 @@ export async function POST(request: NextRequest) {
     options: {
       data: {
         full_name: name,
+        public_handle: publicHandle,
       },
       redirectTo: `${getAppUrl(request)}/auth/callback?next=${encodeURIComponent("/auth/email-confirmed")}`,
     },

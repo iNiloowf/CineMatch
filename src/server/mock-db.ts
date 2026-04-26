@@ -15,6 +15,24 @@ function pairKey(userA: string, userB: string) {
   return [userA, userB].sort().join("::");
 }
 
+function uniquePublicHandleFromEmail(email: string): string {
+  const rawLocal = (email.split("@")[0] ?? "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "") || "user";
+  const base = rawLocal.slice(0, 22);
+  let handle = base;
+  let n = 0;
+  while (
+    database.users.some((entry) => entry.publicHandle.toLowerCase() === handle.toLowerCase())
+  ) {
+    n += 1;
+    handle = `${base.slice(0, 16)}_${n}`;
+  }
+  return handle.toLowerCase();
+}
+
 export function getDatabase() {
   return clone(database);
 }
@@ -66,6 +84,7 @@ export function signupUser(payload: {
 
   const user = {
     id: `user-${crypto.randomUUID()}`,
+    publicHandle: uniquePublicHandleFromEmail(payload.email),
     name: payload.name,
     email: payload.email,
     password: payload.password,
@@ -123,6 +142,7 @@ export function linkUsers(userId: string, targetUserId: string) {
   const link = {
     id: `link-${crypto.randomUUID()}`,
     users: [userId, targetUserId] as [string, string],
+    requesterId: userId,
     status: "accepted" as const,
     createdAt: new Date().toISOString(),
   };

@@ -15,6 +15,7 @@ export const initialAppData: AppData = {
   users: [
     {
       id: "user-admin",
+      publicHandle: "admin_root",
       name: "Admin",
       email: "admin@cinematch.app",
       avatar: "AD",
@@ -23,6 +24,7 @@ export const initialAppData: AppData = {
     },
     {
       id: "user-alex",
+      publicHandle: "alex_rivera",
       name: "Alex Rivera",
       email: "alex@cinematch.app",
       avatar: "AR",
@@ -31,6 +33,7 @@ export const initialAppData: AppData = {
     },
     {
       id: "user-jordan",
+      publicHandle: "jordan_lee",
       name: "Jordan Lee",
       email: "jordan@cinematch.app",
       avatar: "JL",

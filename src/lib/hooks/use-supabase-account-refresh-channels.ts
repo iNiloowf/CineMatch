@@ -52,32 +52,8 @@ export function useSupabaseAccountRefreshChannels(
       )
       .subscribe();
 
-    const inviteChannel = supabase
-      .channel(`invite-links-${currentUserId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "invite_links",
-        },
-        (payload) => {
-          const nextRow = payload.new as Row | null;
-          const previousRow = payload.old as Row | null;
-          const touchesCurrentUser =
-            nextRow?.inviter_id === currentUserId ||
-            previousRow?.inviter_id === currentUserId;
-
-          if (touchesCurrentUser) {
-            bump();
-          }
-        },
-      )
-      .subscribe();
-
     return () => {
       void supabase.removeChannel(linkedChannel);
-      void supabase.removeChannel(inviteChannel);
     };
   }, [currentUserId]);
 }

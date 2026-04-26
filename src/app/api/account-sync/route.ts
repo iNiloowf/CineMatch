@@ -7,6 +7,7 @@ import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 type ProfileRow = {
   id: string;
   email: string;
+  public_handle?: string;
   full_name: string;
   avatar_text: string;
   avatar_image_url?: string | null;
@@ -265,53 +266,57 @@ export async function GET(request: NextRequest) {
 
   const settingsResult = await fetchSettingsRow(currentUserId, supabaseAdmin);
 
-  const [profileResult, linksResult, invitesResult] =
-    await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type, profile_header_movie_id, profile_header_movie_title, profile_header_movie_year, profile_header_poster_url, profile_header_media_type")
-        .eq("id", currentUserId)
-        .maybeSingle(),
-      supabaseAdmin
-        .from("linked_users")
-        .select("id, requester_id, target_id, status, created_at")
-        .or(`requester_id.eq.${currentUserId},target_id.eq.${currentUserId}`),
-      supabaseAdmin
-        .from("invite_links")
-        .select("id, inviter_id, token, created_at, used_at, link_code")
-        .eq("inviter_id", currentUserId)
-        .order("created_at", { ascending: false }),
-    ]);
+  const profileSelect =
+    "id, email, public_handle, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type, profile_header_movie_id, profile_header_movie_title, profile_header_movie_year, profile_header_poster_url, profile_header_media_type";
+
+  const [profileResult, linksResult] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select(profileSelect)
+      .eq("id", currentUserId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("linked_users")
+      .select("id, requester_id, target_id, status, created_at")
+      .or(`requester_id.eq.${currentUserId},target_id.eq.${currentUserId}`),
+  ]);
 
   const linkRows = (linksResult.data ?? []) as LinkRow[];
   const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
-  const partnerIds = Array.from(
+  const acceptedPartnerIds = Array.from(
     new Set(
       acceptedLinks.map((link) =>
         link.requester_id === currentUserId ? link.target_id : link.requester_id,
       ),
     ),
   );
-  const sharedLinkIds = linkRows.map((link) => link.id);
+  const allLinkedProfileIds = Array.from(
+    new Set(
+      linkRows.map((link) =>
+        link.requester_id === currentUserId ? link.target_id : link.requester_id,
+      ),
+    ),
+  );
+  const sharedLinkIds = acceptedLinks.map((link) => link.id);
 
-  const reviewUserIds = [currentUserId, ...partnerIds];
+  const reviewUserIds = [currentUserId, ...acceptedPartnerIds];
   const [partnerProfilesResult, ownSwipesResult, partnerAcceptedSwipesResult, sharedWatchResult, watchedPickReviewsResult] =
     await Promise.all([
-      partnerIds.length > 0
+      allLinkedProfileIds.length > 0
         ? supabaseAdmin
             .from("profiles")
-            .select("id, email, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type, profile_header_movie_id, profile_header_movie_title, profile_header_movie_year, profile_header_poster_url, profile_header_media_type")
-            .in("id", partnerIds)
+            .select(profileSelect)
+            .in("id", allLinkedProfileIds)
         : Promise.resolve({ data: [] as ProfileRow[] }),
       supabaseAdmin
         .from("swipes")
         .select("user_id, movie_id, decision, created_at")
         .eq("user_id", currentUserId),
-      partnerIds.length > 0
+      acceptedPartnerIds.length > 0
         ? supabaseAdmin
             .from("swipes")
             .select("user_id, movie_id, decision, created_at")
-            .in("user_id", partnerIds)
+            .in("user_id", acceptedPartnerIds)
             .eq("decision", "accepted")
         : Promise.resolve({ data: [] as SwipeRow[] }),
       sharedLinkIds.length > 0
@@ -359,7 +364,7 @@ export async function GET(request: NextRequest) {
       profile: (profileResult.data ?? null) as ProfileRow | null,
       settings: settingsResult.data,
       links: linkRows,
-      invites: (invitesResult.data ?? []) as InviteRow[],
+      invites: [] as InviteRow[],
       partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],
       swipes: swipeRows,
       sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
