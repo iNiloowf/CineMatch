@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ModalPortal } from "@/components/modal-portal";
 import { DEFAULT_PROFILE_AVATAR_PRESETS } from "@/lib/default-profile-avatar-presets";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -21,6 +21,7 @@ type ProfileAvatarEditorModalProps = {
   canRemoveProfilePhoto?: boolean;
 };
 
+/** Base crop UI size (pick / fallback); adjust step uses measured `previewPx` for a large full-screen editor. */
 const PREVIEW_PX = 260;
 const EXPORT_SIZE = 640;
 const ZOOM_MIN = 1;
@@ -142,6 +143,41 @@ export function ProfileAvatarEditorModal({
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; panX: number; panY: number } | null>(
     null,
   );
+  /** Pixel size of the on-screen crop circle; drives layout math and JPEG export. */
+  const [previewPx, setPreviewPx] = useState(PREVIEW_PX);
+
+  useLayoutEffect(() => {
+    if (!open || step !== "adjust") {
+      return;
+    }
+    const recalc = () => {
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      // Leave room for header, zoom row, copy, and footer; safe for small phones in landscape
+      const reservedY = 288;
+      const maxW = Math.max(0, vw - 20);
+      const maxH = Math.max(0, vh - reservedY);
+      const next = Math.floor(Math.max(200, Math.min(440, Math.min(maxW, maxH))));
+
+      setPreviewPx((prev) => {
+        if (next === prev) {
+          return prev;
+        }
+        if (prev > 0) {
+          const r = next / prev;
+          queueMicrotask(() => {
+            setPan((p) => ({ x: p.x * r, y: p.y * r }));
+          });
+        }
+        return next;
+      });
+    };
+    recalc();
+    window.addEventListener("resize", recalc);
+    return () => {
+      window.removeEventListener("resize", recalc);
+    };
+  }, [open, step, sourceUrl]);
 
   const resetInternal = useCallback(() => {
     presetFetchAbortRef.current?.abort();
@@ -155,6 +191,7 @@ export function ProfileAvatarEditorModal({
     setLoadError(false);
     setExportBusy(false);
     setPresetLoadingId(null);
+    setPreviewPx(PREVIEW_PX);
     if (sourceUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(sourceUrl);
     }
@@ -235,6 +272,7 @@ export function ProfileAvatarEditorModal({
     setStep("pick");
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    setPreviewPx(PREVIEW_PX);
     setImageReady(false);
     setNaturalSize({ w: 1, h: 1 });
     setLoadError(false);
@@ -260,7 +298,7 @@ export function ProfileAvatarEditorModal({
         zoom,
         pan.x,
         pan.y,
-        PREVIEW_PX,
+        previewPx,
         EXPORT_SIZE,
       );
       if (blob) {
@@ -281,14 +319,15 @@ export function ProfileAvatarEditorModal({
   };
 
   const previewLayout =
-    imageReady && naturalSize.w > 0 && naturalSize.h > 0
+    imageReady && naturalSize.w > 0 && naturalSize.h > 0 && step === "adjust"
       ? (() => {
           const { w: iw, h: ih } = naturalSize;
-          const base = Math.max(PREVIEW_PX / iw, PREVIEW_PX / ih) * zoom;
+          const s = previewPx;
+          const base = Math.max(s / iw, s / ih) * zoom;
           const dw = iw * base;
           const dh = ih * base;
-          const left = (PREVIEW_PX - dw) / 2 + pan.x;
-          const top = (PREVIEW_PX - dh) / 2 + pan.y;
+          const left = (s - dw) / 2 + pan.x;
+          const top = (s - dh) / 2 + pan.y;
           return { dw, dh, left, top };
         })()
       : null;
@@ -336,9 +375,15 @@ export function ProfileAvatarEditorModal({
     ? "text-slate-400 hover:bg-white/8 hover:text-slate-100"
     : "text-slate-600 hover:bg-slate-100";
 
+  const isAdjust = step === "adjust";
+
   return (
     <ModalPortal open={open}>
-      <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+      <div
+        className={`ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md ${
+          isAdjust ? "ui-overlay--fill p-0" : ""
+        }`}
+      >
         <button
           type="button"
           aria-label="Close"
@@ -349,11 +394,15 @@ export function ProfileAvatarEditorModal({
           className="absolute inset-0 cursor-default bg-transparent"
         />
         <div
-          className={`ui-shell ui-shell--dialog-lg relative z-10 mx-auto max-h-[min(90dvh,44rem)] w-full min-h-0 overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${shellBorder}`}
+          className={
+            isAdjust
+              ? `ui-shell relative z-10 flex h-[100dvh] min-h-0 w-full max-w-none flex-1 flex-col overflow-hidden rounded-none border-0 shadow-none ${isDarkMode ? "bg-slate-950" : "bg-white"}`
+              : `ui-shell ui-shell--dialog-lg relative z-10 mx-auto max-h-[min(90dvh,44rem)] w-full min-h-0 overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${shellBorder}`
+          }
         >
           <span className="ui-modal-accent-bar" aria-hidden />
           <div
-            className={`flex items-start justify-between gap-3 border-b px-4 py-4 sm:px-5 ${
+            className={`flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-5 sm:py-4 ${
               isDarkMode ? "border-b-white/10" : "border-b-slate-100"
             }`}
           >
@@ -514,21 +563,23 @@ export function ProfileAvatarEditorModal({
               )}
             </>
           ) : (
-            <div className="space-y-5 px-4 py-5 sm:px-5">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 sm:px-5">
               <button
                 type="button"
                 onClick={handleBackFromAdjust}
-                className={`text-xs font-bold uppercase tracking-wide ${isDarkMode ? "text-violet-300 hover:text-violet-200" : "text-violet-700 hover:text-violet-800"}`}
+                className={`shrink-0 self-start text-xs font-bold uppercase tracking-wide ${
+                  isDarkMode ? "text-violet-300 hover:text-violet-200" : "text-violet-700 hover:text-violet-800"
+                }`}
               >
                 ← Back
               </button>
 
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2">
                 <div
-                  className={`relative touch-none select-none overflow-hidden rounded-full shadow-inner ring-2 ${
+                  className={`relative flex-shrink-0 touch-none select-none overflow-hidden rounded-full shadow-inner ring-2 ${
                     isDarkMode ? "ring-violet-400/30" : "ring-violet-200"
                   }`}
-                  style={{ width: PREVIEW_PX, height: PREVIEW_PX }}
+                  style={{ width: previewPx, height: previewPx }}
                   onPointerDown={onPointerDownPreview}
                   onPointerMove={onPointerMovePreview}
                   onPointerUp={onPointerUpPreview}
@@ -604,7 +655,7 @@ export function ProfileAvatarEditorModal({
                       resetInternal();
                       onRequestRemoveProfilePhoto();
                     }}
-                    className={`w-full text-center text-xs font-semibold underline decoration-transparent underline-offset-2 transition hover:decoration-current ${
+                    className={`w-full max-w-sm shrink-0 text-center text-xs font-semibold underline decoration-transparent underline-offset-2 transition hover:decoration-current ${
                       isDarkMode ? "text-rose-300" : "text-rose-700"
                     }`}
                   >
@@ -615,7 +666,11 @@ export function ProfileAvatarEditorModal({
             </div>
           )}
 
-          <div className={`border-t px-4 py-3 sm:px-5 ${isDarkMode ? "border-white/10" : "border-slate-100"}`}>
+          <div
+            className={`shrink-0 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:px-5 ${
+              isDarkMode ? "border-white/10" : "border-slate-100"
+            }`}
+          >
             {step === "pick" ? (
               <div className="flex flex-col gap-2">
                 {canRemoveProfilePhoto && onRequestRemoveProfilePhoto ? (
