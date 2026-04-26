@@ -1253,7 +1253,7 @@ export default function ProfilePage() {
           <div
             className={`gap-3 sm:gap-4 ${
               isEditing
-                ? `flex flex-col sm:flex-row sm:items-start sm:justify-between ${
+                ? `flex flex-col ${
                     isDarkMode
                       ? "rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4"
                       : "rounded-2xl border border-slate-200/90 bg-white/55 p-3 shadow-sm sm:p-4"
@@ -1261,6 +1261,41 @@ export default function ProfilePage() {
                 : "flex items-start justify-between"
             }`}
           >
+            {isEditing ? (
+              <div
+                className={`flex w-full shrink-0 items-center justify-end gap-2 border-b pb-3 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200/80"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetAvatarDraft();
+                    setSaveFeedback("idle");
+                    setSaveMessage("");
+                    setRemovePhotoModalOpen(false);
+                    setIsEditing(false);
+                  }}
+                  aria-label="Close edit profile"
+                  title="Close edit profile"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+                    isDarkMode ? "bg-white/10 text-slate-100 hover:bg-white/15" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2.2" aria-hidden>
+                    <path d="M18 6 6 18" strokeLinecap="round" />
+                    <path d="m6 6 12 12" strokeLinecap="round" />
+                  </svg>
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveFeedback === "saving"}
+                  className={`auth-primary-glow rounded-full px-4 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                >
+                  {saveFeedback === "saving" ? "Saving..." : "Save"}
+                </button>
+              </div>
+            ) : null}
             <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
               <div className="profile-avatar-pop relative flex shrink-0 flex-col items-center self-start">
                 <div
@@ -1401,41 +1436,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            {isEditing ? (
-              <div
-                className={`flex w-full shrink-0 items-center justify-end gap-2 pt-2 sm:w-auto sm:justify-end sm:pt-0 ${
-                  isDarkMode ? "border-t border-white/10 sm:border-0" : "border-t border-slate-200/80 sm:border-0"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetAvatarDraft();
-                    setSaveFeedback("idle");
-                    setSaveMessage("");
-                    setRemovePhotoModalOpen(false);
-                    setIsEditing(false);
-                  }}
-                  aria-label="Close edit profile"
-                  title="Close edit profile"
-                  className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
-                    isDarkMode ? "bg-white/10 text-slate-100 hover:bg-white/15" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4" strokeWidth="2.2" aria-hidden>
-                    <path d="M18 6 6 18" strokeLinecap="round" />
-                    <path d="m6 6 12 12" strokeLinecap="round" />
-                  </svg>
-                </button>
-                <button
-                  type="submit"
-                  disabled={saveFeedback === "saving"}
-                  className={`auth-primary-glow rounded-full px-4 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
-                >
-                  {saveFeedback === "saving" ? "Saving..." : "Save"}
-                </button>
-              </div>
-            ) : (
+            {!isEditing ? (
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
@@ -1447,7 +1448,7 @@ export default function ProfilePage() {
                   <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>
               </button>
-            )}
+            ) : null}
           </div>
           {isEditing && clearAvatarOnSave ? (
             <p
