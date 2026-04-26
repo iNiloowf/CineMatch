@@ -62,6 +62,7 @@ import {
   AppData,
   AuthUser,
   FavoriteMovieSummary,
+  FriendLinkNotifyPayload,
   MutualMatchToastPayload,
   Movie,
   OnboardingPreferences,
@@ -135,6 +136,8 @@ type AppStateContextValue = {
   dismissUnlockedAchievement: () => void;
   mutualMatchToast: MutualMatchToastPayload | null;
   dismissMutualMatchToast: () => void;
+  friendLinkNotifyToast: FriendLinkNotifyPayload | null;
+  dismissFriendLinkNotifyToast: () => void;
   login: (email: string, password: string) => Promise<AuthResult>;
   signup: (payload: {
     name: string;
@@ -1024,12 +1027,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const {
     unlockedAchievement,
     mutualMatchToast,
+    friendLinkNotifyToast,
     dismissUnlockedAchievement,
     dismissMutualMatchToast,
+    dismissFriendLinkNotifyToast,
     setUnlockedAchievement,
     setMutualMatchToast,
+    setFriendLinkNotifyToast,
   } = useAppToasts();
   const syncRetryCountRef = useRef(0);
+  const friendLinksSnapshotRef = useRef(new Map<string, "pending" | "accepted">());
+  const friendLinksBaselineRef = useRef(false);
   const isDarkMode = preferredDarkMode;
   const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
   const currentSettings = currentUserId ? data.settings[currentUserId] : null;
@@ -2103,6 +2111,96 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             } => Boolean(item),
           )
       : [];
+
+  const friendLinksForNotify = useMemo(
+    () =>
+      currentUserId
+        ? data.links.filter((link) => link.users.includes(currentUserId))
+        : [],
+    [data.links, currentUserId],
+  );
+  const friendLinksFingerprint = useMemo(
+    () => friendLinksForNotify.map((l) => `${l.id}:${l.status}`).join("|"),
+    [friendLinksForNotify],
+  );
+
+  useEffect(() => {
+    if (!currentUserId) {
+      friendLinksBaselineRef.current = false;
+      friendLinksSnapshotRef.current = new Map();
+    }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (!isReady || !currentUserId) {
+      return;
+    }
+    const myLinks = friendLinksForNotify;
+    const prev = friendLinksSnapshotRef.current;
+    const allowNotify = (data.settings[currentUserId]?.notifications ?? true) !== false;
+
+    if (!friendLinksBaselineRef.current) {
+      const next = new Map<string, "pending" | "accepted">();
+      for (const l of myLinks) {
+        next.set(l.id, l.status);
+      }
+      friendLinksSnapshotRef.current = next;
+      friendLinksBaselineRef.current = true;
+      return;
+    }
+
+    const resolvePartner = (link: (typeof data.links)[number]) => {
+      const partnerId = link.users.find((id) => id !== currentUserId);
+      if (!partnerId) {
+        return null;
+      }
+      return data.users.find((u) => u.id === partnerId) ?? null;
+    };
+
+    const candidates: FriendLinkNotifyPayload[] = [];
+    for (const link of myLinks) {
+      const o = prev.get(link.id);
+      const req = link.requesterId ?? link.users[0];
+      if (o === undefined) {
+        if (link.status === "pending" && req !== currentUserId) {
+          const p = resolvePartner(link);
+          candidates.push({
+            key: `${link.id}-incoming`,
+            kind: "incoming_request",
+            publicHandle: p?.publicHandle?.trim() || "unknown",
+            displayName: (p?.name ?? p?.publicHandle ?? "Someone") as string,
+          });
+        }
+      } else if (o === "pending" && link.status === "accepted" && req === currentUserId) {
+        const p = resolvePartner(link);
+        candidates.push({
+          key: `${link.id}-accepted`,
+          kind: "request_accepted",
+          publicHandle: p?.publicHandle?.trim() || "unknown",
+          displayName: (p?.name ?? p?.publicHandle ?? "Someone") as string,
+        });
+      }
+    }
+
+    const next = new Map<string, "pending" | "accepted">();
+    for (const l of myLinks) {
+      next.set(l.id, l.status);
+    }
+    friendLinksSnapshotRef.current = next;
+
+    if (allowNotify && candidates.length) {
+      const firstIncoming = candidates.find((c) => c.kind === "incoming_request");
+      setFriendLinkNotifyToast(firstIncoming ?? candidates[0]!);
+    }
+  }, [
+    isReady,
+    currentUserId,
+    friendLinksFingerprint,
+    friendLinksForNotify,
+    data.settings,
+    data.users,
+    setFriendLinkNotifyToast,
+  ]);
 
   const sharedMovieGroups: SharedMovieGroup[] = linkedUsers
     .filter((linked) => linked.status === "accepted")
@@ -3369,6 +3467,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         dismissUnlockedAchievement,
         mutualMatchToast,
         dismissMutualMatchToast,
+        friendLinkNotifyToast,
+        dismissFriendLinkNotifyToast,
         login,
         signup,
         logout,

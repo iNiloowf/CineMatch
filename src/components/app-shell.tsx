@@ -2,6 +2,7 @@
 
 import { AchievementToast } from "@/components/achievement-toast";
 import { BottomNav } from "@/components/bottom-nav";
+import { FriendLinkToast } from "@/components/friend-link-toast";
 import { MatchToast } from "@/components/match-toast";
 import { OfflineBanner } from "@/components/offline-banner";
 import { TabScreenTransition } from "@/components/tab-screen-transition";
@@ -14,6 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     dismissUnlockedAchievement,
     mutualMatchToast,
     dismissMutualMatchToast,
+    friendLinkNotifyToast,
+    dismissFriendLinkNotifyToast,
   } = useAppState();
 
   return (
@@ -46,6 +49,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         toast={mutualMatchToast}
         isDarkMode={isDarkMode}
         onClose={dismissMutualMatchToast}
+      />
+      <FriendLinkToast
+        toast={friendLinkNotifyToast}
+        isDarkMode={isDarkMode}
+        onClose={dismissFriendLinkNotifyToast}
       />
       <div
         data-app-shell-frame="true"

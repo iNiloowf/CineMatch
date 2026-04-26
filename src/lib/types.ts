@@ -169,3 +169,11 @@ export type MutualMatchToastPayload = {
   movieTitle: string;
   partners: string[];
 };
+
+/** In-app friend link banner (not push): someone added you, or they accepted your request */
+export type FriendLinkNotifyPayload = {
+  key: string;
+  kind: "incoming_request" | "request_accepted";
+  publicHandle: string;
+  displayName: string;
+};
