@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
@@ -46,11 +46,21 @@ export default function SignInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
 
-  useEffect(() => {
-    if (isReady && currentUserId) {
-      router.replace("/discover");
+  /**
+   * Logged-in users on `/` must land on the app. `router.replace` is sometimes a no-op in
+   * embedded WebViews and Capacitor, which leaves the “Opening your movie lounge…” screen forever.
+   * A same-origin `location.replace` is reliable.
+   */
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || !isReady || !currentUserId) {
+      return;
     }
-  }, [currentUserId, isReady, router]);
+    const path = window.location.pathname;
+    if (path !== "/" && path !== "") {
+      return;
+    }
+    window.location.replace(new URL("/discover", window.location.origin).toString());
+  }, [currentUserId, isReady]);
 
   const pageBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
