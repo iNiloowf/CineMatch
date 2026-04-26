@@ -35,11 +35,10 @@ import { useAppState } from "@/lib/app-state";
 const ONBOARDING_STEP_COUNT = 3;
 /**
  * How long the current card + feedback stay before we advance. Must be ≥
- * `--motion-duration-discover-swipe-accept` and ≥ burst + heart delay so nothing clips.
+ * `--motion-duration-discover-swipe-accept` / `swipe-reject` (900ms) and ≥ accept burst + heart delay.
  */
 const DISCOVER2_SWIPE_ACCEPT_COMMIT_MS = 940;
-/** Reject only needs swipe-out + pass overlay; shorter than accept. */
-const DISCOVER2_SWIPE_REJECT_COMMIT_MS = 340;
+const DISCOVER2_SWIPE_REJECT_COMMIT_MS = 940;
 
 export type DiscoverPageContentProps = {
   currentUserId: string | null;
