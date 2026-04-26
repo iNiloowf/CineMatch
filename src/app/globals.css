@@ -84,7 +84,7 @@
    * Discover uses the compact token via `--app-main-pad-bottom` in AppShell; do not change discover2 TSX.
    */
   --app-bottom-nav-overlay: calc(
-    env(safe-area-inset-bottom, 0px) + 0.9rem + clamp(7.25rem, 30vmin, 9.25rem)
+    env(safe-area-inset-bottom, 0px) + 1rem + clamp(8.25rem, 34vmin, 11rem)
   );
   --app-bottom-nav-overlay-compact: calc(
     env(safe-area-inset-bottom, 0px) + 0.5rem + clamp(5.5rem, 22vmin, 7rem)

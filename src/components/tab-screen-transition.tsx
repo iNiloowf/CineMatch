@@ -46,8 +46,15 @@ export function TabScreenTransition({ children }: { children: ReactNode }) {
         ? "tab-route-surface tab-route-enter tab-route-enter--back"
         : "tab-route-surface tab-route-enter tab-route-enter--fade";
 
-  /** Fills #main-content so tab routes (esp. Discover) can use flex-1 for full-height cards. */
-  const layoutClass = `${transitionClass} flex w-full min-w-0 max-w-full min-h-0 flex-1 flex-col overflow-x-clip`;
+  /**
+   * /discover: `min-h-0` so the swipe stack can size to the viewport. Everywhere else: `min-h-min`
+   * so the flex child’s height is at least its content; with `min-h-0` alone, WebKit often
+   * under-measures `scrollHeight` and the last cards sit under the fixed bottom nav.
+   */
+  const isDiscoverRoute = pathname === "/discover";
+  const layoutClass = `${transitionClass} flex w-full min-w-0 max-w-full ${
+    isDiscoverRoute ? "min-h-0" : "min-h-min"
+  } flex-1 flex-col overflow-x-clip`;
 
   return (
     <div

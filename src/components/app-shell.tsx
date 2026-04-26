@@ -92,8 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
              */}
             <div
               aria-hidden
-              className="w-full shrink-0"
-              style={{ minHeight: "var(--app-main-pad-bottom)" } satisfies CSSProperties}
+              className="w-full shrink-0 [block-size:var(--app-main-pad-bottom)]"
             />
           </div>
         </div>
