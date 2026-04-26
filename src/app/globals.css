@@ -1192,7 +1192,8 @@ input[type="range"] {
   z-index: 1;
   isolation: isolate;
   background: linear-gradient(180deg, var(--bg-scroll) 0%, var(--bg-stage) 52%, var(--bg-scroll) 100%);
-  border-radius: 1.35rem;
+  /* Match discover2 Bumble-style card (rounded-[28px]) so the stage doesn’t clip the poster card */
+  border-radius: 1.75rem;
 }
 
 [data-app-shell-root][data-theme="dark"] .discover-card-stage {
@@ -1219,7 +1220,8 @@ input[type="range"] {
  * `next/image` + fill have no size — the poster "disappears". Keep a floor in CSS and TSX.
  */
 section[data-poster-layout="immersive"] .discover-immersive-poster-slot {
-  min-height: max(12.5rem, min(42dvh, 52svh));
+  /* Bumble-style: large hero; flex-1 grows inside the card — floor keeps poster obvious on short viewports */
+  min-height: max(14rem, min(52dvh, 64svh));
   flex: 1 1 auto;
 }
 

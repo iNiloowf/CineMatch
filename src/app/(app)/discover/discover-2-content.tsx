@@ -1009,7 +1009,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md min-w-0 min-h-0 flex-1 flex-col gap-1.5 overflow-visible sm:gap-2.5"
+      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md min-w-0 min-h-0 flex-1 flex-col gap-1 overflow-visible sm:gap-2"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
@@ -2254,8 +2254,14 @@ export function DiscoverPage2Content({
         }`}
       >
         {movie ? (
-          /* Swipe card uses full width of the same max-w-md column as the page (no extra px-1 — aligns with search toolbar). */
-          <div className="discover2-main-card flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[22px] sm:rounded-[24px]">
+          /* Bumble-style: one large rounded card, full-bleed poster; width follows app column (max-w-md). */
+          <div
+            className={`discover2-main-card flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[28px] sm:rounded-[32px] ring-1 ${
+              isDarkMode
+                ? "ring-white/10 shadow-[0_20px_55px_rgba(0,0,0,0.5)]"
+                : "ring-slate-200/90 shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
+            }`}
+          >
             <div
               className={`discover-card-stage flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-visible ${
                 transitionState === "idle"

@@ -385,12 +385,12 @@ export function MovieSwipeCard({
 
   if (immersive) {
     return (
-      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col self-stretch max-h-[calc(min(100dvh,100svh)-9.25rem)] sm:max-h-[calc(min(100dvh,100svh)-8.5rem)]">
+      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col self-stretch max-h-[calc(min(100dvh,100svh)-7.35rem)] sm:max-h-[calc(min(100dvh,100svh)-6.85rem)]">
         <SurfaceCard
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
-          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[22px] sm:rounded-[24px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[28px] sm:rounded-[32px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
@@ -414,7 +414,7 @@ export function MovieSwipeCard({
 
           <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col">
             <div
-              className="discover-immersive-poster-slot relative z-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(12.5rem,min(42dvh,52svh))] max-h-[min(66dvh,40rem)]"
+              className="discover-immersive-poster-slot relative z-0 min-h-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(14rem,min(52dvh,64svh))]"
             >
               <div
                 className="absolute inset-0 z-0"
@@ -685,7 +685,7 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`mt-auto shrink-0 w-full min-w-0 max-w-full border-t rounded-b-[22px] sm:rounded-b-[24px] px-3 pt-2.5 sm:px-3.5 ${isDarkMode
+              className={`mt-auto shrink-0 w-full min-w-0 max-w-full border-t rounded-b-[28px] sm:rounded-b-[32px] px-3 pt-2.5 sm:px-3.5 ${isDarkMode
                 ? "border-white/10 bg-slate-950/[0.98]"
                 : "border-slate-200/90 bg-white"} pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))]`}
             >
