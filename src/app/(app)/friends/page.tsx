@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { getClientAccessToken } from "@/lib/get-access-token";
@@ -106,6 +113,83 @@ export default function FriendsPage() {
 
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  const searchRequestIdRef = useRef(0);
+  const SEARCH_DEBOUNCE_MS = 320;
+
+  const executeSearch = useCallback(
+    async (rawQuery: string) => {
+      if (!currentUserId) {
+        return;
+      }
+      const query = rawQuery.trim();
+      if (query.length < 2) {
+        setSearchResults([]);
+        setSearchError(null);
+        return;
+      }
+      const myRequest = ++searchRequestIdRef.current;
+      setSearchError(null);
+      setSearchBusy(true);
+      try {
+        const token = await getClientAccessToken();
+        if (!token) {
+          if (myRequest === searchRequestIdRef.current) {
+            setSearchError("Log in to search.");
+            setSearchResults([]);
+          }
+          return;
+        }
+        const res = await fetch(`/api/profiles/search?q=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const payload = (await res.json()) as {
+          error?: string;
+          results?: {
+            id: string;
+            displayName: string;
+            publicHandle: string;
+            avatarText: string;
+            avatarImageUrl: string | null;
+          }[];
+        };
+        if (myRequest !== searchRequestIdRef.current) {
+          return;
+        }
+        if (!res.ok) {
+          setSearchError(payload.error ?? "Search failed.");
+          setSearchResults([]);
+          return;
+        }
+        setSearchResults(payload.results ?? []);
+      } catch {
+        if (myRequest === searchRequestIdRef.current) {
+          setSearchError("Couldn’t search right now.");
+          setSearchResults([]);
+        }
+      } finally {
+        if (myRequest === searchRequestIdRef.current) {
+          setSearchBusy(false);
+        }
+      }
+    },
+    [currentUserId],
+  );
+
+  useEffect(() => {
+    if (tab !== "search" || !currentUserId) {
+      return;
+    }
+    const query = q.trim();
+    if (query.length < 2) {
+      setSearchResults([]);
+      setSearchError(null);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      void executeSearch(query);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [q, tab, currentUserId, executeSearch]);
 
   useEffect(() => {
     const t = (searchParams.get("tab") as TabId | null) ?? "search";
@@ -135,51 +219,9 @@ export default function FriendsPage() {
     [linkedUsers],
   );
 
-  const runSearch = useCallback(async () => {
-    if (!currentUserId) {
-      return;
-    }
-    const query = q.trim();
-    if (query.length < 2) {
-      setSearchError("Type at least 2 characters.");
-      setSearchResults([]);
-      return;
-    }
-    setSearchError(null);
-    setSearchBusy(true);
-    try {
-      const token = await getClientAccessToken();
-      if (!token) {
-        setSearchError("Log in to search.");
-        setSearchResults([]);
-        return;
-      }
-      const res = await fetch(`/api/profiles/search?q=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const payload = (await res.json()) as {
-        error?: string;
-        results?: {
-          id: string;
-          displayName: string;
-          publicHandle: string;
-          avatarText: string;
-          avatarImageUrl: string | null;
-        }[];
-      };
-      if (!res.ok) {
-        setSearchError(payload.error ?? "Search failed.");
-        setSearchResults([]);
-        return;
-      }
-      setSearchResults(payload.results ?? []);
-    } catch {
-      setSearchError("Couldn’t search right now.");
-      setSearchResults([]);
-    } finally {
-      setSearchBusy(false);
-    }
-  }, [q, currentUserId]);
+  const runSearchNow = useCallback(() => {
+    void executeSearch(q);
+  }, [q, executeSearch]);
 
   const addFriend = async (handle: string) => {
     setActionMessage(null);
@@ -321,22 +363,28 @@ export default function FriendsPage() {
 
       {tab === "search" ? (
         <SurfaceCard
-          className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}
+          className={`space-y-5 p-5 sm:p-6 ${isDarkMode ? "border-white/10" : ""}`}
         >
-          <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Enter a User ID (or part of it) → Search → Add, or open their profile if you’re already linked.
+          <p
+            className={`text-sm leading-relaxed ${
+              isDarkMode ? "text-slate-300" : "text-slate-600"
+            }`}
+          >
+            Type a User ID (or a fragment). After two characters, matches load as you type — or tap
+            Search / press Enter to refresh. Add someone, or open their profile if you’re already linked.
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  void runSearch();
+                  void runSearchNow();
                 }
               }}
               placeholder="e.g. alex or user_4"
-              className={`min-h-11 w-full flex-1 rounded-2xl border px-3 py-2 text-sm ${
+              autoComplete="off"
+              className={`min-h-12 w-full flex-1 rounded-2xl border px-4 py-2.5 text-sm ${
                 isDarkMode
                   ? "border-white/10 bg-white/5 text-white placeholder:text-slate-500"
                   : "border-slate-200 bg-white text-slate-900"
@@ -345,21 +393,26 @@ export default function FriendsPage() {
             <button
               type="button"
               disabled={searchBusy}
-              onClick={() => void runSearch()}
-              className="ui-btn ui-btn-primary min-h-11 px-4 text-sm font-semibold"
+              onClick={() => void runSearchNow()}
+              className="ui-btn ui-btn-primary min-h-12 w-full shrink-0 px-5 text-sm font-semibold sm:min-w-[6.5rem] sm:w-auto"
             >
               {searchBusy ? "Searching…" : "Search"}
             </button>
           </div>
           {searchError ? (
-            <p className="text-sm text-rose-500" role="alert">
+            <p className="pt-0.5 text-sm text-rose-500" role="alert">
               {searchError}
             </p>
           ) : null}
-          <ul className="space-y-2">
+          <ul className="space-y-3 border-t border-transparent pt-1 sm:pt-2">
+            {q.trim().length > 0 && q.trim().length < 2 && !searchBusy ? (
+              <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Add one more character to search.
+              </li>
+            ) : null}
             {searchResults.length === 0 && !searchBusy && q.trim().length >= 2 && !searchError ? (
               <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No results — try another search.
+                No results — try another part of the User ID.
               </li>
             ) : null}
             {searchResults.map((row) => {
@@ -375,83 +428,95 @@ export default function FriendsPage() {
                 bio: "",
                 city: "",
               };
+              if (already) {
+                return (
+                  <li
+                    key={row.id}
+                    className={`rounded-2xl border p-3.5 sm:p-4 ${listShell}`}
+                  >
+                    <UserProfileLinks user={searchUser} isDarkMode={isDarkMode} href={profileHref}>
+                      <Link
+                        href={profileHref}
+                        className="block w-fit max-w-full truncate text-base font-semibold text-left outline-offset-2 hover:underline"
+                      >
+                        {row.displayName}
+                      </Link>
+                      <div className="mt-1.5">
+                        <Link
+                          href={profileHref}
+                          className={`inline font-mono text-xs ${
+                            isDarkMode ? "text-slate-400" : "text-slate-500"
+                          } hover:underline`}
+                        >
+                          @{row.publicHandle}
+                        </Link>
+                      </div>
+                      <p
+                        className={`mt-2.5 text-xs font-medium ${
+                          isDarkMode ? "text-emerald-400/90" : "text-emerald-700"
+                        }`}
+                      >
+                        Already a friend — tap to open their profile
+                      </p>
+                    </UserProfileLinks>
+                  </li>
+                );
+              }
+
               return (
                 <li
                   key={row.id}
-                  className={`flex items-center gap-2 rounded-2xl border p-2.5 sm:p-3 transition ${listShell}`}
+                  className={`flex flex-col gap-3.5 rounded-2xl border p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3.5 sm:pr-3.5 sm:pl-4 ${listShell}`}
                 >
-                  <div className="min-w-0 flex-1">
-                    {already ? (
-                      <UserProfileLinks user={searchUser} isDarkMode={isDarkMode} href={profileHref}>
-                        <Link
-                          href={profileHref}
-                          className="block w-fit max-w-full truncate font-semibold text-left outline-offset-2 hover:underline"
-                        >
-                          {row.displayName}
-                        </Link>
-                        <div className="mt-0.5">
-                          <Link
-                            href={profileHref}
-                            className={`inline font-mono text-xs ${
-                              isDarkMode ? "text-slate-400" : "text-slate-500"
-                            } hover:underline`}
-                          >
-                            @{row.publicHandle}
-                          </Link>
-                        </div>
-                      </UserProfileLinks>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
-                          {row.avatarImageUrl ? (
-                            <Image
-                              src={row.avatarImageUrl}
-                              alt=""
-                              fill
-                              unoptimized
-                              className="object-cover"
-                              sizes="44px"
-                            />
-                          ) : (
-                            <div
-                              className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
-                                isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
-                              }`}
-                            >
-                              {row.avatarText?.slice(0, 2) ?? "—"}
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{row.displayName}</p>
-                          <p
-                            className={`truncate font-mono text-xs ${
-                              isDarkMode ? "text-slate-400" : "text-slate-500"
+                  <div className="min-w-0 flex-1 sm:pr-1">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
+                        {row.avatarImageUrl ? (
+                          <Image
+                            src={row.avatarImageUrl}
+                            alt=""
+                            fill
+                            unoptimized
+                            className="object-cover"
+                            sizes="44px"
+                          />
+                        ) : (
+                          <div
+                            className={`flex h-11 w-11 items-center justify-center text-sm font-semibold ${
+                              isDarkMode ? "bg-violet-600/30 text-white" : "bg-violet-100 text-violet-800"
                             }`}
                           >
-                            @{row.publicHandle}
-                          </p>
-                        </div>
+                            {row.avatarText?.slice(0, 2) ?? "—"}
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="truncate font-semibold leading-snug">{row.displayName}</p>
+                        <p
+                          className={`truncate font-mono text-xs ${
+                            isDarkMode ? "text-slate-400" : "text-slate-500"
+                          }`}
+                        >
+                          @{row.publicHandle}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    disabled={
-                      actionBusy ||
-                      already ||
-                      currentUser?.publicHandle === row.publicHandle
-                    }
-                    onClick={() => void addFriend(row.publicHandle)}
-                    className="shrink-0 rounded-full bg-violet-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {already ? "Added" : "Add"}
-                  </button>
+                  <div className="shrink-0 self-stretch pt-1.5 sm:pt-0">
+                    <button
+                      type="button"
+                      disabled={actionBusy || currentUser?.publicHandle === row.publicHandle}
+                      onClick={() => void addFriend(row.publicHandle)}
+                      className="w-full min-h-11 rounded-full bg-violet-600 px-4 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:px-5 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Add
+                    </button>
+                  </div>
                 </li>
               );
             })}
-  </ul>
-  </SurfaceCard>
+          </ul>
+        </SurfaceCard>
       ) : null}
 
       {tab === "requests" ? (
