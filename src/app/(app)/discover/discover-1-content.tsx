@@ -814,13 +814,21 @@ export function DiscoverPage1Content({
     }
 
     const swipedMovie = movie;
-    const positionOfSwiped = filteredQueue.findIndex((m) => m.id === swipedMovie.id);
+    const n = filteredQueue.length;
+    const isSharedLinkCard = sharedLinkOverlayMovie?.id === swipedMovie.id;
+    // After a swipe, buildDiscoverQueue re-sorts. Index in the pre-swipe list is not
+    // stable; for a shared link card, always show the new deck head.
     const nextBrowseIndex =
-      filteredQueue.length <= 1
+      n <= 1
         ? 0
-        : positionOfSwiped >= 0
-          ? Math.min(positionOfSwiped, filteredQueue.length - 2)
-          : Math.min(safeBrowseIndex, filteredQueue.length - 2);
+        : isSharedLinkCard
+          ? 0
+          : (() => {
+              const i = filteredQueue.findIndex((m) => m.id === swipedMovie.id);
+              return i >= 0
+                ? Math.min(i, n - 2)
+                : Math.min(safeBrowseIndex, n - 2);
+            })();
 
     setSwipeFeedback(decision);
     setFocusedMovieId(null);
@@ -831,7 +839,6 @@ export function DiscoverPage1Content({
     }
 
     swipeTimeoutRef.current = window.setTimeout(() => {
-      registerMovies([swipedMovie]);
       setBrowseIndex(nextBrowseIndex);
       setSwipeFeedback(null);
       setSharedLinkOverlayMovie((current) =>
@@ -855,10 +862,10 @@ export function DiscoverPage1Content({
     movie,
     transitionState,
     swipeFeedback,
-    filteredQueue.length,
+    filteredQueue,
     safeBrowseIndex,
     focusedMovieId,
-    registerMovies,
+    sharedLinkOverlayMovie,
     swipeMovie,
   ]);
 
@@ -1132,7 +1139,7 @@ export function DiscoverPage1Content({
       </ModalPortal>
       {sharedMovieId && sharedMovieFetch === "loading" ? (
         <div
-          className="flex min-h-[min(70dvh,32rem)] flex-col space-y-3"
+          className="mx-auto flex w-full max-w-md flex-col items-center gap-3 py-5"
           role="status"
           aria-live="polite"
         >
@@ -1143,7 +1150,7 @@ export function DiscoverPage1Content({
           >
             Opening shared title…
           </p>
-          <div className="min-h-0 flex-1">
+          <div className="h-52 w-full sm:h-56">
             <DiscoverCardSkeleton />
           </div>
         </div>
