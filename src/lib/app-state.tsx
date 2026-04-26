@@ -29,13 +29,13 @@ import {
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { CURRENT_USER_KEY } from "@/lib/app-state/constants";
+import { toPartnerViewUser } from "@/lib/app-state/partner-user";
 import { useAppToasts } from "@/lib/hooks/use-app-toasts";
 import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
 import {
   clearStoredAuthSession,
   getStoredAuthSession,
   persistStoredAuthSession,
-  type StoredAuthSession,
 } from "@/lib/auth-session-storage";
 import {
   getSupabaseBrowserClient,
@@ -53,7 +53,6 @@ import type {
   MovieRow,
   ProfileRow,
   SettingsRow,
-  SharedWatchRow,
   SwipeRow,
   WatchedPickReviewRow,
 } from "@/lib/account-sync/types";
@@ -95,15 +94,6 @@ const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
   mediaPreference: "both",
   tasteProfile: [],
   completedAt: null,
-};
-
-const TASTE_PROFILE_GENRE_MAP: Record<string, string[]> = {
-  "Feel-good": ["Comedy", "Family", "Romance", "Animation"],
-  "Dark & tense": ["Thriller", "Crime", "Mystery", "Horror"],
-  "Big adventure": ["Action", "Adventure", "Fantasy", "Sci-Fi"],
-  "Mind-bending": ["Sci-Fi", "Mystery", "Thriller", "Drama"],
-  "Cozy night": ["Drama", "Romance", "Comedy"],
-  "Prestige picks": ["Drama", "History", "War", "Biography"],
 };
 
 type AuthResult =
@@ -1675,6 +1665,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     async function loadSupabaseAppData() {
       setIsSyncingAccountData(true);
+      setAccountSyncError(null);
       const sessionResult = await supabaseClient.auth.getSession();
       const storedAuthSession = getStoredAuthSession();
       const accessToken =
@@ -1899,29 +1890,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     [currentUserId, data.watchedPickReviews, data.movies],
   );
 
-  const acceptedGenreCounts = useMemo(() => {
-    return acceptedMovies.reduce<Map<string, number>>(
-      (counts, movie) => {
-        movie.genre.forEach((entry) => {
-          const normalized = entry.trim().toLowerCase();
-
-          if (
-            !normalized ||
-            normalized === "movie" ||
-            normalized === "series"
-          ) {
-            return;
-          }
-
-          counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
-        });
-
-        return counts;
-      },
-      new Map<string, number>(),
-    );
-  }, [acceptedMovies]);
-
   const moviesByIdForTaste = useMemo(
     () => new Map(data.movies.map((m) => [m.id, m])),
     [data.movies],
@@ -2043,19 +2011,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 return [];
               }
 
-              const partnerInfo: User = {
-                id: partner.id,
-                publicHandle: partner.publicHandle,
-                name: partner.name,
-                email: partner.email,
-                avatar: partner.avatar,
-                avatarImageUrl: partner.avatarImageUrl,
-                bio: partner.bio,
-                city: partner.city,
-                favoriteMovie: partner.favoriteMovie,
-                profileHeaderMovie: partner.profileHeaderMovie,
-                profileStyle: partner.profileStyle,
-              };
+              const partnerInfo = toPartnerViewUser(partner);
 
               const partnerAccepted = new Set(
                 data.swipes
@@ -2113,19 +2069,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 return null;
               }
 
-              const partnerInfo: User = {
-                id: partner.id,
-                publicHandle: partner.publicHandle,
-                name: partner.name,
-                email: partner.email,
-                avatar: partner.avatar,
-                avatarImageUrl: partner.avatarImageUrl,
-                bio: partner.bio,
-                city: partner.city,
-                favoriteMovie: partner.favoriteMovie,
-                profileHeaderMovie: partner.profileHeaderMovie,
-                profileStyle: partner.profileStyle,
-              };
+              const partnerInfo = toPartnerViewUser(partner);
 
               return {
                 user: partnerInfo,
