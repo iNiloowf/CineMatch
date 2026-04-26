@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { AchievementBadgesShowcase } from "@/components/achievement-badges-showcase";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
@@ -11,7 +11,7 @@ import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import { partitionAchievements } from "@/lib/achievement-utils";
-import { DEFAULT_PROFILE_AVATAR_PRESETS } from "@/lib/default-profile-avatar-presets";
+import { ProfileAvatarEditorModal } from "@/components/profile-avatar-editor-modal";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS, FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import { shareOrCopyInviteMessage } from "@/lib/invite-link-utils";
 import { useAppState } from "@/lib/app-state";
@@ -76,7 +76,7 @@ export default function ProfilePage() {
   const [saveFeedback, setSaveFeedback] = useState<SaveFeedback>("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [removePhotoModalOpen, setRemovePhotoModalOpen] = useState(false);
-  const [avatarPresetModalOpen, setAvatarPresetModalOpen] = useState(false);
+  const [avatarEditorModalOpen, setAvatarEditorModalOpen] = useState(false);
   const [favoriteGenresDraft, setFavoriteGenresDraft] = useState<string[]>([]);
   const [dislikedGenresDraft, setDislikedGenresDraft] = useState<string[]>([]);
   const [mediaPreferenceDraft, setMediaPreferenceDraft] = useState<"movie" | "series" | "both">("both");
@@ -116,7 +116,6 @@ export default function ProfilePage() {
   );
 
   useEscapeToClose(removePhotoModalOpen, () => setRemovePhotoModalOpen(false));
-  useEscapeToClose(avatarPresetModalOpen, () => setAvatarPresetModalOpen(false));
   useEscapeToClose(Boolean(editingWatchedEntry), () => setEditingWatchedMovieId(null));
   useEscapeToClose(discoverSkipsModalOpen && !discoverSkipDetailMovie, () => setDiscoverSkipsModalOpen(false));
   useEscapeToClose(Boolean(discoverSkipDetailMovie), () => setDiscoverSkipDetailMovie(null));
@@ -411,7 +410,7 @@ export default function ProfilePage() {
     });
     setIsFavoriteGenresOpen(false);
     setIsDislikedGenresOpen(false);
-    setAvatarPresetModalOpen(false);
+    setAvatarEditorModalOpen(false);
   };
 
   const confirmRemovePhotoStaging = () => {
@@ -424,30 +423,13 @@ export default function ProfilePage() {
     setRemovePhotoModalOpen(false);
   };
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+  const handleAvatarEditorApply = (file: File | null, previewObjectUrl: string) => {
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
     }
-
     setClearAvatarOnSave(false);
     setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleSelectPresetAvatar = (url: string) => {
-    if (avatarPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-    setAvatarFile(null);
-    setClearAvatarOnSave(false);
-    setAvatarPreview(url);
-    setAvatarPresetModalOpen(false);
+    setAvatarPreview(previewObjectUrl);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -509,7 +491,7 @@ export default function ProfilePage() {
     setAvatarPreview(undefined);
     setAvatarFile(null);
     setClearAvatarOnSave(false);
-    setAvatarPresetModalOpen(false);
+    setAvatarEditorModalOpen(false);
     setIsEditing(false);
     setSaveFeedback("saved");
     setSaveMessage(result.message ?? "Profile saved.");
@@ -854,111 +836,16 @@ export default function ProfilePage() {
           </div>
         </div>
       </ModalPortal>
-      <ModalPortal open={avatarPresetModalOpen}>
-        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => setAvatarPresetModalOpen(false)}
-            className="absolute inset-0 cursor-default bg-transparent"
-          />
-          <div
-            className={`ui-shell ui-shell--dialog-lg relative z-10 mx-auto max-h-[min(85dvh,40rem)] w-full min-h-0 overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
-              isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
-            }`}
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div
-              className={`flex items-start justify-between gap-3 border-b px-4 py-4 sm:px-5 ${
-                isDarkMode ? "border-b-white/10" : "border-b-slate-100"
-              }`}
-            >
-              <div className="min-w-0">
-                <h2
-                  id="profile-avatar-preset-title"
-                  className={`text-lg font-semibold leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                >
-                  Choose a default poster
-                </h2>
-                <p className={`mt-1.5 text-sm leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-                  Film &amp; series posters from TMDb. They appear in a circle on your profile like a normal photo.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAvatarPresetModalOpen(false)}
-                aria-label="Close"
-                className={`ui-shell-close shrink-0 ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div
-              className="max-h-[min(60dvh,24rem)] overflow-y-auto overflow-x-hidden overscroll-contain px-3 pb-4 pt-1 sm:px-4 [scrollbar-gutter:stable]"
-              role="listbox"
-              aria-labelledby="profile-avatar-preset-title"
-            >
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-                {DEFAULT_PROFILE_AVATAR_PRESETS.map((preset) => {
-                  const selected = avatarPreview === preset.imageUrl && !avatarFile;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      onClick={() => handleSelectPresetAvatar(preset.imageUrl)}
-                      className={`relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
-                        selected
-                          ? isDarkMode
-                            ? "ring-2 ring-violet-300 ring-offset-2 ring-offset-slate-950"
-                            : "ring-2 ring-violet-500 ring-offset-2 ring-offset-white"
-                          : isDarkMode
-                            ? "ring-white/12 hover:ring-violet-400/45"
-                            : "ring-slate-200 hover:ring-violet-300"
-                      } ${isDarkMode ? "bg-white/5" : "bg-slate-100"}`}
-                      title={preset.label}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element -- TMDb static preset */}
-                      <img
-                        src={preset.imageUrl}
-                        alt={preset.label}
-                        className="h-full w-full object-cover"
-                        loading="eager"
-                        decoding="async"
-                        sizes="(max-width: 640px) 50vw, 150px"
-                      />
-                      <span
-                        className="pointer-events-none absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/80 to-transparent px-1.5 py-2 text-left text-[9px] font-semibold leading-tight text-white"
-                      >
-                        {preset.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div
-              className={`border-t px-4 py-3 sm:px-5 ${
-                isDarkMode ? "border-white/10" : "border-slate-100"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setAvatarPresetModalOpen(false)}
-                className="ui-btn ui-btn-secondary w-full"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </ModalPortal>
+      <ProfileAvatarEditorModal
+        open={avatarEditorModalOpen}
+        onClose={() => setAvatarEditorModalOpen(false)}
+        isDarkMode={isDarkMode}
+        avatarPreviewUrl={activeAvatarPreview}
+        isPresetSelection={Boolean(
+          activeAvatarPreview && !avatarFile && !activeAvatarPreview.startsWith("blob:"),
+        )}
+        onApply={handleAvatarEditorApply}
+      />
       <ModalPortal open={discoverSkipsModalOpen && !discoverSkipDetailMovie}>
         <div
           className="ui-overlay z-[var(--z-modal-backdrop)] box-border items-center justify-center bg-slate-950/50 backdrop-blur-md"
@@ -1376,12 +1263,26 @@ export default function ProfilePage() {
                     <div className="flex w-full min-w-0 flex-1 flex-col gap-4 sm:max-w-sm">
                       <div className="flex shrink-0 flex-col items-center gap-3 sm:items-start">
                         <div className="relative">
-                          <AvatarBadge
-                            initials={currentUser.avatar}
-                            imageUrl={activeAvatarPreview}
-                            sizeClassName="h-20 w-20"
-                            textClassName="text-xl font-semibold"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setAvatarEditorModalOpen(true)}
+                            className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                            aria-label="Change profile photo"
+                            title="Change profile photo"
+                          >
+                            <AvatarBadge
+                              initials={currentUser.avatar}
+                              imageUrl={activeAvatarPreview}
+                              sizeClassName="h-20 w-20"
+                              textClassName="text-xl font-semibold"
+                            />
+                            <span
+                              className={`pointer-events-none absolute inset-0 rounded-full opacity-0 ring-2 ring-inset transition group-hover:opacity-100 ${
+                                isDarkMode ? "ring-white/25 bg-black/20" : "ring-slate-900/15 bg-black/10"
+                              }`}
+                              aria-hidden
+                            />
+                          </button>
                           {canRemovePhoto ? (
                             <button
                               type="button"
@@ -1417,25 +1318,9 @@ export default function ProfilePage() {
                         >
                           Profile photo
                         </p>
-                        <div className="flex w-full min-w-0 max-w-sm flex-col gap-2.5 sm:max-w-xs">
-                          <label
-                            className={`auth-primary-glow flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full px-4 py-2.5 text-center text-xs font-bold text-white transition active:scale-[0.98] ${actionGradient} ${actionGradientHover} ${actionRing}`}
-                          >
-                            Upload from gallery
-                            <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setAvatarPresetModalOpen(true)}
-                            className={`w-full min-h-11 rounded-full border px-4 py-2.5 text-center text-xs font-bold transition active:scale-[0.99] ${
-                              isDarkMode
-                                ? "border-white/20 bg-white/[0.08] text-slate-100 hover:bg-white/12"
-                                : "border-slate-300/90 bg-white text-slate-800 shadow-sm hover:bg-slate-50"
-                            }`}
-                          >
-                            Choose a default poster
-                          </button>
-                        </div>
+                        <p className={`max-w-[14rem] text-center text-[11px] leading-snug sm:text-left ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          Tap your photo to upload, pick a default poster, and adjust crop before you save your profile.
+                        </p>
                         {clearAvatarOnSave ? (
                           <p
                             className={`max-w-[12rem] text-center text-[11px] font-medium sm:text-left ${isDarkMode ? "text-amber-200" : "text-amber-800"}`}
@@ -1613,7 +1498,7 @@ export default function ProfilePage() {
                         value={headerBgSearchQuery}
                         onChange={(event) => setHeaderBgSearchQuery(event.target.value)}
                         className={inputClass}
-                        placeholder="Type to search TMDb…"
+                        placeholder="Type to search…"
                       />
                       {headerBgSearchState === "loading" ? (
                         <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
