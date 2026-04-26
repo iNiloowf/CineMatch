@@ -224,6 +224,15 @@
 }
 
 /**
+ * Horizontal padding: base gutter + iOS notch / Dynamic Island / rounded-display insets
+ * so content never sits under system UI. Use on app chrome (shell, bottom nav).
+ */
+.app-safe-x {
+  padding-left: max(var(--app-page-px), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--app-page-px), env(safe-area-inset-right, 0px));
+}
+
+/**
  * In-card section title (uppercase meta) — use instead of ad-hoc `text-xs uppercase` stacks.
  * Pairs with body copy: `.app-body-muted` or `text-sm` + `text-slate-*`.
  */
@@ -248,6 +257,7 @@
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.12;
+  overflow-wrap: anywhere;
   text-wrap: balance;
 }
 
@@ -257,6 +267,7 @@
   color: var(--color-text-muted);
   font-size: var(--font-scale-body);
   line-height: 1.55;
+  overflow-wrap: anywhere;
   text-wrap: pretty;
 }
 
@@ -2018,6 +2029,8 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
   /* min-height comes from Tailwind on the tab wrapper (`min-h-0` + `flex-1`); a bare `min-height: 0`
    * here was overriding `min-h-full` and left empty space under Discover’s swipe card. */
   min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .tab-route-enter--forward {

@@ -69,7 +69,7 @@ export function BottomNav() {
     <nav
       data-bottom-nav="true"
       aria-label="Main navigation"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)] px-[var(--app-page-px)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)]"
+      className="app-safe-x pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)]"
     >
       <div
         ref={panelRef}

@@ -25,7 +25,7 @@ export function AppRouteLoading({
 }) {
   return (
     <div
-      className={frameClassName ?? "flex flex-1 items-center justify-center p-[var(--app-page-px)]"}
+      className={frameClassName ?? "app-safe-x flex min-w-0 flex-1 items-center justify-center py-8"}
     >
       <div
         className="mx-auto w-full max-w-md space-y-4"

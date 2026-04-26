@@ -47,7 +47,7 @@ export function TabScreenTransition({ children }: { children: ReactNode }) {
         : "tab-route-surface tab-route-enter tab-route-enter--fade";
 
   /** Fills #main-content so tab routes (esp. Discover) can use flex-1 for full-height cards. */
-  const layoutClass = `${transitionClass} flex w-full min-w-0 max-w-full min-h-0 flex-1 flex-col`;
+  const layoutClass = `${transitionClass} flex w-full min-w-0 max-w-full min-h-0 flex-1 flex-col overflow-x-clip`;
 
   return (
     <div

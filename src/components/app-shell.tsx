@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div
       data-app-shell-root="true"
       data-theme={isDarkMode ? "dark" : "light"}
-      className={`relative flex h-[100dvh] max-h-[100dvh] min-h-0 flex-col overflow-hidden px-[var(--app-page-px)] pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:pt-4 ${
+      className={`app-safe-x relative flex h-[100dvh] max-h-[100dvh] min-h-0 flex-col overflow-x-clip overflow-y-hidden pb-0 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:pt-4 ${
         isDarkMode
           ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)] text-slate-100"
           : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.55),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(251,207,232,0.42),transparent_26%),linear-gradient(180deg,#fcfbff_0%,#f6f8ff_30%,#eef4ff_68%,#fdf7ff_100%)] text-slate-900"
@@ -31,12 +31,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     >
       <a
         href="#main-content"
-        className={`fixed left-4 z-[calc(var(--z-modal-backdrop)+3)] -translate-y-[140%] rounded-xl px-4 py-2 text-sm font-semibold shadow-lg transition-transform duration-150 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent ${
+        className={`fixed z-[calc(var(--z-modal-backdrop)+3)] -translate-y-[140%] rounded-xl px-4 py-2 text-sm font-semibold shadow-lg transition-transform duration-150 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent ${
           isDarkMode
             ? "bg-violet-500 text-white focus:ring-violet-300"
             : "bg-violet-600 text-white focus:ring-violet-400"
         }`}
-        style={{ top: "max(0.75rem, env(safe-area-inset-top, 0px))" }}
+        style={{
+          top: "max(0.75rem, env(safe-area-inset-top, 0px))",
+          left: "max(1rem, env(safe-area-inset-left, 0px))",
+        }}
       >
         Skip to main content
       </a>

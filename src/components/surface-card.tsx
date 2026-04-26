@@ -77,7 +77,7 @@ export function SurfaceCard({
             aria-hidden
           />
         ) : null}
-        <div className="relative z-10 flex w-full min-w-0 flex-col gap-[var(--app-section-gap-lg)] p-[var(--app-card-pad)] sm:p-6">
+        <div className="relative z-10 flex w-full min-w-0 max-w-full flex-col gap-[var(--app-section-gap-lg)] p-[var(--app-card-pad)] sm:p-6">
           {children}
         </div>
       </section>
@@ -108,7 +108,7 @@ export function SurfaceCard({
           aria-hidden
         />
       ) : null}
-      <div className="relative z-10 flex h-full min-h-0 w-full min-w-0 flex-col">{children}</div>
+      <div className="relative z-10 flex h-full min-h-0 w-full min-w-0 max-w-full flex-col">{children}</div>
     </section>
   );
 }
