@@ -106,9 +106,9 @@ export default function CheckEmailPage() {
 
   if (pending === undefined) {
     return (
-      <div className={`auth-landing-stage relative min-h-screen px-4 py-8 ${pageBg}`}>
+      <div className={`auth-landing-stage relative ${pageBg}`}>
         <AuthLandingBlobs isDarkMode={isDarkMode} />
-        <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
+        <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center justify-center">
           <SurfaceCard className="w-full text-center">
             <p className={`text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>Loading…</p>
           </SurfaceCard>
@@ -119,9 +119,9 @@ export default function CheckEmailPage() {
 
   if (!pending) {
     return (
-      <div className={`auth-landing-stage relative min-h-screen px-4 py-8 ${pageBg}`}>
+      <div className={`auth-landing-stage relative ${pageBg}`}>
         <AuthLandingBlobs isDarkMode={isDarkMode} />
-        <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center gap-6">
+        <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col justify-center gap-6">
           <SurfaceCard
             className={`w-full space-y-5 text-center ${
               isDarkMode ? "border-white/12 bg-slate-950/80 text-slate-100" : ""
@@ -172,9 +172,9 @@ export default function CheckEmailPage() {
   const emailDisplay = pending.email.trim() || "your inbox";
 
   return (
-    <div className={`auth-landing-stage relative min-h-screen px-4 py-8 ${pageBg}`}>
+    <div className={`auth-landing-stage relative ${pageBg}`}>
       <AuthLandingBlobs isDarkMode={isDarkMode} />
-      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-between gap-8">
+      <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col justify-between gap-8">
         <div className="space-y-6">
           <div
             className={`auth-landing-stagger space-y-3 rounded-[34px] p-6 backdrop-blur-xl ${

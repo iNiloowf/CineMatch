@@ -16,7 +16,7 @@ export default function NotFound() {
         aria-hidden
       />
 
-      <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
+      <section className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-3xl flex-col items-center justify-center px-[var(--app-page-px)] py-16 text-center">
         <span className="ui-chip ui-chip--brand-media mb-5">Error 404</span>
         <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
           This page is lost in the cinema multiverse

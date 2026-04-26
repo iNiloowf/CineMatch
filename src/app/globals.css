@@ -210,6 +210,7 @@
   display: flex;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   flex-direction: column;
   gap: var(--app-section-gap-lg);
 }
@@ -228,6 +229,7 @@
 }
 
 .app-page-lead {
+  min-width: 0;
   max-width: 22rem;
   color: var(--color-text-muted);
   font-size: var(--font-scale-body);
@@ -254,6 +256,8 @@
 
 html {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   background-color: var(--bg-primary);
@@ -264,10 +268,11 @@ body {
   min-height: 100svh;
   min-height: 100dvh;
   margin: 0;
+  max-width: 100%;
   background-color: var(--bg-primary);
   color: var(--foreground);
   font-family: "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /** Picks premium insights — small UI chrome (explicit size; buttons use font: inherit from body) */
@@ -1174,7 +1179,7 @@ input[type="range"] {
 /* Narrow phones (~360dp Android): avoid chip/sheet clipping */
 @media (max-width: 380px) {
   .discover-feedback-chip {
-    max-width: min(100%, calc(100vw - 1.75rem));
+    max-width: min(100%, calc(100dvi - 1.75rem));
     padding: 0.45rem 0.65rem;
     font-size: 0.65rem;
     letter-spacing: 0.08em;
@@ -1348,6 +1353,19 @@ section[data-poster-layout="immersive"] .discover-immersive-action-bar {
 .auth-landing-stage {
   position: relative;
   isolation: isolate;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding-left: var(--app-page-px);
+  padding-right: var(--app-page-px);
+  padding-top: max(1.5rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+  overflow-x: clip;
 }
 
 .auth-landing-blob {

@@ -229,9 +229,9 @@ export default function SignUpPage() {
 
   if (!isReady || visitorAlreadySignedIn) {
     return (
-      <div className={`auth-landing-stage min-h-screen px-4 py-8 ${pageBg}`}>
+      <div className={`auth-landing-stage ${pageBg}`}>
         <AuthLandingBlobs isDarkMode={isDarkMode} />
-        <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
+        <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center justify-center">
           <SurfaceCard className="auth-landing-stagger w-full text-center">
             <p className={`text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
               {!isReady ? "Loading…" : "Taking you to Discover…"}
@@ -243,9 +243,9 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className={`auth-landing-stage min-h-screen px-4 py-8 ${pageBg}`}>
+    <div className={`auth-landing-stage ${pageBg}`}>
       <AuthLandingBlobs isDarkMode={isDarkMode} />
-      <div className="relative z-[1] mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-between gap-8">
+      <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col justify-between gap-8">
         <div className="space-y-6">
           <div
             className={`auth-landing-stagger space-y-3 rounded-[34px] p-6 backdrop-blur-xl ${

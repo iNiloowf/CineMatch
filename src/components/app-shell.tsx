@@ -49,17 +49,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <div
         data-app-shell-frame="true"
-        className={`fade-up-enter mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col ${
+        className={`fade-up-enter mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col ${
           isDarkMode ? "text-slate-100" : "text-slate-900"
         }`}
       >
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
           <OfflineBanner />
           <div
             id="main-content"
             data-app-scroll-container="true"
             tabIndex={-1}
-            className="relative z-0 flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+            className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain pb-[var(--app-scroll-pad-bottom)] outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             <TabScreenTransition>{children}</TabScreenTransition>
           </div>

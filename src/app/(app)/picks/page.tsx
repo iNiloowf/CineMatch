@@ -1449,7 +1449,7 @@ export default function PicksPage() {
                 className="absolute inset-0 cursor-default bg-transparent"
               />
               <div
-                className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-[min(100%,22rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:w-full ${
+                className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto flex w-[min(100%,22rem)] max-w-[calc(100dvi-2rem)] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:w-full ${
                   isDarkMode
                     ? "border-white/10 bg-slate-950 text-white"
                     : "border-white/80 bg-white text-slate-900"

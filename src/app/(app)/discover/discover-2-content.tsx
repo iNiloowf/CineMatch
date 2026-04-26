@@ -1323,7 +1323,7 @@ export function DiscoverPage2Content({
                       <div
                         ref={moreMenuPanelRef}
                         id="discover-more-menu"
-                        className="ui-menu-panel discover-more-menu fixed z-[var(--z-popover)] w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(72dvh,32rem)] overflow-y-auto p-0 shadow-2xl"
+                        className="ui-menu-panel discover-more-menu fixed z-[var(--z-popover)] w-[min(20rem,calc(100dvi-1.5rem))] max-h-[min(72dvh,32rem)] overflow-y-auto p-0 shadow-2xl"
                         style={{
                           top: moreMenuCoords.top,
                           right: moreMenuCoords.right,

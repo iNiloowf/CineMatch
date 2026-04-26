@@ -975,7 +975,7 @@ export default function ProfilePage() {
             onClick={() => setDiscoverSkipsModalOpen(false)}
             className="absolute inset-0 cursor-default bg-transparent"
           />
-          <div className="relative z-10 flex w-full min-w-0 max-w-[min(22rem,calc(100vw-2.5rem))] flex-col">
+          <div className="relative z-10 flex w-full min-w-0 max-w-[min(22rem,calc(100dvi-2.5rem))] flex-col">
             <div
               className={`ui-shell flex max-h-[min(72dvh,32rem)] w-full flex-col overflow-hidden rounded-2xl border shadow-[0_20px_48px_rgba(0,0,0,0.35)] sm:max-h-[min(78dvh,34rem)] sm:rounded-[20px] ${
                 isDarkMode ? "border-white/[0.08] bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"

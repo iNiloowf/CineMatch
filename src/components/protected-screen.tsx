@@ -38,7 +38,7 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
 
   if (accountSyncError && currentUserId && !currentUser) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
+      <div className="flex min-w-0 flex-1 items-center justify-center p-[var(--app-page-px)]">
         <NetworkStatusBlock
           variant="error"
           isDarkMode={isDarkMode}
@@ -73,9 +73,9 @@ export function ProtectedScreen({ children }: { children: React.ReactNode }) {
 
   if (!currentUserId) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
+      <div className="flex min-w-0 flex-1 items-center justify-center p-[var(--app-page-px)]">
         <div
-          className="mx-auto flex w-full max-w-md flex-col items-center gap-4"
+          className="mx-auto flex w-full min-w-0 max-w-md flex-col items-center gap-4"
           role="status"
           aria-live="polite"
           aria-label="Redirecting to sign in"
