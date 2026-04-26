@@ -44,6 +44,28 @@ function popularityBoost(movie: Movie): number {
   return Math.min(14, Math.max(0, (movie.rating - 5.2) * 2.5));
 }
 
+/**
+ * Learnt `center` from 2000s/2010s picks can match 2003–2007 too strongly and bury 2017+;
+ * for deck ordering, blend the center toward a recent anchor unless the user is classic-first.
+ */
+function yearTasteForDiscoverOrdering(
+  taste: { center: number; spread: number; classicEngaged: boolean },
+  calendarYear: number,
+): { center: number; spread: number; classicEngaged: boolean } {
+  if (taste.classicEngaged) {
+    return taste;
+  }
+  const recencyAnchor = Math.max(2015, calendarYear - 3);
+  const blendW = 0.64;
+  const blendedCenter =
+    (1 - blendW) * taste.center + blendW * recencyAnchor;
+  return {
+    center: Math.min(calendarYear - 1, blendedCenter),
+    spread: Math.max(taste.spread, 12.5),
+    classicEngaged: false,
+  };
+}
+
 function yearPreferenceScore(
   movieYear: number,
   taste: { center: number; spread: number; classicEngaged: boolean },
@@ -124,7 +146,7 @@ function pre2017RarityPenalty(
     return 0;
   }
   const yearsBefore2017 = 2017 - movieYear;
-  const raw = -Math.min(24, 4.5 + yearsBefore2017 * 0.2);
+  const raw = -Math.min(32, 6.5 + yearsBefore2017 * 0.28);
   return classicEngaged ? raw * CLASSIC_PRE_2017_PENALTY_RETAIN : raw;
 }
 
@@ -309,7 +331,7 @@ export function buildDiscoverQueue(options: {
         );
         const yearPersonal = yearPreferenceScore(
           movie.year,
-          tasteYear,
+          yearTasteForDiscoverOrdering(tasteYear, calendarYear),
           calendarYear,
         );
         const yearScore = currentUserId

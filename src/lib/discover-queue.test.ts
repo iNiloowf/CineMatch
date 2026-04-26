@@ -149,4 +149,28 @@ describe("discover-queue", () => {
     });
     expect(q[0]?.id).toBe("recent-2023");
   });
+
+  it("ranks 2017+ before mid-2000s even when Picks pull taste center to the 2000s", () => {
+    const y2005 = { ...mkMovie("y2005"), year: 2005 };
+    const y2019 = { ...mkMovie("y2019"), year: 2019 };
+    const y2006 = { ...mkMovie("y2006"), year: 2006 };
+    const q = buildDiscoverQueue({
+      movies: [y2005, y2019, y2006],
+      swipes: [
+        {
+          userId: "u1",
+          movieId: "y2006",
+          decision: "accepted",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      currentUserId: "u1",
+      discoverShuffleSeed: "seed",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+      pickEngagement: [{ movieId: "y2006", recommended: true }],
+    });
+    expect(q[0]?.id).toBe("y2019");
+  });
 });
