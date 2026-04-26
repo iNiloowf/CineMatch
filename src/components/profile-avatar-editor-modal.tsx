@@ -91,7 +91,7 @@ export function ProfileAvatarEditorModal({
   const [exportBusy, setExportBusy] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [presetLoadingId, setPresetLoadingId] = useState<string | null>(null);
-  const presetFetchGenerationRef = useRef(0);
+  const presetFetchAbortRef = useRef<AbortController | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -100,7 +100,8 @@ export function ProfileAvatarEditorModal({
   );
 
   const resetInternal = useCallback(() => {
-    presetFetchGenerationRef.current += 1;
+    presetFetchAbortRef.current?.abort();
+    presetFetchAbortRef.current = null;
     setStep("pick");
     setTab("upload");
     setZoom(1);
@@ -148,12 +149,18 @@ export function ProfileAvatarEditorModal({
   };
 
   const handlePickPreset = async (presetId: string, imageUrl: string) => {
-    const generation = ++presetFetchGenerationRef.current;
+    presetFetchAbortRef.current?.abort();
+    const ac = new AbortController();
+    presetFetchAbortRef.current = ac;
     setPresetLoadingId(presetId);
     setLoadError(false);
     try {
-      const res = await fetch(imageUrl, { mode: "cors", credentials: "omit" });
-      if (generation !== presetFetchGenerationRef.current) {
+      const res = await fetch(imageUrl, {
+        mode: "cors",
+        credentials: "omit",
+        signal: ac.signal,
+      });
+      if (ac.signal.aborted) {
         return;
       }
       if (!res.ok) {
@@ -161,7 +168,7 @@ export function ProfileAvatarEditorModal({
         return;
       }
       const blob = await res.blob();
-      if (generation !== presetFetchGenerationRef.current) {
+      if (ac.signal.aborted) {
         return;
       }
       if (!blob.size) {
@@ -173,12 +180,21 @@ export function ProfileAvatarEditorModal({
         return;
       }
       goToAdjust(URL.createObjectURL(blob));
-    } catch {
-      if (generation === presetFetchGenerationRef.current) {
+    } catch (e: unknown) {
+      const aborted =
+        (e instanceof DOMException && e.name === "AbortError") ||
+        (e instanceof Error && e.name === "AbortError");
+      if (aborted) {
+        return;
+      }
+      if (!ac.signal.aborted) {
         setLoadError(true);
       }
     } finally {
-      if (generation === presetFetchGenerationRef.current) {
+      if (presetFetchAbortRef.current === ac) {
+        presetFetchAbortRef.current = null;
+      }
+      if (!ac.signal.aborted) {
         setPresetLoadingId(null);
       }
     }
