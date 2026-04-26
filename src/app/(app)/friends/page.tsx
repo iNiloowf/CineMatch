@@ -475,7 +475,7 @@ export default function FriendsPage() {
               </li>
             ) : null}
             {searchResults.map((row) => {
-              const already = linkedUsers.some((l) => l.user.id === row.id);
+              const link = linkedUsers.find((l) => l.user.id === row.id);
               const profileHref = `/friends/${row.id}`;
               const searchUser: User = {
                 id: row.id,
@@ -487,7 +487,15 @@ export default function FriendsPage() {
                 bio: "",
                 city: "",
               };
-              if (already) {
+              if (link) {
+                const isAccepted = link.status === "accepted";
+                const isOutgoingRequest =
+                  link.status === "pending" && link.requesterId === currentUserId;
+                const statusMessage = isAccepted
+                  ? "Already a friend — tap to open their profile"
+                  : isOutgoingRequest
+                    ? "Friend request sent — tap to open their profile"
+                    : "Request pending — open the Requests tab to respond";
                 return (
                   <li
                     key={row.id}
@@ -512,10 +520,16 @@ export default function FriendsPage() {
                       </div>
                       <p
                         className={`mt-2.5 text-xs font-medium ${
-                          isDarkMode ? "text-emerald-400/90" : "text-emerald-700"
+                          isAccepted
+                            ? isDarkMode
+                              ? "text-emerald-400/90"
+                              : "text-emerald-700"
+                            : isDarkMode
+                              ? "text-amber-200/90"
+                              : "text-amber-800"
                         }`}
                       >
-                        Already a friend — tap to open their profile
+                        {statusMessage}
                       </p>
                     </UserProfileLinks>
                   </li>
