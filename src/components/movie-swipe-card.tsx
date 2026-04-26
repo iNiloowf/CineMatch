@@ -178,6 +178,12 @@ export function MovieSwipeCard({
   }, [movie.id, movie.trailerUrl]);
 
   useEffect(() => {
+    if (swipeFeedback) {
+      setDragOffset(0);
+    }
+  }, [swipeFeedback]);
+
+  useEffect(() => {
     if (!isTrailerVisible) {
       return;
     }
@@ -233,6 +239,19 @@ export function MovieSwipeCard({
     await fetchTrailerIfNeeded();
   }, [fetchTrailerIfNeeded]);
 
+  const maxDrag = immersive ? 80 : 42;
+  const dragRotate = immersive ? 0.078 : 0.045;
+  const scaleDrop = immersive ? 0.0005 : 0.0002;
+  const liveScale = dragOffset === 0 ? 1 : 1 - Math.min(0.05, Math.abs(dragOffset) * scaleDrop);
+  const prevWispOp =
+    immersive && dragOffset > 4
+      ? Math.min(0.4, (dragOffset - 4) / 88)
+      : 0;
+  const nextWispOp =
+    immersive && dragOffset < -4
+      ? Math.min(0.4, (-dragOffset - 4) / 88)
+      : 0;
+
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isInteractionLocked) {
       return;
@@ -261,7 +280,7 @@ export function MovieSwipeCard({
       return;
     }
 
-    setDragOffset(Math.max(-42, Math.min(42, deltaX)));
+    setDragOffset(Math.max(-maxDrag, Math.min(maxDrag, deltaX)));
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -337,20 +356,23 @@ export function MovieSwipeCard({
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
-            transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
+            transform: `translateX(${dragOffset}px) rotate(${dragOffset * dragRotate}deg) scale(${liveScale})`,
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {swipeFeedback ? (
-            <div className="pointer-events-none absolute inset-x-4 top-3 z-[var(--z-local)] flex justify-center sm:inset-x-6 sm:top-4">
+            <div
+              className="pointer-events-none absolute inset-x-3 top-2.5 z-[20] flex justify-center sm:inset-x-5 sm:top-3.5"
+              role="status"
+            >
               <div
                 className={`discover-feedback-chip ${
                   swipeFeedback === "accepted" ? "discover-feedback-accept" : "discover-feedback-reject"
                 }`}
               >
-                {swipeFeedback === "accepted" ? "Added to picks" : "Passed for now"}
+                {swipeFeedback === "accepted" ? "Saved" : "Passed"}
               </div>
             </div>
           ) : null}
@@ -377,6 +399,40 @@ export function MovieSwipeCard({
                 className="z-[1]"
               />
               <div className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(180deg,rgba(2,6,23,0.45),transparent_38%,rgba(2,6,23,0.12)_55%,rgba(2,6,23,0.7)_100%)]" />
+              {prevWispOp > 0 && !swipeFeedback ? (
+                <div
+                  className="pointer-events-none absolute inset-y-0 left-0 z-[2] w-[40%] bg-gradient-to-r from-cyan-400/25 to-transparent"
+                  style={{ opacity: prevWispOp }}
+                  aria-hidden
+                />
+              ) : null}
+              {nextWispOp > 0 && !swipeFeedback ? (
+                <div
+                  className="pointer-events-none absolute inset-y-0 right-0 z-[2] w-[40%] bg-gradient-to-l from-fuchsia-400/22 to-transparent"
+                  style={{ opacity: nextWispOp }}
+                  aria-hidden
+                />
+              ) : null}
+              {swipeFeedback === "accepted" ? (
+                <div className="discover-accept-overlay" aria-hidden>
+                  <div className="discover-accept-vignette" />
+                  <div className="discover-accept-glow-ring" />
+                  <div className="discover-accept-heart">
+                    <svg
+                      className="discover-accept-heart-svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : null}
+              {swipeFeedback === "rejected" ? (
+                <div className="discover-reject-overlay" aria-hidden>
+                  <span className="discover-reject-stamp">Pass</span>
+                </div>
+              ) : null}
 
               <div className="absolute left-0 right-0 top-0 z-[3] flex min-w-0 w-full max-w-full items-start justify-between gap-2 px-3 pt-3 sm:px-3.5 sm:pt-3.5">
                 <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
@@ -655,14 +711,17 @@ export function MovieSwipeCard({
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
         style={{
-          transform: `translateX(${dragOffset}px) rotate(${dragOffset * 0.045}deg) scale(${dragOffset === 0 ? 1 : 0.996})`,
+          transform: `translateX(${dragOffset}px) rotate(${dragOffset * dragRotate}deg) scale(${liveScale})`,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {swipeFeedback ? (
-          <div className="pointer-events-none absolute inset-x-6 top-6 z-[var(--z-local)] flex justify-center">
+          <div
+            className="pointer-events-none absolute inset-x-4 top-5 z-[var(--z-local)] flex justify-center sm:inset-x-5 sm:top-6"
+            role="status"
+          >
             <div
               className={`discover-feedback-chip ${
                 swipeFeedback === "accepted"
@@ -670,7 +729,7 @@ export function MovieSwipeCard({
                   : "discover-feedback-reject"
               }`}
             >
-              {swipeFeedback === "accepted" ? "Added to picks" : "Passed for now"}
+              {swipeFeedback === "accepted" ? "Saved to picks" : "Passed for now"}
             </div>
           </div>
         ) : null}

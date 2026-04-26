@@ -33,6 +33,8 @@ import type { Movie } from "@/lib/types";
 import { useAppState } from "@/lib/app-state";
 
 const ONBOARDING_STEP_COUNT = 3;
+/** Time to run swipe-out + heart overlay before advancing queue (matches CSS, ~1 frame for paint). */
+const DISCOVER2_SWIPE_COMMIT_MS = 340;
 
 export type DiscoverPageContentProps = {
   currentUserId: string | null;
@@ -826,7 +828,7 @@ export function DiscoverPage2Content({
       }, 5200);
 
       void swipeMovie(swipedMovie.id, decision);
-    }, 48);
+    }, DISCOVER2_SWIPE_COMMIT_MS);
   }, [
     movie,
     transitionState,
