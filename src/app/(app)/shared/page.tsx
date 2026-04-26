@@ -31,7 +31,7 @@ export default function SharedWatchlistPage() {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="app-screen-stack">
         <PageHeader
           eyebrow="Together"
           title="Shared Watchlist"

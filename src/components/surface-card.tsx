@@ -49,7 +49,7 @@ export function SurfaceCard({
     return (
       <section
         {...props}
-        className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] hover:-translate-y-0.5 ${className}`}
+        className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] hover:-translate-y-0.5 ${className}`}
       >
         {heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- external TMDB poster
@@ -77,7 +77,9 @@ export function SurfaceCard({
             aria-hidden
           />
         ) : null}
-        <div className="relative z-10 flex w-full min-w-0 flex-col gap-6 p-5 sm:p-6">{children}</div>
+        <div className="relative z-10 flex w-full min-w-0 flex-col gap-[var(--app-section-gap-lg)] p-[var(--app-card-pad)] sm:p-6">
+          {children}
+        </div>
       </section>
     );
   }
@@ -96,7 +98,7 @@ export function SurfaceCard({
   return (
     <section
       {...props}
-      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[28px] p-5 hover:-translate-y-0.5 ${
+      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] p-[var(--app-card-pad)] hover:-translate-y-0.5 ${
         isDarkMode ? darkShell : lightShell
       } ${className}`}
     >

@@ -922,7 +922,7 @@ export default function PicksPage() {
 
   return (
     <>
-      <div className="space-y-5">
+      <div className="app-screen-stack">
         <div className="fade-up-enter">
           <PageHeader
             eyebrow="Your picks"

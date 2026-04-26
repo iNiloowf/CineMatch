@@ -260,11 +260,11 @@ export default function FriendProfilePage() {
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-200/90"
     : sectionEyebrow;
   const friendCardOuterClass = isDarkMode
-    ? "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[28px] border border-white/16"
-    : "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[28px] border border-slate-200/90";
+    ? "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] border border-white/16"
+    : "ui-motion-surface relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] border border-slate-200/90";
 
   return (
-    <div className="space-y-5 pb-2">
+    <div className="app-screen-stack pb-2">
       {selectedMovie ? (
         <MovieDetailsModal
           movie={selectedMovie}

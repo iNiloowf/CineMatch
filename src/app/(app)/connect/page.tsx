@@ -171,7 +171,7 @@ export default function ConnectPage() {
   return (
     <div className={`auth-landing-stage relative min-h-full ${shellBg}`}>
       <ConnectBackdrop isDarkMode={isDarkMode} />
-      <div className="relative z-[1] space-y-5 pb-8">
+      <div className="app-screen-stack relative z-[1] pb-8">
         <div className="fade-up-enter">
           <PageHeader
             eyebrow="Connect"

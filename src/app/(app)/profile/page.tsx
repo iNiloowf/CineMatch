@@ -802,7 +802,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="app-screen-stack">
       <ModalPortal open={removePhotoModalOpen}>
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
           <button

@@ -410,7 +410,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="w-full min-w-0 space-y-4">
+    <div className="app-screen-stack w-full min-w-0">
       <ModalPortal open={isContactAdminModalOpen}>
         {isContactAdminModalOpen ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">

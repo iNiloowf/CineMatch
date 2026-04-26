@@ -24,7 +24,9 @@ export function AppRouteLoading({
   frameClassName?: string;
 }) {
   return (
-    <div className={frameClassName ?? "flex flex-1 items-center justify-center p-4"}>
+    <div
+      className={frameClassName ?? "flex flex-1 items-center justify-center p-[var(--app-page-px)]"}
+    >
       <div
         className="mx-auto w-full max-w-md space-y-4"
         role="status"
@@ -120,7 +122,7 @@ export function AppRouteEmptyCard({
 export function AppRouteNetworkStatus(props: ComponentProps<typeof NetworkStatusBlock>) {
   return (
     <div
-      className={`flex w-full flex-1 flex-col items-center justify-center px-4 ${
+      className={`flex w-full flex-1 flex-col items-center justify-center px-[var(--app-page-px)] ${
         props.compact ? "min-h-[30vh] py-5 sm:min-h-[34vh] sm:py-6" : "min-h-[40vh] py-8"
       }`}
     >

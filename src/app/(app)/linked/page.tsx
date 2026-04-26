@@ -105,7 +105,7 @@ export default function FriendsPage() {
         : "bg-amber-400/95";
 
   return (
-    <div className="space-y-5">
+    <div className="app-screen-stack">
       <ModalPortal open={Boolean(pendingRemove)}>
         {pendingRemove ? (
         <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/32 backdrop-blur-md">
