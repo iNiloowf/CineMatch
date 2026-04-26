@@ -2,11 +2,13 @@
 
 import { processLock } from "@supabase/auth-js";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  AUTH_SUPABASE_KV_KEY,
+  createSupabaseAuthStorageAdapter,
+} from "@/lib/auth/auth-credential-kv";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-/** Isolated localStorage key for auth session (avoids clashing with default `sb-*` cookies). */
-const AUTH_STORAGE_KEY = "cinematch-supabase-auth";
 
 type SupabaseDatabase = {
   public: {
@@ -76,20 +78,21 @@ export function getSupabaseBrowserClient() {
       supabaseUrl,
       supabasePublishableKey,
       {
-      auth: {
-        /** Session persisted in `localStorage` under `cinematch-supabase-auth`. */
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        flowType: "pkce",
-        storageKey: AUTH_STORAGE_KEY,
-        /**
-         * Use in-process locks instead of the Web Locks API (`navigator.locks`).
-         * The default navigator lock can throw "stolen lock" errors when multiple
-         * tabs or Strict Mode compete for the same lock name.
-         */
-        lock: processLock,
-      },
+        auth: {
+          /** iOS Keychain / Android Keystore in Capacitor; prefixed store on the web. */
+          storage: createSupabaseAuthStorageAdapter(),
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          flowType: "pkce",
+          storageKey: AUTH_SUPABASE_KV_KEY,
+          /**
+           * Use in-process locks instead of the Web Locks API (`navigator.locks`).
+           * The default navigator lock can throw "stolen lock" errors when multiple
+           * tabs or Strict Mode compete for the same lock name.
+           */
+          lock: processLock,
+        },
       },
     );
   }

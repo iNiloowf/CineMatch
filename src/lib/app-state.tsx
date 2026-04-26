@@ -34,6 +34,7 @@ import { useAppToasts } from "@/lib/hooks/use-app-toasts";
 import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
 import {
   clearStoredAuthSession,
+  ensureAuthSessionMirrorLoaded,
   getStoredAuthSession,
   persistStoredAuthSession,
 } from "@/lib/auth-session-storage";
@@ -724,6 +725,7 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
 }
 
 async function getCurrentAccessToken() {
+  await ensureAuthSessionMirrorLoaded();
   const storedSession = getStoredAuthSession();
 
   if (storedSession?.accessToken) {
@@ -1291,7 +1293,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    let authSubscription: { unsubscribe: () => void } | null = null;
+
     void (async () => {
+      await ensureAuthSessionMirrorLoaded();
+      if (!active) {
+        return;
+      }
+
       const sessionResponse = await supabase.auth.getSession();
 
       if (!active) {
@@ -1306,68 +1315,63 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         refreshDiscoverShuffle(null);
         setAccountRefreshKey((current) => current + 1);
         setIsReady(true);
-        return;
-      }
-
-      if (!sessionUser && storedSession?.userId) {
+      } else if (!sessionUser && storedSession?.userId) {
         setCurrentUserId(storedSession.userId);
         setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
           getStoredUserTheme(storedSession.userId) ?? getGlobalStoredTheme(),
         );
         setIsReady(true);
-        return;
-      }
-
-      if (!sessionUser) {
+      } else if (!sessionUser) {
         setIsReady(true);
+      } else {
+        if (
+          sessionResponse.data.session?.access_token &&
+          sessionResponse.data.session?.refresh_token
+        ) {
+          persistStoredAuthSession({
+            userId: sessionUser.id,
+            email: sessionUser.email ?? null,
+            accessToken: sessionResponse.data.session.access_token,
+            refreshToken: sessionResponse.data.session.refresh_token,
+          });
+        }
+
+        const fullName =
+          (sessionUser.user_metadata.full_name as string | undefined) ??
+          sessionUser.email?.split("@")[0] ??
+          "CineMatch User";
+
+        setData((current) =>
+          mergeAppMetadataSubscriptionIntoData(
+            ensureLocalUser(current, {
+              id: sessionUser.id,
+              name: fullName,
+              email: sessionUser.email ?? "",
+              avatarImageUrl:
+                (sessionUser.user_metadata.avatar_image_url as string | undefined) ??
+                undefined,
+            }),
+            sessionUser.id,
+            sessionUser.app_metadata as Record<string, unknown> | undefined,
+          ),
+        );
+        setCurrentUserId(sessionUser.id);
+        setAccountRefreshKey((current) => current + 1);
+        setPreferredDarkMode(
+          getStoredUserTheme(sessionUser.id) ?? getGlobalStoredTheme(),
+        );
+        setIsReady(true);
+      }
+
+      if (!active) {
         return;
       }
 
-      if (
-        sessionResponse.data.session?.access_token &&
-        sessionResponse.data.session?.refresh_token
-      ) {
-        persistStoredAuthSession({
-          userId: sessionUser.id,
-          email: sessionUser.email ?? null,
-          accessToken: sessionResponse.data.session.access_token,
-          refreshToken: sessionResponse.data.session.refresh_token,
-        });
-      }
-
-      const fullName =
-        (sessionUser.user_metadata.full_name as string | undefined) ??
-        sessionUser.email?.split("@")[0] ??
-        "CineMatch User";
-
-      setData((current) =>
-        mergeAppMetadataSubscriptionIntoData(
-          ensureLocalUser(current, {
-            id: sessionUser.id,
-            name: fullName,
-            email: sessionUser.email ?? "",
-            avatarImageUrl:
-              (sessionUser.user_metadata.avatar_image_url as string | undefined) ??
-              undefined,
-          }),
-          sessionUser.id,
-          sessionUser.app_metadata as Record<string, unknown> | undefined,
-        ),
-      );
-      setCurrentUserId(sessionUser.id);
-      setAccountRefreshKey((current) => current + 1);
-      setPreferredDarkMode(
-        getStoredUserTheme(sessionUser.id) ??
-          getGlobalStoredTheme(),
-      );
-      setIsReady(true);
-    })();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(
+        (event: AuthChangeEvent, session: Session | null) => {
         const sessionUser = session?.user;
 
         if (!sessionUser) {
@@ -1461,12 +1465,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           getStoredUserTheme(activeSessionUser.id) ?? getGlobalStoredTheme(),
         );
         setIsReady(true);
-      },
-    );
+        },
+      );
+
+      authSubscription = subscription;
+      if (!active) {
+        subscription.unsubscribe();
+      }
+    })();
 
     return () => {
       active = false;
-      subscription.unsubscribe();
+      authSubscription?.unsubscribe();
     };
   }, [refreshDiscoverShuffle]);
 
@@ -1666,6 +1676,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const activeUserId = currentUserId;
 
     async function loadSupabaseAppData() {
+      await ensureAuthSessionMirrorLoaded();
       setIsSyncingAccountData(true);
       setAccountSyncError(null);
       const sessionResult = await supabaseClient.auth.getSession();
