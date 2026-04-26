@@ -226,17 +226,26 @@ export default function ProfilePage() {
       setHeaderBgSearchResults([]);
       setHeaderBgSearchState("idle");
       setHeaderBgSearchMessage("");
-      setEditSectionsOpen({
-        basicInfo: false,
-        headerBackground: false,
-        watchedReviews: false,
-        discoveryPreferences: false,
-        discoverSkips: false,
-      });
+      // Do not collapse edit accordions while the user is editing — account sync can
+      // refresh `favoriteMovie` / `onboardingPreferences` and would otherwise close Basic info mid-scroll.
+      if (!isEditing) {
+        setEditSectionsOpen({
+          basicInfo: false,
+          headerBackground: false,
+          watchedReviews: false,
+          discoveryPreferences: false,
+          discoverSkips: false,
+        });
+      }
       setIsFavoriteGenresOpen(false);
       setIsDislikedGenresOpen(false);
     });
-  }, [currentUser?.favoriteMovie, currentUser?.profileHeaderMovie, onboardingPreferences]);
+  }, [
+    currentUser?.favoriteMovie,
+    currentUser?.profileHeaderMovie,
+    onboardingPreferences,
+    isEditing,
+  ]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -1463,24 +1472,39 @@ export default function ProfilePage() {
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditSectionsOpen((current) => ({
-                        ...current,
-                        basicInfo: !current.basicInfo,
-                      }))
-                    }
-                    className="flex w-full items-center justify-between gap-2 text-left"
-                  >
-                    <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <p
+                      id="profile-edit-basic-info-heading"
+                      className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                    >
                       Basic info
                     </p>
-                    <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
-                      {editSectionsOpen.basicInfo ? "−" : "+"}
-                    </span>
-                  </button>
-                  <div className={editSectionsOpen.basicInfo ? "" : "hidden"}>
+                    <button
+                      type="button"
+                      aria-expanded={editSectionsOpen.basicInfo}
+                      aria-controls="profile-edit-basic-info-panel"
+                      aria-labelledby="profile-edit-basic-info-heading"
+                      onClick={() =>
+                        setEditSectionsOpen((current) => ({
+                          ...current,
+                          basicInfo: !current.basicInfo,
+                        }))
+                      }
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                        isDarkMode
+                          ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span aria-hidden>{editSectionsOpen.basicInfo ? "−" : "+"}</span>
+                      <span className="sr-only">{editSectionsOpen.basicInfo ? "Collapse" : "Expand"} basic info</span>
+                    </button>
+                  </div>
+                  <div
+                    id="profile-edit-basic-info-panel"
+                    role="region"
+                    hidden={!editSectionsOpen.basicInfo}
+                  >
                 <div className="flex min-w-0 flex-1 flex-col gap-3.5 sm:max-w-xl">
                   <label className={`block space-y-2 ${labelClass}`}>
                     Username
@@ -1620,17 +1644,8 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditSectionsOpen((current) => ({
-                        ...current,
-                        headerBackground: !current.headerBackground,
-                      }))
-                    }
-                    className="flex w-full items-start justify-between gap-2 text-left"
-                  >
-                    <div>
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1" id="profile-edit-header-bg-heading">
                       <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                         Header background
                       </p>
@@ -1638,10 +1653,26 @@ export default function ProfilePage() {
                         Pick a film — friends see the same art on your card.
                       </p>
                     </div>
-                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
-                      {editSectionsOpen.headerBackground ? "−" : "+"}
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      aria-expanded={editSectionsOpen.headerBackground}
+                      aria-labelledby="profile-edit-header-bg-heading"
+                      onClick={() =>
+                        setEditSectionsOpen((current) => ({
+                          ...current,
+                          headerBackground: !current.headerBackground,
+                        }))
+                      }
+                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                        isDarkMode
+                          ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span aria-hidden>{editSectionsOpen.headerBackground ? "−" : "+"}</span>
+                      <span className="sr-only">{editSectionsOpen.headerBackground ? "Collapse" : "Expand"} header background</span>
+                    </button>
+                  </div>
                   {editSectionsOpen.headerBackground ? (
                     <div className="space-y-2">
                       <p className={`text-[11px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
@@ -1753,17 +1784,8 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditSectionsOpen((current) => ({
-                        ...current,
-                        watchedReviews: !current.watchedReviews,
-                      }))
-                    }
-                    className="flex w-full items-start justify-between gap-2 text-left"
-                  >
-                    <div>
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1" id="profile-edit-watched-reviews-heading">
                       <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                         Watched reviews
                       </p>
@@ -1771,31 +1793,59 @@ export default function ProfilePage() {
                         From Picks after you mark a title watched. Titles you mark <span className="font-semibold">Recommended</span> appear on your friend profile for people you’re linked with.
                       </p>
                     </div>
-                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
-                      {editSectionsOpen.watchedReviews ? "−" : "+"}
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      aria-expanded={editSectionsOpen.watchedReviews}
+                      aria-labelledby="profile-edit-watched-reviews-heading"
+                      onClick={() =>
+                        setEditSectionsOpen((current) => ({
+                          ...current,
+                          watchedReviews: !current.watchedReviews,
+                        }))
+                      }
+                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                        isDarkMode
+                          ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span aria-hidden>{editSectionsOpen.watchedReviews ? "−" : "+"}</span>
+                      <span className="sr-only">{editSectionsOpen.watchedReviews ? "Collapse" : "Expand"} watched reviews</span>
+                    </button>
+                  </div>
                   {editSectionsOpen.watchedReviews ? watchedReviewsEditorSection : null}
                 </section>
 
                 <section className={`space-y-4 p-3 sm:p-4 ${editSectionShell}`}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditSectionsOpen((current) => ({
-                        ...current,
-                        discoveryPreferences: !current.discoveryPreferences,
-                      }))
-                    }
-                    className="flex w-full items-center justify-between gap-2 text-left"
-                  >
-                    <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <p
+                      id="profile-edit-discovery-pref-heading"
+                      className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                    >
                       Discovery preferences
                     </p>
-                    <span className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
-                      {editSectionsOpen.discoveryPreferences ? "−" : "+"}
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      aria-expanded={editSectionsOpen.discoveryPreferences}
+                      aria-labelledby="profile-edit-discovery-pref-heading"
+                      onClick={() =>
+                        setEditSectionsOpen((current) => ({
+                          ...current,
+                          discoveryPreferences: !current.discoveryPreferences,
+                        }))
+                      }
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                        isDarkMode
+                          ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span aria-hidden>{editSectionsOpen.discoveryPreferences ? "−" : "+"}</span>
+                      <span className="sr-only">
+                        {editSectionsOpen.discoveryPreferences ? "Collapse" : "Expand"} discovery preferences
+                      </span>
+                    </button>
+                  </div>
                   {editSectionsOpen.discoveryPreferences && (
                   <>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -1958,17 +2008,8 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditSectionsOpen((current) => ({
-                        ...current,
-                        discoverSkips: !current.discoverSkips,
-                      }))
-                    }
-                    className="flex w-full items-start justify-between gap-2 text-left"
-                  >
-                    <div>
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1" id="profile-edit-discover-skips-heading">
                       <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                         Discover skips
                       </p>
@@ -1977,10 +2018,26 @@ export default function ProfilePage() {
                         into your queue, read details, or save it to picks.
                       </p>
                     </div>
-                    <span className={`pt-0.5 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`} aria-hidden>
-                      {editSectionsOpen.discoverSkips ? "−" : "+"}
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      aria-expanded={editSectionsOpen.discoverSkips}
+                      aria-labelledby="profile-edit-discover-skips-heading"
+                      onClick={() =>
+                        setEditSectionsOpen((current) => ({
+                          ...current,
+                          discoverSkips: !current.discoverSkips,
+                        }))
+                      }
+                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                        isDarkMode
+                          ? "bg-white/10 text-slate-200 hover:bg-white/15"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span aria-hidden>{editSectionsOpen.discoverSkips ? "−" : "+"}</span>
+                      <span className="sr-only">{editSectionsOpen.discoverSkips ? "Collapse" : "Expand"} discover skips</span>
+                    </button>
+                  </div>
                   {editSectionsOpen.discoverSkips ? (
                     <button
                       type="button"
