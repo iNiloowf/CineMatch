@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { getCheckoutUrlForPlan } from "@/server/stripe";
 
 const createCheckoutIntentSchema = z.object({
@@ -12,25 +11,15 @@ const createCheckoutIntentSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in first.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { supabaseAdmin, auth } = session;
 
   const parsedBody = await parseJsonBody(request, createCheckoutIntentSchema);
   if (!parsedBody.ok) {
     return parsedBody.response;
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return apiJsonError(503, "Billing is not configured on the server yet.", {
-      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
-      request,
-    });
   }
 
   const { planType } = parsedBody.data;
@@ -132,8 +121,7 @@ export async function POST(request: NextRequest) {
   }
   checkoutUrl.searchParams.set("client_reference_id", token);
 
-  const buyerResult = await supabaseAdmin.auth.getUser(auth.accessToken);
-  const buyerEmail = buyerResult.data.user?.email ?? null;
+  const buyerEmail = auth.user.email?.trim() ?? null;
   if (buyerEmail) {
     checkoutUrl.searchParams.set("prefilled_email", buyerEmail);
   }

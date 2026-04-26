@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
 import { logSecurityAudit } from "@/server/security-audit";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { appendConversation, parseConversation, type ConversationEntry } from "@/lib/support-ticket-conversation";
 import { z } from "zod";
 
@@ -20,14 +19,11 @@ export async function POST(
   context: { params: Promise<{ ticketId: string }> },
 ) {
   const { ticketId } = await context.params;
-  const authToken = await verifyBearerFromRequest(request);
-
-  if (!authToken) {
-    return apiJsonError(401, "You need to be signed in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { supabaseAdmin, auth: authToken } = session;
 
   const rate = checkRateLimit({
     key: `ticket:followup:${authToken.userId}`,
@@ -46,15 +42,6 @@ export async function POST(
   const parsed = await parseJsonBody(request, bodySchema);
   if (!parsed.ok) {
     return parsed.response;
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return apiJsonError(
-      500,
-      "Ticket service is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL, request },
-    );
   }
 
   const rowResult = (await supabaseAdmin

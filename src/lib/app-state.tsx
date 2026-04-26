@@ -1314,6 +1314,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     let authSubscription: { unsubscribe: () => void } | null = null;
 
     void (async () => {
+      try {
       await ensureAuthSessionMirrorLoaded();
       if (!active) {
         return;
@@ -1490,6 +1491,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (!active) {
         subscription.unsubscribe();
       }
+      } catch (authBootstrapError) {
+        console.error("[cinematch] Auth bootstrap failed:", authBootstrapError);
+        if (active) {
+          setIsReady(true);
+        }
+      }
     })();
 
     return () => {
@@ -1497,6 +1504,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       authSubscription?.unsubscribe();
     };
   }, [refreshDiscoverShuffle]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || isReady) {
+      return;
+    }
+    const safetyId = window.setTimeout(() => {
+      setIsReady(true);
+    }, 15000);
+    return () => {
+      window.clearTimeout(safetyId);
+    };
+  }, [isReady]);
 
   useSupabaseAccountRefreshChannels(currentUserId, requestAccountDataRefresh);
 

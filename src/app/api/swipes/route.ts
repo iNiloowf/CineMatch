@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { logSecurityAudit } from "@/server/security-audit";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { z } from "zod";
 
 type SwipeDecision = "accepted" | "rejected";
@@ -43,42 +42,14 @@ const deleteSwipeBodySchema = z.object({
   movieId: z.string().min(1),
 });
 
-async function getAuthorizedUserId(request: NextRequest) {
-  const authToken = await verifyBearerFromRequest(request);
-
-  if (!authToken) {
-    return { error: "You need to be logged in first.", status: 401 as const };
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (!supabaseAdmin) {
-    return {
-      error: "Server-side account sync is not configured yet.",
-      status: 500 as const,
-    };
-  }
-
-  const currentUserId = authToken.userId;
-
-  return { supabaseAdmin, currentUserId } as const;
-}
-
 export async function POST(request: NextRequest) {
-  const authResult = await getAuthorizedUserId(request);
-
-  if ("error" in authResult) {
-    const code =
-      authResult.status === 401
-        ? API_ERROR_CODES.UNAUTHORIZED
-        : API_ERROR_CODES.INTERNAL;
-    return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
-      code,
-      request,
-    });
+  const authResult = await requireAuthenticatedUserWithAdmin(request);
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  const { supabaseAdmin, currentUserId } = authResult;
+  const { supabaseAdmin, auth } = authResult;
+  const currentUserId = auth.userId;
 
   const createRate = checkRateLimit({
     key: `swipe:post:${currentUserId}`,
@@ -175,20 +146,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const authResult = await getAuthorizedUserId(request);
-
-  if ("error" in authResult) {
-    const code =
-      authResult.status === 401
-        ? API_ERROR_CODES.UNAUTHORIZED
-        : API_ERROR_CODES.INTERNAL;
-    return apiJsonError(authResult.status ?? 500, authResult.error ?? "Request failed.", {
-      code,
-      request,
-    });
+  const authResult = await requireAuthenticatedUserWithAdmin(request);
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  const { supabaseAdmin, currentUserId } = authResult;
+  const { supabaseAdmin, auth } = authResult;
+  const currentUserId = auth.userId;
 
   const undoRate = checkRateLimit({
     key: `swipe:delete:${currentUserId}`,

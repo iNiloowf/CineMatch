@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
+import { forbiddenUserScopeResponse, requireAuthenticatedUser } from "@/server/api-auth-guard";
+import { apiJsonOk } from "@/server/api-response";
 import { parseJsonBody, parseSearchParams } from "@/server/api-validation";
 import { getDatabase, linkUsers } from "@/server/mock-db";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { z } from "zod";
 
 const linksGetQuerySchema = z.object({
@@ -15,14 +15,11 @@ const createLinkBodySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { auth } = session;
 
   const parsedQuery = parseSearchParams(request, linksGetQuerySchema);
   if (!parsedQuery.ok) {
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest) {
   const database = getDatabase();
 
   if (userId && userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
+    return forbiddenUserScopeResponse(request);
   }
 
   const effectiveUserId = userId ?? auth.userId;
@@ -46,14 +43,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { auth } = session;
 
   const parsedBody = await parseJsonBody(request, createLinkBodySchema);
   if (!parsedBody.ok) {
@@ -62,7 +56,7 @@ export async function POST(request: NextRequest) {
   const body = parsedBody.data;
 
   if (!body.userId || body.userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
+    return forbiddenUserScopeResponse(request);
   }
 
   const link = linkUsers(body.userId, body.targetUserId);

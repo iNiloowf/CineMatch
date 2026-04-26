@@ -1,29 +1,16 @@
 import { NextRequest } from "next/server";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
-
-  const admin = getSupabaseAdminClient();
-
-  if (!admin) {
-    return apiJsonError(503, "Photo upload service is not configured.", {
-      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
-      request,
-    });
-  }
+  const { supabaseAdmin: admin, auth } = session;
 
   let formData: FormData;
   try {

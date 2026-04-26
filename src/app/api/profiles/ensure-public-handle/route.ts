@@ -1,8 +1,7 @@
 import { type NextRequest } from "next/server";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { checkRateLimit } from "@/server/rate-limit";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 const WINDOW_MS = 60_000;
 const MAX = 30;
@@ -12,21 +11,11 @@ const MAX = 30;
  * a handle (legacy accounts). First login or sync.
  */
 export async function POST(request: NextRequest) {
-  const token = await verifyBearerFromRequest(request);
-  if (!token) {
-    return apiJsonError(401, "Log in to continue.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
-
-  const supabase = getSupabaseAdminClient();
-  if (!supabase) {
-    return apiJsonError(500, "Server is not configured.", {
-      code: API_ERROR_CODES.INTERNAL,
-      request,
-    });
-  }
+  const { supabaseAdmin: supabase, auth: token } = session;
 
   const rate = checkRateLimit({
     key: `ensure-public-handle:post:${token.userId}`,

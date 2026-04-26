@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 
 const giftCodeQuerySchema = z.object({
   activeOnly: z.string().optional(),
@@ -20,25 +19,15 @@ type GiftCodeRow = {
 };
 
 export async function GET(request: NextRequest) {
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
+  }
+  const { supabaseAdmin, auth } = session;
+
   const parsedQuery = parseSearchParams(request, giftCodeQuerySchema);
   if (!parsedQuery.ok) {
     return parsedQuery.response;
-  }
-
-  const auth = await verifyBearerFromRequest(request);
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in first.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-  if (!supabaseAdmin) {
-    return apiJsonError(503, "Billing is not configured on the server yet.", {
-      code: API_ERROR_CODES.SERVICE_UNAVAILABLE,
-      request,
-    });
   }
 
   const activeOnly = parsedQuery.data.activeOnly !== "false";

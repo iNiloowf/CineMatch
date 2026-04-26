@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { checkRateLimit } from "@/server/rate-limit";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 type ProfileRow = {
   id: string;
@@ -139,10 +139,7 @@ function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
   return raw === true;
 }
 
-async function fetchSettingsRow(
-  userId: string,
-  supabaseAdmin: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
-) {
+async function fetchSettingsRow(userId: string, supabaseAdmin: SupabaseClient) {
   const fullSelect =
     "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion, subscription_tier, admin_mode_simulate_pro";
   const fallbackSelect =
@@ -225,17 +222,15 @@ async function fetchSettingsRow(
 }
 
 export async function GET(request: NextRequest) {
-  const authToken = await verifyBearerFromRequest(request);
-
-  if (!authToken) {
-    return apiJsonError(401, "You need to be logged in to sync account data.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { supabaseAdmin, auth } = session;
+  const currentUserId = auth.userId;
 
   const syncRate = checkRateLimit({
-    key: `account-sync:get:${authToken.userId}`,
+    key: `account-sync:get:${currentUserId}`,
     max: SYNC_MAX,
     windowMs: SYNC_WINDOW_MS,
   });
@@ -251,18 +246,6 @@ export async function GET(request: NextRequest) {
       },
     );
   }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (!supabaseAdmin) {
-    return apiJsonError(
-      500,
-      "Account sync is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL, request },
-    );
-  }
-
-  const currentUserId = authToken.userId;
 
   const settingsResult = await fetchSettingsRow(currentUserId, supabaseAdmin);
 

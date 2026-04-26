@@ -8,8 +8,7 @@
 
 ## Server-side API routes
 
-- **Do not trust JWT payload alone.** Use **`verifyBearerFromRequest`** (`src/server/supabase-auth-verify.ts`), which calls **`supabase.auth.getUser(accessToken)`** with the service-role client to validate signature, expiry, and user id when `SUPABASE_SERVICE_ROLE_KEY` is set.
-- **Without service role** (local demo): verification falls back to decode-only checks — acceptable for offline mocks only.
+- **Do not trust JWT payload alone.** Use **`requireAuthenticatedUser` / `requireAuthenticatedUserWithAdmin`** (`src/server/api-auth-guard.ts`) or **`verifySupabaseBearer`** (`src/server/supabase-auth-verify.ts`), which call **`auth.getUser(accessToken)`** on the service-role client. If the service role is not configured, the API returns **503** (no decode-only / silent bypass).
 
 ## Avatars & RLS
 

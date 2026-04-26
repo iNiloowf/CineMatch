@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
+import { forbiddenUserScopeResponse, requireAuthenticatedUser } from "@/server/api-auth-guard";
+import { apiJsonOk } from "@/server/api-response";
 import { parseJsonBody, parseSearchParams } from "@/server/api-validation";
 import { getSharedWatchlist, updateSharedWatch } from "@/server/mock-db";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { z } from "zod";
 
 const sharedWatchlistGetQuerySchema = z.object({
@@ -18,14 +18,11 @@ const sharedWatchlistPatchSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { auth } = session;
 
   const parsedQuery = parseSearchParams(request, sharedWatchlistGetQuerySchema);
   if (!parsedQuery.ok) {
@@ -34,25 +31,18 @@ export async function GET(request: NextRequest) {
   const userId = parsedQuery.data.userId;
 
   if (userId !== auth.userId) {
-    return apiJsonError(
-      400,
-      "userId is required and must match your account.",
-      { code: API_ERROR_CODES.BAD_REQUEST, request },
-    );
+    return forbiddenUserScopeResponse(request);
   }
 
   return apiJsonOk({ sharedWatchlist: getSharedWatchlist(userId) }, request);
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = await verifyBearerFromRequest(request);
-
-  if (!auth) {
-    return apiJsonError(401, "You need to be logged in.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { auth } = session;
 
   const parsedBody = await parseJsonBody(request, sharedWatchlistPatchSchema);
   if (!parsedBody.ok) {
@@ -61,7 +51,7 @@ export async function PATCH(request: NextRequest) {
   const body = parsedBody.data;
 
   if (!body.userId || body.userId !== auth.userId) {
-    return apiJsonError(403, "Forbidden.", { code: API_ERROR_CODES.FORBIDDEN, request });
+    return forbiddenUserScopeResponse(request);
   }
 
   const shared = updateSharedWatch(body);

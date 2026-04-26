@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { clientIp, checkRateLimit } from "@/server/rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
@@ -9,8 +10,6 @@ import {
   getResendTestingTarget,
   isResendTestModeEnabled,
 } from "@/server/resend";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 import { parseConversation } from "@/lib/support-ticket-conversation";
 import { z } from "zod";
 
@@ -62,24 +61,11 @@ function buildTicketAcknowledgementHtml({
 }
 
 export async function GET(request: NextRequest) {
-  const authToken = await verifyBearerFromRequest(request);
-
-  if (!authToken) {
-    return apiJsonError(401, "You need to be signed in to view your tickets.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (!supabaseAdmin) {
-    return apiJsonError(
-      500,
-      "Ticket service is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL, request },
-    );
-  }
+  const { supabaseAdmin, auth: authToken } = session;
 
   const listResult = (await supabaseAdmin
     .from("support_tickets")
@@ -169,14 +155,11 @@ function buildAdminTicketNotificationHtml({
 }
 
 export async function POST(request: NextRequest) {
-  const authToken = await verifyBearerFromRequest(request);
-
-  if (!authToken) {
-    return apiJsonError(401, "You need to be logged in to submit a ticket.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const { supabaseAdmin, auth: authToken } = session;
 
   const submitRate = checkRateLimit({
     key: `ticket:submit:${authToken.userId}`,
@@ -190,16 +173,6 @@ export async function POST(request: NextRequest) {
       headers: { "Retry-After": String(submitRate.retryAfterSec) },
       request,
     });
-  }
-
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (!supabaseAdmin) {
-    return apiJsonError(
-      500,
-      "Ticket service is not configured on the server yet.",
-      { code: API_ERROR_CODES.INTERNAL, request },
-    );
   }
 
   const parsedBody = await parseJsonBody(request, createTicketBodySchema);
@@ -278,8 +251,7 @@ export async function POST(request: NextRequest) {
 
     let rawEmail = profileResult.data?.email?.trim().toLowerCase() ?? "";
     if (!rawEmail) {
-      const authUserResult = await supabaseAdmin.auth.getUser(authToken.accessToken);
-      rawEmail = authUserResult.data.user?.email?.trim().toLowerCase() ?? "";
+      rawEmail = authToken.user.email?.trim().toLowerCase() ?? "";
     }
     const targetEmail = resendTestMode ? resendTestTarget : rawEmail;
     const displayName = profileResult.data?.full_name?.trim() || "there";

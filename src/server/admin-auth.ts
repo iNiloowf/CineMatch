@@ -2,8 +2,9 @@ import type { NextRequest } from "next/server";
 import type { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { API_ERROR_CODES, apiJsonError } from "@/server/api-response";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
+import { mapBearerFailureToResponse } from "@/server/api-auth-guard";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
+import { verifySupabaseBearer } from "@/server/supabase-auth-verify";
 
 type AdminIdentity = {
   userId: string;
@@ -61,15 +62,9 @@ function hasAdminRole(appMetadata: Record<string, unknown> | undefined) {
 export async function requireServerAdmin(
   request: NextRequest,
 ): Promise<RequireServerAdminResult> {
-  const auth = await verifyBearerFromRequest(request);
-  if (!auth) {
-    return {
-      ok: false,
-      response: apiJsonError(401, "You must be signed in to use admin endpoints.", {
-        code: API_ERROR_CODES.UNAUTHORIZED,
-        request,
-      }),
-    };
+  const v = await verifySupabaseBearer(request);
+  if (!v.ok) {
+    return { ok: false, response: mapBearerFailureToResponse(v, request) };
   }
 
   const supabaseAdmin = getSupabaseAdminClient();
@@ -77,37 +72,25 @@ export async function requireServerAdmin(
     return {
       ok: false,
       response: apiJsonError(
-        500,
-        "Admin endpoints are not configured on the server yet.",
-        { code: API_ERROR_CODES.INTERNAL, request },
+        503,
+        "Admin endpoints are not available. Authentication could not be verified.",
+        { code: API_ERROR_CODES.SERVICE_UNAVAILABLE, request },
       ),
     };
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(auth.accessToken);
-  if (error || !data.user) {
-    return {
-      ok: false,
-      response: apiJsonError(401, "Admin session could not be verified.", {
-        code: API_ERROR_CODES.UNAUTHORIZED,
-        request,
-      }),
-    };
-  }
-
-  const email = data.user.email?.trim().toLowerCase() ?? null;
+  const su = v.user;
+  const email = su.email?.trim().toLowerCase() ?? null;
   const role =
-    typeof data.user.app_metadata?.role === "string"
-      ? data.user.app_metadata.role
-      : null;
+    typeof su.app_metadata?.role === "string" ? su.app_metadata.role : null;
   /** Server-only env — never use NEXT_PUBLIC_* for allowlists (would ship to the client). */
   const adminIds = parseEnvList(process.env.ADMIN_USER_IDS);
   const adminEmails = parseEnvList(process.env.ADMIN_EMAILS);
   addEnvEmail(adminEmails, process.env.ADMIN_DASHBOARD_EMAIL);
   addEnvEmail(adminEmails, process.env.ADMIN_EMAIL);
-  const allowlistedById = adminIds.has(data.user.id.toLowerCase());
+  const allowlistedById = adminIds.has(su.id.toLowerCase());
   const allowlistedByEmail = email ? adminEmails.has(email) : false;
-  const isAdmin = hasAdminRole(data.user.app_metadata) || allowlistedById || allowlistedByEmail;
+  const isAdmin = hasAdminRole(su.app_metadata) || allowlistedById || allowlistedByEmail;
 
   if (!isAdmin) {
     return {
@@ -124,7 +107,7 @@ export async function requireServerAdmin(
     ok: true,
     supabaseAdmin,
     identity: {
-      userId: data.user.id,
+      userId: su.id,
       email,
       role,
     },

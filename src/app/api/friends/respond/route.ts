@@ -1,10 +1,9 @@
 import { type NextRequest } from "next/server";
 import { z } from "zod";
+import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
-import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { checkRateLimit } from "@/server/rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
-import { verifyBearerFromRequest } from "@/server/supabase-auth-verify";
 
 const WINDOW_MS = 60_000;
 const MAX = 50;
@@ -15,21 +14,11 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const token = await verifyBearerFromRequest(request);
-  if (!token) {
-    return apiJsonError(401, "Log in to answer friend requests.", {
-      code: API_ERROR_CODES.UNAUTHORIZED,
-      request,
-    });
+  const session = await requireAuthenticatedUserWithAdmin(request);
+  if (!session.ok) {
+    return session.response;
   }
-
-  const supabase = getSupabaseAdminClient();
-  if (!supabase) {
-    return apiJsonError(500, "Server is not configured.", {
-      code: API_ERROR_CODES.INTERNAL,
-      request,
-    });
-  }
+  const { supabaseAdmin: supabase, auth: token } = session;
 
   const rate = checkRateLimit({
     key: `friends-respond:post:${token.userId}`,

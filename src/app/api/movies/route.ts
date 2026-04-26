@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { passesDiscoverListEligibility } from "@/lib/discover-quality";
+import { forbiddenUserScopeResponse, requireAuthenticatedUser } from "@/server/api-auth-guard";
 import { apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
@@ -26,6 +27,17 @@ export async function GET(request: NextRequest) {
     parsedQuery.data;
   const userId = rawUserId?.trim() || undefined;
   const movieId = rawMovieId?.trim() || undefined;
+
+  if (userId) {
+    const session = await requireAuthenticatedUser(request);
+    if (!session.ok) {
+      return session.response;
+    }
+    if (userId !== session.auth.userId) {
+      return forbiddenUserScopeResponse(request);
+    }
+  }
+
   const database = getDatabase();
   const query = rawQuery?.trim() ?? "";
   const movies =
