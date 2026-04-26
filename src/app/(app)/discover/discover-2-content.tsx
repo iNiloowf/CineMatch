@@ -1227,14 +1227,8 @@ export function DiscoverPage2Content({
       ) : null}
 
       {!isSearchOpen ? (
-        <div className="shrink-0 space-y-2 sm:space-y-2.5">
-          <div
-            className={`discover-v2-hero-slab mx-0.5 flex items-center justify-between gap-2 rounded-[22px] border px-2.5 py-2 sm:mx-1 sm:gap-3 sm:px-3.5 sm:py-2.5 ${
-              isDarkMode
-                ? "border-violet-500/20 bg-gradient-to-r from-slate-950/95 via-violet-950/40 to-fuchsia-950/35 shadow-[0_10px_36px_rgba(0,0,0,0.4)]"
-                : "border-violet-200/80 bg-gradient-to-r from-white via-violet-50/95 to-fuchsia-50/80 shadow-sm"
-            }`}
-          >
+        <div className="shrink-0 space-y-1.5 sm:space-y-2">
+          <div className="mx-0.5 flex items-center justify-between gap-2 px-0.5 py-0 sm:mx-1 sm:gap-3 sm:py-0.5">
             <div className="min-w-0 flex-1 pr-0.5">
               <p
                 className={`text-[0.65rem] font-bold uppercase tracking-[0.2em] ${
@@ -1529,7 +1523,7 @@ export function DiscoverPage2Content({
             hasActiveBrowse={Boolean(movie)}
             isOnboardingComplete={isOnboardingComplete}
           />
-          <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar px-3 py-2.5 sm:px-3.5">
+          <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar px-3 py-2 sm:px-3.5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
