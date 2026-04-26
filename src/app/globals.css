@@ -1210,8 +1210,13 @@ input[type="range"] {
  * bottom nav with only a hairline (card buttons still use their own safe-area).
  */
 [data-app-scroll-container="true"] .discover-v2-page-stack {
-  /* Sit the card stack on the bottom nav; card buttons keep their own safe padding */
-  margin-bottom: calc(-1 * var(--app-scroll-pad-bottom));
+  /*
+   * Negate the “gutter + curve” scroll pad only; keep a slice of the nav clearance in flow so
+   * the swipe card is less likely to end under the fixed bar on small / odd viewports.
+   */
+  margin-bottom: calc(
+    -1 * (var(--app-scroll-pad-bottom) - var(--app-bottom-nav-overlay) - 0.5rem)
+  );
 }
 
 /*
@@ -1223,6 +1228,16 @@ section[data-poster-layout="immersive"] .discover-immersive-poster-slot {
   /* Grows with flex-1; floor only prevents collapse when the flex chain is ambiguous */
   min-height: max(12rem, min(36dvh, 44svh));
   flex: 1 1 auto;
+}
+
+/* Like / Reject sit above the fixed bottom nav; discover2 pulls into scroll-pad with negative margin */
+section[data-poster-layout="immersive"] .discover-immersive-action-bar {
+  /* Match odd viewports, dynamic toolbars, and when vmin-based --app-bottom-nav-overlay is too small */
+  padding-bottom: max(
+    0.85rem,
+    var(--app-bottom-nav-overlay),
+    calc(env(safe-area-inset-bottom, 0px) + 5.75rem)
+  );
 }
 
 [data-app-shell-root][data-theme="dark"] #main-content {
