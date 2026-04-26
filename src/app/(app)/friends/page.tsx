@@ -186,7 +186,7 @@ export default function FriendsPage() {
   );
 
   useEffect(() => {
-    if (tab !== "friends" || !currentUserId) {
+    if (!currentUserId) {
       return;
     }
     const query = q.trim();
@@ -199,7 +199,7 @@ export default function FriendsPage() {
       void executeSearch(query);
     }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(t);
-  }, [q, tab, currentUserId, executeSearch]);
+  }, [q, currentUserId, executeSearch]);
 
   useEffect(() => {
     const t = searchParams.get("tab");
@@ -365,11 +365,7 @@ export default function FriendsPage() {
     <div
       className={`app-screen-stack w-full min-w-0 ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}
     >
-      <PageHeader
-        eyebrow="People"
-        title="Friends"
-        description="Search by User ID on the Friends tab, and manage invite requests on Requests."
-      />
+      <PageHeader eyebrow="People" title="Friends" />
 
       {actionMessage ? (
         <p
@@ -381,6 +377,67 @@ export default function FriendsPage() {
           {actionMessage}
         </p>
       ) : null}
+
+      <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar w-full px-3 py-2.5 sm:px-3.5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <p id="friends-search-hint" className="sr-only">
+            Type at least two characters to search by User ID. Press Enter to refresh results.
+          </p>
+          <div className="relative min-w-0 flex-1">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void runSearchNow();
+                }
+              }}
+              placeholder="Search by User ID"
+              autoComplete="off"
+              enterKeyHint="search"
+              aria-describedby="friends-search-hint"
+              className="ui-input-shell w-full min-w-0 py-2 pl-9 pr-3 text-[13px] outline-none focus:border-violet-400 max-[380px]:text-[12px] sm:pl-10 sm:pr-4"
+            />
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:left-4">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="ui-icon-md ui-icon-stroke"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3-3" />
+              </svg>
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={searchBusy}
+            onClick={() => void runSearchNow()}
+            aria-label={searchBusy ? "Searching" : "Search"}
+            className="ui-icon-button flex min-h-11 shrink-0 items-center justify-center px-2.5 hover:bg-white/12 min-[400px]:px-3"
+          >
+            {searchBusy ? (
+              <span
+                className={`inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400/40 border-t-violet-500`}
+                aria-hidden
+              />
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                className="ui-icon-md ui-icon-stroke"
+                aria-hidden
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3-3" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
 
       <div
         className="grid w-full grid-cols-2 gap-1.5 p-0 sm:gap-2"
@@ -437,44 +494,14 @@ export default function FriendsPage() {
 
       {tab === "friends" ? (
         <div className="space-y-[var(--app-section-gap)]">
-          <SurfaceCard className="space-y-5">
-            <h2 className="app-section-label">Find people</h2>
-            <p className="app-body-muted leading-relaxed">
-              Type a User ID (or a fragment). After two characters, matches load as you type — or tap
-              Search / press Enter. Add someone, or open their profile if you’re already linked.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    void runSearchNow();
-                  }
-                }}
-                placeholder="e.g. alex or user_4"
-                autoComplete="off"
-                className={`min-h-12 w-full flex-1 rounded-2xl border px-4 py-2.5 text-sm ${
-                  isDarkMode
-                    ? "border-white/10 bg-white/5 text-white placeholder:text-slate-500"
-                    : "border-slate-200 bg-white text-slate-900"
-                }`}
-              />
-              <button
-                type="button"
-                disabled={searchBusy}
-                onClick={() => void runSearchNow()}
-                className="ui-btn ui-btn-primary min-h-12 w-full shrink-0 px-5 text-sm font-semibold sm:min-w-[6.5rem] sm:w-auto"
-              >
-                {searchBusy ? "Searching…" : "Search"}
-              </button>
-            </div>
+          {q.trim().length > 0 ? (
+          <SurfaceCard className="space-y-3">
             {searchError ? (
-              <p className="pt-0.5 text-sm text-rose-500" role="alert">
+              <p className="text-sm text-rose-500" role="alert">
                 {searchError}
               </p>
             ) : null}
-            <ul className="space-y-3 border-t border-transparent pt-1 sm:pt-2">
+            <ul className="space-y-3">
               {q.trim().length > 0 && q.trim().length < 2 && !searchBusy ? (
                 <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Add one more character to search.
@@ -601,15 +628,13 @@ export default function FriendsPage() {
               })}
             </ul>
           </SurfaceCard>
+          ) : null}
 
           <SurfaceCard className="space-y-4">
             <h2 className="app-section-label">Your friends</h2>
-            <p className="app-body-muted">
-              Tap a row to open their profile. Trash on the right opens a dialog to remove someone.
-            </p>
             {friendsAccepted.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                No friends yet — use the search above to find people.
+                No friends yet.
               </p>
             ) : (
               <ul className="space-y-2">

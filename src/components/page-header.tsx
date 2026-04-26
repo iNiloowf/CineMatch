@@ -3,7 +3,8 @@
 type PageHeaderProps = {
   eyebrow?: string;
   title: string;
-  description: string;
+  /** Omitted on screens that use a top toolbar instead of lead copy. */
+  description?: string;
   action?: React.ReactNode;
 };
 
@@ -19,7 +20,7 @@ export function PageHeader({
         {eyebrow ? <p className="app-eyebrow">{eyebrow}</p> : null}
         <div className="space-y-2">
           <h1 className="app-page-title">{title}</h1>
-          <p className="app-page-lead">{description}</p>
+          {description ? <p className="app-page-lead">{description}</p> : null}
         </div>
       </div>
       {action ? <div className="shrink-0 self-center sm:pt-0.5">{action}</div> : null}
