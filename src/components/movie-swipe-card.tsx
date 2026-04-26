@@ -412,8 +412,8 @@ export function MovieSwipeCard({
             </div>
           ) : null}
 
-          <div className="flex h-full min-h-0 w-full max-w-full flex-1 flex-col">
-            <div className="relative z-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(12rem,min(45dvh,50svh))] max-h-[min(64dvh,40rem)]">
+          <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col">
+            <div className="relative z-0 w-full min-w-0 min-h-0 flex-1 overflow-hidden [min-height:max(12rem,min(45dvh,50svh))] max-h-[min(64dvh,40rem)]">
               <div
                 className="absolute inset-0 z-0"
                 style={{
@@ -574,7 +574,7 @@ export function MovieSwipeCard({
                     ))}
                   </div>
                   {onMatchPercentClick ? (
-                    <div className="mt-1.5 sm:mt-2">
+                    <div className="mt-1.5 sm:mt-1.5">
                       <button
                         type="button"
                         disabled={isInteractionLocked}
@@ -582,12 +582,12 @@ export function MovieSwipeCard({
                           e.stopPropagation();
                           onMatchPercentClick();
                         }}
-                        className="inline-flex min-h-8 min-w-0 max-w-full items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/22 px-2 py-1 text-left text-[9px] font-semibold leading-tight text-violet-100 shadow-sm backdrop-blur-sm transition sm:min-h-8 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-[10px] enabled:hover:bg-violet-500/32 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-6 min-w-0 max-w-full items-center gap-0.5 rounded-full border border-violet-400/40 bg-violet-500/22 px-1.5 py-0.5 text-left text-[7px] font-medium leading-tight text-violet-100/95 shadow-sm backdrop-blur-sm transition sm:min-h-7 sm:gap-1 sm:px-2 sm:py-0.5 sm:text-[8px] enabled:hover:bg-violet-500/32 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400/80 disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Why ${matchScore}% match for your taste?`}
                       >
                         <svg
                           viewBox="0 0 24 24"
-                          className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
+                          className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -601,13 +601,13 @@ export function MovieSwipeCard({
                           <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
                         </svg>
                         <span>
-                          {matchScore}% <span className="font-medium text-violet-200/88">taste match</span>
+                          {matchScore}% <span className="font-medium text-violet-200/85">match</span>
                         </span>
-                        <span className="ml-0.5 text-[8px] font-medium text-violet-200/75 sm:text-[9px]">Tap for why</span>
+                        <span className="ml-0.5 text-[6.5px] font-medium text-violet-200/70 sm:text-[7.5px]">Why</span>
                       </button>
                     </div>
                   ) : (
-                    <p className="mt-1.5 text-[9px] font-semibold text-violet-200/90 sm:mt-2 sm:text-[10px]">
+                    <p className="mt-1.5 text-[7px] font-medium text-violet-200/88 sm:mt-1.5 sm:text-[8px]">
                       {matchScore}% match
                     </p>
                   )}
@@ -675,7 +675,7 @@ export function MovieSwipeCard({
                         </div>
                       )
                     ) : (
-                      <p className="text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
+                      <p className="line-clamp-3 text-[11px] leading-[1.35rem] text-slate-100/90">{movie.description}</p>
                     )}
                   </div>
                 </div>
@@ -683,7 +683,7 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`shrink-0 w-full min-w-0 max-w-full border-t px-3 pt-2.5 sm:px-3.5 ${isDarkMode
+              className={`mt-auto shrink-0 w-full min-w-0 max-w-full border-t rounded-b-[22px] sm:rounded-b-[24px] px-3 pt-2.5 sm:px-3.5 ${isDarkMode
                 ? "border-white/10 bg-slate-950/[0.98]"
                 : "border-slate-200/90 bg-white"} pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))]`}
             >
