@@ -1108,11 +1108,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const ownSettings = payload.settings ?? null;
       next = mergeMoviesIntoData(next, (payload.movies ?? []).map(mapMovieRow));
 
+      const serverMappedSwipes = swipeRows.map(mapSwipeRow);
+      const serverActiveMovieIds = new Set(
+        serverMappedSwipes
+          .filter((s) => s.userId === activeUserId)
+          .map((s) => s.movieId),
+      );
+      /**
+       * Account sync can return before a just-posted swipe is visible in the DB, so the
+       * payload would drop the optimistic row and the title reappears in Discover.
+       * Keep any own swipes not present in the server list (same idea as localOnlyWatchedPicks).
+       */
+      const localActiveSwipesNotOnServerYet = next.swipes.filter(
+        (s) => s.userId === activeUserId && !serverActiveMovieIds.has(s.movieId),
+      );
       const currentSwipes = [
         ...next.swipes.filter(
           (swipe) => !hydratedSwipeUserIds.includes(swipe.userId),
         ),
-        ...swipeRows.map(mapSwipeRow),
+        ...serverMappedSwipes,
+        ...localActiveSwipesNotOnServerYet,
       ];
       const currentLinks = [
         ...next.links.filter((link) => !link.users.includes(activeUserId)),
