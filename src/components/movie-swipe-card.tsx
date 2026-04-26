@@ -390,7 +390,7 @@ export function MovieSwipeCard({
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
-          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !p-0 rounded-[28px] sm:rounded-[32px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
+          className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !border-0 !p-0 !shadow-none rounded-[28px] sm:rounded-[32px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
           style={{
@@ -492,9 +492,9 @@ export function MovieSwipeCard({
                   onClick={onPrevious}
                   disabled={!canGoPrevious}
                   aria-label="Show previous title"
-                  className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
+                  className={`-ml-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-black/40 text-white shadow-[0_4px_20px_rgba(0,0,0,0.45)] ring-0 backdrop-blur-sm transition ${
                     canGoPrevious
-                      ? "opacity-100 hover:bg-black/28 active:scale-95"
+                      ? "opacity-100 hover:bg-black/55 active:scale-95"
                       : "cursor-not-allowed opacity-35"
                   }`}
                 >
@@ -507,8 +507,8 @@ export function MovieSwipeCard({
                   onClick={onNext}
                   disabled={!canGoNext}
                   aria-label="Show next title"
-                  className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/15 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition ${
-                    canGoNext ? "opacity-100 hover:bg-black/28 active:scale-95" : "cursor-not-allowed opacity-35"
+                  className={`-mr-1 flex h-11 w-11 items-center justify-center rounded-full border-0 bg-black/40 text-white shadow-[0_4px_20px_rgba(0,0,0,0.45)] ring-0 backdrop-blur-sm transition ${
+                    canGoNext ? "opacity-100 hover:bg-black/55 active:scale-95" : "cursor-not-allowed opacity-35"
                   }`}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden="true">
@@ -518,22 +518,22 @@ export function MovieSwipeCard({
               </div>
 
               {!suppressTrailerPlayButton ? (
-                <div className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center">
+                <div className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center p-4">
                   <button
                     type="button"
                     onClick={handleOpenTrailer}
                     disabled={!hasTrailer || isLoadingTrailer}
                     aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
-                    className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border text-white shadow-[0_6px_28px_rgba(0,0,0,0.55)] transition ${
+                    className={`pointer-events-auto flex aspect-square h-16 w-16 shrink-0 items-center justify-center rounded-full border-0 text-white shadow-[0_8px_32px_rgba(0,0,0,0.55)] ring-0 transition outline-none ${
                       hasTrailer
-                        ? "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
-                        : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
+                        ? "bg-white/25 backdrop-blur-sm hover:bg-white/35 active:scale-95"
+                        : "cursor-not-allowed bg-black/30 text-white/50"
                     }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="ml-1 h-6 w-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
+                      className="ml-0.5 h-7 w-7 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
                       aria-hidden="true"
                     >
                       <path d="m8 5 11 7-11 7V5Z" />

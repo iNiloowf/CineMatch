@@ -1238,7 +1238,7 @@ export function DiscoverPage2Content({
       {!isSearchOpen ? (
         <div className="shrink-0 space-y-2 sm:space-y-2.5">
           <div
-            className={`discover-v2-hero-slab mx-0.5 flex items-start justify-between gap-2 rounded-[22px] border px-2.5 py-2 sm:mx-1 sm:gap-3 sm:px-3.5 sm:py-2.5 ${
+            className={`discover-v2-hero-slab mx-0.5 flex items-center justify-between gap-2 rounded-[22px] border px-2.5 py-2 sm:mx-1 sm:gap-3 sm:px-3.5 sm:py-2.5 ${
               isDarkMode
                 ? "border-violet-500/20 bg-gradient-to-r from-slate-950/95 via-violet-950/40 to-fuchsia-950/35 shadow-[0_10px_36px_rgba(0,0,0,0.4)]"
                 : "border-violet-200/80 bg-gradient-to-r from-white via-violet-50/95 to-fuchsia-50/80 shadow-sm"
@@ -1252,15 +1252,8 @@ export function DiscoverPage2Content({
               >
                 CineMatch
               </p>
-              <h1
-                className={`mt-0.5 text-[1.5rem] font-bold leading-[1.1] tracking-[-0.04em] sm:text-[1.75rem] ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Discover
-              </h1>
             </div>
-            <div className="flex shrink-0 pt-0.5">
+            <div className="flex shrink-0">
               <div ref={menuRef} className="relative">
                 <button
                   type="button"
@@ -2249,7 +2242,7 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`discover2-swipe-viewport flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-hidden ${
+        className={`discover2-swipe-viewport flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible px-0.5 py-1 sm:px-0.5 sm:py-1.5 ${
           isDarkMode
             ? "discover-card-viewport"
             : "rounded-[1.75rem] bg-gradient-to-b from-transparent to-white/40"
