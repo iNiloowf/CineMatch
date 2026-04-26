@@ -597,11 +597,11 @@ export function MovieSwipeCard({
             </div>
 
             <div
-              className={`discover-immersive-action-bar mt-auto w-full min-w-0 max-w-full shrink-0 border-t rounded-b-[28px] sm:rounded-b-[32px] px-3 pt-2.5 sm:px-3.5 ${isDarkMode
+              className={`discover-immersive-action-bar z-[6] mt-auto w-full min-w-0 max-w-full shrink-0 self-end border-t rounded-b-[28px] sm:rounded-b-[32px] px-3 sm:px-3.5 ${isDarkMode
                 ? "border-white/10 bg-slate-950/[0.98]"
                 : "border-slate-200/90 bg-white"}`}
             >
-              <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              <div className="grid w-full grid-cols-2 gap-2 sm:gap-2.5">
                 <button
                   type="button"
                   onClick={onReject}
