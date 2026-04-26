@@ -385,7 +385,7 @@ export function MovieSwipeCard({
 
   if (immersive) {
     return (
-      <div className="discover-immersive-swipe flex min-h-0 w-full min-w-0 max-w-full flex-1 flex-col self-stretch max-h-[calc(min(100dvh,100svh)-7.35rem)] sm:max-h-[calc(min(100dvh,100svh)-6.85rem)]">
+      <div className="discover-immersive-swipe flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col self-stretch">
         <SurfaceCard
           data-poster-layout="immersive"
           shimmer={false}
@@ -414,7 +414,7 @@ export function MovieSwipeCard({
 
           <div className="flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col">
             <div
-              className="discover-immersive-poster-slot relative z-0 min-h-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(14rem,min(52dvh,64svh))]"
+              className="discover-immersive-poster-slot relative z-0 min-h-0 w-full min-w-0 flex-1 overflow-hidden [min-height:max(12rem,min(36dvh,44svh))]"
             >
               <div
                 className="absolute inset-0 z-0"

@@ -1220,8 +1220,8 @@ input[type="range"] {
  * `next/image` + fill have no size — the poster "disappears". Keep a floor in CSS and TSX.
  */
 section[data-poster-layout="immersive"] .discover-immersive-poster-slot {
-  /* Bumble-style: large hero; flex-1 grows inside the card — floor keeps poster obvious on short viewports */
-  min-height: max(14rem, min(52dvh, 64svh));
+  /* Grows with flex-1; floor only prevents collapse when the flex chain is ambiguous */
+  min-height: max(12rem, min(36dvh, 44svh));
   flex: 1 1 auto;
 }
 
@@ -1716,7 +1716,9 @@ section[data-poster-layout="immersive"] .discover-immersive-poster-slot {
 }
 
 .tab-route-surface {
-  min-height: 0;
+  /* min-height comes from Tailwind on the tab wrapper (`min-h-0` + `flex-1`); a bare `min-height: 0`
+   * here was overriding `min-h-full` and left empty space under Discover’s swipe card. */
+  min-width: 0;
 }
 
 .tab-route-enter--forward {

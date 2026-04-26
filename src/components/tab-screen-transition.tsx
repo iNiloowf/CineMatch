@@ -38,10 +38,6 @@ export function TabScreenTransition({ children }: { children: ReactNode }) {
 
   const { pillIndex } = resolveBottomNavHighlight(pathname);
 
-  /** Fill the scrollport so Discover pages can flex the swipe card to the bottom bar. */
-  const isDiscoverTab =
-    pathname === "/discover" || pathname === "/discover1" || pathname === "/discover2";
-
   const transitionClass = !animate
     ? "tab-route-surface"
     : dir === "forward"
@@ -50,13 +46,14 @@ export function TabScreenTransition({ children }: { children: ReactNode }) {
         ? "tab-route-surface tab-route-enter tab-route-enter--back"
         : "tab-route-surface tab-route-enter tab-route-enter--fade";
 
+  /** Fills #main-content so tab routes (esp. Discover) can use flex-1 for full-height cards. */
+  const layoutClass = `${transitionClass} flex w-full min-h-0 flex-1 flex-col`;
+
   return (
     <div
       key={pathname}
       data-tab-route-active-index={pillIndex >= 0 ? pillIndex : undefined}
-      className={
-        isDiscoverTab ? `${transitionClass} flex min-h-full flex-col` : transitionClass
-      }
+      className={layoutClass}
     >
       {children}
     </div>

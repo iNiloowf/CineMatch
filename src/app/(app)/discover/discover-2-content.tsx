@@ -1009,7 +1009,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex w-full max-w-md min-w-0 min-h-0 flex-1 flex-col gap-1 overflow-visible sm:gap-2"
+      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 w-full max-w-md min-w-0 flex-1 flex-col gap-1 overflow-x-hidden sm:gap-2"
       data-discover-ab="discover2"
     >
       <ModalPortal open={!isOnboardingComplete}>
@@ -2249,21 +2249,23 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-          isDarkMode ? "discover-card-viewport" : ""
+        className={`discover2-swipe-viewport flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-hidden ${
+          isDarkMode
+            ? "discover-card-viewport"
+            : "rounded-[1.75rem] bg-gradient-to-b from-transparent to-white/40"
         }`}
       >
         {movie ? (
-          /* Bumble-style: one large rounded card, full-bleed poster; width follows app column (max-w-md). */
+          /* Fills space between header and bottom nav; width follows app column (max-w-md). */
           <div
-            className={`discover2-main-card flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[28px] sm:rounded-[32px] ring-1 ${
+            className={`discover2-main-card flex h-full min-h-0 w-full min-w-0 max-w-md flex-1 flex-col self-stretch overflow-hidden rounded-[28px] sm:rounded-[32px] ring-1 ${
               isDarkMode
                 ? "ring-white/10 shadow-[0_20px_55px_rgba(0,0,0,0.5)]"
                 : "ring-slate-200/90 shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
             }`}
           >
             <div
-              className={`discover-card-stage flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-visible ${
+              className={`discover-card-stage flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-visible ${
                 transitionState === "idle"
                   ? ""
                   : transitionState === "out"
@@ -2298,43 +2300,47 @@ export function DiscoverPage2Content({
             </div>
           </div>
         ) : filteredQueue.length === 0 && discoverQueue.length > 0 ? (
-          <AppRouteNetworkStatus
-            compact
-            variant="empty"
-            isDarkMode={isDarkMode}
-            title="No titles match these filters"
-            description="Try clearing genres or adjust the filter sheet."
-            secondaryAction={{
-              label: "Clear genres",
-              onClick: () => {
-                applyGenreFilterChange([]);
-              },
-            }}
-            tertiaryAction={{
-              label: "Filters",
-              onClick: () => setIsFilterOpen(true),
-            }}
-          />
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-2 py-4">
+            <AppRouteNetworkStatus
+              compact
+              variant="empty"
+              isDarkMode={isDarkMode}
+              title="No titles match these filters"
+              description="Try clearing genres or adjust the filter sheet."
+              secondaryAction={{
+                label: "Clear genres",
+                onClick: () => {
+                  applyGenreFilterChange([]);
+                },
+              }}
+              tertiaryAction={{
+                label: "Filters",
+                onClick: () => setIsFilterOpen(true),
+              }}
+            />
+          </div>
         ) : (
-          <AppRouteNetworkStatus
-            compact
-            variant="empty"
-            isDarkMode={isDarkMode}
-            title="You’re caught up for now"
-            description="Open Picks or Shared to keep exploring."
-            secondaryAction={{
-              label: "Picks",
-              onClick: () => {
-                router.push("/picks");
-              },
-            }}
-            tertiaryAction={{
-              label: "Shared",
-              onClick: () => {
-                router.push("/shared");
-              },
-            }}
-          />
+          <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-2 py-4">
+            <AppRouteNetworkStatus
+              compact
+              variant="empty"
+              isDarkMode={isDarkMode}
+              title="You’re caught up for now"
+              description="Open Picks or Shared to keep exploring."
+              secondaryAction={{
+                label: "Picks",
+                onClick: () => {
+                  router.push("/picks");
+                },
+              }}
+              tertiaryAction={{
+                label: "Shared",
+                onClick: () => {
+                  router.push("/shared");
+                },
+              }}
+            />
+          </div>
         )}
       </div>
 
