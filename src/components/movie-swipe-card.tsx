@@ -545,8 +545,8 @@ export function MovieSwipeCard({
               <div
                 className={`absolute inset-x-0 bottom-0 z-[4] flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden ${
                   isDescriptionExpanded
-                    ? "max-h-[min(50dvh,60%)]"
-                    : "max-h-[min(24dvh,32%)]"
+                    ? "max-h-[min(55dvh,70%)]"
+                    : "max-h-[min(48dvh,60%)]"
                 }`}
               >
                 <div
@@ -614,6 +614,60 @@ export function MovieSwipeCard({
                     </p>
                   )}
 
+                  {movie.description.trim() ? (
+                    <div
+                      ref={descriptionSectionRef}
+                      className={`mt-2.5 border-t border-white/10 pt-2.5 ${
+                        isDescriptionExpanded ? "min-h-0" : ""
+                      } ${shouldClamp && !isDescriptionExpanded ? "cursor-pointer" : ""}`}
+                      onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
+                    >
+                      {shouldClamp ? (
+                        isDescriptionExpanded ? (
+                          <>
+                            <p className="text-[11px] leading-[1.35rem] text-slate-100/90">{movie.description}</p>
+                            <div className="mt-1 flex justify-end">
+                              <button
+                                type="button"
+                                aria-label="Show less description"
+                                aria-expanded
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleDescription();
+                                }}
+                                className="min-h-11 rounded-lg px-1 text-violet-300"
+                                style={{ fontSize: "11px" }}
+                              >
+                                Less
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="relative min-h-0 w-full">
+                            <p className="line-clamp-3 pr-[3.35rem] text-[11px] leading-[1.35rem] text-slate-100/90">
+                              {movie.description}
+                            </p>
+                            <button
+                              type="button"
+                              aria-label="Show full description"
+                              aria-expanded={false}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleDescription();
+                              }}
+                              className="absolute bottom-0 right-0 z-[1] inline-flex min-h-11 items-end rounded-lg px-1 text-violet-300"
+                              style={{ fontSize: "11px" }}
+                            >
+                              More
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-[11px] leading-[1.35rem] text-slate-100/90">{movie.description}</p>
+                      )}
+                    </div>
+                  ) : null}
+
                   {discoverPartnerNotes.length > 0 ? (
                     <div className="mt-2.5 border-t border-white/12 pt-2" role="region" aria-label="What your connected friends did with this title">
                       <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/90">Your connections</p>
@@ -626,60 +680,6 @@ export function MovieSwipeCard({
                       </ul>
                     </div>
                   ) : null}
-
-                  <div
-                    ref={descriptionSectionRef}
-                    className={`mt-2.5 border-t border-white/10 pt-2.5 ${
-                      isDescriptionExpanded ? "min-h-0" : ""
-                    }`}
-                    onClick={!isDescriptionExpanded && shouldClamp ? handleToggleDescription : undefined}
-                    style={
-                      shouldClamp && !isDescriptionExpanded
-                        ? { cursor: "pointer" }
-                        : undefined
-                    }
-                  >
-                    {shouldClamp ? (
-                      isDescriptionExpanded ? (
-                        <>
-                          <p className="text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
-                          <div className="mt-1.5 flex justify-end">
-                            <button
-                              type="button"
-                              aria-label="Show less description"
-                              aria-expanded
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleDescription();
-                              }}
-                              className="min-h-9 rounded-lg px-1 text-violet-300"
-                              style={{ fontSize: "11px" }}
-                            >
-                              Less
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="relative min-h-0">
-                          <p className="line-clamp-3 pr-[3.2rem] text-[11px] leading-[1.4rem] text-slate-100/90">{movie.description}</p>
-                          <button
-                            type="button"
-                            aria-label="Show full description"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleDescription();
-                            }}
-                            className="absolute bottom-0 right-0 z-[1] min-h-9 text-violet-300"
-                            style={{ fontSize: "11px" }}
-                          >
-                            More
-                          </button>
-                        </div>
-                      )
-                    ) : (
-                      <p className="line-clamp-3 text-[11px] leading-[1.35rem] text-slate-100/90">{movie.description}</p>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
