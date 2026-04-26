@@ -158,8 +158,14 @@ export function computeTasteYearProfile(
   }
   const spread = Math.max(9, Math.min(30, Math.sqrt(varSum / years.length) || 14));
 
+  /**
+   * Only treat as “classic-first” when taste is clearly old-heavy — a single pre-1997
+   * pick or a center just below 2000 used to set this and removed all recency penalties
+   * (filling the deck with silent-era titles).
+   */
+  const pre1995Count = samples.filter((s) => s.year <= 1995).length;
   const classicEngaged =
-    center <= 2001 || samples.some((s) => s.year <= 1996 && s.w >= 1);
+    center <= 1990 || (pre1995Count >= 2 && center <= 1997);
 
   return { center, spread, classicEngaged };
 }

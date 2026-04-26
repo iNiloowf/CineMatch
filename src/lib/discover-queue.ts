@@ -67,50 +67,65 @@ function yearPreferenceScore(
   return score;
 }
 
-/** Extra deck priority: newer titles first unless the user clearly likes classics. */
+const CLASSIC_RECENCY_PENALTY_RETAIN = 0.42;
+const CLASSIC_STALE_RELEASE_RETAIN = 0.45;
+const CLASSIC_PRE_2017_PENALTY_RETAIN = 0.55;
+
+/** Extra deck priority: newer titles first; classics fans still get a nudge away from the oldest tier. */
 function recencyDeckBoost(
   movieYear: number,
   calendarYear: number,
   taste: { classicEngaged: boolean },
 ): number {
-  if (taste.classicEngaged) {
-    return 0;
-  }
   const age = calendarYear - movieYear;
+  let base = 0;
   if (age <= 8) {
-    return 12;
+    base = 12;
+  } else if (age <= 18) {
+    base = 8;
+  } else if (age <= 30) {
+    base = 3;
+  } else if (age >= 52) {
+    base = -14;
+  } else if (age >= 40) {
+    base = -7;
   }
-  if (age <= 18) {
-    return 8;
+  if (taste.classicEngaged) {
+    return base * CLASSIC_RECENCY_PENALTY_RETAIN;
   }
-  if (age <= 30) {
-    return 3;
-  }
-  if (age >= 52) {
-    return -14;
-  }
-  if (age >= 40) {
-    return -7;
-  }
-  return 0;
+  return base;
 }
 
 /**
  * Pull 2022-and-older releases down the Discover deck so fresher titles surface first.
- * Skipped when taste profile says the user engages with classics.
+ * Classics mode softens, not removes, the penalty so pre-2017/1920s titles don’t take over.
  */
 function pre2023DiscoverPenalty(
   movieYear: number,
   classicEngaged: boolean,
 ): number {
-  if (classicEngaged) {
-    return 0;
-  }
   if (movieYear >= 2023) {
     return 0;
   }
   const yearsBack = 2023 - movieYear;
-  return -Math.min(26, 7 + yearsBack * 0.42);
+  const raw = -Math.min(26, 7 + yearsBack * 0.42);
+  return classicEngaged ? raw * CLASSIC_STALE_RELEASE_RETAIN : raw;
+}
+
+/**
+ * User preference: pre-2017 should appear only rarely; extra pull below that line (still
+ * partially applies for classic-leaning profiles so silent/early film doesn’t crowd out).
+ */
+function pre2017RarityPenalty(
+  movieYear: number,
+  classicEngaged: boolean,
+): number {
+  if (movieYear >= 2017) {
+    return 0;
+  }
+  const yearsBefore2017 = 2017 - movieYear;
+  const raw = -Math.min(24, 4.5 + yearsBefore2017 * 0.2);
+  return classicEngaged ? raw * CLASSIC_PRE_2017_PENALTY_RETAIN : raw;
 }
 
 /** First real genre tag (not Movie/Series) — used to mix the deck so it isn’t one-note. */
@@ -306,6 +321,10 @@ export function buildDiscoverQueue(options: {
           movie.year,
           tasteYear.classicEngaged,
         );
+        const pre2017Rarity = pre2017RarityPenalty(
+          movie.year,
+          tasteYear.classicEngaged,
+        );
 
         return (
           preferenceMatchScore * 1.24 +
@@ -313,7 +332,8 @@ export function buildDiscoverQueue(options: {
           pop * 1.28 +
           yearScore +
           recencyDeck +
-          staleReleasePenalty
+          staleReleasePenalty +
+          pre2017Rarity
         );
       };
 
