@@ -198,6 +198,29 @@ export default function FriendsPage() {
     }
   }, [searchParams]);
 
+  const FRIENDS_LINKS_POLL_MS = 12_000;
+
+  /** Pull latest links when opening Friends or changing tab so requests/accepts don’t need an app restart. */
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+    refreshAccountData();
+  }, [currentUserId, tab, refreshAccountData]);
+
+  /** If Realtime is slow or the user never backgrounds the app, still pick up adds/accepts. */
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshAccountData();
+      }
+    }, FRIENDS_LINKS_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [currentUserId, refreshAccountData]);
+
   const sentPending = useMemo(
     () =>
       linkedUsers.filter(
