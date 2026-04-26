@@ -933,7 +933,7 @@ export default function PicksPage() {
 
         {acceptedMovies.length > 0 ? (
           <div
-            className={`fade-up-enter flex rounded-[14px] p-1 ${
+            className={`fade-up-enter flex rounded-[var(--radius-lg)] p-1 ${
               isDarkMode
                 ? "bg-white/[0.06] ring-1 ring-white/10"
                 : "bg-slate-100 ring-1 ring-slate-200/90"

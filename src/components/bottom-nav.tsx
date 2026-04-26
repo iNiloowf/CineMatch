@@ -77,7 +77,7 @@ export function BottomNav() {
         data-bottom-nav-pill="true"
         data-pill-dragging={isDragging ? "true" : undefined}
         onTouchStart={onTouchStart}
-        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[26px] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
+        className={`pointer-events-auto relative mx-auto flex w-full max-w-md items-stretch overflow-hidden rounded-[var(--radius-surface)] px-1.5 py-2 backdrop-blur-2xl transition-[box-shadow] duration-500 ease-out motion-reduce:duration-0 max-[380px]:px-1 sm:px-2 ${
           isDragging ? "touch-none" : "touch-manipulation"
         } ${
           isDarkMode

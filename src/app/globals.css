@@ -223,6 +223,25 @@
   gap: var(--app-section-gap);
 }
 
+/**
+ * In-card section title (uppercase meta) — use instead of ad-hoc `text-xs uppercase` stacks.
+ * Pairs with body copy: `.app-body-muted` or `text-sm` + `text-slate-*`.
+ */
+.app-section-label {
+  color: var(--color-text-muted);
+  font-size: var(--font-scale-meta);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.app-body-muted {
+  color: var(--color-text-muted);
+  font-size: var(--font-scale-body);
+  line-height: 1.55;
+}
+
 .app-page-title {
   color: var(--color-text-strong);
   font-size: clamp(1.375rem, 4.2vw, 1.875rem);
@@ -234,7 +253,7 @@
 
 .app-page-lead {
   min-width: 0;
-  max-width: 22rem;
+  max-width: min(28rem, 100%);
   color: var(--color-text-muted);
   font-size: var(--font-scale-body);
   line-height: 1.55;

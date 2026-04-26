@@ -11,6 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { AppRouteLoading } from "@/components/app-route-status";
 import { ModalPortal } from "@/components/modal-portal";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
@@ -341,24 +342,26 @@ export default function FriendsPage() {
   useEscapeToClose(unfriendConfirm !== null && !unfriendWorking, closeUnfriendModal);
 
   if (!isReady) {
-    return <div className="p-6">Loading…</div>;
+    return (
+      <AppRouteLoading
+        ariaLabel="Loading friends"
+        message="Loading…"
+        isDarkMode={isDarkMode}
+        visual="spinner"
+        frameClassName="flex min-h-[40vh] w-full flex-1 flex-col items-center justify-center"
+      />
+    );
   }
 
   const listShell = isDarkMode
     ? "border-white/12 bg-white/[0.04] hover:border-white/18"
     : "border-slate-200/90 bg-white hover:border-slate-300/90";
 
-  /** Matches bottom nav inner panel: `px-1.5 sm:px-2` inside `max-w-md` (see `bottom-nav.tsx`). */
-  const navWidthMatch = "px-1.5 sm:px-2";
-
   return (
     <>
     <div
-      className={`mx-auto w-full max-w-md min-h-0 px-[var(--app-page-px)] py-4 pb-24 ${
-        isDarkMode ? "text-slate-100" : "text-slate-900"
-      }`}
+      className={`app-screen-stack w-full min-w-0 ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}
     >
-      <div className={`w-full min-w-0 space-y-4 ${navWidthMatch}`}>
       <PageHeader
         eyebrow="People"
         title="Friends"
@@ -379,8 +382,8 @@ export default function FriendsPage() {
       <div
         className={`grid w-full grid-cols-3 gap-1 p-1 sm:gap-1.5 sm:p-1.5 ${
           isDarkMode
-            ? "rounded-[26px] bg-slate-950/60 ring-1 ring-white/10"
-            : "rounded-[26px] bg-slate-200/80 ring-1 ring-slate-200/60"
+            ? "rounded-[var(--radius-surface)] bg-slate-950/60 ring-1 ring-white/10"
+            : "rounded-[var(--radius-surface)] bg-slate-200/80 ring-1 ring-slate-200/60"
         }`}
         role="tablist"
         aria-label="Friends sections"
@@ -434,14 +437,8 @@ export default function FriendsPage() {
       </div>
 
       {tab === "search" ? (
-        <SurfaceCard
-          className={`space-y-5 p-5 sm:p-6 ${isDarkMode ? "border-white/10" : ""}`}
-        >
-          <p
-            className={`text-sm leading-relaxed ${
-              isDarkMode ? "text-slate-300" : "text-slate-600"
-            }`}
-          >
+        <SurfaceCard className="space-y-5">
+          <p className="app-body-muted leading-relaxed">
             Type a User ID (or a fragment). After two characters, matches load as you type — or tap
             Search / press Enter to refresh. Add someone, or open their profile if you’re already linked.
           </p>
@@ -606,16 +603,10 @@ export default function FriendsPage() {
       ) : null}
 
       {tab === "requests" ? (
-        <div className="space-y-4">
-          <SurfaceCard className={`space-y-3 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
-            <h2
-              className={`text-sm font-bold uppercase tracking-[0.12em] ${
-                isDarkMode ? "text-slate-400" : "text-slate-500"
-              }`}
-            >
-              Received
-            </h2>
-            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+        <div className="space-y-[var(--app-section-gap)]">
+          <SurfaceCard className="space-y-3">
+            <h2 className="app-section-label">Received</h2>
+            <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Inbox — accept or decline.
             </p>
             {receivedPending.length === 0 ? (
@@ -673,15 +664,9 @@ export default function FriendsPage() {
             )}
           </SurfaceCard>
 
-          <SurfaceCard className={`space-y-3 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
-            <h2
-              className={`text-sm font-bold uppercase tracking-[0.12em] ${
-                isDarkMode ? "text-slate-400" : "text-slate-500"
-              }`}
-            >
-              Sent
-            </h2>
-            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+          <SurfaceCard className="space-y-3">
+            <h2 className="app-section-label">Sent</h2>
+            <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Outbox — waiting on them to accept.
             </p>
             {sentPending.length === 0 ? (
@@ -725,8 +710,8 @@ export default function FriendsPage() {
       ) : null}
 
       {tab === "friends" ? (
-        <SurfaceCard className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
-          <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+        <SurfaceCard className="space-y-4">
+          <p className="app-body-muted">
             Tap the left to open a profile. Trash on the right opens a dialog to remove someone.
           </p>
           {friendsAccepted.length === 0 ? (
@@ -807,7 +792,6 @@ export default function FriendsPage() {
           )}
         </SurfaceCard>
       ) : null}
-      </div>
     </div>
 
     <ModalPortal open={unfriendConfirm !== null}>
