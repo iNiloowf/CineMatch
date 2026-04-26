@@ -949,6 +949,11 @@ export default function ProfilePage() {
           activeAvatarPreview && !avatarFile && !activeAvatarPreview.startsWith("blob:"),
         )}
         onApply={handleAvatarEditorApply}
+        canRemoveProfilePhoto={canRemovePhoto}
+        onRequestRemoveProfilePhoto={() => {
+          setAvatarEditorModalOpen(false);
+          setRemovePhotoModalOpen(true);
+        }}
       />
       <ModalPortal open={discoverSkipsModalOpen && !discoverSkipDetailMovie}>
         <div
@@ -1334,33 +1339,31 @@ export default function ProfilePage() {
                           aria-hidden
                         />
                       </button>
-                      {canRemovePhoto ? (
-                        <button
-                          type="button"
-                          onClick={() => setRemovePhotoModalOpen(true)}
-                          aria-label="Remove profile photo"
-                          title="Remove profile photo"
-                          className={`absolute -right-0.5 -top-0.5 z-[1] flex h-8 w-8 items-center justify-center rounded-full border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
-                            isDarkMode
-                              ? "border-slate-950 bg-rose-500 text-white hover:bg-rose-400"
-                              : "border-white bg-rose-500 text-white hover:bg-rose-600"
-                          }`}
+                      <button
+                        type="button"
+                        onClick={() => setAvatarEditorModalOpen(true)}
+                        aria-label="Edit profile photo"
+                        title="Edit profile photo"
+                        className={`absolute -right-0.5 -top-0.5 z-[1] flex h-8 w-8 items-center justify-center rounded-full border-2 shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition hover:scale-105 active:scale-95 ${
+                          isDarkMode
+                            ? "border-slate-950 bg-violet-600 text-white hover:bg-violet-500"
+                            : "border-white bg-violet-600 text-white hover:bg-violet-700"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="h-3.5 w-3.5"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            className="h-3.5 w-3.5"
-                            stroke="currentColor"
-                            strokeWidth="2.2"
-                            aria-hidden
-                          >
-                            <path d="M3 6h18" strokeLinecap="round" />
-                            <path d="M8 6V4h8v2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M19 6l-1 14H6L5 6" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M10 11v6M14 11v6" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      ) : null}
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
                     </div>
                   ) : (
                     <AvatarBadge
@@ -1377,7 +1380,7 @@ export default function ProfilePage() {
                       isDarkMode ? "text-slate-400" : "text-slate-500"
                     }`}
                   >
-                    Tap photo to change
+                    Tap the photo or edit to change
                   </p>
                 ) : null}
               </div>

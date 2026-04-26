@@ -16,6 +16,9 @@ type ProfileAvatarEditorModalProps = {
   /** True when staged selection is a preset URL (not a file blob) */
   isPresetSelection: boolean;
   onApply: (file: File | null, previewObjectUrl: string) => void;
+  /** When set and true, show “remove photo” in this modal; parent should open a confirm and/or stage removal. */
+  onRequestRemoveProfilePhoto?: () => void;
+  canRemoveProfilePhoto?: boolean;
 };
 
 const PREVIEW_PX = 260;
@@ -75,6 +78,8 @@ export function ProfileAvatarEditorModal({
   avatarPreviewUrl,
   isPresetSelection,
   onApply,
+  onRequestRemoveProfilePhoto,
+  canRemoveProfilePhoto = false,
 }: ProfileAvatarEditorModalProps) {
   const [tab, setTab] = useState<TabId>("upload");
   const [step, setStep] = useState<"pick" | "adjust">("pick");
@@ -438,7 +443,6 @@ export function ProfileAvatarEditorModal({
                     ref={imgRef}
                     src={sourceUrl ?? undefined}
                     alt=""
-                    crossOrigin={sourceKind === "url" ? "anonymous" : undefined}
                     draggable={false}
                     className={`pointer-events-none max-w-none ${previewLayout ? "" : "opacity-0"}`}
                     width={previewLayout ? Math.round(previewLayout.dw) : undefined}
@@ -495,22 +499,51 @@ export function ProfileAvatarEditorModal({
                     browser blocks editing.
                   </p>
                 )}
+
+                {canRemoveProfilePhoto && onRequestRemoveProfilePhoto ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetInternal();
+                      onRequestRemoveProfilePhoto();
+                    }}
+                    className={`w-full text-center text-xs font-semibold underline decoration-transparent underline-offset-2 transition hover:decoration-current ${
+                      isDarkMode ? "text-rose-300" : "text-rose-700"
+                    }`}
+                  >
+                    Remove profile photo
+                  </button>
+                ) : null}
               </div>
             </div>
           )}
 
           <div className={`border-t px-4 py-3 sm:px-5 ${isDarkMode ? "border-white/10" : "border-slate-100"}`}>
             {step === "pick" ? (
-              <button
-                type="button"
-                onClick={() => {
-                  resetInternal();
-                  onClose();
-                }}
-                className="ui-btn ui-btn-secondary w-full"
-              >
-                Close
-              </button>
+              <div className="flex flex-col gap-2">
+                {canRemoveProfilePhoto && onRequestRemoveProfilePhoto ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetInternal();
+                      onRequestRemoveProfilePhoto();
+                    }}
+                    className="ui-btn ui-btn-danger w-full"
+                  >
+                    Remove profile photo
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetInternal();
+                    onClose();
+                  }}
+                  className="ui-btn ui-btn-secondary w-full"
+                >
+                  Close
+                </button>
+              </div>
             ) : (
               <div className="flex gap-2">
                 <button
