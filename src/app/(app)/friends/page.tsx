@@ -11,10 +11,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ModalPortal } from "@/components/modal-portal";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { getClientAccessToken } from "@/lib/get-access-token";
 import { useAppState } from "@/lib/app-state";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import type { User } from "@/lib/types";
 
 type TabId = "search" | "requests" | "friends";
@@ -113,6 +115,12 @@ export default function FriendsPage() {
 
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  const [unfriendConfirm, setUnfriendConfirm] = useState<{
+    userId: string;
+    name: string;
+    publicHandle: string;
+  } | null>(null);
+  const [unfriendWorking, setUnfriendWorking] = useState(false);
   const searchRequestIdRef = useRef(0);
   const SEARCH_DEBOUNCE_MS = 320;
 
@@ -309,6 +317,29 @@ export default function FriendsPage() {
     }
   };
 
+  const closeUnfriendModal = useCallback(() => {
+    if (unfriendWorking) {
+      return;
+    }
+    setUnfriendConfirm(null);
+  }, [unfriendWorking]);
+
+  const confirmUnfriend = useCallback(async () => {
+    if (!unfriendConfirm) {
+      return;
+    }
+    setUnfriendWorking(true);
+    try {
+      const res = await unlinkUser(unfriendConfirm.userId);
+      setActionMessage(res.message);
+      setUnfriendConfirm(null);
+    } finally {
+      setUnfriendWorking(false);
+    }
+  }, [unfriendConfirm, unlinkUser]);
+
+  useEscapeToClose(unfriendConfirm !== null && !unfriendWorking, closeUnfriendModal);
+
   if (!isReady) {
     return <div className="p-6">Loading…</div>;
   }
@@ -321,6 +352,7 @@ export default function FriendsPage() {
   const navWidthMatch = "px-1.5 sm:px-2";
 
   return (
+    <>
     <div
       className={`mx-auto w-full max-w-md min-h-0 px-[var(--app-page-px)] py-4 pb-24 ${
         isDarkMode ? "text-slate-100" : "text-slate-900"
@@ -668,8 +700,7 @@ export default function FriendsPage() {
       {tab === "friends" ? (
         <SurfaceCard className={`space-y-4 p-4 sm:p-5 ${isDarkMode ? "border-white/10" : ""}`}>
           <p className={`text-sm ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Tap the left side to open their profile. The trash column on the right removes them (confirm
-            first).
+            Tap the left to open a profile. Trash on the right opens a dialog to remove someone.
           </p>
           {friendsAccepted.length === 0 ? (
             <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -715,18 +746,14 @@ export default function FriendsPage() {
                         className={`flex h-full w-full min-h-11 items-center justify-center outline-offset-2 transition hover:bg-rose-500/15 active:scale-95 ${
                           isDarkMode ? "text-rose-400" : "text-rose-600"
                         }`}
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (
-                            !window.confirm(
-                              `Remove ${l.user.name} (@${l.user.publicHandle}) from your friends?`,
-                            )
-                          ) {
-                            return;
-                          }
-                          const res = await unlinkUser(l.user.id);
-                          setActionMessage(res.message);
+                          setUnfriendConfirm({
+                            userId: l.user.id,
+                            name: l.user.name,
+                            publicHandle: l.user.publicHandle,
+                          });
                         }}
                       >
                         <svg
@@ -755,5 +782,68 @@ export default function FriendsPage() {
       ) : null}
       </div>
     </div>
+
+    <ModalPortal open={unfriendConfirm !== null}>
+      <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={closeUnfriendModal}
+          className="absolute inset-0 cursor-default bg-transparent"
+        />
+        <div
+          className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto w-full max-w-md overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+            isDarkMode ? "border-white/12 bg-slate-950 text-slate-100" : "border-slate-200/90 bg-white text-slate-900"
+          }`}
+        >
+          <span className="ui-modal-accent-bar" aria-hidden />
+          <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+            <p className="min-w-0 flex-1 text-lg font-semibold text-inherit">Remove friend?</p>
+            <button
+              type="button"
+              onClick={closeUnfriendModal}
+              disabled={unfriendWorking}
+              aria-label="Close"
+              className={`ui-shell-close ${
+                isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+              } disabled:opacity-50`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="ui-shell-body !pt-4">
+            {unfriendConfirm ? (
+              <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                Remove <span className="font-semibold text-inherit">{unfriendConfirm.name}</span> (
+                <span className="font-mono">@{unfriendConfirm.publicHandle}</span>) from your friends? You can
+                send a new request from Search later.
+              </p>
+            ) : null}
+          </div>
+          <div className="ui-shell-footer !pt-4">
+            <button
+              type="button"
+              onClick={closeUnfriendModal}
+              disabled={unfriendWorking}
+              className="ui-btn ui-btn-secondary min-w-0 flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void confirmUnfriend()}
+              disabled={unfriendWorking}
+              className="ui-btn ui-btn-danger min-w-0 flex-1"
+            >
+              {unfriendWorking ? "Removing…" : "Remove"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </ModalPortal>
+    </>
   );
 }
