@@ -208,15 +208,6 @@ export function DiscoverPage2Content({
     [discoverQueue],
   );
 
-  /** `/discover2?friendPreview=recommends|not_for_them|pick` — preview friend strip when no live data. */
-  const friendRecommendationPreview = useMemo((): "recommends" | "not_for_them" | "pick" | null => {
-    const v = searchParams.get("friendPreview");
-    if (v === "recommends" || v === "not_for_them" || v === "pick") {
-      return v;
-    }
-    return null;
-  }, [searchParams]);
-
   useEffect(() => {
     if (!sharedMovieId) {
       setSharedMovieFetch("idle");
@@ -2288,7 +2279,6 @@ export function DiscoverPage2Content({
                 suppressTrailerPlayButton={!isOnboardingComplete}
                 onMatchPercentClick={currentUserId ? openMatchExplanation : undefined}
                 posterLayout="immersive"
-                friendRecommendationPreview={friendRecommendationPreview}
               />
             </div>
           </div>

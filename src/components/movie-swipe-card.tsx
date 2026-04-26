@@ -36,11 +36,6 @@ type MovieSwipeCardProps = {
    * (no duplicate IMDb/runtime block below the image). Discover 2 only.
    */
   posterLayout?: "standard" | "immersive";
-  /**
-   * Discover 2: optional `?friendPreview=` on /discover2 to preview friend strips when you have
-   * no linked friend data. Values: recommends | not_for_them | pick
-   */
-  friendRecommendationPreview?: "recommends" | "not_for_them" | "pick" | null;
 };
 
 export function MovieSwipeCard({
@@ -56,7 +51,6 @@ export function MovieSwipeCard({
   suppressTrailerPlayButton = false,
   onMatchPercentClick,
   posterLayout = "standard",
-  friendRecommendationPreview = null,
 }: MovieSwipeCardProps) {
   const immersive = posterLayout === "immersive";
   const {
@@ -156,57 +150,6 @@ export function MovieSwipeCard({
       return [{ id: partnerId, label, displayName }];
     });
   }, [currentUserId, data, linkedUsers, movie.id]);
-
-  const friendRecStrips = useMemo(() => {
-    return discoverPartnerNotes.map((row) => {
-      const first = row.displayName.trim().split(/\s+/)[0] || row.displayName;
-      if (row.label.includes("Recommends it")) {
-        return { id: row.id, firstName: first, tone: "recommends" as const, line: `${first} recommends this` };
-      }
-      if (row.label.includes("not for them") || row.label.includes("Marked not")) {
-        return {
-          id: row.id,
-          firstName: first,
-          tone: "not_for_them" as const,
-          line: `${first} added to picks — didn’t work for them`,
-        };
-      }
-      return {
-        id: row.id,
-        firstName: first,
-        tone: "pick" as const,
-        line: `${first} added to picks · no review yet`,
-      };
-    });
-  }, [discoverPartnerNotes]);
-
-  const friendStripsForPoster = useMemo(() => {
-    if (friendRecStrips.length > 0) {
-      return friendRecStrips;
-    }
-    if (!friendRecommendationPreview) {
-      return [];
-    }
-    const demo = "Alex";
-    if (friendRecommendationPreview === "recommends") {
-      return [
-        { id: "friend-preview", firstName: demo, tone: "recommends" as const, line: `${demo} recommends this` },
-      ];
-    }
-    if (friendRecommendationPreview === "not_for_them") {
-      return [
-        {
-          id: "friend-preview",
-          firstName: demo,
-          tone: "not_for_them" as const,
-          line: `${demo} added to picks — didn’t work for them`,
-        },
-      ];
-    }
-    return [
-      { id: "friend-preview", firstName: demo, tone: "pick" as const, line: `${demo} added to picks · no review yet` },
-    ];
-  }, [friendRecStrips, friendRecommendationPreview]);
 
   const handleToggleDescription = () => {
     if (!shouldClamp) {
@@ -455,38 +398,7 @@ export function MovieSwipeCard({
                 </div>
               </div>
 
-              {friendStripsForPoster.length > 0 ? (
-                <div
-                  className="absolute left-2.5 right-2.5 z-[3] max-h-[5rem] overflow-hidden sm:left-3 sm:right-3 sm:max-h-[5.5rem]"
-                  style={{ top: "3.1rem" }}
-                  data-friend-pick={friendRecStrips.length > 0 ? "live" : "preview"}
-                >
-                  {friendRecStrips.length === 0 && friendRecommendationPreview ? (
-                    <p className="mb-1.5 text-[9px] font-medium uppercase tracking-[0.12em] text-white/55">Preview (URL)</p>
-                  ) : null}
-                  <ul className="flex list-none flex-col gap-1.5 p-0">
-                    {friendStripsForPoster.map((row) => (
-                      <li
-                        key={row.id}
-                        className={`flex items-start gap-2 rounded-2xl border px-2.5 py-1.5 text-[10px] font-semibold leading-snug shadow-[0_6px_20px_rgba(0,0,0,0.45)] backdrop-blur-md sm:text-[11px] ${
-                          row.tone === "recommends"
-                            ? "border-emerald-400/55 bg-emerald-950/80 text-emerald-50"
-                            : row.tone === "not_for_them"
-                              ? "border-amber-400/50 bg-amber-950/78 text-amber-50"
-                              : "border-violet-400/50 bg-slate-950/82 text-violet-100"
-                        }`}
-                      >
-                        <span aria-hidden className="shrink-0 text-[0.85rem] leading-none">
-                          {row.tone === "recommends" ? "💬" : row.tone === "not_for_them" ? "⏸" : "👤"}
-                        </span>
-                        <span>{row.line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              <div className="absolute inset-y-0 left-0 right-0 z-[3] flex items-center justify-between px-0">
+              <div className="absolute left-0 right-0 top-[38%] z-[3] flex -translate-y-1/2 items-center justify-between px-0 sm:top-[40%]">
                 <button
                   type="button"
                   onClick={onPrevious}
@@ -518,7 +430,7 @@ export function MovieSwipeCard({
               </div>
 
               {!suppressTrailerPlayButton ? (
-                <div className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center p-4">
+                <div className="pointer-events-none absolute left-0 right-0 top-[38%] z-[3] flex -translate-y-1/2 items-center justify-center p-4 sm:top-[40%]">
                   <button
                     type="button"
                     onClick={handleOpenTrailer}
