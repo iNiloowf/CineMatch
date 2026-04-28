@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import Script from "next/script";
 import { AppStateProvider } from "@/lib/app-state";
 import { htmlMetadataIcons } from "@/lib/pwa-app-icons";
@@ -27,12 +28,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
@@ -42,7 +44,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Script id="cinematch-theme-boot" src="/scripts/theme-boot.js" strategy="beforeInteractive" />
+        <Script
+          id="cinematch-theme-boot"
+          src="/scripts/theme-boot.js"
+          strategy="beforeInteractive"
+          nonce={nonce}
+        />
         <AppStateProvider>{children}</AppStateProvider>
       </body>
     </html>

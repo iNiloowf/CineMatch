@@ -2,20 +2,27 @@ import { describe, expect, it, vi } from "vitest";
 import { getContentSecurityPolicy } from "./csp";
 
 describe("getContentSecurityPolicy", () => {
-  it("omits script unsafe-inline in production mode (styles may still use it)", () => {
-    const csp = getContentSecurityPolicy({ isProduction: true });
+  it("uses nonce-based script-src when a nonce is provided", () => {
+    const csp = getContentSecurityPolicy({ isProduction: true, nonce: "abc123" });
     const scriptPart = csp
       .split(";")
       .map((p) => p.trim())
       .find((p) => p.startsWith("script-src"));
     expect(scriptPart).toBeDefined();
     expect(scriptPart).toContain("'self'");
+    expect(scriptPart).toContain("'nonce-abc123'");
     expect(scriptPart).not.toContain("unsafe-inline");
+    expect(scriptPart).not.toContain("unsafe-eval");
   });
 
-  it("allows eval in development mode for the Next dev server", () => {
-    const csp = getContentSecurityPolicy({ isProduction: false });
-    expect(csp).toMatch(/'unsafe-eval'/u);
+  it("falls back to self-only script-src when nonce is missing", () => {
+    const csp = getContentSecurityPolicy({ isProduction: true });
+    const scriptPart = csp
+      .split(";")
+      .map((p) => p.trim())
+      .find((p) => p.startsWith("script-src"));
+    expect(scriptPart).toBeDefined();
+    expect(scriptPart).toBe("script-src 'self'");
   });
 
   it("includes Sentry connect host when DSN is set", () => {

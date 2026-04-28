@@ -2,8 +2,7 @@
  * Build a strict Content-Security-Policy for the Next.js app (web) and
  * the Capacitor webview (loads the same site via `server.url` — same headers).
  *
- * Development: `script-src` includes `'unsafe-eval'` (Next.js / Turbopack HMR).
- * Production: scripts are only from `'self'` (e.g. `public/scripts/theme-boot.js`).
+ * Scripts are restricted to `'self'` plus a per-request nonce when provided.
  * `style-src` includes `'unsafe-inline'` for React `style` props and layout paint.
  *
  * @see docs/content-security-policy.md
@@ -11,6 +10,8 @@
 export type CspBuildOptions = {
   /** @default process.env.NODE_ENV === "production" */
   isProduction?: boolean;
+  /** Optional per-request CSP nonce for inline/framework scripts. */
+  nonce?: string;
 };
 
 function wssForHost(host: string): string {
@@ -82,6 +83,10 @@ export function getContentSecurityPolicy(
   const extraConnect = splitExtra(process.env.CSP_EXTRA_CONNECT_SRC);
   const extraImage = splitExtra(process.env.CSP_EXTRA_IMG_SRC);
   const capExtra = splitExtra(process.env.CSP_CAPACITOR_EXTRA_SRCS);
+  const nonce =
+    typeof options.nonce === "string" && options.nonce.trim().length > 0
+      ? options.nonce.trim()
+      : null;
 
   const connectParts = new Set<string>(["'self'"]);
 
@@ -138,7 +143,7 @@ export function getContentSecurityPolicy(
   const imgSrc = Array.from(imgParts).join(" ");
 
   const styleSrc = "'self' 'unsafe-inline'";
-  const scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'";
+  const scriptSrc = nonce ? `'self' 'nonce-${nonce}'` : "'self'";
 
   return [
     "default-src 'self'",
