@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useLayoutEffect, useState } from "react";
+import { FormEvent, useEffect, useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
@@ -45,6 +45,7 @@ export default function SignInPage() {
   const [authError, setAuthError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
+  const [isBootstrapTimedOut, setIsBootstrapTimedOut] = useState(false);
 
   /**
    * Logged-in users on auth landing routes (`/` and WebView `/index.html`) must land on the app.
@@ -68,6 +69,21 @@ export default function SignInPage() {
     }
     window.location.replace(new URL("/discover", window.location.origin).toString());
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (isReady || currentUserId) {
+      setIsBootstrapTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsBootstrapTimedOut(true);
+    }, 6000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentUserId, isReady]);
 
   const pageBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
@@ -106,7 +122,7 @@ export default function SignInPage() {
     </p>
   );
 
-  if (!isReady || currentUserId) {
+  if ((!isReady && !isBootstrapTimedOut) || currentUserId) {
     return (
       <div className={`auth-landing-stage ${pageBg}`}>
         <AuthLandingBlobs isDarkMode={isDarkMode} />
