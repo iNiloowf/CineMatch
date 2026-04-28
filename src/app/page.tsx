@@ -49,10 +49,11 @@ export default function SignInPage() {
   /**
    * Logged-in users on auth landing routes (`/` and WebView `/index.html`) must land on the app.
    * `router.replace` is sometimes a no-op in embedded WebViews/Capacitor, which leaves the
-   * “Opening your movie lounge…” screen forever. A same-origin `location.replace` is reliable.
+   * “Opening your movie lounge…” screen forever. Redirect as soon as we have a remembered user id
+   * (do not wait for `isReady`) so slow native auth hydration cannot trap users here.
    */
   useLayoutEffect(() => {
-    if (typeof window === "undefined" || !isReady || !currentUserId) {
+    if (typeof window === "undefined" || !currentUserId) {
       return;
     }
     const normalizedPath = window.location.pathname.trim().toLowerCase();
@@ -66,7 +67,7 @@ export default function SignInPage() {
       return;
     }
     window.location.replace(new URL("/discover", window.location.origin).toString());
-  }, [currentUserId, isReady]);
+  }, [currentUserId]);
 
   const pageBg = isDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
