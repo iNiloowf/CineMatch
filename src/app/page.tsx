@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useLayoutEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PasswordInput } from "@/components/password-input";
 import { SurfaceCard } from "@/components/surface-card";
 import { LegalPolicyModal } from "@/components/legal-policy-modal";
@@ -37,7 +36,6 @@ function AuthLandingBlobs({ isDarkMode }: { isDarkMode: boolean }) {
 }
 
 export default function SignInPage() {
-  const router = useRouter();
   const { login, isDarkMode, currentUserId, isReady } = useAppState();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -156,10 +154,17 @@ export default function SignInPage() {
     setFieldErrors({});
 
     setIsSubmitting(true);
+    const startedAt = Date.now();
+    console.warn("[auth-debug] sign-in submit started");
 
     const result = await login(parsed.data.email, parsed.data.password);
 
     setIsSubmitting(false);
+    console.warn("[auth-debug] sign-in submit resolved", {
+      ok: result.ok,
+      shouldRedirect: result.ok ? Boolean(result.shouldRedirect) : false,
+      elapsedMs: Date.now() - startedAt,
+    });
 
     if (!result.ok) {
       setAuthError(result.message);
@@ -169,7 +174,8 @@ export default function SignInPage() {
     setAuthError("");
 
     if (result.shouldRedirect) {
-      router.push("/discover");
+      // `router.push` may no-op in embedded WebViews; hard navigation is reliable.
+      window.location.replace(new URL("/discover", window.location.origin).toString());
     }
   };
 
