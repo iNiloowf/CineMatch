@@ -138,7 +138,7 @@ export function getContentSecurityPolicy(
   const imgSrc = Array.from(imgParts).join(" ");
 
   const styleSrc = "'self' 'unsafe-inline'";
-  const scriptSrc = isProd ? "'self'" : "'self' 'unsafe-eval'";
+  const scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'";
 
   return [
     "default-src 'self'",
