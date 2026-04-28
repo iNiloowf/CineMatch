@@ -47,16 +47,22 @@ export default function SignInPage() {
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
 
   /**
-   * Logged-in users on `/` must land on the app. `router.replace` is sometimes a no-op in
-   * embedded WebViews and Capacitor, which leaves the “Opening your movie lounge…” screen forever.
-   * A same-origin `location.replace` is reliable.
+   * Logged-in users on auth landing routes (`/` and WebView `/index.html`) must land on the app.
+   * `router.replace` is sometimes a no-op in embedded WebViews/Capacitor, which leaves the
+   * “Opening your movie lounge…” screen forever. A same-origin `location.replace` is reliable.
    */
   useLayoutEffect(() => {
     if (typeof window === "undefined" || !isReady || !currentUserId) {
       return;
     }
-    const path = window.location.pathname;
-    if (path !== "/" && path !== "") {
+    const normalizedPath = window.location.pathname.trim().toLowerCase();
+    const isAuthLandingPath =
+      normalizedPath === "" ||
+      normalizedPath === "/" ||
+      normalizedPath === "/index.html" ||
+      normalizedPath.endsWith("/index.html");
+
+    if (!isAuthLandingPath) {
       return;
     }
     window.location.replace(new URL("/discover", window.location.origin).toString());
