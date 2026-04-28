@@ -18,7 +18,7 @@ export function AppRouteLoading({
   message,
   ariaLabel,
   isDarkMode,
-  visual = "skeleton",
+  visual = "spinner",
   frameClassName,
   slowHintMessage = DEFAULT_SLOW_HINT,
   /** Show the slow hint after this many ms; set `0` or omit `slowHintMessage` to disable. */

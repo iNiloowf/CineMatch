@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import Script from "next/script";
+import { AppBootstrapGate } from "@/components/app-bootstrap-gate";
 import { AppStateProvider } from "@/lib/app-state";
 import { htmlMetadataIcons } from "@/lib/pwa-app-icons";
 import "./globals.css";
@@ -50,7 +51,9 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           nonce={nonce}
         />
-        <AppStateProvider>{children}</AppStateProvider>
+        <AppStateProvider>
+          <AppBootstrapGate>{children}</AppBootstrapGate>
+        </AppStateProvider>
       </body>
     </html>
   );
