@@ -62,10 +62,15 @@ export function MovieDetailsModal({
   const hasTrailer = Boolean(trailerUrl) || movie?.id.startsWith("tmdb-");
   const runtimeLabel =
     movie?.runtime.trim().toLowerCase() === "runtime unavailable" ? "N/A" : (movie?.runtime ?? "");
-  const matchScore = computeMovieMatchPercent(movie, {
-    acceptedGenres,
-    onboarding: onboardingPreferences,
-  });
+  const matchScore = useMemo(() => {
+    if (!movie) {
+      return 0;
+    }
+    return computeMovieMatchPercent(movie, {
+      acceptedGenres,
+      onboarding: onboardingPreferences,
+    });
+  }, [movie, acceptedGenres, onboardingPreferences]);
 
   useEffect(() => {
     if (!movie) {
