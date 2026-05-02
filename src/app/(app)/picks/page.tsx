@@ -1,14 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ModalPortal } from "@/components/modal-portal";
 import { AvatarBadge } from "@/components/avatar-badge";
-import { matchPercentForMovie } from "@/components/movie-details-modal";
+import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
 import { PicksMovieRow } from "@/components/picks-movie-row";
-import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteEmptyCard } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
 import {
@@ -16,14 +14,8 @@ import {
   VirtualScrollList,
 } from "@/components/virtual-scroll-list";
 import { useAppState } from "@/lib/app-state";
-import { formatRuntimeForDisplay } from "@/lib/format-runtime-display";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-
-const PicksTrailerModalLazy = dynamic(
-  () => import("@/components/picks-trailer-modal").then((m) => m.PicksTrailerModal),
-  { ssr: false },
-);
 
 type ShareToast = { message: string; variant: "success" | "error" };
 type TopSharedPick = {
@@ -76,10 +68,6 @@ export default function PicksPage() {
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
-  const [isTrailerVisible, setIsTrailerVisible] = useState(false);
-  const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
-  const [trailerError, setTrailerError] = useState<string | null>(null);
-  const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const [isPremiumInsightsExpanded, setIsPremiumInsightsExpanded] = useState(true);
   const [isPremiumInsightsClosing, setIsPremiumInsightsClosing] = useState(false);
   /** Drives grid 0fr→1fr when opening from collapsed (smooth expand). */
@@ -369,21 +357,6 @@ export default function PicksPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedMovie) {
-      setIsTrailerVisible(false);
-      setTrailerUrl(null);
-      setTrailerError(null);
-      setIsLoadingTrailer(false);
-      return;
-    }
-
-    setTrailerUrl(selectedMovie.trailerUrl ?? null);
-    setTrailerError(null);
-    setIsLoadingTrailer(false);
-    setIsTrailerVisible(false);
-  }, [selectedMovie]);
-
-  useEffect(() => {
     return () => {
       if (shareToastTimerRef.current) {
         window.clearTimeout(shareToastTimerRef.current);
@@ -435,7 +408,7 @@ export default function PicksPage() {
 
   useEffect(() => {
     const anyOpen = Boolean(
-      selectedMovieId || pendingRemoveMovieId || pendingWatchedMovieId || isTrailerVisible,
+      selectedMovieId || pendingRemoveMovieId || pendingWatchedMovieId,
     );
     if (!anyOpen) {
       return;
@@ -446,10 +419,6 @@ export default function PicksPage() {
         return;
       }
       event.preventDefault();
-      if (isTrailerVisible) {
-        setIsTrailerVisible(false);
-        return;
-      }
       if (pendingRemoveMovieId) {
         setPendingRemoveMovieId(null);
         return;
@@ -465,7 +434,7 @@ export default function PicksPage() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedMovieId, pendingRemoveMovieId, pendingWatchedMovieId, isTrailerVisible]);
+  }, [selectedMovieId, pendingRemoveMovieId, pendingWatchedMovieId]);
 
   useLayoutEffect(() => {
     if (!pendingWatchedMovieId && !pendingRemoveMovieId) {
@@ -537,58 +506,16 @@ export default function PicksPage() {
     }
   }, [acceptedMovies, data.movies, showShareToast]);
 
-  const fetchTrailerForSelected = useCallback(async () => {
-    if (!selectedMovie || trailerUrl) {
-      return;
-    }
-
-    setTrailerError(null);
-    setIsLoadingTrailer(true);
-
-    try {
-      const response = await fetch(
-        `/api/movies/trailer?movieId=${encodeURIComponent(selectedMovie.id)}`,
-        {
-          cache: "no-store",
-        },
-      );
-      const payload = (await response.json()) as {
-        trailerUrl?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.trailerUrl) {
-        setTrailerError(
-          payload.error ?? "We couldn’t find a playable trailer for this title.",
-        );
-        return;
-      }
-
-      setTrailerUrl(payload.trailerUrl);
-    } catch {
-      setTrailerError("We couldn’t load the trailer right now.");
-    } finally {
-      setIsLoadingTrailer(false);
-    }
-  }, [selectedMovie, trailerUrl]);
-
-  const handleOpenTrailer = useCallback(async () => {
-    setIsTrailerVisible(true);
-    await fetchTrailerForSelected();
-  }, [fetchTrailerForSelected]);
-
   const openPickDetails = useCallback((movieId: string) => {
     setSelectedMovieId(movieId);
   }, []);
 
   const requestRemovePick = useCallback((movieId: string) => {
     setSelectedMovieId(null);
-    setIsTrailerVisible(false);
     setPendingRemoveMovieId(movieId);
   }, []);
   const requestMarkWatched = useCallback((movieId: string) => {
     setSelectedMovieId(null);
-    setIsTrailerVisible(false);
     setPendingWatchedMovieId(movieId);
   }, []);
 
@@ -688,227 +615,31 @@ export default function PicksPage() {
   }, []);
 
   const detailsModal = (
-    <ModalPortal open={Boolean(selectedMovie)}>
-      {selectedMovie ? (
-          <div className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]">
+    <MovieDetailsModal
+      movie={selectedMovie}
+      isDarkMode={isDarkMode}
+      onClose={() => setSelectedMovieId(null)}
+      footer={({ openTrailer }) =>
+        selectedMovie ? (
+          <>
             <button
               type="button"
-              aria-label="Close movie details"
-              className="absolute inset-0 z-0 cursor-default bg-transparent"
-              onClick={() => {
-                setSelectedMovieId(null);
-                setIsTrailerVisible(false);
-              }}
-            />
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="picks-details-title"
-              className={`details-modal-shell ui-shell pointer-events-auto absolute inset-x-0 bottom-0 top-0 z-10 mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-lg flex-col shadow-[0_24px_80px_rgba(15,23,42,0.2)] ${
-                isDarkMode ? "bg-slate-950 text-white" : "bg-white text-slate-900"
-              }`}
+              className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
+              onClick={() => void handleShareMovie(selectedMovie.id)}
             >
-              <span className="ui-modal-accent-bar" aria-hidden />
-              <div
-                className={`ui-shell-header !border-b-black/6 !py-3 !pt-[max(1rem,env(safe-area-inset-top,0px))] shrink-0`}
-              >
-                <p
-                  className={`min-w-0 flex-1 truncate text-xs font-medium tracking-[0.01em] ${
-                    isDarkMode ? "text-slate-300" : "text-slate-500"
-                  }`}
-                >
-                  Movie details
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedMovieId(null);
-                    setIsTrailerVisible(false);
-                  }}
-                  aria-label="Close movie details"
-                  className={`ui-shell-close ${
-                    isDarkMode ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
-                  }`}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="ui-icon-md ui-icon-stroke"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div
-                className={`ui-shell-body !flex !min-h-0 !flex-1 !flex-col !overflow-hidden !px-0 !pb-0 !pt-0 ${
-                  isDarkMode ? "bg-slate-950" : "bg-white"
-                }`}
-              >
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-2 pt-4">
-                  <p
-                    className={`mb-3 flex items-center gap-2 text-[11px] font-semibold ${
-                      isDarkMode ? "text-slate-400" : "text-slate-500"
-                    }`}
-                  >
-                    <span aria-hidden className="select-none">
-                      ↓
-                    </span>
-                    Scroll for synopsis and credits-style details.
-                  </p>
-
-                  <div
-                    className="relative overflow-hidden rounded-[18px] p-4 text-white shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
-                    style={{
-                      backgroundImage: selectedMovie.poster.imageUrl
-                        ? undefined
-                        : `linear-gradient(145deg, ${selectedMovie.poster.accentFrom}, ${selectedMovie.poster.accentTo})`,
-                      backgroundSize: selectedMovie.poster.imageUrl ? undefined : "cover",
-                      backgroundPosition: "center",
-                    }}
-                  >
-                    <PosterBackdrop
-                      imageUrl={selectedMovie.poster.imageUrl}
-                      profile="hero"
-                      objectFit="cover"
-                    />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.7)_0%,rgba(15,23,42,0.1)_45%,rgba(15,23,42,0.4)_100%)]" />
-                    <div className="relative z-[1] flex min-h-[12.5rem] flex-col items-stretch justify-start gap-2.5 sm:min-h-[13.5rem] sm:gap-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full bg-violet-600/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white">
-                          {selectedMovie.mediaType === "series" ? "Series" : "Movie"}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
-                            {selectedMovie.year}
-                          </span>
-                          <span className="rounded-full bg-black/28 px-2.5 py-1 text-[11px] font-semibold text-white/88 backdrop-blur-md">
-                            {formatRuntimeForDisplay(selectedMovie.runtime)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs font-medium text-white/90">
-                        {selectedMovie.genre.slice(0, 3).join(" • ")}
-                      </p>
-                      <h2
-                        id="picks-details-title"
-                        className="text-[1.6rem] font-semibold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] sm:text-[1.75rem]"
-                      >
-                        {selectedMovie.title}
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`mt-4 grid grid-cols-3 gap-2 rounded-[24px] px-3 py-3 ${
-                      isDarkMode
-                        ? "border border-white/14 bg-white/10"
-                        : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
-                    }`}
-                  >
-                    <div className="flex min-w-0 items-center justify-center gap-2">
-                      <span className="text-base leading-none text-violet-500">★</span>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {selectedMovie.rating.toFixed(1)}
-                        </p>
-                        <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          IMDb rating
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      className={`flex min-w-0 items-center justify-center gap-2 border-x ${
-                        isDarkMode ? "border-white/12" : "border-black/6"
-                      }`}
-                    >
-                      <span className={`text-[1.1rem] leading-none ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                        ◷
-                      </span>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {formatRuntimeForDisplay(selectedMovie.runtime)}
-                        </p>
-                        <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          Runtime
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex min-w-0 items-center justify-center gap-2">
-                      <span className="text-base leading-none text-emerald-500">☺</span>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                          {matchPercentForMovie(selectedMovie, {
-                            acceptedGenres,
-                            onboarding: onboardingPreferences,
-                          })}%
-                        </p>
-                        <p className={`text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                          Match
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`relative mt-4 rounded-[22px] px-4 py-4 ${
-                      isDarkMode ? "bg-white/10" : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
-                    }`}
-                  >
-                    <p className={`text-[11px] leading-5 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
-                      {selectedMovie.description}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`pointer-events-none sticky bottom-0 z-[1] -mx-1 mt-2 h-10 bg-gradient-to-t ${
-                      isDarkMode ? "from-slate-950" : "from-white"
-                    } to-transparent`}
-                    aria-hidden
-                  />
-                </div>
-              </div>
-
-              <div
-                className={`ui-shell-footer !flex !flex-col !pt-3 sm:!flex-row sm:items-stretch shrink-0 gap-2 ${
-                  isDarkMode ? "bg-slate-950" : "bg-white"
-                }`}
-              >
-                <button
-                  type="button"
-                  className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
-                  onClick={() => void handleShareMovie(selectedMovie.id)}
-                >
-                  Share link
-                </button>
-                <button
-                  type="button"
-                  className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-0"
-                  onClick={() => void handleOpenTrailer()}
-                >
-                  Watch trailer
-                </button>
-              </div>
-            </div>
-
-            {isTrailerVisible ? (
-              <PicksTrailerModalLazy
-                title={selectedMovie.title}
-                isDarkMode={isDarkMode}
-                trailerUrl={trailerUrl}
-                isLoadingTrailer={isLoadingTrailer}
-                trailerError={trailerError}
-                onClose={() => setIsTrailerVisible(false)}
-                onRetry={() => void fetchTrailerForSelected()}
-              />
-            ) : null}
-          </div>
-      ) : null}
-    </ModalPortal>
+              Share link
+            </button>
+            <button
+              type="button"
+              className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-0"
+              onClick={() => void openTrailer()}
+            >
+              Watch trailer
+            </button>
+          </>
+        ) : null
+      }
+    />
   );
 
   const premiumInsightsBodyOpen =
