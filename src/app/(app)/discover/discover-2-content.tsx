@@ -144,6 +144,7 @@ export function DiscoverPage2Content({
   const undoToastTimeoutRef = useRef<number | null>(null);
   const discoverSessionSaveTimerRef = useRef<number | null>(null);
   const discoverSessionSnapshotRef = useRef<DiscoverSessionSnapshotV1 | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const overlaySearchInputRef = useRef<HTMLInputElement | null>(null);
   const skipNextDiscoverSessionSnapshotRestore = useRef(false);
   const lastResolvedShareParamRef = useRef<string | null>(null);
@@ -1513,6 +1514,7 @@ export function DiscoverPage2Content({
                 can pick a title without losing your place.
               </p>
               <input
+                ref={searchInputRef}
                 value={searchQuery}
                 onChange={(event) => {
                   const nextValue = event.target.value;
@@ -1553,12 +1555,22 @@ export function DiscoverPage2Content({
               {searchQuery.length > 0 ? (
                 <button
                   type="button"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                  }}
                   onClick={() => {
                     setSearchQuery("");
                     setSearchResults([]);
+                    window.requestAnimationFrame(() => {
+                      searchInputRef.current?.focus();
+                    });
                   }}
                   aria-label="Clear search"
-                  className="ui-soft-pill absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center"
+                  className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full transition ${
+                    isDarkMode
+                      ? "text-slate-300 hover:text-white"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -1747,15 +1759,21 @@ export function DiscoverPage2Content({
                 {searchQuery.length > 0 ? (
                   <button
                     type="button"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                    }}
                     onClick={() => {
                       setSearchQuery("");
                       setSearchResults([]);
+                      window.requestAnimationFrame(() => {
+                        overlaySearchInputRef.current?.focus();
+                      });
                     }}
                     aria-label="Clear search"
-                    className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full ${
+                    className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full transition ${
                       isDarkMode
-                        ? "bg-white/8 text-slate-300"
-                        : "bg-slate-100 text-slate-500"
+                        ? "text-slate-300 hover:text-white"
+                        : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
                     <svg
