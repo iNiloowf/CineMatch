@@ -234,7 +234,9 @@ export function TermsOfServiceDocumentBody({
         You retain rights to content you submit (for example profile text or photos), and you grant us a worldwide,
         non-exclusive license to host, store, process, and display that content solely to operate and improve the
         Service. Movie catalog data may be subject to third-party terms (such as TMDB attribution requirements).
-        Trailer and streaming availability links may point to third parties; we do not control those services.
+        Trailer and streaming availability links may point to third parties; we do not control those services. Depending
+        on your discovery activity and the source catalog, trailers or recommendations for mature / 18+ titles may
+        appear in the app.
       </p>
 
       <h2 className={h2}>6. Intellectual property</h2>
