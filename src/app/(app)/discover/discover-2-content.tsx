@@ -1240,14 +1240,14 @@ export function DiscoverPage2Content({
                   aria-expanded={isMoreMenuOpen}
                   aria-controls={isMoreMenuOpen ? "discover-more-menu" : undefined}
                   onClick={() => setIsMoreMenuOpen((current) => !current)}
-                  className={`flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-full border transition ${
+                  className={`flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-full transition ${
                     isDarkMode
                       ? isMoreMenuOpen
-                        ? "border-violet-400/55 bg-white/12 text-white ring-2 ring-violet-400/45"
-                        : "border-white/15 text-slate-300 hover:bg-white/8"
+                        ? "bg-white/12 text-white ring-2 ring-violet-400/45"
+                        : "text-slate-300 hover:bg-white/8"
                       : isMoreMenuOpen
-                        ? "border-violet-500/45 bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
-                        : "border-slate-300/80 text-slate-700 hover:bg-black/5"
+                        ? "bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
+                        : "text-slate-700 hover:bg-black/5"
                   }`}
                 >
                   {currentUser?.avatarImageUrl ? (
@@ -1303,31 +1303,6 @@ export function DiscoverPage2Content({
                           </p>
                           <div className="space-y-0.5">
                             <Link
-                              href="/settings"
-                              onClick={() => setIsMoreMenuOpen(false)}
-                              className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
-                            >
-                              <span
-                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                                  isDarkMode ? "bg-violet-500/15 text-violet-200" : "bg-violet-100 text-violet-700"
-                                }`}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  className="ui-icon-md ui-icon-stroke"
-                                  strokeWidth="1.75"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  aria-hidden
-                                >
-                                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                                  <circle cx="12" cy="12" r="3" />
-                                </svg>
-                              </span>
-                              <span className="min-w-0">Settings</span>
-                            </Link>
-                            <Link
                               href="/profile"
                               onClick={() => setIsMoreMenuOpen(false)}
                               className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
@@ -1351,6 +1326,31 @@ export function DiscoverPage2Content({
                                 </svg>
                               </span>
                               <span className="min-w-0">Profile</span>
+                            </Link>
+                            <Link
+                              href="/settings"
+                              onClick={() => setIsMoreMenuOpen(false)}
+                              className="ui-menu-item group flex w-full items-center gap-3 rounded-[0.9rem] px-2.5 py-2.5 font-medium"
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                  isDarkMode ? "bg-violet-500/15 text-violet-200" : "bg-violet-100 text-violet-700"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="ui-icon-md ui-icon-stroke"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              </span>
+                              <span className="min-w-0">Settings</span>
                             </Link>
                           </div>
                           <p
@@ -1382,6 +1382,8 @@ export function DiscoverPage2Content({
                                 >
                                   <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                                   <path d="M17 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                                  <path d="M3 20v-1a4 4 0 0 1 4-4h4" />
+                                  <path d="M13 20v-1a4 4 0 0 1 4-4h4" />
                                 </svg>
                               </span>
                               <div className="min-w-0 text-left">
