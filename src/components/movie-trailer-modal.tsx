@@ -186,10 +186,7 @@ export function MovieTrailerModal({
                     : "border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
                 }`}
               >
-                <span className="inline-flex items-center gap-2">
-                  <span className="text-sm leading-none">×</span>
-                  <span>Reject</span>
-                </span>
+                <span>Reject</span>
               </button>
               <button
                 type="button"

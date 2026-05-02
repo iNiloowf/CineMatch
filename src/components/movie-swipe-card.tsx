@@ -239,6 +239,20 @@ export function MovieSwipeCard({
     await fetchTrailerIfNeeded();
   }, [fetchTrailerIfNeeded]);
 
+  const handleTrailerReject = useCallback(() => {
+    setIsTrailerVisible(false);
+    window.requestAnimationFrame(() => {
+      onReject();
+    });
+  }, [onReject]);
+
+  const handleTrailerLike = useCallback(() => {
+    setIsTrailerVisible(false);
+    window.requestAnimationFrame(() => {
+      onAccept();
+    });
+  }, [onAccept]);
+
   const maxDrag = immersive ? 80 : 42;
   const dragRotate = immersive ? 0.078 : 0.045;
   const scaleDrop = immersive ? 0.0005 : 0.0002;
@@ -340,8 +354,8 @@ export function MovieSwipeCard({
       runtimeLabel={runtimeLabel}
       onClose={() => setIsTrailerVisible(false)}
       onRetryTrailer={() => void fetchTrailerIfNeeded()}
-      onAccept={onAccept}
-      onReject={onReject}
+      onAccept={handleTrailerLike}
+      onReject={handleTrailerReject}
     />
   ) : null;
 
