@@ -59,8 +59,13 @@ export function MovieDetailsModal({
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
   const [trailerError, setTrailerError] = useState<string | null>(null);
   const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
+  const hasTrailer = Boolean(trailerUrl) || movie?.id.startsWith("tmdb-");
   const runtimeLabel =
     movie?.runtime.trim().toLowerCase() === "runtime unavailable" ? "N/A" : (movie?.runtime ?? "");
+  const matchScore = computeMovieMatchPercent(movie, {
+    acceptedGenres,
+    onboarding: onboardingPreferences,
+  });
 
   useEffect(() => {
     if (!movie) {
@@ -222,7 +227,7 @@ export function MovieDetailsModal({
                 objectFit={movie.poster.imageUrl ? "contain" : "cover"}
               />
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),transparent_32%,rgba(15,23,42,0.42)_58%,rgba(3,7,18,0.82)_100%)]" />
-              <div className="relative flex min-h-[10.25rem] flex-col justify-between gap-2 sm:min-h-[11.5rem]">
+              <div className="relative flex min-h-[13rem] flex-col justify-between gap-2 sm:min-h-[14rem]">
                 <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                   <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                     {movie.mediaType === "series" ? "Series" : "Movie"}
@@ -242,6 +247,28 @@ export function MovieDetailsModal({
                     </span>
                   </div>
                 </div>
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenTrailer()}
+                    disabled={!hasTrailer || isLoadingTrailer}
+                    aria-label={hasTrailer ? "Play trailer" : "Trailer unavailable"}
+                    className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border text-white shadow-[0_6px_28px_rgba(0,0,0,0.55)] transition ${
+                      hasTrailer
+                        ? "border-white/50 bg-transparent hover:bg-black/20 active:scale-95"
+                        : "cursor-not-allowed border-white/25 bg-transparent text-white/50"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="ml-1 h-6 w-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]"
+                      aria-hidden="true"
+                    >
+                      <path d="m8 5 11 7-11 7V5Z" />
+                    </svg>
+                  </button>
+                </div>
                 <div className="space-y-2.5 pt-4">
                   <div className="flex flex-wrap gap-1.5">
                     {movie.genre.slice(0, 3).map((genre) => (
@@ -260,101 +287,15 @@ export function MovieDetailsModal({
                   >
                     {movie.title}
                   </h2>
+                  <p className="text-[9px] font-semibold leading-tight text-violet-200/90 sm:text-[10px]">
+                    {matchScore}% match
+                  </p>
+                  <div className="border-t border-white/10 pt-2.5">
+                    <p className="text-[11px] leading-[1.35rem] text-slate-100/90">
+                      {movie.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div
-              className={`mt-4 grid shrink-0 grid-cols-3 gap-1 rounded-[18px] px-2 py-2.5 sm:gap-2 sm:rounded-[20px] sm:px-3 sm:py-3 ${
-                isDarkMode
-                  ? "border border-white/14 bg-white/10"
-                  : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
-              }`}
-            >
-              <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`h-6 w-6 shrink-0 ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d="M12 3.2 14.4 9.2h6.5l-5.2 3.8 2 6.4L12 16.9 6.3 19.4l2-6.4L3.1 9.2h6.5L12 3.2z" />
-                </svg>
-                <div className="min-w-0 text-center sm:text-left">
-                  <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                    {movie.rating.toFixed(1)}
-                  </p>
-                  <p className={`text-[9px] sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                    IMDb rating
-                  </p>
-                </div>
-              </div>
-              <div
-                className={`flex min-w-0 items-center justify-center gap-2 border-x px-0.5 sm:gap-2.5 sm:px-0 ${
-                  isDarkMode ? "border-white/12" : "border-black/6"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`h-6 w-6 shrink-0 ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3 3" />
-                </svg>
-                <div className="min-w-0 text-center sm:text-left">
-                  <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                    {runtimeLabel}
-                  </p>
-                  <p className={`text-[9px] sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                    Runtime
-                  </p>
-                </div>
-              </div>
-              <div className="flex min-w-0 items-center justify-center gap-2 sm:gap-2.5">
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`h-6 w-6 ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M8.25 14.1c.9 1.35 2.35 2.15 3.75 2.15s2.85-.8 3.75-2.15" />
-                  <circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none" />
-                  <circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none" />
-                </svg>
-                <div className="min-w-0 text-center sm:text-left">
-                  <p className={`text-xs font-semibold sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                    {computeMovieMatchPercent(movie, {
-                      acceptedGenres,
-                      onboarding: onboardingPreferences,
-                    })}%
-                  </p>
-                  <p className={`text-[9px] sm:text-[10px] ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
-                    Match
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`mt-4 flex w-full flex-col overflow-hidden rounded-[22px] text-left ${
-                isDarkMode ? "bg-white/10" : "border border-slate-200/90 bg-slate-50/95 shadow-sm"
-              }`}
-            >
-              <div className="px-3 py-2.5">
-                <p className={`text-[11px] leading-[1.35rem] ${isDarkMode ? "text-slate-200" : "text-slate-600"}`}>
-                  {movie.description}
-                </p>
               </div>
             </div>
           </div>
