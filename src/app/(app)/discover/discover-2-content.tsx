@@ -401,15 +401,32 @@ export function DiscoverPage2Content({
     });
   }, []);
 
-  const filteredQueue = useMemo(() => {
-    return discoverQueue.filter((movie) => {
-      const matchesGenre =
-        selectedGenres.length === 0 ||
-        selectedGenres.some((genre) => movie.genre.includes(genre));
+  const rankQueueByGenreMatchStrength = useCallback(
+    (queue: Movie[], genres: string[]) => {
+      if (genres.length === 0) {
+        return queue;
+      }
+      const selected = new Set(genres);
+      return queue
+        .map((movie, index) => {
+          const matchCount = movie.genre.filter((genre) => selected.has(genre)).length;
+          return { movie, index, matchCount };
+        })
+        .filter((entry) => entry.matchCount > 0)
+        .sort((left, right) => {
+          if (left.matchCount !== right.matchCount) {
+            return right.matchCount - left.matchCount;
+          }
+          return left.index - right.index;
+        })
+        .map((entry) => entry.movie);
+    },
+    [],
+  );
 
-      return matchesGenre;
-    });
-  }, [discoverQueue, selectedGenres]);
+  const filteredQueue = useMemo(() => {
+    return rankQueueByGenreMatchStrength(discoverQueue, selectedGenres);
+  }, [discoverQueue, rankQueueByGenreMatchStrength, selectedGenres]);
 
   const sortedSearchResults = useMemo(() => {
     if (normalizedSearchQuery.length < 2) {
@@ -458,12 +475,7 @@ export function DiscoverPage2Content({
   /** Keeps the current title when possible; only jumps when it drops out of the new filter. */
   const applyGenreFilterChange = useCallback(
     (nextGenres: string[]) => {
-      const nextFiltered = discoverQueue.filter((m) => {
-        return (
-          nextGenres.length === 0 ||
-          nextGenres.some((g) => m.genre.includes(g))
-        );
-      });
+      const nextFiltered = rankQueueByGenreMatchStrength(discoverQueue, nextGenres);
 
       const currentId =
         focusedMovieId ??
@@ -487,7 +499,13 @@ export function DiscoverPage2Content({
       setFocusedMovieId(null);
       setSelectedGenres(nextGenres);
     },
-    [discoverQueue, filteredQueue, focusedMovieId, safeBrowseIndex],
+    [
+      discoverQueue,
+      filteredQueue,
+      focusedMovieId,
+      rankQueueByGenreMatchStrength,
+      safeBrowseIndex,
+    ],
   );
 
   useEffect(() => {
