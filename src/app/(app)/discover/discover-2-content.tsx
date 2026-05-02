@@ -318,9 +318,7 @@ export function DiscoverPage2Content({
 
       try {
         const response = await fetch(
-          `/api/movies?source=tmdb&query=${encodeURIComponent(
-            searchQuery.trim(),
-          )}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ""}`,
+          `/api/movies?source=tmdb&query=${encodeURIComponent(searchQuery.trim())}`,
           {
             cache: "no-store",
             signal: controller.signal,
