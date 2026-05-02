@@ -304,7 +304,7 @@ export function DiscoverPage2Content({
   }, [registerMovies, router, sharedMovieId, sharedMovieRetryKey]);
 
   useEffect(() => {
-    if (normalizedSearchQuery.length < 2) {
+    if (normalizedSearchQuery.length < 1) {
       setSearchFetchState("idle");
       setSearchFetchError(null);
       return;
@@ -445,7 +445,7 @@ export function DiscoverPage2Content({
   }, [discoverQueue, rankQueueByGenreMatchStrength, selectedGenres]);
 
   const sortedSearchResults = useMemo(() => {
-    if (normalizedSearchQuery.length < 2) {
+    if (normalizedSearchQuery.length < 1) {
       return [];
     }
 
@@ -1509,7 +1509,7 @@ export function DiscoverPage2Content({
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="relative min-w-0 flex-1">
               <p id="discover-search-hint" className="sr-only">
-                Type at least two characters to open live search. Results open in a sheet so you
+                Type at least one character to open live search. Results open in a sheet so you
                 can pick a title without losing your place.
               </p>
               <input
@@ -1518,7 +1518,7 @@ export function DiscoverPage2Content({
                   const nextValue = event.target.value;
                   setSearchQuery(nextValue);
 
-                  if (nextValue.trim().length < 2) {
+                  if (nextValue.trim().length < 1) {
                     setSearchResults([]);
                   } else {
                     setIsSearchSheetOpen(true);
@@ -1556,7 +1556,6 @@ export function DiscoverPage2Content({
                   onClick={() => {
                     setSearchQuery("");
                     setSearchResults([]);
-                    setIsSearchSheetOpen(false);
                   }}
                   aria-label="Clear search"
                   className="ui-soft-pill absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center"
@@ -1704,7 +1703,7 @@ export function DiscoverPage2Content({
             >
               <div className="relative">
                 <p id="discover-overlay-search-hint" className="sr-only">
-                  Type at least two characters. Choose a result to open it on your Discover stack.
+                  Type at least one character. Choose a result to open it on your Discover stack.
                 </p>
                 <input
                   ref={overlaySearchInputRef}
@@ -1713,7 +1712,7 @@ export function DiscoverPage2Content({
                     const nextValue = event.target.value;
                     setSearchQuery(nextValue);
 
-                    if (nextValue.trim().length < 2) {
+                    if (nextValue.trim().length < 1) {
                       setSearchResults([]);
                     } else {
                       setIsSearchSheetOpen(true);
@@ -1751,7 +1750,6 @@ export function DiscoverPage2Content({
                     onClick={() => {
                       setSearchQuery("");
                       setSearchResults([]);
-                      setIsSearchSheetOpen(false);
                     }}
                     aria-label="Clear search"
                     className={`absolute right-2 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full ${
@@ -1783,7 +1781,7 @@ export function DiscoverPage2Content({
             </div>
 
             <div className="ui-shell-body pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-              {normalizedSearchQuery.length < 2 ? (
+              {normalizedSearchQuery.length < 1 ? (
                 <SurfaceCard className="space-y-3 text-center">
                   <h3
                     className={`text-lg font-semibold ${
@@ -1797,12 +1795,12 @@ export function DiscoverPage2Content({
                       isDarkMode ? "text-slate-300" : "text-slate-500"
                     }`}
                   >
-                    Enter at least two characters to search movies and series.
+                    Enter at least one character to search movies and series.
                   </p>
                 </SurfaceCard>
               ) : null}
 
-              {normalizedSearchQuery.length >= 2 &&
+              {normalizedSearchQuery.length >= 1 &&
               (searchFetchState === "loading" || searchFetchState === "idle") ? (
                 <div className="space-y-3" role="status" aria-live="polite">
                   <p
@@ -1853,7 +1851,7 @@ export function DiscoverPage2Content({
               ) : null}
 
               {searchFetchState === "ready" &&
-              normalizedSearchQuery.length >= 2 &&
+              normalizedSearchQuery.length >= 1 &&
               searchResults.length > 0 &&
               sortedSearchResults.length === 0 ? (
                 <NetworkStatusBlock
