@@ -278,9 +278,10 @@ export function useBottomNavPillDrag(opts: {
     transition: isDragging ? "none" : `transform ${transitionMs}ms ${transitionEasing}`,
   };
 
-  const onActiveLinkClick = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
+  const onLinkClick = useCallback((e: MouseEvent<HTMLAnchorElement>) => {
     if (suppressClickRef.current) {
       e.preventDefault();
+      e.stopPropagation();
       suppressClickRef.current = false;
     }
   }, []);
@@ -288,7 +289,7 @@ export function useBottomNavPillDrag(opts: {
   return {
     onTouchStart,
     pillTransformStyle,
-    onActiveLinkClick,
+    onLinkClick,
     isDragging,
     visualHighlightIndex,
   };

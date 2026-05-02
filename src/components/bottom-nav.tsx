@@ -55,7 +55,7 @@ export function BottomNav() {
   const { pillIndex, activeHref } = resolveBottomNavHighlight(pathname);
   const hasTabMatch = pillIndex >= 0 && activeHref !== null;
 
-  const { onTouchStart, pillTransformStyle, onActiveLinkClick, isDragging, visualHighlightIndex } =
+  const { onTouchStart, pillTransformStyle, onLinkClick, isDragging, visualHighlightIndex } =
     useBottomNavPillDrag({
       panelRef,
       pillIndex: hasTabMatch ? pillIndex : 0,
@@ -105,7 +105,7 @@ export function BottomNav() {
               data-bottom-nav-link="true"
               data-active={visualActive ? "true" : "false"}
               aria-current={routeActive ? "page" : undefined}
-              onClick={routeActive ? onActiveLinkClick : undefined}
+              onClick={onLinkClick}
               className={`group relative z-10 flex min-h-[44px] min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 rounded-[18px] px-0.5 py-2 transition-[transform,color] duration-300 ease-out motion-reduce:transition-colors motion-reduce:duration-150 max-[380px]:px-0 sm:gap-1 sm:px-1 ${
                 visualActive
                   ? "text-white motion-reduce:scale-100"
