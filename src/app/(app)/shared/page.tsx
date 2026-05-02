@@ -176,23 +176,18 @@ export default function SharedWatchlistPage() {
         isDarkMode={isDarkMode}
         onClose={closeDetails}
         contextLabel={detailsMovie ? `Shared match with ${detailsMovie.partner.name}` : undefined}
-        footer={({ openTrailer }) =>
+        footer={() =>
           detailsMovie ? (
             <>
               <Link
                 href={`/friends/${detailsMovie.partner.id}`}
-                className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
+                className={`inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] transition hover:from-violet-500 hover:to-violet-600 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
+                  isDarkMode ? "" : "backdrop-blur-xl"
+                }`}
                 onClick={closeDetails}
               >
                 View {detailsMovie.partner.name}
               </Link>
-              <button
-                type="button"
-                className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-0"
-                onClick={() => void openTrailer()}
-              >
-                Watch trailer
-              </button>
             </>
           ) : null
         }

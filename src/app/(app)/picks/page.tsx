@@ -624,14 +624,20 @@ export default function PicksPage() {
           <>
             <button
               type="button"
-              className="ui-btn ui-btn-primary min-h-12 w-full flex-1 sm:min-w-0"
+              className={`min-h-11 min-w-0 rounded-md border px-3 py-2.5 text-[11px] font-semibold transition max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
+                isDarkMode
+                  ? "border-white/20 bg-slate-900/95 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:bg-slate-800/95 active:bg-slate-800"
+                  : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm backdrop-blur-xl hover:bg-white/70"
+              }`}
               onClick={() => void handleShareMovie(selectedMovie.id)}
             >
               Share link
             </button>
             <button
               type="button"
-              className="ui-btn ui-btn-secondary min-h-12 w-full flex-1 sm:min-w-0"
+              className={`min-h-11 min-w-0 rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] transition hover:from-violet-500 hover:to-violet-600 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
+                isDarkMode ? "" : "backdrop-blur-xl"
+              }`}
               onClick={() => void openTrailer()}
             >
               Watch trailer
