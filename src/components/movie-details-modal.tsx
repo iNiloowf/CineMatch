@@ -214,9 +214,9 @@ export function MovieDetailsModal({
             isDarkMode ? "bg-slate-950" : "bg-white"
           }`}
         >
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-3 sm:px-5 sm:pt-4">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-3 sm:px-5 sm:pt-4">
             <div
-              className="discover-hero-reveal relative shrink-0 overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.1)] sm:p-4"
+              className="discover-hero-reveal relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-[18px] p-3.5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.1)] [min-height:max(13rem,min(36dvh,44svh))] sm:p-4 sm:[min-height:max(14rem,min(42dvh,50svh))]"
               style={{
                 backgroundImage: movie.poster.imageUrl
                   ? undefined
@@ -232,8 +232,8 @@ export function MovieDetailsModal({
                 objectFit={movie.poster.imageUrl ? "contain" : "cover"}
               />
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08),transparent_32%,rgba(15,23,42,0.42)_58%,rgba(3,7,18,0.82)_100%)]" />
-              <div className="relative flex min-h-[13rem] flex-col justify-between gap-2 sm:min-h-[14rem]">
-                <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+              <div className="relative z-[1] flex min-h-0 flex-1 flex-col">
+                <div className="flex min-w-0 shrink-0 flex-wrap items-start justify-between gap-2">
                   <span className="ui-chip ui-chip--brand-media shrink-0 sm:px-3 sm:text-[10px] sm:tracking-[0.24em]">
                     {movie.mediaType === "series" ? "Series" : "Movie"}
                   </span>
@@ -274,7 +274,7 @@ export function MovieDetailsModal({
                     </svg>
                   </button>
                 </div>
-                <div className="space-y-2.5 pt-4">
+                <div className="mt-auto min-h-0 space-y-2.5 pt-4">
                   <div className="flex flex-wrap gap-1.5">
                     {movie.genre.slice(0, 3).map((genre) => (
                       <span
