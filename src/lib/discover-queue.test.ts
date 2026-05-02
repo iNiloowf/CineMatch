@@ -111,6 +111,32 @@ describe("discover-queue", () => {
     expect(q.map((m) => m.id)).toContain("b");
   });
 
+  it("hides same-title variants after a title is swiped", () => {
+    const movie = { ...mkMovie("m1"), title: "The Office", mediaType: "movie" as const };
+    const series = { ...mkMovie("s1"), title: "The Office", mediaType: "series" as const };
+    const other = { ...mkMovie("o1"), title: "Other Title" };
+    const swipes: SwipeRecord[] = [
+      {
+        userId: "u1",
+        movieId: "m1",
+        decision: "accepted",
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    const q = buildDiscoverQueue({
+      movies: [movie, series, other],
+      swipes,
+      currentUserId: "u1",
+      discoverShuffleSeed: "seed",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: onboarding,
+    });
+    expect(q.map((m) => m.id)).not.toContain("m1");
+    expect(q.map((m) => m.id)).not.toContain("s1");
+    expect(q.map((m) => m.id)).toContain("o1");
+  });
+
   it("ranks 2023+ releases before 2022-and-older when taste is similar", () => {
     const y2022 = { ...mkMovie("y2022"), year: 2022 };
     const y2025 = { ...mkMovie("y2025"), year: 2025 };

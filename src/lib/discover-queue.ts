@@ -36,6 +36,10 @@ function dedupeMoviesById(movies: Movie[]): Movie[] {
   return out;
 }
 
+function normalizeDiscoverTitleKey(title: string): string {
+  return title.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 function popularityBoost(movie: Movie): number {
   const p = movie.popularity;
   if (typeof p === "number" && Number.isFinite(p) && p > 0) {
@@ -297,6 +301,13 @@ export function buildDiscoverQueue(options: {
       : [],
   );
 
+  const hiddenTitleKeys = new Set(
+    Array.from(hiddenMovieIds)
+      .map((movieId) => moviesById.get(movieId)?.title ?? "")
+      .map(normalizeDiscoverTitleKey)
+      .filter((titleKey) => titleKey.length > 0),
+  );
+
   const sortBySessionShuffle = (list: Movie[]) =>
     [...list].sort(
       (left, right) =>
@@ -390,7 +401,8 @@ export function buildDiscoverQueue(options: {
     const filtered = pool.filter(
       (movie) =>
         passesDiscoverListEligibility(movie, calendarYear) &&
-        !hiddenMovieIds.has(movie.id),
+        !hiddenMovieIds.has(movie.id) &&
+        !hiddenTitleKeys.has(normalizeDiscoverTitleKey(movie.title)),
     );
     return rotateDiscoverQueue(diversifyDiscoverQueue(sortDiscoverQueue(filtered)));
   }
