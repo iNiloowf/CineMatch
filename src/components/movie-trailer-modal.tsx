@@ -197,10 +197,7 @@ export function MovieTrailerModal({
                 disabled={isInteractionLocked}
                 className="rounded-[20px] bg-violet-600 px-4 py-3 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(109,40,217,0.2)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80"
               >
-                <span className="inline-flex items-center gap-2">
-                  <span className="text-sm leading-none">♡</span>
-                  <span>Accept</span>
-                </span>
+                <span>Like</span>
               </button>
             </div>
           </div>
