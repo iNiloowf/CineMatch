@@ -1246,15 +1246,15 @@ export function DiscoverPage2Content({
                         ? "bg-white/12 text-white ring-2 ring-violet-400/45"
                         : "text-slate-300 hover:bg-white/8"
                       : isMoreMenuOpen
-                        ? "bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
-                        : "text-slate-700 hover:bg-black/5"
+                        ? "text-slate-900 ring-2 ring-violet-500/35"
+                        : "text-slate-700 hover:bg-slate-200/70"
                   }`}
                 >
                   {currentUser?.avatarImageUrl ? (
                     <img
                       src={currentUser.avatarImageUrl}
                       alt=""
-                      className="h-11 w-11 object-cover"
+                      className="h-11 w-11 rounded-full bg-transparent object-cover"
                       aria-hidden
                     />
                   ) : (
@@ -1315,6 +1315,7 @@ export function DiscoverPage2Content({
                                 <svg
                                   viewBox="0 0 24 24"
                                   fill="none"
+                                  stroke="currentColor"
                                   className="ui-icon-md ui-icon-stroke"
                                   strokeWidth="1.75"
                                   strokeLinecap="round"
@@ -1340,6 +1341,7 @@ export function DiscoverPage2Content({
                                 <svg
                                   viewBox="0 0 24 24"
                                   fill="none"
+                                  stroke="currentColor"
                                   className="ui-icon-md ui-icon-stroke"
                                   strokeWidth="1.75"
                                   strokeLinecap="round"
@@ -1374,6 +1376,7 @@ export function DiscoverPage2Content({
                                 <svg
                                   viewBox="0 0 24 24"
                                   fill="none"
+                                  stroke="currentColor"
                                   className="ui-icon-md ui-icon-stroke"
                                   strokeWidth="1.75"
                                   strokeLinecap="round"
@@ -1412,6 +1415,7 @@ export function DiscoverPage2Content({
                                 <svg
                                   viewBox="0 0 24 24"
                                   fill="none"
+                                  stroke="currentColor"
                                   className="ui-icon-md ui-icon-stroke"
                                   strokeWidth="1.75"
                                   strokeLinecap="round"
@@ -1471,6 +1475,7 @@ export function DiscoverPage2Content({
                               <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
+                                stroke="currentColor"
                                 className="ui-icon-md ui-icon-stroke"
                                 strokeWidth="1.75"
                                 strokeLinecap="round"
