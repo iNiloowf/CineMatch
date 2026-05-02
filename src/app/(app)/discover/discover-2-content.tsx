@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { DiscoverMatchExplainModal } from "@/components/discover-match-explain-modal";
 import { ModalPortal } from "@/components/modal-portal";
 import { useBodyScrollLock } from "@/lib/hooks/use-body-scroll-lock";
+import { useAppState } from "@/lib/app-state";
 import { DiscoverSearchResultRow } from "@/components/discover-search-result-row";
 import {
   shouldVirtualizeList,
@@ -108,6 +109,7 @@ export function DiscoverPage2Content({
   discoverPersonalizationWeight,
 }: DiscoverPageContentProps) {
   const router = useRouter();
+  const { currentUser } = useAppState();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -148,6 +150,22 @@ export function DiscoverPage2Content({
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const profileTriggerLabel = useMemo(() => {
+    if (currentUser?.avatarImageUrl) {
+      return currentUser.name || "Profile";
+    }
+    const avatarText = (currentUser?.avatar ?? "").trim();
+    if (avatarText.length > 0) {
+      return avatarText.slice(0, 2).toUpperCase();
+    }
+    const fromName = (currentUser?.name ?? "")
+      .split(/\s+/)
+      .map((part) => part[0] ?? "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+    return fromName || "ME";
+  }, [currentUser]);
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
   const [isSavingOnboarding, setIsSavingOnboarding] = useState(false);
@@ -1217,31 +1235,38 @@ export function DiscoverPage2Content({
               <div ref={menuRef} className="relative">
                 <button
                   type="button"
-                  aria-label="Open more options"
+                  aria-label="Open profile menu"
                   aria-haspopup="dialog"
                   aria-expanded={isMoreMenuOpen}
                   aria-controls={isMoreMenuOpen ? "discover-more-menu" : undefined}
                   onClick={() => setIsMoreMenuOpen((current) => !current)}
-                  className={`flex min-h-11 min-w-11 items-center justify-center rounded-full transition ${
+                  className={`flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-full border transition ${
                     isDarkMode
                       ? isMoreMenuOpen
-                        ? "bg-white/12 text-white ring-2 ring-violet-400/45"
-                        : "text-slate-300 hover:bg-white/8"
+                        ? "border-violet-400/55 bg-white/12 text-white ring-2 ring-violet-400/45"
+                        : "border-white/15 text-slate-300 hover:bg-white/8"
                       : isMoreMenuOpen
-                        ? "bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
-                        : "text-slate-700 hover:bg-black/5"
+                        ? "border-violet-500/45 bg-slate-200/90 text-slate-900 ring-2 ring-violet-500/35"
+                        : "border-slate-300/80 text-slate-700 hover:bg-black/5"
                   }`}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="ui-icon-md"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="5" r="1.8" />
-                    <circle cx="12" cy="12" r="1.8" />
-                    <circle cx="12" cy="19" r="1.8" />
-                  </svg>
+                  {currentUser?.avatarImageUrl ? (
+                    <img
+                      src={currentUser.avatarImageUrl}
+                      alt=""
+                      className="h-11 w-11 object-cover"
+                      aria-hidden
+                    />
+                  ) : (
+                    <span
+                      className={`flex h-11 w-11 items-center justify-center text-[11px] font-bold tracking-[0.08em] ${
+                        isDarkMode ? "bg-white/8 text-slate-100" : "bg-white text-slate-700"
+                      }`}
+                      aria-hidden
+                    >
+                      {profileTriggerLabel}
+                    </span>
+                  )}
                 </button>
               </div>
               {typeof document !== "undefined" && isMoreMenuOpen && moreMenuCoords
@@ -1256,10 +1281,11 @@ export function DiscoverPage2Content({
                       <div
                         ref={moreMenuPanelRef}
                         id="discover-more-menu"
-                        className="ui-menu-panel discover-more-menu fixed z-[var(--z-popover)] w-[min(20rem,calc(100dvi-1.5rem))] max-h-[min(72dvh,32rem)] overflow-y-auto p-0 shadow-2xl"
+                        className="ui-menu-panel discover-more-menu fixed z-[var(--z-popover)] w-[min(20rem,calc(100vw-1.5rem))] overflow-y-auto overflow-x-hidden p-0 shadow-2xl"
                         style={{
                           top: moreMenuCoords.top,
                           right: moreMenuCoords.right,
+                          maxHeight: `calc(100dvh - ${moreMenuCoords.top + 12}px)`,
                         }}
                         role="dialog"
                         aria-modal="true"
