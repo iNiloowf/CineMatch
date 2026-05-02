@@ -72,11 +72,13 @@ export function useBottomNavPillDrag(opts: {
   }, [pillIndex]);
 
   useLayoutEffect(() => {
-    if (optimisticIndex === null || pillIndex === optimisticIndex) {
+    if (optimisticIndex === null) {
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync away stale optimistic index when pathname updates from taps / back
-    setOptimisticIndex(null);
+    if (pillIndex === optimisticIndex) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear optimistic override when route catches up
+      setOptimisticIndex(null);
+    }
   }, [pillIndex, optimisticIndex]);
 
   useEffect(() => {
