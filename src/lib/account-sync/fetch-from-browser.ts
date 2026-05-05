@@ -6,6 +6,7 @@ import type {
   LinkRow,
   MovieRow,
   ProfileRow,
+  SettingsRow,
   SharedWatchRow,
   SwipeRow,
   WatchedPickReviewRow,
@@ -167,12 +168,26 @@ export async function fetchAccountSyncFromBrowser(
     return null;
   }
 
+  let partnerSettings: SettingsRow[] = [];
+  if (acceptedPartnerIds.length > 0) {
+    const partnerSettingsResult = await supabaseClient
+      .from("settings")
+      .select(
+        "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion, subscription_tier, admin_mode_simulate_pro",
+      )
+      .in("user_id", acceptedPartnerIds);
+    if (!partnerSettingsResult.error && partnerSettingsResult.data) {
+      partnerSettings = (partnerSettingsResult.data as SettingsRow[]) ?? [];
+    }
+  }
+
   return {
     profile: (profileResult.data ?? null) as ProfileRow | null,
     settings: settingsResult.data ?? null,
     links: linkRows,
     invites: [] as InviteRow[],
     partnerProfiles: ((partnerProfilesResult.data ?? []) as ProfileRow[]) ?? [],
+    partnerSettings,
     swipes: swipeRows,
     sharedWatch: ((sharedWatchResult.data ?? []) as SharedWatchRow[]) ?? [],
     movies: movieResults.flatMap(

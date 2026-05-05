@@ -97,6 +97,11 @@ export type AccountSyncPayload = {
   links: LinkRow[];
   invites: InviteRow[];
   partnerProfiles: ProfileRow[];
+  /**
+   * Accepted link partners’ settings rows (at least subscription tier).
+   * Used so viewers can see Pro friends’ public achievement badges on `/friends/[userId]`.
+   */
+  partnerSettings?: SettingsRow[];
   swipes: SwipeRow[];
   sharedWatch: SharedWatchRow[];
   movies: MovieRow[];

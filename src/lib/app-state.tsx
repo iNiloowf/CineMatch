@@ -448,6 +448,37 @@ function mapSettingsRow(settings: SettingsRow): ProfileSettings {
   };
 }
 
+/** Merge subscription tier from account-sync partner rows so friend profiles can gate public badges. */
+function mergePartnerSubscriptionSettingsFromSync(
+  base: AppData,
+  activeUserId: string,
+  partnerRows: SettingsRow[] | undefined,
+): AppData {
+  if (!partnerRows?.length) {
+    return base;
+  }
+  let out = base;
+  for (const row of partnerRows) {
+    if (row.user_id === activeUserId) {
+      continue;
+    }
+    const mapped = mapSettingsRow(row);
+    const existing = out.settings[row.user_id] ?? { ...defaultSettings };
+    out = {
+      ...out,
+      settings: {
+        ...out.settings,
+        [row.user_id]: {
+          ...existing,
+          subscriptionTier: mapped.subscriptionTier,
+          adminModeSimulatePro: mapped.adminModeSimulatePro,
+        },
+      },
+    };
+  }
+  return out;
+}
+
 /**
  * JWT app_metadata (and fresh logins) can carry Pro before/without settings sync; merge so new devices show the right tier.
  */
@@ -1253,34 +1284,42 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const autoplayTrailersResolved =
           getStoredUserAutoplayTrailers(activeUserId) ?? mapped.autoplayTrailers;
 
-        const merged: AppData = {
+        const merged: AppData = mergePartnerSubscriptionSettingsFromSync(
+          {
+            ...next,
+            swipes: currentSwipes,
+            links: currentLinks,
+            invites: currentInvites,
+            sharedWatch: currentSharedWatch,
+            watchedPickReviews: mergedWatchedPickReviews,
+            settings: {
+              ...next.settings,
+              [activeUserId]: {
+                ...mapped,
+                autoplayTrailers: autoplayTrailersResolved,
+              },
+            },
+          },
+          activeUserId,
+          payload.partnerSettings,
+        );
+        seedSeenAchievementsFromHydratedData(activeUserId, merged);
+        return merged;
+      }
+
+      const mergedNoSettings: AppData = mergePartnerSubscriptionSettingsFromSync(
+        {
           ...next,
           swipes: currentSwipes,
           links: currentLinks,
           invites: currentInvites,
           sharedWatch: currentSharedWatch,
           watchedPickReviews: mergedWatchedPickReviews,
-          settings: {
-            ...next.settings,
-            [activeUserId]: {
-              ...mapped,
-              autoplayTrailers: autoplayTrailersResolved,
-            },
-          },
-        };
-        seedSeenAchievementsFromHydratedData(activeUserId, merged);
-        return merged;
-      }
-
-      const mergedNoSettings: AppData = {
-        ...next,
-        swipes: currentSwipes,
-        links: currentLinks,
-        invites: currentInvites,
-        sharedWatch: currentSharedWatch,
-        watchedPickReviews: mergedWatchedPickReviews,
-        settings: next.settings,
-      };
+          settings: next.settings,
+        },
+        activeUserId,
+        payload.partnerSettings,
+      );
       seedSeenAchievementsFromHydratedData(activeUserId, mergedNoSettings);
       return mergedNoSettings;
     });

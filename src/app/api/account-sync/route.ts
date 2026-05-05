@@ -335,13 +335,23 @@ export async function GET(request: NextRequest) {
       ids.length === 0
         ? Promise.resolve({ data: [] as MovieRow[] })
         : supabaseAdmin
-        .from("movies")
-        .select(
-          "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
-        )
-        .in("id", ids),
+            .from("movies")
+            .select(
+              "id, title, release_year, runtime, rating, genres, description, poster_eyebrow, poster_image_url, accent_from, accent_to, trailer_url",
+            )
+            .in("id", ids),
     ),
   );
+
+  const partnerSettingsResults =
+    acceptedPartnerIds.length > 0
+      ? await Promise.all(
+          acceptedPartnerIds.map((partnerId) => fetchSettingsRow(partnerId, supabaseAdmin)),
+        )
+      : [];
+  const partnerSettings = partnerSettingsResults
+    .map((r) => r.data)
+    .filter((row): row is SettingsRow => row != null);
 
   return apiJsonOk(
     {
@@ -350,6 +360,7 @@ export async function GET(request: NextRequest) {
       links: linkRows,
       invites: [] as InviteRow[],
       partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],
+      partnerSettings,
       swipes: swipeRows,
       sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
       movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
