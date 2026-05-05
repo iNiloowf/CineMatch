@@ -326,6 +326,37 @@ export default function FriendsPage() {
     }
   };
 
+  const withdrawSentRequest = async (linkId: string) => {
+    setActionMessage(null);
+    setActionBusy(true);
+    try {
+      const token = await getClientAccessToken();
+      if (!token) {
+        setActionMessage("Log in to manage requests.");
+        return;
+      }
+      const res = await fetch("/api/friends/cancel", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ linkId }),
+      });
+      const payload = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setActionMessage(payload.error ?? "Couldn’t withdraw that request.");
+        return;
+      }
+      setActionMessage("Request withdrawn.");
+      refreshAccountData();
+    } catch {
+      setActionMessage("Something went wrong. Try again.");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   const closeUnfriendModal = useCallback(() => {
     if (unfriendWorking) {
       return;
@@ -787,7 +818,7 @@ export default function FriendsPage() {
           <SurfaceCard className="space-y-3">
             <h2 className="app-section-label">Sent</h2>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Outbox — waiting on them to accept.
+              Outbox — waiting on them to accept. You can withdraw a request anytime before they respond.
             </p>
             {sentPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -800,7 +831,7 @@ export default function FriendsPage() {
                   return (
                     <li
                       key={l.linkId}
-                      className={`flex items-center gap-2 rounded-2xl border p-2.5 transition sm:p-3 ${listShell}`}
+                      className={`flex flex-col gap-2 rounded-2xl border p-2.5 transition sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3 ${listShell}`}
                     >
                       <div className="min-w-0 flex-1">
                         <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
@@ -820,6 +851,19 @@ export default function FriendsPage() {
                           </Link>
                         </UserProfileLinks>
                       </div>
+                      <button
+                        type="button"
+                        disabled={actionBusy}
+                        onClick={() => void withdrawSentRequest(l.linkId)}
+                        aria-label={`Withdraw friend request to ${l.user.name}`}
+                        className={`min-h-10 w-full shrink-0 rounded-full border px-3 text-xs font-semibold sm:w-auto sm:min-w-[6.5rem] ${
+                          isDarkMode
+                            ? "border-white/20 text-slate-200 hover:bg-white/10"
+                            : "border-slate-300 text-slate-800 hover:bg-slate-50"
+                        } disabled:opacity-50`}
+                      >
+                        Withdraw
+                      </button>
                     </li>
                   );
                 })}
