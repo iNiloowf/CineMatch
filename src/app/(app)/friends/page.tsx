@@ -224,27 +224,12 @@ export default function FriendsPage() {
     }
   }, [searchParams]);
 
-  const FRIENDS_LINKS_POLL_MS = 90_000;
-
-  /** One sync when landing on Friends (immediate so lists match the server quickly). */
+  /** One sync when landing on Friends (global foreground poll + Realtime handle the rest). */
   useEffect(() => {
     if (!currentUserId) {
       return;
     }
     flushAccountDataRefresh();
-  }, [currentUserId, flushAccountDataRefresh]);
-
-  /** Rare fallback poll; Realtime uses immediate flush. */
-  useEffect(() => {
-    if (!currentUserId) {
-      return;
-    }
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        flushAccountDataRefresh();
-      }
-    }, FRIENDS_LINKS_POLL_MS);
-    return () => window.clearInterval(id);
   }, [currentUserId, flushAccountDataRefresh]);
 
   const sentPending = useMemo(
@@ -902,10 +887,10 @@ export default function FriendsPage() {
                         disabled={actionBusy}
                         onClick={() => void removeSentRequest(l.linkId)}
                         aria-label={`Remove friend request to ${l.user.name}`}
-                        className={`min-h-10 w-full shrink-0 rounded-full border px-3 text-xs font-semibold sm:w-auto sm:min-w-[6.5rem] ${
+                        className={`min-h-10 w-full shrink-0 rounded-full px-3 text-xs font-semibold shadow-sm sm:w-auto sm:min-w-[6.5rem] ${
                           isDarkMode
-                            ? "border-white/20 text-slate-200 hover:bg-white/10"
-                            : "border-slate-300 text-slate-800 hover:bg-slate-50"
+                            ? "bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700"
+                            : "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800"
                         } disabled:opacity-50`}
                       >
                         Remove

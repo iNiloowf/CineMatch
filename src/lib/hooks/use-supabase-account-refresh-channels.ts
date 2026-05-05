@@ -3,8 +3,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
-type Row = Record<string, string | undefined>;
-
 /**
  * Subscribes to Supabase tables that should pull a fresh `/api/account-sync`
  * payload when rows touching the signed-in user change.
@@ -29,6 +27,10 @@ export function useSupabaseAccountRefreshChannels(
       onRefreshRef.current();
     };
 
+    /** Scoped filters so the browser gets relevant rows immediately (full-table fan-out can lag). */
+    const filterAsRequester = `requester_id=eq.${currentUserId}`;
+    const filterAsTarget = `target_id=eq.${currentUserId}`;
+
     const linkedChannel = supabase
       .channel(`linked-users-${currentUserId}`)
       .on(
@@ -37,20 +39,19 @@ export function useSupabaseAccountRefreshChannels(
           event: "*",
           schema: "public",
           table: "linked_users",
+          filter: filterAsRequester,
         },
-        (payload) => {
-          const nextRow = payload.new as Row | null;
-          const previousRow = payload.old as Row | null;
-          const touchesCurrentUser =
-            nextRow?.requester_id === currentUserId ||
-            nextRow?.target_id === currentUserId ||
-            previousRow?.requester_id === currentUserId ||
-            previousRow?.target_id === currentUserId;
-
-          if (touchesCurrentUser) {
-            bump();
-          }
+        bump,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "linked_users",
+          filter: filterAsTarget,
         },
+        bump,
       )
       .subscribe();
 

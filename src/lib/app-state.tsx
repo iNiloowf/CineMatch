@@ -1577,6 +1577,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     onRequestSync: requestAccountDataRefresh,
   });
 
+  /** While signed in and the tab is visible, re-sync often so friend requests / accepts surface quickly if Realtime lags. */
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    }
+    const FRIEND_LINK_FOREGROUND_POLL_MS = 7000;
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        flushAccountDataRefresh();
+      }
+    }, FRIEND_LINK_FOREGROUND_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [currentUserId, flushAccountDataRefresh]);
+
   const watchedReviewMovieIdsMissingFromCatalogKey = useMemo(() => {
     const catalog = new Set(data.movies.map((m) => m.id));
     return JSON.stringify(
