@@ -358,8 +358,19 @@ textarea {
   font: inherit;
 }
 
-/* Default press — .ui-btn overrides with its own micro-interaction */
-button:not([disabled]):not([aria-disabled="true"]):not(.ui-btn):active {
+button,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * Default press — .ui-btn overrides with its own micro-interaction.
+ * Exclude full-row switches and accordion/disclosure triggers: scaling inside lifted
+ * SurfaceCards reads as a bogus “active” state and fights hover translate on the card.
+ */
+button:not([disabled]):not([aria-disabled="true"]):not(.ui-btn):not([role="switch"]):not(
+    [aria-expanded]
+  ):active {
   transform: scale(0.98);
   transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
@@ -372,6 +383,13 @@ button:not([disabled]):not([aria-disabled="true"]):not(.ui-btn):active {
 ):focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
+}
+
+/* Full-width toggles: outer outline + offset reads as extra gap around the row */
+[role="switch"]:focus-visible,
+button[aria-expanded]:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
 }
 
 a:focus-visible {
@@ -393,6 +411,11 @@ a:focus-visible {
   a:focus-visible,
   :where(input, textarea, select):focus-visible:not(.ui-input-shell) {
     outline-offset: 1px;
+  }
+
+  [role="switch"]:focus-visible,
+  button[aria-expanded]:focus-visible {
+    outline-offset: -2px;
   }
 }
 
