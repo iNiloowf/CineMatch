@@ -611,6 +611,12 @@ export default function ProfilePage() {
     : "w-full rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-400 focus:bg-white";
 
   const labelClass = isDarkMode ? "text-sm font-medium text-slate-200" : "text-sm font-medium text-slate-700";
+  /** Edit mode: uppercase section labels (one scale site-wide). */
+  const editSectionTitleClass = `text-xs font-semibold uppercase tracking-[0.14em] ${
+    isDarkMode ? "text-slate-400" : "text-slate-500"
+  }`;
+  /** Edit mode: helper copy under section titles. */
+  const editSectionDescClass = `text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
   const editSectionShell = isDarkMode
     ? "rounded-[18px] border border-white/12 bg-white/[0.03]"
     : "rounded-[18px] border border-slate-200/90 bg-slate-50/60";
@@ -790,7 +796,7 @@ export default function ProfilePage() {
     <div className="space-y-3">
       {watchedPickReviews.length === 0 ? (
         <div
-          className={`rounded-xl px-4 py-3.5 text-center text-[10px] leading-snug ${
+          className={`rounded-xl px-4 py-3.5 text-center text-sm leading-snug ${
             isDarkMode ? "bg-white/[0.04] text-slate-300" : "bg-slate-100/90 text-slate-600"
           }`}
         >
@@ -807,7 +813,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setWatchedReviewTab("recommended")}
               aria-label={`Recommended, ${recommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-[11px] font-semibold uppercase leading-snug tracking-wide transition sm:text-xs ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-xs font-semibold uppercase leading-snug tracking-wide transition ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
                     ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
@@ -825,7 +831,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setWatchedReviewTab("notRecommended")}
               aria-label={`Not recommended, ${notRecommendedWatchedPicks.length} movies`}
-              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-[11px] font-semibold uppercase leading-snug tracking-wide transition sm:text-xs ${
+              className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-xs font-semibold uppercase leading-snug tracking-wide transition ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
                     ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
@@ -847,26 +853,26 @@ export default function ProfilePage() {
             }`}
           >
             {activeWatchedEntries.length === 0 ? (
-              <p className={`px-3 py-3 text-[10px] leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
+              <p className={`px-3 py-3 text-sm leading-snug ${isDarkMode ? "text-slate-300" : "text-slate-500"}`}>
                 No movies in this tab yet.
               </p>
             ) : (
               activeWatchedEntries.map((entry) => (
                 <div
                   key={`${watchedReviewTab}-${entry.movie.id}`}
-                  className={`px-3 py-2 text-[10px] leading-snug ${isDarkMode ? "text-slate-100" : "text-slate-700"}`}
+                  className={`px-3 py-2 text-sm leading-snug ${isDarkMode ? "text-slate-100" : "text-slate-700"}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{entry.movie.title}</p>
-                      <p className={`text-[9px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className="truncate text-sm font-semibold">{entry.movie.title}</p>
+                      <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                         {new Date(entry.watchedAt).toLocaleDateString()}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setEditingWatchedMovieId(entry.movie.id)}
-                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                      className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${
                         watchedReviewTab === "recommended"
                           ? isDarkMode
                             ? "bg-emerald-500/20 text-emerald-100"
@@ -984,8 +990,8 @@ export default function ProfilePage() {
                 }`}
               >
                 <div className="min-w-0 flex-1 pr-1">
-                  <p className="text-[13px] font-semibold leading-tight tracking-tight sm:text-sm">Skipped on Discover</p>
-                  <p className={`mt-1 text-[11px] leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  <p className="text-sm font-semibold leading-tight tracking-tight sm:text-base">Skipped on Discover</p>
+                  <p className={`mt-1 text-xs leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                     Restore a title to put it back on your stack.
                   </p>
                 </div>
@@ -1007,7 +1013,7 @@ export default function ProfilePage() {
                 }`}
               >
                 {skippedDiscoverMovies.length === 0 ? (
-                  <p className={`py-8 text-center text-[11px] leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  <p className={`py-8 text-center text-sm leading-relaxed ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                     Nothing here — older passes roll off after about a week.
                   </p>
                 ) : (
@@ -1037,13 +1043,13 @@ export default function ProfilePage() {
                         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                           <div className="min-w-0">
                             <p
-                              className={`line-clamp-2 text-left text-[12px] font-semibold leading-snug sm:text-[13px] ${
+                              className={`line-clamp-2 text-left text-sm font-semibold leading-snug sm:text-base ${
                                 isDarkMode ? "text-slate-100" : "text-slate-900"
                               }`}
                             >
                               {movie.title}
                             </p>
-                            <p className={`mt-0.5 text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                            <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                               Skipped {new Date(createdAt).toLocaleDateString()}
                             </p>
                           </div>
@@ -1051,7 +1057,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => setDiscoverSkipDetailMovie(movie)}
-                              className={`discover-skips-action rounded-sm px-0 py-0.5 text-left underline-offset-2 transition hover:underline ${
+                              className={`discover-skips-action text-xs rounded-sm px-0 py-0.5 text-left underline-offset-2 transition hover:underline ${
                                 isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900"
                               }`}
                             >
@@ -1060,7 +1066,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => void handleRestoreDiscoverSkip(movie)}
-                              className={`discover-skips-action rounded-sm px-0 py-0.5 text-left underline-offset-2 transition hover:underline ${
+                              className={`discover-skips-action text-xs rounded-sm px-0 py-0.5 text-left underline-offset-2 transition hover:underline ${
                                 isDarkMode ? "text-violet-400 hover:text-violet-300" : "text-violet-700 hover:text-violet-800"
                               }`}
                             >
@@ -1164,14 +1170,14 @@ export default function ProfilePage() {
                     await markPickWatched(editingWatchedEntry.movie.id, false);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
+                  className={`min-h-[3.5rem] rounded-[16px] border px-3 py-2.5 text-left transition ${
                     isDarkMode
                       ? "border-rose-400/30 bg-rose-500/12 text-rose-100 hover:bg-rose-500/20"
                       : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                   }`}
                 >
-                  <p className="text-[10px] font-semibold leading-tight">Not recommended</p>
-                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
+                  <p className="text-sm font-semibold leading-tight">Not recommended</p>
+                  <p className={`mt-0.5 text-xs leading-snug ${isDarkMode ? "text-rose-100/80" : "text-rose-600/85"}`}>
                     Keep this title in your watched list, marked as not recommended.
                   </p>
                 </button>
@@ -1181,14 +1187,14 @@ export default function ProfilePage() {
                     await markPickWatched(editingWatchedEntry.movie.id, true);
                     setEditingWatchedMovieId(null);
                   }}
-                  className={`min-h-10 rounded-[16px] border px-2.5 py-2 text-left transition ${
+                  className={`min-h-[3.5rem] rounded-[16px] border px-3 py-2.5 text-left transition ${
                     isDarkMode
                       ? "border-emerald-400/30 bg-emerald-500/14 text-emerald-100 hover:bg-emerald-500/24"
                       : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   }`}
                 >
-                  <p className="text-[10px] font-semibold leading-tight">Recommend</p>
-                  <p className={`mt-0.5 text-[9px] leading-snug ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
+                  <p className="text-sm font-semibold leading-tight">Recommend</p>
+                  <p className={`mt-0.5 text-xs leading-snug ${isDarkMode ? "text-emerald-100/80" : "text-emerald-700/85"}`}>
                     Mark this movie as a recommendation for your profile.
                   </p>
                 </button>
@@ -1305,7 +1311,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saveFeedback === "saving"}
-                  className={`auth-primary-glow rounded-full px-4 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                  className={`auth-primary-glow rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
                 >
                   {saveFeedback === "saving" ? "Saving..." : "Save"}
                 </button>
@@ -1377,7 +1383,7 @@ export default function ProfilePage() {
                 </div>
                 {isEditing ? (
                   <p
-                    className={`mt-1.5 max-w-[5.5rem] text-center text-[9px] font-medium leading-tight sm:max-w-[6rem] ${
+                    className={`mt-1.5 max-w-[6.5rem] text-center text-xs font-medium leading-snug sm:max-w-[7rem] ${
                       isDarkMode ? "text-slate-400" : "text-slate-500"
                     }`}
                   >
@@ -1392,7 +1398,7 @@ export default function ProfilePage() {
                   </h2>
                   {hasProAccess ? (
                     <span
-                      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
+                      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
                         isDarkMode
                           ? "border border-amber-300/35 bg-amber-400/20 text-amber-100"
                           : "border border-amber-300 bg-amber-100 text-amber-800"
@@ -1436,7 +1442,7 @@ export default function ProfilePage() {
                     }`}
                   >
                     {copyIdBusy ? (
-                      <span className={`text-[11px] font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`} aria-hidden>
+                      <span className={`text-xs font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-500"}`} aria-hidden>
                         …
                       </span>
                     ) : (
@@ -1477,10 +1483,7 @@ export default function ProfilePage() {
               <div className="space-y-5 sm:space-y-6">
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full items-center justify-between gap-2">
-                    <p
-                      id="profile-edit-basic-info-heading"
-                      className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
-                    >
+                    <p id="profile-edit-basic-info-heading" className={editSectionTitleClass}>
                       Basic info
                     </p>
                     <button
@@ -1650,10 +1653,8 @@ export default function ProfilePage() {
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full items-start justify-between gap-2">
                     <div className="min-w-0 flex-1" id="profile-edit-header-bg-heading">
-                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        Header background
-                      </p>
-                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={editSectionTitleClass}>Header background</p>
+                      <p className={`mt-1 ${editSectionDescClass}`}>
                         Pick a film — friends see the same art on your card.
                       </p>
                     </div>
@@ -1679,7 +1680,7 @@ export default function ProfilePage() {
                   </div>
                   {editSectionsOpen.headerBackground ? (
                     <div className="space-y-2">
-                      <p className={`text-[11px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                      <p className="text-xs font-medium text-slate-500">
                         Search a movie or series (uses its poster as the cover behind your name).
                       </p>
                       <input
@@ -1790,10 +1791,8 @@ export default function ProfilePage() {
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full items-start justify-between gap-2">
                     <div className="min-w-0 flex-1" id="profile-edit-watched-reviews-heading">
-                      <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        Watched reviews
-                      </p>
-                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={editSectionTitleClass}>Watched reviews</p>
+                      <p className={`mt-1 ${editSectionDescClass}`}>
                         From Picks after you mark a title watched. Titles you mark <span className="font-semibold">Recommended</span> appear on your friend profile for people you’re linked with.
                       </p>
                     </div>
@@ -1822,10 +1821,7 @@ export default function ProfilePage() {
 
                 <section className={`space-y-4 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full items-center justify-between gap-2">
-                    <p
-                      id="profile-edit-discovery-pref-heading"
-                      className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
-                    >
+                    <p id="profile-edit-discovery-pref-heading" className={editSectionTitleClass}>
                       Discovery preferences
                     </p>
                     <button
@@ -1861,14 +1857,14 @@ export default function ProfilePage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Genres you like</p>
-                          <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                             {favoriteGenresDraft.length}/{FAVORITE_GENRE_LIMIT} selected — stronger Discover signal when fewer.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setIsFavoriteGenresOpen((current) => !current)}
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
                           }`}
                         >
@@ -1903,7 +1899,7 @@ export default function ProfilePage() {
                                       return [...current, genre];
                                     })
                                   }
-                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-[11px] font-semibold leading-tight transition sm:text-xs ${
+                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold leading-tight transition ${
                                     active
                                       ? "bg-violet-600 text-white shadow-sm"
                                       : atFavoriteLimit
@@ -1931,14 +1927,14 @@ export default function ProfilePage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Genres you dislike</p>
-                          <p className={`mt-0.5 text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                          <p className={`mt-0.5 text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                             {dislikedGenresDraft.length} selected
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setIsDislikedGenresOpen((current) => !current)}
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             isDarkMode ? "bg-white/10 text-slate-200" : "bg-white text-slate-700 ring-1 ring-slate-200/90"
                           }`}
                         >
@@ -1961,7 +1957,7 @@ export default function ProfilePage() {
                                         : [...current, genre],
                                     )
                                   }
-                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-[11px] font-semibold leading-tight transition sm:text-xs ${
+                                  className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold leading-tight transition ${
                                     active
                                       ? "bg-rose-600 text-white shadow-sm"
                                       : isDarkMode
@@ -2014,10 +2010,8 @@ export default function ProfilePage() {
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full items-start justify-between gap-2">
                     <div className="min-w-0 flex-1" id="profile-edit-discover-skips-heading">
-                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                        Discover skips
-                      </p>
-                      <p className={`mt-1 text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                      <p className={editSectionTitleClass}>Discover skips</p>
+                      <p className={`mt-1 ${editSectionDescClass}`}>
                         Titles you pass stay off your Discover stack for about a week. Open the list to bring one back
                         into your queue, read details, or save it to picks.
                       </p>

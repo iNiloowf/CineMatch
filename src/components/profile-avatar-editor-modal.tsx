@@ -542,7 +542,7 @@ export function ProfileAvatarEditorModal({
                               />
                             </span>
                           ) : null}
-                          <span className="pointer-events-none absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/80 to-transparent px-1.5 py-2 text-left text-[9px] font-semibold leading-tight text-white">
+                          <span className="pointer-events-none absolute inset-x-0 bottom-0 line-clamp-2 bg-gradient-to-t from-black/80 to-transparent px-1.5 py-2 text-left text-xs font-semibold leading-tight text-white">
                             {preset.label}
                           </span>
                         </button>
@@ -642,7 +642,7 @@ export function ProfileAvatarEditorModal({
                     Couldn’t apply your crop. Try a different file or another poster, then tap “Use photo” again.
                   </p>
                 ) : (
-                  <p className={`text-center text-[11px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                  <p className={`text-center text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
                     Drag the preview to frame your face or subject, then use “Use photo” — your zoom and position are
                     applied to the saved profile image.
                   </p>
