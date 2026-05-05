@@ -2145,6 +2145,8 @@ export default function ProfilePage() {
         </form>
       </SurfaceCard>
 
+      <PremiumPickInsightsCard animationDelayMs={0} />
+
       <SurfaceCard
         className={`discover-toolbar-enter relative overflow-hidden !p-0 ${proStudioSurface}`}
         style={{ animationDelay: "95ms" }}
@@ -2245,8 +2247,6 @@ export default function ProfilePage() {
           </div>
         ) : null}
       </SurfaceCard>
-
-      <PremiumPickInsightsCard animationDelayMs={0} />
 
       <div className="grid grid-cols-1 gap-3 px-px sm:grid-cols-2 sm:gap-4">
         {shortcutTiles.map((tile, index) => (

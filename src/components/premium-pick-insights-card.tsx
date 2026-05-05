@@ -395,6 +395,17 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
     : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
 
+  const toggleExpanded = useCallback(() => {
+    if (isClosing) {
+      return;
+    }
+    if (isExpanded) {
+      handleClose();
+    } else {
+      handleShow();
+    }
+  }, [handleClose, handleShow, isClosing, isExpanded]);
+
   return (
     <section
       className={`discover-toolbar-enter relative overflow-hidden rounded-[22px] sm:rounded-[24px] ${tileSurface}`}
@@ -418,7 +429,7 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
               <path d="M22 18V4" strokeLinecap="round" />
             </svg>
           </span>
-          <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p
@@ -457,7 +468,7 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                   </p>
                 ) : null}
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex shrink-0 items-center gap-2">
                 {!hasProAccess ? (
                   <span
                     className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
@@ -469,51 +480,37 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                     Pro
                   </span>
                 ) : null}
-                {isExpanded || isClosing ? (
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    disabled={isClosing}
-                    aria-label="Close Premium insight"
-                    className={`premium-insights-chrome-btn shrink-0 rounded-md border px-1.5 py-0.5 transition-colors disabled:pointer-events-none disabled:opacity-40 ${
-                      isDarkMode
-                        ? "border-white/10 bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-200"
-                        : "border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                    }`}
-                  >
-                    Close
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleShow}
-                    aria-label="Show Premium insight"
-                    className={`premium-insights-chrome-btn shrink-0 rounded-md px-1.5 py-0.5 transition active:scale-[0.98] motion-reduce:active:scale-100 ${
-                      isDarkMode
-                        ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/30 hover:bg-violet-500/32"
-                        : "bg-violet-600 text-white shadow-sm ring-1 ring-violet-500/30 hover:bg-violet-500"
-                    }`}
-                  >
-                    Show
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={toggleExpanded}
+                  disabled={isClosing}
+                  aria-expanded={Boolean(isExpanded && !isClosing)}
+                  aria-label={isExpanded ? "Collapse Premium insight" : "Expand Premium insight"}
+                  className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg text-base font-light transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 motion-reduce:active:scale-100"
+                >
+                  <span className={`text-base ${isDarkMode ? "text-slate-300" : "text-slate-500"}`} aria-hidden>
+                    {isExpanded ? "−" : "+"}
+                  </span>
+                </button>
               </div>
             </div>
+          </div>
+        </div>
 
+        <div
+          className="grid transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
+          style={{ gridTemplateRows: gridRowsFr }}
+        >
+          <div className="min-h-0 overflow-hidden">
             <div
-              className="grid overflow-hidden transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
-              style={{ gridTemplateRows: gridRowsFr }}
+              className={`pt-3 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 sm:pt-3.5 ${
+                isClosing
+                  ? "opacity-0 [transform:translate3d(0,-6px,0)]"
+                  : isExpanded && !panelReveal
+                    ? "opacity-0 [transform:translate3d(0,6px,0)]"
+                    : "opacity-100 [transform:translate3d(0,0,0)]"
+              }`}
             >
-              <div className="min-h-0 overflow-hidden">
-                <div
-                  className={`transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 ${
-                    isClosing
-                      ? "opacity-0 [transform:translate3d(0,-6px,0)]"
-                      : isExpanded && !panelReveal
-                        ? "opacity-0 [transform:translate3d(0,6px,0)]"
-                        : "opacity-100 [transform:translate3d(0,0,0)]"
-                  }`}
-                >
                   {!hasProAccess ? (
                     <>
                       <p
@@ -547,15 +544,15 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                               >
                                 Compare with
                               </span>
-                              <div className="relative">
+                              <div className="relative isolate">
                                 <select
                                   value={insightsPartner.id}
                                   onChange={(e) => setInsightsPartnerId(e.target.value)}
                                   aria-label="Choose friend for Premium insight"
-                                  className={`w-full min-h-[2.75rem] cursor-pointer appearance-none rounded-xl border py-2.5 pl-3 pr-11 text-left text-sm font-medium shadow-none transition outline-none focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-500/40 motion-reduce:transition-none ${
+                                  className={`w-full min-h-[2.75rem] cursor-pointer appearance-none rounded-xl border py-2.5 pl-3 pr-10 text-left text-sm font-medium shadow-none transition outline-none focus-visible:border-violet-400/90 focus-visible:outline-none motion-reduce:transition-none ${
                                     isDarkMode
-                                      ? "border-white/20 bg-white/[0.08] text-white [&:focus-visible]:bg-white/[0.1]"
-                                      : "border-slate-200/95 bg-white text-slate-900"
+                                      ? "border-white/20 bg-white/[0.08] text-white focus-visible:shadow-[inset_0_0_0_2px_rgba(167,139,250,0.45)] [&:focus-visible]:bg-white/[0.1]"
+                                      : "border-slate-200/95 bg-white text-slate-900 focus-visible:shadow-[inset_0_0_0_2px_rgba(139,92,246,0.35)]"
                                   }`}
                                 >
                                   {acceptedConnectedPartners.map((p) => (
@@ -565,15 +562,13 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                                   ))}
                                 </select>
                                 <span
-                                  className={`pointer-events-none absolute bottom-0 right-0 top-0 flex w-11 items-center justify-center border-l ${
-                                    isDarkMode ? "border-white/12" : "border-slate-200/90"
-                                  }`}
+                                  className={`pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
                                   aria-hidden
                                 >
                                   <svg
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    className={`h-4 w-4 shrink-0 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                                    className="h-4 w-4 shrink-0"
                                     stroke="currentColor"
                                     strokeWidth="2"
                                     strokeLinecap="round"
@@ -683,8 +678,6 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                       )}
                     </>
                   )}
-                </div>
-              </div>
             </div>
           </div>
         </div>
