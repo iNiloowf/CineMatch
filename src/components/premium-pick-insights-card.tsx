@@ -88,6 +88,9 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
   );
 
   const [insightsPartnerId, setInsightsPartnerId] = useState<string | null>(null);
+  const [comparePickerOpen, setComparePickerOpen] = useState(false);
+  const comparePickerRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!insightsPartnerId) {
       return;
@@ -96,6 +99,44 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
       setInsightsPartnerId(null);
     }
   }, [acceptedConnectedPartners, insightsPartnerId]);
+
+  useEffect(() => {
+    if (!isExpanded || isClosing) {
+      setComparePickerOpen(false);
+    }
+  }, [isClosing, isExpanded]);
+
+  useEffect(() => {
+    if (!comparePickerOpen) {
+      return;
+    }
+    const onDocPointer = (event: MouseEvent | TouchEvent) => {
+      const el = comparePickerRef.current;
+      const target = event.target as Node | null;
+      if (el && target && !el.contains(target)) {
+        setComparePickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocPointer);
+    document.addEventListener("touchstart", onDocPointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onDocPointer);
+      document.removeEventListener("touchstart", onDocPointer);
+    };
+  }, [comparePickerOpen]);
+
+  useEffect(() => {
+    if (!comparePickerOpen) {
+      return;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setComparePickerOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [comparePickerOpen]);
 
   const insightsPartner = useMemo(() => {
     if (acceptedConnectedPartners.length === 0) {
@@ -538,47 +579,112 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                       ) : (
                         <div className="space-y-2 sm:space-y-3">
                           {acceptedConnectedPartners.length > 1 ? (
-                            <label className="block space-y-1.5">
+                            <div ref={comparePickerRef} className="space-y-1.5">
                               <span
+                                id="premium-insight-compare-label"
                                 className={`block text-[10px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
                               >
                                 Compare with
                               </span>
-                              <div className="relative isolate">
-                                <select
-                                  value={insightsPartner.id}
-                                  onChange={(e) => setInsightsPartnerId(e.target.value)}
-                                  aria-label="Choose friend for Premium insight"
-                                  className={`w-full min-h-[2.75rem] cursor-pointer appearance-none rounded-xl border py-2.5 pl-3 pr-10 text-left text-sm font-medium shadow-none transition outline-none focus-visible:border-violet-400/90 focus-visible:outline-none motion-reduce:transition-none ${
-                                    isDarkMode
-                                      ? "border-white/20 bg-white/[0.08] text-white focus-visible:shadow-[inset_0_0_0_2px_rgba(167,139,250,0.45)] [&:focus-visible]:bg-white/[0.1]"
-                                      : "border-slate-200/95 bg-white text-slate-900 focus-visible:shadow-[inset_0_0_0_2px_rgba(139,92,246,0.35)]"
-                                  }`}
-                                >
-                                  {acceptedConnectedPartners.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <span
-                                  className={`pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                              <button
+                                type="button"
+                                id="premium-insight-compare-trigger"
+                                aria-haspopup="listbox"
+                                aria-expanded={comparePickerOpen}
+                                aria-controls="premium-insight-compare-list"
+                                aria-labelledby="premium-insight-compare-label"
+                                onClick={() => setComparePickerOpen((open) => !open)}
+                                className={`flex w-full min-h-[2.75rem] items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-sm font-medium outline-none transition-[border-color,background-color] motion-reduce:transition-none ${
+                                  !comparePickerOpen && isDarkMode
+                                    ? "focus-visible:border-violet-400/70"
+                                    : ""
+                                } ${
+                                  !comparePickerOpen && !isDarkMode ? "focus-visible:border-violet-500/55" : ""
+                                } ${
+                                  comparePickerOpen
+                                    ? isDarkMode
+                                      ? "border-violet-400/75 bg-white/[0.1] text-white"
+                                      : "border-violet-500/55 bg-violet-50/60 text-slate-900"
+                                    : isDarkMode
+                                      ? "border-white/20 bg-white/[0.08] text-white active:bg-white/[0.1]"
+                                      : "border-slate-200/95 bg-white text-slate-900 active:bg-slate-50"
+                                }`}
+                              >
+                                <span className="min-w-0 truncate">{insightsPartner.name}</span>
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                                    comparePickerOpen ? "rotate-180" : ""
+                                  } ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                   aria-hidden
                                 >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    className="h-4 w-4 shrink-0"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="m6 9 6 6 6-6" />
-                                  </svg>
-                                </span>
-                              </div>
-                            </label>
+                                  <path d="m6 9 6 6 6-6" />
+                                </svg>
+                              </button>
+                              {comparePickerOpen ? (
+                                <ul
+                                  id="premium-insight-compare-list"
+                                  role="listbox"
+                                  aria-labelledby="premium-insight-compare-label"
+                                  className={`max-h-[min(16rem,50vh)] overflow-y-auto overflow-x-hidden rounded-xl border ${
+                                    isDarkMode
+                                      ? "border-white/14 bg-slate-950/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                                      : "border-slate-200/95 bg-white shadow-sm"
+                                  }`}
+                                >
+                                  {acceptedConnectedPartners.map((p, index) => {
+                                    const selected = p.id === insightsPartner.id;
+                                    const showDivider =
+                                      index < acceptedConnectedPartners.length - 1;
+                                    return (
+                                      <li key={p.id} role="presentation" className={showDivider ? (isDarkMode ? "border-b border-white/10" : "border-b border-slate-200/90") : ""}>
+                                        <button
+                                          type="button"
+                                          role="option"
+                                          aria-selected={selected}
+                                          onClick={() => {
+                                            setInsightsPartnerId(p.id);
+                                            setComparePickerOpen(false);
+                                          }}
+                                          className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                                            selected
+                                              ? isDarkMode
+                                                ? "bg-violet-500/22 text-violet-50"
+                                                : "bg-violet-100 text-violet-900"
+                                              : isDarkMode
+                                                ? "text-slate-200 active:bg-white/[0.08]"
+                                                : "text-slate-800 active:bg-slate-100"
+                                          }`}
+                                        >
+                                          {selected ? (
+                                            <svg
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              className={`h-4 w-4 shrink-0 ${isDarkMode ? "text-violet-300" : "text-violet-600"}`}
+                                              stroke="currentColor"
+                                              strokeWidth="2.5"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              aria-hidden
+                                            >
+                                              <path d="M20 6 9 17l-5-5" />
+                                            </svg>
+                                          ) : (
+                                            <span className="inline-block w-4 shrink-0" aria-hidden />
+                                          )}
+                                          <span className="min-w-0 truncate">{p.name}</span>
+                                        </button>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              ) : null}
+                            </div>
                           ) : null}
                           {tasteOverlap ? (
                             <div
