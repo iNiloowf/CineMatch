@@ -1481,6 +1481,13 @@ html[data-reduce-motion="true"] .toast-dismiss-progress-fill {
   backdrop-filter: none !important;
 }
 
+/* Friends search: same nested blur stability as Discover, without the ::after gap filler (not a swipe stack). */
+[data-app-shell-root][data-theme="dark"] .friends-search-toolbar .ui-input-shell,
+[data-app-shell-root][data-theme="dark"] .friends-search-toolbar .ui-icon-button {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 [data-app-shell-root][data-theme="dark"] .discover-card-viewport {
   position: relative;
   z-index: 1;

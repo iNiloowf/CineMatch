@@ -29,16 +29,17 @@ function tabItemClass(
   isDarkMode: boolean,
   compact?: boolean,
 ) {
+  /** Inset border + soft inner highlight — avoids ring/shadow clipped by app `overflow-x-hidden`. */
   return [
-    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[16px] px-1.5 py-2 text-center font-semibold transition sm:px-2",
+    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1.5 py-2 text-center font-semibold transition duration-200 sm:px-2",
     compact ? "text-[10px] sm:text-xs" : "text-[11px] sm:text-sm",
     active
       ? isDarkMode
-        ? "bg-violet-500/30 text-white shadow-sm ring-1 ring-white/15"
-        : "bg-white text-violet-900 shadow-sm ring-1 ring-violet-200/80"
+        ? "border border-violet-400/35 bg-gradient-to-b from-violet-500/45 to-violet-600/22 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+        : "border border-violet-200/95 bg-white text-violet-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_1px_2px_rgba(91,33,182,0.06)]"
       : isDarkMode
-        ? "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
-        : "text-slate-500 hover:bg-white/60 hover:text-slate-800",
+        ? "border border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-slate-200"
+        : "border border-transparent text-slate-500 hover:border-slate-200/80 hover:bg-slate-100/85 hover:text-slate-800",
   ].join(" ");
 }
 
@@ -446,7 +447,13 @@ export default function FriendsPage() {
         </p>
       ) : null}
 
-      <div className="ui-glass-panel discover-toolbar-enter discover-search-toolbar w-full px-3 py-2.5 sm:px-3.5">
+      <div
+        className={`friends-search-toolbar discover-toolbar-enter w-full rounded-[var(--radius-xl)] px-3 py-2.5 sm:px-3.5 ${
+          isDarkMode
+            ? "border border-white/12 bg-[rgb(9,7,16)] shadow-[0_4px_22px_rgba(0,0,0,0.42)]"
+            : "ui-glass-panel"
+        }`}
+      >
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <p id="friends-search-hint" className="sr-only">
             Type at least two characters to search by User ID. Press Enter to refresh results.
@@ -484,7 +491,9 @@ export default function FriendsPage() {
             disabled={searchBusy}
             onClick={() => void runSearchNow()}
             aria-label={searchBusy ? "Searching" : "Search"}
-            className="ui-icon-button flex min-h-11 shrink-0 items-center justify-center px-2.5 hover:bg-white/12 min-[400px]:px-3"
+            className={`ui-icon-button flex min-h-11 shrink-0 items-center justify-center px-2.5 min-[400px]:px-3 ${
+              isDarkMode ? "hover:bg-white/12" : "hover:bg-slate-100/90"
+            }`}
           >
             {searchBusy ? (
               <span
@@ -512,7 +521,7 @@ export default function FriendsPage() {
       </div>
 
       <div
-        className="grid w-full grid-cols-2 gap-1.5 p-0 sm:gap-2"
+        className="grid w-full min-w-0 grid-cols-2 gap-2 px-0.5 sm:gap-2.5 sm:px-1"
         role="tablist"
         aria-label="Friends sections"
       >
@@ -690,7 +699,11 @@ export default function FriendsPage() {
                         type="button"
                         disabled={actionBusy || currentUser?.publicHandle === row.publicHandle}
                         onClick={() => void addFriend(row.publicHandle)}
-                        className="w-full min-h-11 rounded-full bg-violet-600 px-4 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:px-5 disabled:cursor-not-allowed disabled:opacity-50"
+                        className={`w-full min-h-11 rounded-full border px-4 text-xs font-semibold sm:min-w-[5.5rem] sm:px-5 disabled:cursor-not-allowed disabled:opacity-50 ${
+                          isDarkMode
+                            ? "border-violet-400/35 bg-violet-600 text-white hover:bg-violet-500 active:bg-violet-700"
+                            : "border-violet-600/25 bg-violet-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:bg-violet-500 active:bg-violet-700"
+                        }`}
                       >
                         Add
                       </button>
@@ -715,7 +728,7 @@ export default function FriendsPage() {
                   return (
                     <li
                       key={l.linkId}
-                      className={`flex min-h-[3.5rem] items-stretch overflow-hidden rounded-2xl border transition ${listShell}`}
+                      className={`flex min-h-[3.5rem] items-stretch rounded-2xl border transition ${listShell}`}
                     >
                       <div className="min-w-0 flex-1 p-2.5 pr-2 sm:p-3 sm:pr-2">
                         <UserProfileLinks user={l.user} isDarkMode={isDarkMode} href={href}>
@@ -824,7 +837,11 @@ export default function FriendsPage() {
                           type="button"
                           disabled={actionBusy}
                           onClick={() => void respond(l.linkId, true)}
-                          className="min-h-10 min-w-0 flex-1 rounded-full bg-emerald-600 px-3 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:flex-none"
+                          className={`min-h-10 min-w-0 flex-1 rounded-full border px-3 text-xs font-semibold text-white sm:min-w-[5.5rem] sm:flex-none ${
+                            isDarkMode
+                              ? "border-emerald-400/40 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700"
+                              : "border-emerald-700/20 bg-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] hover:bg-emerald-500 active:bg-emerald-700"
+                          } disabled:opacity-50`}
                         >
                           Accept
                         </button>
@@ -832,8 +849,10 @@ export default function FriendsPage() {
                           type="button"
                           disabled={actionBusy}
                           onClick={() => void respond(l.linkId, false)}
-                          className={`min-h-10 min-w-0 flex-1 rounded-full border px-3 text-xs font-semibold sm:min-w-[5.5rem] sm:flex-none ${
-                            isDarkMode ? "border-white/20 text-white" : "border-slate-300 text-slate-800"
+                          className={`min-h-10 min-w-0 flex-1 rounded-full border px-3 text-xs font-semibold sm:min-w-[5.5rem] sm:flex-none disabled:opacity-50 ${
+                            isDarkMode
+                              ? "border-white/18 bg-white/[0.06] text-slate-100 hover:bg-white/12 hover:border-white/25"
+                              : "border-slate-300/95 bg-white text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] hover:border-slate-400 hover:bg-slate-50"
                           }`}
                         >
                           Decline
@@ -887,11 +906,11 @@ export default function FriendsPage() {
                         disabled={actionBusy}
                         onClick={() => void removeSentRequest(l.linkId)}
                         aria-label={`Remove friend request to ${l.user.name}`}
-                        className={`min-h-10 w-full shrink-0 rounded-full px-3 text-xs font-semibold shadow-sm sm:w-auto sm:min-w-[6.5rem] ${
+                        className={`min-h-10 w-full shrink-0 rounded-full border px-3 text-xs font-semibold sm:w-auto sm:min-w-[6.5rem] disabled:opacity-50 ${
                           isDarkMode
-                            ? "bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700"
-                            : "bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800"
-                        } disabled:opacity-50`}
+                            ? "border-rose-400/35 bg-rose-600 text-white hover:bg-rose-500 active:bg-rose-700"
+                            : "border-rose-700/25 bg-rose-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-rose-700 active:bg-rose-800"
+                        }`}
                       >
                         Remove
                       </button>
