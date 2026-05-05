@@ -613,7 +613,7 @@ export default function ProfilePage() {
 
   const labelClass = isDarkMode ? "text-sm font-medium text-slate-200" : "text-sm font-medium text-slate-700";
   /** Edit mode: uppercase section labels (one scale site-wide). */
-  const editSectionTitleClass = `text-xs font-semibold uppercase tracking-[0.14em] ${
+  const editSectionTitleClass = `text-xs font-semibold uppercase leading-none tracking-[0.14em] ${
     isDarkMode ? "text-slate-400" : "text-slate-500"
   }`;
   const editSectionShell = isDarkMode
@@ -1480,9 +1480,9 @@ export default function ProfilePage() {
           <div className="space-y-3 sm:space-y-4">
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
-                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                <section className={`flex flex-col gap-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full min-h-9 items-center justify-between gap-2">
-                    <p id="profile-edit-basic-info-heading" className={`${editSectionTitleClass} leading-tight`}>
+                    <p id="profile-edit-basic-info-heading" className={editSectionTitleClass}>
                       Basic info
                     </p>
                     <button
@@ -1649,9 +1649,9 @@ export default function ProfilePage() {
                 </div>
                 </section>
 
-                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                <section className={`flex flex-col gap-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full min-h-9 items-center justify-between gap-2">
-                    <p id="profile-edit-header-bg-heading" className={`${editSectionTitleClass} leading-tight`}>
+                    <p id="profile-edit-header-bg-heading" className={editSectionTitleClass}>
                       Header background
                     </p>
                     <button
@@ -1784,9 +1784,9 @@ export default function ProfilePage() {
                   ) : null}
                 </section>
 
-                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                <section className={`flex flex-col gap-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full min-h-9 items-center justify-between gap-2">
-                    <p id="profile-edit-watched-reviews-heading" className={`${editSectionTitleClass} leading-tight`}>
+                    <p id="profile-edit-watched-reviews-heading" className={editSectionTitleClass}>
                       Watched reviews
                     </p>
                     <button
@@ -1812,9 +1812,9 @@ export default function ProfilePage() {
                   {editSectionsOpen.watchedReviews ? watchedReviewsEditorSection : null}
                 </section>
 
-                <section className={`space-y-4 p-3 sm:p-4 ${editSectionShell}`}>
+                <section className={`flex flex-col gap-4 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full min-h-9 items-center justify-between gap-2">
-                    <p id="profile-edit-discovery-pref-heading" className={`${editSectionTitleClass} leading-tight`}>
+                    <p id="profile-edit-discovery-pref-heading" className={editSectionTitleClass}>
                       Discovery preferences
                     </p>
                     <button
@@ -2000,9 +2000,9 @@ export default function ProfilePage() {
                   )}
                 </section>
 
-                <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
+                <section className={`flex flex-col gap-3 p-3 sm:p-4 ${editSectionShell}`}>
                   <div className="flex w-full min-h-9 items-center justify-between gap-2">
-                    <p id="profile-edit-discover-skips-heading" className={`${editSectionTitleClass} leading-tight`}>
+                    <p id="profile-edit-discover-skips-heading" className={editSectionTitleClass}>
                       Discover skips
                     </p>
                     <button
