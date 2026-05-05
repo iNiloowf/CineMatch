@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { SurfaceCard } from "@/components/surface-card";
 import { useAppState } from "@/lib/app-state";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 
@@ -18,6 +17,8 @@ type TopSharedPick = {
   title: string;
   year: number;
   score: number;
+  /** Used only for ranking tie-break. */
+  popularity: number;
   reasons: string[];
 };
 
@@ -33,6 +34,12 @@ function getTasteOverlapLabel(score: number) {
     return "Medium";
   }
   return "Low";
+}
+
+function movieGenreList(movie: { genre: string[] }) {
+  return movie.genre
+    .map((genre) => genre.trim().toLowerCase())
+    .filter((genre) => Boolean(genre) && genre !== "movie" && genre !== "series");
 }
 
 /** Pro: taste overlap + suggested top 3 with one linked friend (lives on Profile, not Picks). */
@@ -167,6 +174,16 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     );
   }, [data.movies, partnerAcceptedMovieIds]);
 
+  const sharedTasteGenres = useMemo(() => {
+    const overlap = new Set<string>();
+    for (const genre of acceptedGenres) {
+      if (partnerAcceptedGenres.has(genre)) {
+        overlap.add(genre);
+      }
+    }
+    return overlap;
+  }, [acceptedGenres, partnerAcceptedGenres]);
+
   const tasteOverlap = useMemo(() => {
     if (!insightsPartner) {
       return null;
@@ -209,10 +226,21 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
       return [];
     }
 
+    const genreBasis =
+      sharedTasteGenres.size > 0
+        ? sharedTasteGenres
+        : new Set<string>([...acceptedGenres, ...partnerAcceptedGenres]);
+
     const candidates = data.movies
       .filter((movie) => !acceptedMovieIdSet.has(movie.id) || !partnerAcceptedMovieIds.has(movie.id))
       .filter((movie) => !userRejectedMovieIds.has(movie.id))
       .filter((movie) => !partnerRejectedMovieIds.has(movie.id))
+      .filter((movie) => {
+        if (genreBasis.size === 0) {
+          return true;
+        }
+        return movieGenreList(movie).some((g) => genreBasis.has(g));
+      })
       .map((movie) => {
         const userScore = computeMovieMatchPercent(movie, {
           acceptedGenres,
@@ -224,30 +252,68 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
         const avgScore = (userScore + partnerScore) / 2;
         const likedByExactlyOne =
           Number(acceptedMovieIdSet.has(movie.id)) + Number(partnerAcceptedMovieIds.has(movie.id)) === 1;
-        const sharedGenreHits = movie.genre
-          .map((entry) => entry.trim().toLowerCase())
-          .filter((entry) => acceptedGenres.has(entry) && partnerAcceptedGenres.has(entry)).length;
 
-        const finalScore = clampPercent(avgScore + sharedGenreHits * 3 + (likedByExactlyOne ? 4 : 0));
+        const genres = movieGenreList(movie);
+        const overlapGenreLabels: string[] = [];
+        for (const g of genres) {
+          const inBoth =
+            sharedTasteGenres.size > 0 ? sharedTasteGenres.has(g) : genreBasis.has(g);
+          if (!inBoth) {
+            continue;
+          }
+          const raw = movie.genre.find((x) => x.trim().toLowerCase() === g);
+          if (raw) {
+            overlapGenreLabels.push(raw.trim());
+          }
+        }
+        const sharedGenreHits =
+          sharedTasteGenres.size > 0
+            ? genres.filter((g) => sharedTasteGenres.has(g)).length
+            : genres.filter((g) => genreBasis.has(g)).length;
+
+        const pop = movie.popularity ?? 0;
+        const popularityBoost = Math.min(22, Math.log1p(Math.max(0, pop)) * 2.4);
+        const yearBoost = movie.year >= 2020 ? 10 : movie.year >= 2015 ? 7 : movie.year >= 2010 ? 4 : 0;
+        const ratingBoost = Math.min(12, (movie.rating ?? 0) * 0.9);
+
+        const blendScore = clampPercent(
+          avgScore + sharedGenreHits * 5.5 + popularityBoost + yearBoost + ratingBoost + (likedByExactlyOne ? 3 : 0),
+        );
 
         const reasons: string[] = [];
-        if (sharedGenreHits > 0) {
-          reasons.push(`Shared genre signal (${sharedGenreHits})`);
+        const uniqueLabels = [...new Set(overlapGenreLabels.map((l) => l.replace(/\s+/g, " ").trim()))];
+        if (uniqueLabels.length > 0) {
+          const labelShort = `${uniqueLabels.slice(0, 2).join(", ")}${uniqueLabels.length > 2 ? "…" : ""}`;
+          reasons.push(sharedTasteGenres.size > 0 ? `Shared tastes: ${labelShort}` : `Genres: ${labelShort}`);
+        } else if (sharedGenreHits > 0) {
+          reasons.push(`${sharedGenreHits} overlapping genre${sharedGenreHits === 1 ? "" : "s"}`);
+        }
+        if (pop >= 40) {
+          reasons.push("Trending");
         }
         if (likedByExactlyOne) {
-          reasons.push("Liked by one of you already");
+          reasons.push("One of you already liked it");
         }
-        reasons.push(`Predicted fit ${finalScore}%`);
+        reasons.push(`Fit ${blendScore}%`);
 
         return {
           movieId: movie.id,
           title: movie.title,
           year: movie.year,
-          score: finalScore,
+          score: blendScore,
+          popularity: pop,
           reasons,
         };
       })
-      .sort((left, right) => right.score - left.score);
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+        if (right.popularity !== left.popularity) {
+          return right.popularity - left.popularity;
+        }
+        return right.year - left.year;
+      });
 
     return candidates.slice(0, 3);
   }, [
@@ -259,6 +325,7 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     partnerAcceptedMovieIds,
     partnerRejectedMovieIds,
     insightsPartner,
+    sharedTasteGenres,
     userRejectedMovieIds,
   ]);
 
@@ -308,250 +375,283 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
 
   const bodyOpen = isExpanded && !isClosing && panelReveal;
   const gridRowsFr: "0fr" | "1fr" = bodyOpen ? "1fr" : "0fr";
+  const showExpandedChrome = isExpanded && !isClosing;
+
+  const tileSurface = isDarkMode
+    ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
+    : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]";
+  const iconTileWrap = isDarkMode
+    ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
+    : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
 
   return (
-    <SurfaceCard
-      className="discover-toolbar-enter space-y-2.5 p-3.5 sm:p-4"
+    <section
+      className={`discover-toolbar-enter relative overflow-hidden rounded-[22px] sm:rounded-[24px] ${tileSurface}`}
       style={{ animationDelay: `${animationDelayMs}ms` }}
+      aria-label="Premium insight"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p
-            className={`text-xs font-semibold leading-tight sm:text-sm ${isDarkMode ? "text-white" : "text-slate-900"}`}
+      <span
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500"
+        aria-hidden
+      />
+      <div className="relative p-4 sm:p-5">
+        <div className="flex gap-3 sm:gap-3.5">
+          <span
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${iconTileWrap}`}
+            aria-hidden
           >
-            Premium pick insights
-          </p>
-          {isExpanded || isClosing ? (
-            <>
-              {hasProAccess && insightsPartner && tasteOverlap ? (
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75">
+              <path d="M4 18V6" strokeLinecap="round" />
+              <path d="M10 18v-5" strokeLinecap="round" />
+              <path d="M16 18V9" strokeLinecap="round" />
+              <path d="M22 18V4" strokeLinecap="round" />
+            </svg>
+          </span>
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
                 <p
-                  className={`mt-1 text-[10px] leading-snug sm:text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
+                  className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}
                 >
-                  Compare your accepts with one linked friend: overlap score and suggested titles to watch together.
-                  Stats use {insightsPartner.name}
-                  {acceptedConnectedPartners.length > 1 ? " (pick below if you have several links)." : "."}
+                  Premium insight
                 </p>
-              ) : hasProAccess && !insightsPartner ? (
-                <p className={`mt-1 text-[10px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Link a friend to see shared rankings and overlap.
-                </p>
-              ) : (
-                <p className={`mt-1 text-[10px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Pro: shared top 3 suggestions + taste overlap with one linked partner at a time.
-                </p>
-              )}
-            </>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {!hasProAccess ? (
-            <span
-              className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
-                isDarkMode
-                  ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
-                  : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
-              }`}
-            >
-              Pro
-            </span>
-          ) : null}
-          {isExpanded || isClosing ? (
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isClosing}
-              aria-label="Close premium pick insights"
-              className={`premium-insights-chrome-btn shrink-0 rounded-md border px-1.5 py-0.5 transition-colors disabled:pointer-events-none disabled:opacity-40 ${
-                isDarkMode
-                  ? "border-white/10 bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-200"
-                  : "border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-              }`}
-            >
-              Close
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleShow}
-              aria-label="Show premium pick insights"
-              className={`premium-insights-chrome-btn shrink-0 rounded-md px-1.5 py-0.5 transition active:scale-[0.98] motion-reduce:active:scale-100 ${
-                isDarkMode
-                  ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/30 hover:bg-violet-500/32"
-                  : "bg-violet-600 text-white shadow-sm ring-1 ring-violet-500/30 hover:bg-violet-500"
-              }`}
-            >
-              Show
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div
-        className="grid overflow-hidden transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
-        style={{ gridTemplateRows: gridRowsFr }}
-      >
-        <div className="min-h-0 overflow-hidden">
-          <div
-            className={`transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 ${
-              isClosing
-                ? "opacity-0 [transform:translate3d(0,-6px,0)]"
-                : isExpanded && !panelReveal
-                  ? "opacity-0 [transform:translate3d(0,6px,0)]"
-                  : "opacity-100 [transform:translate3d(0,0,0)]"
-            }`}
-          >
-            {!hasProAccess ? (
-              <>
-                <p
-                  className={`text-[11px] leading-snug sm:text-xs sm:leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
-                >
-                  Unlock shared top 3 suggestions and taste overlap with a linked partner.
-                </p>
-                <Link
-                  href="/settings"
-                  className="ui-btn ui-btn-primary mt-1 inline-flex min-h-10 w-full items-center justify-center text-sm sm:w-auto"
-                >
-                  View plans in Settings
-                </Link>
-              </>
-            ) : (
-              <>
-                {!insightsPartner ? (
-                  <p className={`text-[11px] leading-snug sm:text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                    Connect with a partner from{" "}
-                    <Link href="/friends" className="font-semibold underline underline-offset-2">
-                      Friends
-                    </Link>{" "}
-                    to unlock shared top picks here.
-                  </p>
-                ) : (
-                  <div className="mt-3 space-y-2 sm:mt-4">
-                    {acceptedConnectedPartners.length > 1 ? (
-                      <label className="block space-y-1">
-                        <span
-                          className={`text-[10px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
-                        >
-                          Compare with
-                        </span>
-                        <select
-                          value={insightsPartner.id}
-                          onChange={(e) => setInsightsPartnerId(e.target.value)}
-                          aria-label="Choose friend for premium pick insights"
-                          className={`w-full rounded-xl border px-3 py-2 text-sm font-medium outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
-                            isDarkMode
-                              ? "border-white/14 bg-white/[0.06] text-white"
-                              : "border-slate-200 bg-white text-slate-900"
-                          }`}
-                        >
-                          {acceptedConnectedPartners.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : null}
-                    {tasteOverlap ? (
-                      <div
-                        className={`grid grid-cols-3 gap-1.5 rounded-xl px-2 py-2 ${
-                          isDarkMode ? "bg-white/[0.05]" : "bg-slate-50/95"
-                        }`}
+                {showExpandedChrome ? (
+                  <>
+                    {hasProAccess && insightsPartner && tasteOverlap ? (
+                      <p
+                        className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
                       >
-                        <div className="text-center">
-                          <p
-                            className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
-                          >
-                            Overlap
-                          </p>
-                          <p
-                            className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                          >
-                            {tasteOverlap.score}%
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p
-                            className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
-                          >
-                            Both liked
-                          </p>
-                          <p
-                            className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                          >
-                            {tasteOverlap.bothLikedCount}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p
-                            className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
-                          >
-                            Genres
-                          </p>
-                          <p
-                            className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
-                          >
-                            {tasteOverlap.genreOverlapPercent}%
-                          </p>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="flex flex-wrap items-end justify-between gap-1">
-                      <p className={`text-xs font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                        {isFridayNight ? "Tonight’s top 3" : "This week’s top 3"}
+                        Overlap vs {insightsPartner.name}
+                        {acceptedConnectedPartners.length > 1 ? " · switch below" : ""}.
                       </p>
-                      <p className={`text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                        You &amp; {insightsPartner.name}
+                    ) : hasProAccess && !insightsPartner ? (
+                      <p
+                        className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
+                      >
+                        Link a friend to see overlap.
                       </p>
-                    </div>
+                    ) : (
+                      <p
+                        className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
+                      >
+                        Pro: overlap + 3 genre-based picks.
+                      </p>
+                    )}
+                  </>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {!hasProAccess ? (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
+                      isDarkMode
+                        ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
+                        : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
+                    }`}
+                  >
+                    Pro
+                  </span>
+                ) : null}
+                {isExpanded || isClosing ? (
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    disabled={isClosing}
+                    aria-label="Close Premium insight"
+                    className={`premium-insights-chrome-btn shrink-0 rounded-md border px-1.5 py-0.5 transition-colors disabled:pointer-events-none disabled:opacity-40 ${
+                      isDarkMode
+                        ? "border-white/10 bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-200"
+                        : "border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                    }`}
+                  >
+                    Close
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleShow}
+                    aria-label="Show Premium insight"
+                    className={`premium-insights-chrome-btn shrink-0 rounded-md px-1.5 py-0.5 transition active:scale-[0.98] motion-reduce:active:scale-100 ${
+                      isDarkMode
+                        ? "bg-violet-500/22 text-violet-100 ring-1 ring-violet-400/30 hover:bg-violet-500/32"
+                        : "bg-violet-600 text-white shadow-sm ring-1 ring-violet-500/30 hover:bg-violet-500"
+                    }`}
+                  >
+                    Show
+                  </button>
+                )}
+              </div>
+            </div>
 
-                    <div>
-                      {weeklyTopSharedPicks.length === 0 ? (
-                        <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
-                          Swipe more — we need a bit more signal for a shared top 3.
+            <div
+              className="grid overflow-hidden transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
+              style={{ gridTemplateRows: gridRowsFr }}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  className={`transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 ${
+                    isClosing
+                      ? "opacity-0 [transform:translate3d(0,-6px,0)]"
+                      : isExpanded && !panelReveal
+                        ? "opacity-0 [transform:translate3d(0,6px,0)]"
+                        : "opacity-100 [transform:translate3d(0,0,0)]"
+                  }`}
+                >
+                  {!hasProAccess ? (
+                    <>
+                      <p
+                        className={`text-[11px] leading-snug sm:text-xs sm:leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                      >
+                        Shared-genre picks + taste overlap with a partner.
+                      </p>
+                      <Link
+                        href="/settings"
+                        className="ui-btn ui-btn-primary mt-1 inline-flex min-h-10 w-full items-center justify-center text-sm sm:w-auto"
+                      >
+                        View plans in Settings
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      {!insightsPartner ? (
+                        <p className={`text-[11px] leading-snug sm:text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                          Open{" "}
+                          <Link href="/friends" className="font-semibold underline underline-offset-2">
+                            Friends
+                          </Link>{" "}
+                          and connect to unlock picks.
                         </p>
                       ) : (
-                        weeklyTopSharedPicks.map((pick, index) => (
-                          <div
-                            key={pick.movieId}
-                            className={`flex items-center justify-between gap-2 py-1.5 ${
-                              index > 0
-                                ? isDarkMode
-                                  ? "border-t border-white/10"
-                                  : "border-t border-slate-200/80"
-                                : ""
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <p className={`truncate text-xs font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                                <span className="tabular-nums text-slate-500">{index + 1}.</span> {pick.title}{" "}
-                                <span className="font-normal text-slate-500">({pick.year})</span>
-                              </p>
-                              <p
-                                className={`mt-0.5 line-clamp-1 text-[10px] leading-tight ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
-                                title={pick.reasons.join(" · ")}
+                        <div className="space-y-2 sm:space-y-3">
+                          {acceptedConnectedPartners.length > 1 ? (
+                            <label className="block space-y-1">
+                              <span
+                                className={`text-[10px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
                               >
-                                {pick.reasons.join(" · ")}
-                              </p>
-                            </div>
-                            <span
-                              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
-                                isDarkMode ? "bg-violet-500/16 text-violet-100" : "bg-violet-100 text-violet-700"
+                                Compare with
+                              </span>
+                              <select
+                                value={insightsPartner.id}
+                                onChange={(e) => setInsightsPartnerId(e.target.value)}
+                                aria-label="Choose friend for Premium insight"
+                                className={`w-full rounded-xl border px-3 py-2 text-sm font-medium outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
+                                  isDarkMode
+                                    ? "border-white/14 bg-white/[0.06] text-white"
+                                    : "border-slate-200 bg-white text-slate-900"
+                                }`}
+                              >
+                                {acceptedConnectedPartners.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          ) : null}
+                          {tasteOverlap ? (
+                            <div
+                              className={`grid grid-cols-3 gap-1.5 rounded-xl px-2 py-2 ${
+                                isDarkMode ? "bg-white/[0.05]" : "bg-slate-50/95"
                               }`}
                             >
-                              {pick.score}%
-                            </span>
+                              <div className="text-center">
+                                <p
+                                  className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
+                                >
+                                  Overlap
+                                </p>
+                                <p
+                                  className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                                >
+                                  {tasteOverlap.score}%
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p
+                                  className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
+                                >
+                                  Both liked
+                                </p>
+                                <p
+                                  className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                                >
+                                  {tasteOverlap.bothLikedCount}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p
+                                  className={`text-[9px] font-medium uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
+                                >
+                                  Genres
+                                </p>
+                                <p
+                                  className={`mt-0.5 text-base font-bold tabular-nums ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                                >
+                                  {tasteOverlap.genreOverlapPercent}%
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="flex flex-wrap items-end justify-between gap-1">
+                            <p className={`text-xs font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                              {isFridayNight ? "Tonight’s picks" : "Genre picks"}
+                            </p>
+                            <p className={`text-[10px] ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
+                              You &amp; {insightsPartner.name}
+                            </p>
                           </div>
-                        ))
+
+                          <div>
+                            {weeklyTopSharedPicks.length === 0 ? (
+                              <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                                Nothing matches your shared genres yet — keep swiping together.
+                              </p>
+                            ) : (
+                              weeklyTopSharedPicks.map((pick, index) => (
+                                <div
+                                  key={pick.movieId}
+                                  className={`flex items-center justify-between gap-2 py-1.5 ${
+                                    index > 0
+                                      ? isDarkMode
+                                        ? "border-t border-white/10"
+                                        : "border-t border-slate-200/80"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <p className={`truncate text-xs font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                                      <span className="tabular-nums text-slate-500">{index + 1}.</span> {pick.title}{" "}
+                                      <span className="font-normal text-slate-500">({pick.year})</span>
+                                    </p>
+                                    <p
+                                      className={`mt-0.5 line-clamp-1 text-[10px] leading-tight ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
+                                      title={pick.reasons.join(" · ")}
+                                    >
+                                      {pick.reasons.join(" · ")}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+                                      isDarkMode ? "bg-violet-500/16 text-violet-100" : "bg-violet-100 text-violet-700"
+                                    }`}
+                                  >
+                                    {pick.score}%
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </SurfaceCard>
+    </section>
   );
 }

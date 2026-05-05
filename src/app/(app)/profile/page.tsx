@@ -2246,13 +2246,15 @@ export default function ProfilePage() {
         ) : null}
       </SurfaceCard>
 
+      <PremiumPickInsightsCard animationDelayMs={0} />
+
       <div className="grid grid-cols-1 gap-3 px-px sm:grid-cols-2 sm:gap-4">
         {shortcutTiles.map((tile, index) => (
           <Link
             key={tile.href}
             href={tile.href}
             className={`discover-toolbar-enter group relative flex min-h-[5.85rem] overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:min-h-[6.1rem] sm:rounded-[24px] ${tile.surface}`}
-            style={{ animationDelay: `${index * 75}ms` }}
+            style={{ animationDelay: `${90 + index * 75}ms` }}
           >
             <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-transparent" aria-hidden />
             <div className="flex w-full items-center gap-3 px-4 py-4 sm:gap-3.5 sm:px-5 sm:py-4">
@@ -2280,9 +2282,7 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <PremiumPickInsightsCard animationDelayMs={260} />
-
-      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
+      <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "280ms" }}>
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
       </SurfaceCard>
     </div>
