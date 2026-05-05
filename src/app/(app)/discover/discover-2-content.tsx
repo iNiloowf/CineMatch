@@ -2109,10 +2109,10 @@ export function DiscoverPage2Content({
       ) : null}
 
       <div
-        className={`discover2-swipe-viewport relative z-0 flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible px-0.5 pt-1.5 pb-1 sm:px-0.5 sm:pt-2 sm:pb-1.5 ${
+        className={`discover2-swipe-viewport relative z-0 flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible pt-1.5 pb-1 sm:pt-2 sm:pb-1.5 ${
           isDarkMode
-            ? "discover-card-viewport border-t border-white/12"
-            : "mt-0.5 rounded-[1.75rem] border border-slate-200/80 bg-gradient-to-b from-slate-100/90 to-white shadow-[0_1px_0_rgba(15,23,42,0.06)]"
+            ? "discover-card-viewport border-t border-white/12 px-0.5 sm:px-0.5"
+            : "mt-0.5 rounded-[1.75rem] bg-gradient-to-b from-slate-100/90 to-white px-0 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.92),0_1px_0_rgba(15,23,42,0.06)]"
         }`}
       >
         {sharedMovieId && sharedMovieFetch === "loading" ? (

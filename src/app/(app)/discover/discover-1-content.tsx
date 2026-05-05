@@ -2034,7 +2034,9 @@ export function DiscoverPage1Content({
       >
         {sharedMovieId && sharedMovieFetch === "loading" ? (
           <div
-            className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col items-center justify-center gap-3 overflow-hidden rounded-[26px] px-3 sm:px-2"
+            className={`mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col items-center justify-center gap-3 overflow-hidden rounded-[26px] ${
+              isDarkMode ? "px-3 sm:px-2" : "px-0"
+            }`}
             role="status"
             aria-live="polite"
           >
@@ -2050,7 +2052,11 @@ export function DiscoverPage1Content({
             </div>
           </div>
         ) : movie ? (
-          <div className="mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] px-1.5 sm:px-2">
+          <div
+            className={`mx-auto flex h-full w-full max-w-xl min-h-[min(58dvh,27rem)] flex-col overflow-hidden rounded-[26px] ${
+              isDarkMode ? "px-1.5 sm:px-2" : "px-0"
+            }`}
+          >
             <div
               className={`discover-card-stage ${
                 transitionState === "idle"
