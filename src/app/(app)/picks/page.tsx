@@ -65,6 +65,7 @@ export default function PicksPage() {
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
   const [pendingWatchedMovieId, setPendingWatchedMovieId] = useState<string | null>(null);
   const [picksListTab, setPicksListTab] = useState<"queue" | "watched">("queue");
+  const prevPicksListTabRef = useRef(picksListTab);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
@@ -103,6 +104,10 @@ export default function PicksPage() {
     setIsPremiumInsightsClosing(false);
     setInsightsPanelReveal(true);
   }, [premiumInsightsDismissKey, premiumInsightsExpandedKey]);
+
+  useLayoutEffect(() => {
+    prevPicksListTabRef.current = picksListTab;
+  }, [picksListTab]);
 
   const pendingRemoveMovie = useMemo(
     () =>
@@ -645,6 +650,27 @@ export default function PicksPage() {
     insightsPanelReveal;
   const premiumInsightsGridRowsFr: "0fr" | "1fr" = premiumInsightsBodyOpen ? "1fr" : "0fr";
 
+  const prevPicksListTab = prevPicksListTabRef.current;
+  let picksListTabAnimate = false;
+  let picksListTabDir: "forward" | "back" | null = null;
+  if (prevPicksListTab !== picksListTab) {
+    picksListTabAnimate = true;
+    const tabIndex = (tab: "queue" | "watched") => (tab === "queue" ? 0 : 1);
+    const fromIdx = tabIndex(prevPicksListTab);
+    const toIdx = tabIndex(picksListTab);
+    if (fromIdx !== toIdx) {
+      picksListTabDir = toIdx > fromIdx ? "forward" : "back";
+    }
+  }
+
+  const picksListTabPanelClass = !picksListTabAnimate
+    ? "tab-route-surface"
+    : picksListTabDir === "forward"
+      ? "tab-route-surface tab-route-enter tab-route-enter--forward"
+      : picksListTabDir === "back"
+        ? "tab-route-surface tab-route-enter tab-route-enter--back"
+        : "tab-route-surface tab-route-enter tab-route-enter--fade";
+
   return (
     <>
       <div className="app-screen-stack">
@@ -981,7 +1007,10 @@ export default function PicksPage() {
 
         {acceptedMovies.length > 0 ? (
           <div className="space-y-3">
-            <div className="space-y-3 sm:space-y-3.5">
+            <div
+              className={`${picksListTabPanelClass} min-w-0 space-y-3 overflow-x-clip sm:space-y-3.5`}
+              data-picks-list-tab={picksListTab}
+            >
               {picksListTab === "queue" ? (
                 queueMovies.length > 0 ? (
                   queueMovies.map((movie, index) => (
