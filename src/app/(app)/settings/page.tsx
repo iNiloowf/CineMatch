@@ -194,6 +194,14 @@ export default function SettingsPage() {
   useEscapeToClose(isGiftRedeemModalOpen, () => setIsGiftRedeemModalOpen(false));
   useEscapeToClose(isGiftPartnerPickerOpen, () => setIsGiftPartnerPickerOpen(false));
 
+  useEffect(() => {
+    if (!isGiftRedeemModalOpen) {
+      setGiftRedeemCode("");
+      setGiftRedeemState("idle");
+      setGiftRedeemFeedback("");
+    }
+  }, [isGiftRedeemModalOpen]);
+
   const handleSubmitTicket = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const subject = ticketSubject.trim();
@@ -654,15 +662,7 @@ export default function SettingsPage() {
           <button
             type="button"
             aria-label="Close"
-            onClick={() => {
-              setIsGiftRedeemModalOpen(false);
-              queueMicrotask(() => {
-                if (giftRedeemState !== "saving") {
-                  setGiftRedeemState("idle");
-                  setGiftRedeemFeedback("");
-                }
-              });
-            }}
+            onClick={() => setIsGiftRedeemModalOpen(false)}
             className="absolute inset-0 cursor-default bg-transparent"
           />
           <div
@@ -687,15 +687,7 @@ export default function SettingsPage() {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setIsGiftRedeemModalOpen(false);
-                  queueMicrotask(() => {
-                    if (giftRedeemState !== "saving") {
-                      setGiftRedeemState("idle");
-                      setGiftRedeemFeedback("");
-                    }
-                  });
-                }}
+                onClick={() => setIsGiftRedeemModalOpen(false)}
                 disabled={giftRedeemState === "saving"}
                 aria-label="Close"
                 className={`ui-shell-close ${
@@ -763,15 +755,7 @@ export default function SettingsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsGiftRedeemModalOpen(false);
-                    queueMicrotask(() => {
-                      if (giftRedeemState !== "saving") {
-                        setGiftRedeemState("idle");
-                        setGiftRedeemFeedback("");
-                      }
-                    });
-                  }}
+                  onClick={() => setIsGiftRedeemModalOpen(false)}
                   disabled={giftRedeemState === "saving"}
                   className="ui-btn ui-btn-secondary order-1 w-full justify-center px-3 py-2.5 text-xs font-semibold leading-tight tracking-tight disabled:opacity-70 sm:text-[13px]"
                 >
