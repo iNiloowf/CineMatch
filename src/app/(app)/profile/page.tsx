@@ -7,6 +7,7 @@ import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { ModalPortal } from "@/components/modal-portal";
 import { PageHeader } from "@/components/page-header";
+import { PremiumPickInsightsCard } from "@/components/premium-pick-insights-card";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { AppRouteLoading } from "@/components/app-route-status";
 import { SurfaceCard } from "@/components/surface-card";
@@ -2278,6 +2279,8 @@ export default function ProfilePage() {
           </Link>
         ))}
       </div>
+
+      <PremiumPickInsightsCard animationDelayMs={260} />
 
       <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "120ms" }}>
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />
