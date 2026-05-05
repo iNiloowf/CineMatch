@@ -1070,7 +1070,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     currentSettings?.adminModeSimulatePro ?? false;
 
   /** Coalesce burst refreshes (Realtime + focus + Friends UI) so we don’t hammer `/api/account-sync`. */
-  const accountRefreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const accountRefreshDebounceRef = useRef<number | null>(null);
   const requestAccountDataRefresh = useCallback(() => {
     if (accountRefreshDebounceRef.current !== null) {
       window.clearTimeout(accountRefreshDebounceRef.current);
