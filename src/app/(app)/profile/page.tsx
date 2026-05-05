@@ -616,8 +616,6 @@ export default function ProfilePage() {
   const editSectionTitleClass = `text-xs font-semibold uppercase tracking-[0.14em] ${
     isDarkMode ? "text-slate-400" : "text-slate-500"
   }`;
-  /** Edit mode: helper copy under section titles. */
-  const editSectionDescClass = `text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`;
   const editSectionShell = isDarkMode
     ? "rounded-[18px] border border-white/12 bg-white/[0.03]"
     : "rounded-[18px] border border-slate-200/90 bg-slate-50/60";
@@ -1483,8 +1481,8 @@ export default function ProfilePage() {
             {isEditing ? (
               <div className="space-y-5 sm:space-y-6">
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <p id="profile-edit-basic-info-heading" className={editSectionTitleClass}>
+                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                    <p id="profile-edit-basic-info-heading" className={`${editSectionTitleClass} leading-tight`}>
                       Basic info
                     </p>
                     <button
@@ -1652,13 +1650,10 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1" id="profile-edit-header-bg-heading">
-                      <p className={editSectionTitleClass}>Header background</p>
-                      <p className={`mt-1 ${editSectionDescClass}`}>
-                        Pick a film — friends see the same art on your card.
-                      </p>
-                    </div>
+                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                    <p id="profile-edit-header-bg-heading" className={`${editSectionTitleClass} leading-tight`}>
+                      Header background
+                    </p>
                     <button
                       type="button"
                       aria-expanded={editSectionsOpen.headerBackground}
@@ -1669,7 +1664,7 @@ export default function ProfilePage() {
                           headerBackground: !current.headerBackground,
                         }))
                       }
-                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
                         isDarkMode
                           ? "bg-white/10 text-slate-200 hover:bg-white/15"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -1790,13 +1785,10 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1" id="profile-edit-watched-reviews-heading">
-                      <p className={editSectionTitleClass}>Watched reviews</p>
-                      <p className={`mt-1 ${editSectionDescClass}`}>
-                        From Picks after you mark a title watched. Titles you mark <span className="font-semibold">Recommended</span> appear on your friend profile for people you’re linked with.
-                      </p>
-                    </div>
+                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                    <p id="profile-edit-watched-reviews-heading" className={`${editSectionTitleClass} leading-tight`}>
+                      Watched reviews
+                    </p>
                     <button
                       type="button"
                       aria-expanded={editSectionsOpen.watchedReviews}
@@ -1807,7 +1799,7 @@ export default function ProfilePage() {
                           watchedReviews: !current.watchedReviews,
                         }))
                       }
-                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
                         isDarkMode
                           ? "bg-white/10 text-slate-200 hover:bg-white/15"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -1821,8 +1813,8 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-4 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <p id="profile-edit-discovery-pref-heading" className={editSectionTitleClass}>
+                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                    <p id="profile-edit-discovery-pref-heading" className={`${editSectionTitleClass} leading-tight`}>
                       Discovery preferences
                     </p>
                     <button
@@ -2009,14 +2001,10 @@ export default function ProfilePage() {
                 </section>
 
                 <section className={`space-y-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1" id="profile-edit-discover-skips-heading">
-                      <p className={editSectionTitleClass}>Discover skips</p>
-                      <p className={`mt-1 ${editSectionDescClass}`}>
-                        Titles you pass stay off your Discover stack for about a week. Open the list to bring one back
-                        into your queue, read details, or save it to picks.
-                      </p>
-                    </div>
+                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                    <p id="profile-edit-discover-skips-heading" className={`${editSectionTitleClass} leading-tight`}>
+                      Discover skips
+                    </p>
                     <button
                       type="button"
                       aria-expanded={editSectionsOpen.discoverSkips}
@@ -2027,7 +2015,7 @@ export default function ProfilePage() {
                           discoverSkips: !current.discoverSkips,
                         }))
                       }
-                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition ${
                         isDarkMode
                           ? "bg-white/10 text-slate-200 hover:bg-white/15"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
