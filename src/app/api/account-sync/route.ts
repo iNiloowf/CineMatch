@@ -102,7 +102,8 @@ function chunk<T>(items: T[], size: number) {
 }
 
 const SYNC_WINDOW_MS = 60 * 1000;
-const SYNC_MAX = 45;
+/** Room for debounced Realtime + focus without 429 loops during normal use */
+const SYNC_MAX = 90;
 
 function isMissingOptionalSettingsColumnError(
   error: { message?: string; code?: string } | null,

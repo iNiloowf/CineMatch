@@ -91,6 +91,7 @@ const USER_THEME_STORAGE_PREFIX = "cinematch-user-theme";
 const USER_AUTOPLAY_TRAILERS_PREFIX = "cinematch-user-autoplay-trailers";
 const ONBOARDING_STORAGE_PREFIX = "cinematch-onboarding";
 const PROFILE_PHOTOS_BUCKET = "profile-photos";
+const AUTH_LOGIN_API_TIMEOUT_MS = 12000;
 
 const DEFAULT_ONBOARDING_PREFERENCES: OnboardingPreferences = {
   favoriteGenres: [],
@@ -508,12 +509,35 @@ function mapWatchedPickReviewRow(row: WatchedPickReviewRow): WatchedPickReview {
   };
 }
 
+function normalizeLinkStatus(raw: string | undefined): "accepted" | "pending" {
+  return String(raw ?? "").toLowerCase().trim() === "accepted" ? "accepted" : "pending";
+}
+
+/** If the client ever sees two rows for the same pair, keep the accepted one (server should not duplicate). */
+function dedupePartnerLinkRows(rows: LinkRow[]): LinkRow[] {
+  const map = new Map<string, LinkRow>();
+  for (const row of rows) {
+    const a = row.requester_id;
+    const b = row.target_id;
+    const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, row);
+      continue;
+    }
+    const nextAccepted = normalizeLinkStatus(row.status) === "accepted";
+    const prevAccepted = normalizeLinkStatus(prev.status) === "accepted";
+    map.set(key, nextAccepted && !prevAccepted ? row : prevAccepted ? prev : row);
+  }
+  return Array.from(map.values());
+}
+
 function mapLinkRow(link: LinkRow) {
   return {
     id: link.id,
     users: [link.requester_id, link.target_id] as [string, string],
     requesterId: link.requester_id,
-    status: link.status,
+    status: normalizeLinkStatus(link.status),
     createdAt: link.created_at,
   };
 }
@@ -1045,8 +1069,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const adminSubscriptionPreviewModeEnabled =
     currentSettings?.adminModeSimulatePro ?? false;
 
+  /** Coalesce burst refreshes (Realtime + focus + Friends UI) so we don’t hammer `/api/account-sync`. */
+  const accountRefreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestAccountDataRefresh = useCallback(() => {
-    setAccountRefreshKey((current) => current + 1);
+    if (accountRefreshDebounceRef.current !== null) {
+      window.clearTimeout(accountRefreshDebounceRef.current);
+    }
+    accountRefreshDebounceRef.current = window.setTimeout(() => {
+      accountRefreshDebounceRef.current = null;
+      setAccountRefreshKey((current) => current + 1);
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (accountRefreshDebounceRef.current !== null) {
+        window.clearTimeout(accountRefreshDebounceRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -1068,7 +1108,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   ) => {
     persistAccountSnapshot(activeUserId, payload);
 
-    const linkRows = payload.links ?? [];
+    const linkRows = dedupePartnerLinkRows(payload.links ?? []);
     const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
     const acceptedPartnerIds = Array.from(
       new Set(
@@ -1284,26 +1324,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [isDarkMode]);
 
   useEffect(() => {
-    const handleRefreshSignal = () => {
-      setAccountRefreshKey((current) => current + 1);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        handleRefreshSignal();
-      }
-    };
-
-    window.addEventListener("focus", handleRefreshSignal);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", handleRefreshSignal);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-  useEffect(() => {
     let active = true;
     const supabase = getSupabaseBrowserClient();
 
@@ -1315,12 +1335,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     void (async () => {
       try {
+      console.warn("[auth-debug][provider] bootstrap start");
       await ensureAuthSessionMirrorLoaded();
+      console.warn("[auth-debug][provider] mirror loaded");
       if (!active) {
         return;
       }
 
       const sessionResponse = await supabase.auth.getSession();
+      console.warn("[auth-debug][provider] getSession resolved", {
+        hasSession: Boolean(sessionResponse.data.session),
+      });
 
       if (!active) {
         return;
@@ -1790,6 +1815,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
        * "Recommends" on a friend’s profile.
        */
       let payload: AccountSyncPayload | null = null;
+      let accountSyncRateLimited = false;
+      let accountSyncRetryAfterMs = 4000;
       try {
         const response = await fetch("/api/account-sync", {
           headers: {
@@ -1800,6 +1827,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
         if (response.ok) {
           payload = (await response.json()) as AccountSyncPayload;
+        } else if (response.status === 429) {
+          accountSyncRateLimited = true;
+          const ra = response.headers.get("Retry-After");
+          const sec = ra ? Number.parseInt(ra, 10) : Number.NaN;
+          accountSyncRetryAfterMs = Math.min(
+            60_000,
+            Math.max(2000, Number.isFinite(sec) ? sec * 1000 : 5000),
+          );
         }
       } catch {
         payload = null;
@@ -1809,12 +1844,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         payload = await fetchAccountSyncFromBrowser(supabaseClient, activeUserId);
       }
 
-      if (!payload) {
+      if (!payload && !accountSyncRateLimited) {
         payload = cachedPayload;
       }
 
       if (!payload) {
         setIsSyncingAccountData(false);
+        if (accountSyncRateLimited && syncRetryCountRef.current < 12) {
+          syncRetryCountRef.current += 1;
+          window.setTimeout(() => {
+            setAccountRefreshKey((current) => current + 1);
+          }, accountSyncRetryAfterMs);
+          return;
+        }
         if (syncRetryCountRef.current < 5) {
           syncRetryCountRef.current += 1;
           window.setTimeout(() => {
@@ -2300,6 +2342,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [achievements, currentUserId, setUnlockedAchievement]);
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
+    console.warn("[auth-debug][provider] login start", { email });
     const supabase = getSupabaseBrowserClient();
 
     if (supabase && isSupabaseConfigured()) {
@@ -2313,15 +2356,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           | undefined;
 
         try {
-          const loginResponse = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-          });
+          const controller = new AbortController();
+          const timeoutId = window.setTimeout(() => {
+            controller.abort();
+          }, AUTH_LOGIN_API_TIMEOUT_MS);
 
-          const loginPayload = (await loginResponse.json()) as {
+          let loginResponse: Response;
+          try {
+            loginResponse = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, password }),
+              signal: controller.signal,
+            });
+          } finally {
+            window.clearTimeout(timeoutId);
+          }
+
+          let loginPayload: {
             error?: string;
             user?: {
               id: string;
@@ -2332,9 +2386,33 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               access_token: string;
               refresh_token: string;
             };
-          };
+          } | null = null;
+          try {
+            loginPayload = (await loginResponse.json()) as {
+              error?: string;
+              user?: {
+                id: string;
+                email?: string | null;
+                user_metadata?: Record<string, unknown>;
+              };
+              session?: {
+                access_token: string;
+                refresh_token: string;
+              };
+            };
+          } catch (payloadError) {
+            console.warn("[auth-debug][provider] /api/auth/login non-JSON payload", payloadError);
+          }
 
-        if (loginResponse.ok && loginPayload.user && loginPayload.session) {
+          console.warn("[auth-debug][provider] /api/auth/login response", {
+            ok: loginResponse.ok,
+            status: loginResponse.status,
+            hasUser: Boolean(loginPayload?.user),
+            hasSession: Boolean(loginPayload?.session),
+            error: loginPayload?.error ?? null,
+          });
+
+          if (loginResponse.ok && loginPayload?.user && loginPayload.session) {
             persistStoredAuthSession({
               userId: loginPayload.user.id,
               email: loginPayload.user.email ?? email,
@@ -2352,18 +2430,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             return {
               ok: false,
               message:
-                loginPayload.error ??
+                loginPayload?.error ??
                 "We couldn’t sign you in. Double-check your email and password.",
             };
           }
-        } catch {
+        } catch (loginApiError) {
+          console.error("[auth-debug][provider] /api/auth/login failed", loginApiError);
           authUser = undefined;
         }
 
         if (!authUser) {
+          console.warn("[auth-debug][provider] falling back to supabase.auth.signInWithPassword");
           const directLoginResult = await supabase.auth.signInWithPassword({
             email,
             password,
+          });
+          console.warn("[auth-debug][provider] direct signInWithPassword result", {
+            hasError: Boolean(directLoginResult.error),
+            hasUser: Boolean(directLoginResult.data.user),
+            hasSession: Boolean(directLoginResult.data.session),
+            error: directLoginResult.error?.message ?? null,
           });
 
           if (directLoginResult.error || !directLoginResult.data.user) {
@@ -2416,6 +2502,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           ),
         );
         setCurrentUserId(authUser.id);
+        console.warn("[auth-debug][provider] setCurrentUserId after login", {
+          userId: authUser.id,
+        });
         refreshDiscoverShuffle(authUser.id);
         setAccountRefreshKey((current) => current + 1);
 

@@ -215,17 +215,17 @@ export default function FriendsPage() {
     }
   }, [searchParams]);
 
-  const FRIENDS_LINKS_POLL_MS = 12_000;
+  const FRIENDS_LINKS_POLL_MS = 90_000;
 
-  /** Pull latest links when opening Friends or changing tab so requests/accepts don’t need an app restart. */
+  /** One refresh when landing on Friends; tab switches use URL state only (full sync is debounced app-wide). */
   useEffect(() => {
     if (!currentUserId) {
       return;
     }
     refreshAccountData();
-  }, [currentUserId, tab, refreshAccountData]);
+  }, [currentUserId, refreshAccountData]);
 
-  /** If Realtime is slow or the user never backgrounds the app, still pick up adds/accepts. */
+  /** If Realtime is slow, still pick up accepts — infrequent to avoid rate limits and jank. */
   useEffect(() => {
     if (!currentUserId) {
       return;

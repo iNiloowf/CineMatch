@@ -58,7 +58,6 @@ export function TabScreenTransition({ children }: { children: ReactNode }) {
 
   return (
     <div
-      key={pathname}
       data-tab-route-active-index={pillIndex >= 0 ? pillIndex : undefined}
       className={layoutClass}
     >
