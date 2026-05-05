@@ -1186,6 +1186,37 @@ input[type="range"] {
   animation: appNotifyIn var(--motion-duration-banner-in) var(--motion-ease-standard) both;
 }
 
+/** Fills left → right under toasts; duration is set inline to match the auto-dismiss timeout. */
+@keyframes toast-dismiss-progress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.toast-dismiss-progress-fill {
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-dismiss-progress-fill {
+    animation: none !important;
+    opacity: 0.35;
+    transform: scaleX(1);
+  }
+}
+
+html[data-reduce-motion="true"] .toast-dismiss-progress-fill {
+  animation: none !important;
+  opacity: 0.35;
+  transform: scaleX(1);
+}
+
 .discover-swipe-card-motion {
   transition: transform var(--motion-duration-reveal) var(--motion-ease-standard);
 }

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { ToastDismissProgressBar } from "@/components/toast-dismiss-progress-bar";
+import { TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
 import type { FriendLinkNotifyPayload } from "@/lib/types";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
@@ -10,8 +12,6 @@ type FriendLinkToastProps = {
   isDarkMode: boolean;
   onClose: () => void;
 };
-
-const AUTO_DISMISS_MS = 14_000;
 
 export function FriendLinkToast({ toast, isDarkMode, onClose }: FriendLinkToastProps) {
   const onCloseRef = useRef(onClose);
@@ -27,7 +27,7 @@ export function FriendLinkToast({ toast, isDarkMode, onClose }: FriendLinkToastP
     }
     const timeout = window.setTimeout(() => {
       onCloseRef.current();
-    }, AUTO_DISMISS_MS);
+    }, TOAST_AUTO_DISMISS_MS);
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
@@ -52,9 +52,9 @@ export function FriendLinkToast({ toast, isDarkMode, onClose }: FriendLinkToastP
       <div
         role="status"
         aria-live="polite"
-        className={`app-notify-banner pointer-events-auto relative w-full max-w-md overflow-hidden rounded-[26px] px-4 py-3.5 backdrop-blur-xl ${shell}`}
+        className={`app-notify-banner pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-[26px] backdrop-blur-xl ${shell}`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 px-4 py-3.5">
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg ${
               isDarkMode
@@ -109,6 +109,7 @@ export function FriendLinkToast({ toast, isDarkMode, onClose }: FriendLinkToastP
             </button>
           </div>
         </div>
+        <ToastDismissProgressBar key={toast.key} isDarkMode={isDarkMode} accent="violet" />
       </div>
     </div>
   );

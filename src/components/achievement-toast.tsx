@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { ToastDismissProgressBar } from "@/components/toast-dismiss-progress-bar";
+import { TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
 import { Achievement } from "@/lib/types";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -33,7 +35,7 @@ export function AchievementToast({
 
       const timeout = window.setTimeout(() => {
         onCloseRef.current();
-      }, 15000);
+      }, TOAST_AUTO_DISMISS_MS);
 
       return () => window.clearTimeout(timeout);
     },
@@ -73,7 +75,7 @@ export function AchievementToast({
       </div>
 
       <div
-        className={`app-notify-banner pointer-events-auto relative w-full max-w-md overflow-hidden rounded-[28px] p-4 backdrop-blur-xl ${shell}`}
+        className={`app-notify-banner pointer-events-auto relative flex w-full max-w-md flex-col overflow-hidden rounded-[28px] backdrop-blur-xl ${shell}`}
         role="status"
         aria-live="polite"
       >
@@ -81,7 +83,7 @@ export function AchievementToast({
           ✦
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 p-4">
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl shadow-[0_4px_14px_rgba(109,40,217,0.25)] ${
               isDarkMode ? "bg-violet-500 text-white" : "bg-violet-600 text-white"
@@ -119,6 +121,7 @@ export function AchievementToast({
             OK
           </button>
         </div>
+        <ToastDismissProgressBar key={achievement.id} isDarkMode={isDarkMode} accent="violet" />
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import { MovieSwipeCard } from "@/components/movie-swipe-card";
 import { AppRouteNetworkStatus } from "@/components/app-route-status";
 import { NetworkStatusBlock } from "@/components/network-status-block";
 import { SurfaceCard } from "@/components/surface-card";
+import { ToastDismissProgressBar } from "@/components/toast-dismiss-progress-bar";
 import { DiscoverCardSkeleton, SearchResultsSkeletonList } from "@/components/ui-skeleton";
 import { FAVORITE_GENRE_LIMIT } from "@/lib/discover-constants";
 import {
@@ -30,6 +31,7 @@ import {
   explainDiscoverSwipeMatch,
   type DiscoverSwipeMatchExplanation,
 } from "@/lib/match-score";
+import { TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
 import type { Movie } from "@/lib/types";
 
 const ONBOARDING_STEP_COUNT = 3;
@@ -902,7 +904,7 @@ export function DiscoverPage2Content({
         setLastSwipe((current) =>
           current?.movie.id === swipedMovie.id ? null : current,
         );
-      }, 5200);
+      }, TOAST_AUTO_DISMISS_MS);
 
       void swipeMovie(swipedMovie.id, decision);
     },
@@ -2054,13 +2056,13 @@ export function DiscoverPage2Content({
           aria-live="polite"
         >
           <div
-            className={`app-notify-banner pointer-events-auto relative w-full max-w-[min(100%,20rem)] overflow-hidden rounded-2xl border px-3 py-2.5 backdrop-blur-xl sm:max-w-md sm:rounded-[24px] sm:px-3.5 sm:py-3 ${
+            className={`app-notify-banner pointer-events-auto relative flex w-full max-w-[min(100%,20rem)] flex-col overflow-hidden rounded-2xl border backdrop-blur-xl sm:max-w-md sm:rounded-[24px] ${
               isDarkMode
                 ? "border-white/12 bg-slate-950/92 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.42)]"
                 : "border-slate-200/85 bg-white/95 text-slate-900 shadow-[0_10px_32px_rgba(124,58,237,0.1)]"
             }`}
           >
-            <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-3.5 sm:py-3">
               <div
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[1.05rem] leading-none shadow-[0_2px_10px_rgba(109,40,217,0.22)] sm:h-10 sm:w-10 sm:text-lg ${
                   isDarkMode ? "bg-violet-500 text-white" : "bg-violet-600 text-white"
@@ -2104,6 +2106,11 @@ export function DiscoverPage2Content({
                 Undo
               </button>
             </div>
+            <ToastDismissProgressBar
+              key={`${lastSwipe.movie.id}-${lastSwipe.decision}`}
+              isDarkMode={isDarkMode}
+              accent="violet"
+            />
           </div>
         </div>
       ) : null}
