@@ -16,6 +16,7 @@ import {
 import { useAppState } from "@/lib/app-state";
 import { computeMovieMatchPercent } from "@/lib/match-score";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useSegmentedPillDrag } from "@/lib/use-segmented-pill-drag";
 
 type ShareToast = { message: string; variant: "success" | "error" };
 type TopSharedPick = {
@@ -66,6 +67,7 @@ export default function PicksPage() {
   const [pendingWatchedMovieId, setPendingWatchedMovieId] = useState<string | null>(null);
   const [picksListTab, setPicksListTab] = useState<"queue" | "watched">("queue");
   const prevPicksListTabRef = useRef(picksListTab);
+  const picksTabPanelRef = useRef<HTMLDivElement | null>(null);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
@@ -90,6 +92,29 @@ export default function PicksPage() {
   );
   const premiumInsightsExpandedKeyRef = useRef(premiumInsightsExpandedKey);
   premiumInsightsExpandedKeyRef.current = premiumInsightsExpandedKey;
+
+  const reduceMotion = useMemo(() => {
+    if (!currentUserId) {
+      return false;
+    }
+    return data.settings[currentUserId]?.reduceMotion ?? false;
+  }, [currentUserId, data.settings]);
+
+  const picksListPillIndex = picksListTab === "queue" ? 0 : 1;
+  const onPicksListTabCommit = useCallback((index: number) => {
+    setPicksListTab(index === 0 ? "queue" : "watched");
+  }, []);
+
+  const picksPillDrag = useSegmentedPillDrag({
+    panelRef: picksTabPanelRef,
+    tabCount: 2,
+    activeIndex: picksListPillIndex,
+    enabled: acceptedMovies.length > 0,
+    reduceMotion,
+    trackPaddingPx: 8,
+    activeSlotSelector: '[data-picks-pill-tab="true"][data-picks-tab-active="true"]',
+    onIndexCommit: onPicksListTabCommit,
+  });
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") {
@@ -684,7 +709,13 @@ export default function PicksPage() {
 
         {acceptedMovies.length > 0 ? (
           <div
-            className={`fade-up-enter flex rounded-[var(--radius-lg)] p-1 ${
+            ref={picksTabPanelRef}
+            data-picks-pill-panel="true"
+            data-pill-dragging={picksPillDrag.isDragging ? "true" : undefined}
+            onTouchStart={picksPillDrag.onTouchStart}
+            className={`fade-up-enter relative flex overflow-hidden rounded-[var(--radius-lg)] p-1 ${
+              picksPillDrag.isDragging ? "touch-none" : "touch-manipulation"
+            } ${
               isDarkMode
                 ? "bg-white/[0.06] ring-1 ring-white/10"
                 : "bg-slate-100 ring-1 ring-slate-200/90"
@@ -693,41 +724,64 @@ export default function PicksPage() {
             aria-label="Picks lists"
             style={{ animationDelay: "24ms" }}
           >
+            <span
+              aria-hidden
+              className={`pointer-events-none absolute bottom-1 left-1 top-1 z-0 rounded-[10px] will-change-transform motion-reduce:will-change-auto ${
+                isDarkMode
+                  ? "bg-gradient-to-b from-violet-500/92 via-violet-600 to-violet-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_24px_rgba(109,40,217,0.32)]"
+                  : "bg-gradient-to-b from-violet-400 via-violet-500 to-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_22px_rgba(109,40,217,0.22)]"
+              }`}
+              style={picksPillDrag.pillTransformStyle}
+            />
             <button
               type="button"
               role="tab"
               aria-selected={picksListTab === "queue"}
-              onClick={() => setPicksListTab("queue")}
-              className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
-                picksListTab === "queue"
-                  ? isDarkMode
-                    ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
-                    : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
+              data-picks-pill-tab="true"
+              data-picks-tab-active={picksPillDrag.visualHighlightIndex === 0 ? true : undefined}
+              onClick={(e) => {
+                if (picksPillDrag.onSegmentClick(e)) {
+                  return;
+                }
+                setPicksListTab("queue");
+              }}
+              className={`picks-tab-label relative z-10 flex min-h-10 min-w-0 flex-1 flex-col items-center justify-center rounded-[10px] px-2 py-1.5 text-center transition-[transform,color] duration-300 ease-out motion-reduce:transition-colors motion-reduce:duration-150 ${
+                picksPillDrag.visualHighlightIndex === 0
+                  ? "text-white"
                   : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-slate-400 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:text-slate-200"
+                    : "text-slate-500 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:text-slate-800"
               }`}
             >
-              To watch
-              <span className="ml-1 tabular-nums font-semibold opacity-80">({queueCount})</span>
+              <span className="text-sm font-semibold leading-tight">
+                To watch
+                <span className="ml-1 tabular-nums font-semibold opacity-80">({queueCount})</span>
+              </span>
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={picksListTab === "watched"}
-              onClick={() => setPicksListTab("watched")}
-              className={`picks-tab-label min-h-10 flex-1 rounded-[11px] px-2 transition ${
-                picksListTab === "watched"
-                  ? isDarkMode
-                    ? "bg-violet-600/45 text-white shadow-sm ring-1 ring-violet-400/45"
-                    : "bg-violet-100 text-violet-900 shadow-sm ring-1 ring-violet-200/90"
+              data-picks-pill-tab="true"
+              data-picks-tab-active={picksPillDrag.visualHighlightIndex === 1 ? true : undefined}
+              onClick={(e) => {
+                if (picksPillDrag.onSegmentClick(e)) {
+                  return;
+                }
+                setPicksListTab("watched");
+              }}
+              className={`picks-tab-label relative z-10 flex min-h-10 min-w-0 flex-1 flex-col items-center justify-center rounded-[10px] px-2 py-1.5 text-center transition-[transform,color] duration-300 ease-out motion-reduce:transition-colors motion-reduce:duration-150 ${
+                picksPillDrag.visualHighlightIndex === 1
+                  ? "text-white"
                   : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-slate-400 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:text-slate-200"
+                    : "text-slate-500 active:scale-[0.97] motion-reduce:active:scale-100 [@media(hover:hover)_and_(pointer:fine)]:hover:text-slate-800"
               }`}
             >
-              Watched
-              <span className="ml-1 tabular-nums font-semibold opacity-80">({watchedCount})</span>
+              <span className="text-sm font-semibold leading-tight">
+                Watched
+                <span className="ml-1 tabular-nums font-semibold opacity-80">({watchedCount})</span>
+              </span>
             </button>
           </div>
         ) : null}
