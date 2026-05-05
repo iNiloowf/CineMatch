@@ -222,6 +222,38 @@ async function fetchSettingsRow(userId: string, supabaseAdmin: SupabaseClient) {
   };
 }
 
+/**
+ * Linked friends’ `settings.subscription_tier` can lag Stripe / Auth updates.
+ * Merge `app_metadata` so viewers see Pro-only surfaces (e.g. achievement badges on friend profile).
+ */
+async function fetchPartnerSettingsRowWithAuthTier(
+  partnerId: string,
+  supabaseAdmin: SupabaseClient,
+): Promise<SettingsRow | null> {
+  const base = await fetchSettingsRow(partnerId, supabaseAdmin);
+  if (!base.data) {
+    return null;
+  }
+  try {
+    const authUserResult = await supabaseAdmin.auth.admin.getUserById(partnerId);
+    const metadata = (authUserResult.data?.user?.app_metadata ?? {}) as AuthMetadataLike;
+    const metaTierPro = readSubscriptionTierFromMetadata(metadata) === "pro";
+    const metaAdmin = readAdminSimulateFromMetadata(metadata);
+    const dbTierPro = base.data.subscription_tier === "pro";
+    const dbAdmin = base.data.admin_mode_simulate_pro === true;
+    if (!metaTierPro && !metaAdmin && !dbTierPro && !dbAdmin) {
+      return base.data;
+    }
+    return {
+      ...base.data,
+      subscription_tier: metaTierPro || dbTierPro ? "pro" : "free",
+      admin_mode_simulate_pro: metaAdmin || dbAdmin,
+    };
+  } catch {
+    return base.data;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const session = await requireAuthenticatedUserWithAdmin(request);
   if (!session.ok) {
@@ -346,12 +378,14 @@ export async function GET(request: NextRequest) {
   const partnerSettingsResults =
     acceptedPartnerIds.length > 0
       ? await Promise.all(
-          acceptedPartnerIds.map((partnerId) => fetchSettingsRow(partnerId, supabaseAdmin)),
+          acceptedPartnerIds.map((partnerId) =>
+            fetchPartnerSettingsRowWithAuthTier(partnerId, supabaseAdmin),
+          ),
         )
       : [];
-  const partnerSettings = partnerSettingsResults
-    .map((r) => r.data)
-    .filter((row): row is SettingsRow => row != null);
+  const partnerSettings = partnerSettingsResults.filter(
+    (row): row is SettingsRow => row != null,
+  );
 
   return apiJsonOk(
     {
