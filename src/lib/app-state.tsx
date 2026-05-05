@@ -128,6 +128,26 @@ type AppStateContextValue = {
   dismissAccountSyncError: () => void;
   /** Soft refresh (e.g. tab focus); does not clear sync error state */
   refreshAccountData: () => void;
+  /** Immediate full account sync (no debounce). Friend Realtime + post-mutation. */
+  flushAccountDataRefresh: () => void;
+  /** Apply a friend link row locally so Sent / Friends updates before `/api/account-sync` returns. */
+  upsertLocalFriendLink: (args: {
+    link: {
+      id: string;
+      requester_id: string;
+      target_id: string;
+      status: string;
+      created_at: string;
+    };
+    partner?: {
+      id: string;
+      displayName: string;
+      publicHandle: string;
+      avatarText: string;
+      avatarImageUrl: string | null;
+    };
+  }) => void;
+  removeLocalFriendLink: (linkId: string) => void;
   achievements: Achievement[];
   unlockedAchievement: Achievement | null;
   dismissUnlockedAchievement: () => void;
@@ -1069,8 +1089,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const adminSubscriptionPreviewModeEnabled =
     currentSettings?.adminModeSimulatePro ?? false;
 
-  /** Coalesce burst refreshes (Realtime + focus + Friends UI) so we don’t hammer `/api/account-sync`. */
+  /** Coalesce burst refreshes (focus / online) so we don’t hammer `/api/account-sync`. Friend rows use `flushAccountDataRefresh`. */
   const accountRefreshDebounceRef = useRef<number | null>(null);
+  const flushAccountDataRefresh = useCallback(() => {
+    if (accountRefreshDebounceRef.current !== null) {
+      window.clearTimeout(accountRefreshDebounceRef.current);
+      accountRefreshDebounceRef.current = null;
+    }
+    setAccountRefreshKey((current) => current + 1);
+  }, []);
+
   const requestAccountDataRefresh = useCallback(() => {
     if (accountRefreshDebounceRef.current !== null) {
       window.clearTimeout(accountRefreshDebounceRef.current);
@@ -1078,7 +1106,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     accountRefreshDebounceRef.current = window.setTimeout(() => {
       accountRefreshDebounceRef.current = null;
       setAccountRefreshKey((current) => current + 1);
-    }, 500);
+    }, 200);
   }, []);
 
   useEffect(() => {
@@ -1542,7 +1570,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isReady]);
 
-  useSupabaseAccountRefreshChannels(currentUserId, requestAccountDataRefresh);
+  useSupabaseAccountRefreshChannels(currentUserId, flushAccountDataRefresh);
 
   useAccountSyncTriggers({
     enabled: Boolean(currentUserId),
@@ -3612,6 +3640,69 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setAccountSyncError(null);
   }, []);
 
+  const upsertLocalFriendLink = useCallback(
+    (args: {
+      link: {
+        id: string;
+        requester_id: string;
+        target_id: string;
+        status: string;
+        created_at: string;
+      };
+      partner?: {
+        id: string;
+        displayName: string;
+        publicHandle: string;
+        avatarText: string;
+        avatarImageUrl: string | null;
+      };
+    }) => {
+      if (!currentUserId) {
+        return;
+      }
+      const mapped = mapLinkRow(args.link as LinkRow);
+      const partnerId =
+        args.link.requester_id === currentUserId
+          ? args.link.target_id
+          : args.link.requester_id;
+      setData((current) => {
+        let next = current;
+        if (args.partner) {
+          next = ensureLocalUser(next, {
+            id: args.partner.id,
+            publicHandle: args.partner.publicHandle,
+            name: args.partner.displayName,
+            email: "",
+            avatar: args.partner.avatarText?.slice(0, 2) ?? "—",
+            avatarImageUrl: args.partner.avatarImageUrl ?? undefined,
+            bio: "",
+            city: "",
+          });
+        }
+        const cleaned = next.links.filter(
+          (l) =>
+            !(
+              l.users.includes(currentUserId) &&
+              l.users.includes(partnerId)
+            ),
+        );
+        return {
+          ...next,
+          links: [...cleaned, mapped],
+        };
+      });
+    },
+    [currentUserId],
+  );
+
+  const removeLocalFriendLink = useCallback((linkId: string) => {
+    setData((current) => ({
+      ...current,
+      links: current.links.filter((l) => l.id !== linkId),
+      sharedWatch: current.sharedWatch.filter((e) => e.pairKey !== linkId),
+    }));
+  }, []);
+
   useEffect(() => {
     if (!currentUserId) {
       queueMicrotask(() => {
@@ -3635,6 +3726,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         retryAccountSync,
         dismissAccountSyncError,
         refreshAccountData: requestAccountDataRefresh,
+        flushAccountDataRefresh,
+        upsertLocalFriendLink,
+        removeLocalFriendLink,
         achievements,
         unlockedAchievement,
         dismissUnlockedAchievement,

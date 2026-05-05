@@ -96,8 +96,17 @@ function UserProfileLinks({
 export default function FriendsPage() {
   const searchParams = useSearchParams();
   const isOnline = useOnlineStatus();
-  const { isDarkMode, currentUserId, currentUser, linkedUsers, unlinkUser, refreshAccountData, isReady } =
-    useAppState();
+  const {
+    isDarkMode,
+    currentUserId,
+    currentUser,
+    linkedUsers,
+    unlinkUser,
+    flushAccountDataRefresh,
+    upsertLocalFriendLink,
+    removeLocalFriendLink,
+    isReady,
+  } = useAppState();
 
   const tabFromUrl = searchParams.get("tab");
   const initialTab: TabId =
@@ -217,26 +226,26 @@ export default function FriendsPage() {
 
   const FRIENDS_LINKS_POLL_MS = 90_000;
 
-  /** One refresh when landing on Friends; tab switches use URL state only (full sync is debounced app-wide). */
+  /** One sync when landing on Friends (immediate so lists match the server quickly). */
   useEffect(() => {
     if (!currentUserId) {
       return;
     }
-    refreshAccountData();
-  }, [currentUserId, refreshAccountData]);
+    flushAccountDataRefresh();
+  }, [currentUserId, flushAccountDataRefresh]);
 
-  /** If Realtime is slow, still pick up accepts — infrequent to avoid rate limits and jank. */
+  /** Rare fallback poll; Realtime uses immediate flush. */
   useEffect(() => {
     if (!currentUserId) {
       return;
     }
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") {
-        refreshAccountData();
+        flushAccountDataRefresh();
       }
     }, FRIENDS_LINKS_POLL_MS);
     return () => window.clearInterval(id);
-  }, [currentUserId, refreshAccountData]);
+  }, [currentUserId, flushAccountDataRefresh]);
 
   const sentPending = useMemo(
     () =>
@@ -280,15 +289,37 @@ export default function FriendsPage() {
         },
         body: JSON.stringify({ publicHandle: handle }),
       });
-      const payload = (await res.json()) as { error?: string; kind?: string };
+      const payload = (await res.json()) as {
+        error?: string;
+        kind?: string;
+        link?: {
+          id: string;
+          requester_id: string;
+          target_id: string;
+          status: string;
+          created_at: string;
+        };
+        user?: {
+          id: string;
+          displayName: string;
+          publicHandle: string;
+          avatarText: string;
+          avatarImageUrl: string | null;
+        };
+      };
       if (!res.ok) {
         setActionMessage(payload.error ?? "Couldn’t send a request.");
         return;
       }
+      if (payload.link && payload.user) {
+        upsertLocalFriendLink({ link: payload.link, partner: payload.user });
+      } else if (payload.link) {
+        upsertLocalFriendLink({ link: payload.link });
+      }
       setActionMessage(
         payload.kind === "auto_accepted" ? "You’re now friends." : "Friend request sent.",
       );
-      refreshAccountData();
+      flushAccountDataRefresh();
     } catch {
       setActionMessage("Request failed. Try again.");
     } finally {
@@ -312,13 +343,27 @@ export default function FriendsPage() {
         },
         body: JSON.stringify({ linkId, accept }),
       });
-      const payload = (await res.json()) as { error?: string };
+      const payload = (await res.json()) as {
+        error?: string;
+        link?: {
+          id: string;
+          requester_id: string;
+          target_id: string;
+          status: string;
+          created_at: string;
+        };
+      };
       if (!res.ok) {
         setActionMessage(payload.error ?? "Couldn’t update that request.");
         return;
       }
+      if (accept && payload.link) {
+        upsertLocalFriendLink({ link: payload.link });
+      } else if (!accept) {
+        removeLocalFriendLink(linkId);
+      }
       setActionMessage(accept ? "Request accepted." : "Request declined.");
-      refreshAccountData();
+      flushAccountDataRefresh();
     } catch {
       setActionMessage("Update failed. Try again.");
     } finally {
@@ -326,7 +371,7 @@ export default function FriendsPage() {
     }
   };
 
-  const withdrawSentRequest = async (linkId: string) => {
+  const removeSentRequest = async (linkId: string) => {
     setActionMessage(null);
     setActionBusy(true);
     try {
@@ -345,11 +390,12 @@ export default function FriendsPage() {
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setActionMessage(payload.error ?? "Couldn’t withdraw that request.");
+        setActionMessage(payload.error ?? "Couldn’t remove that request.");
         return;
       }
-      setActionMessage("Request withdrawn.");
-      refreshAccountData();
+      removeLocalFriendLink(linkId);
+      setActionMessage("Request removed.");
+      flushAccountDataRefresh();
     } catch {
       setActionMessage("Something went wrong. Try again.");
     } finally {
@@ -818,7 +864,7 @@ export default function FriendsPage() {
           <SurfaceCard className="space-y-3">
             <h2 className="app-section-label">Sent</h2>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Outbox — waiting on them to accept. You can withdraw a request anytime before they respond.
+              Outbox — waiting on them to accept. Remove a pending request anytime before they respond.
             </p>
             {sentPending.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -854,15 +900,15 @@ export default function FriendsPage() {
                       <button
                         type="button"
                         disabled={actionBusy}
-                        onClick={() => void withdrawSentRequest(l.linkId)}
-                        aria-label={`Withdraw friend request to ${l.user.name}`}
+                        onClick={() => void removeSentRequest(l.linkId)}
+                        aria-label={`Remove friend request to ${l.user.name}`}
                         className={`min-h-10 w-full shrink-0 rounded-full border px-3 text-xs font-semibold sm:w-auto sm:min-w-[6.5rem] ${
                           isDarkMode
                             ? "border-white/20 text-slate-200 hover:bg-white/10"
                             : "border-slate-300 text-slate-800 hover:bg-slate-50"
                         } disabled:opacity-50`}
                       >
-                        Withdraw
+                        Remove
                       </button>
                     </li>
                   );
