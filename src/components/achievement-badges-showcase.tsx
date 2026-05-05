@@ -11,6 +11,11 @@ type AchievementBadgesShowcaseProps = {
   variant: "self" | "friend";
   /** Friend profile: show only the badge grid (no section title or intro paragraph). */
   compact?: boolean;
+  /**
+   * Friend profile: free members don’t show which badges they earned (Pro-only visibility).
+   * When true, ignore `earned` and show a short privacy notice instead.
+   */
+  friendAchievementsPrivate?: boolean;
 };
 
 export function AchievementBadgesShowcase({
@@ -18,12 +23,37 @@ export function AchievementBadgesShowcase({
   isDarkMode,
   variant,
   compact = false,
+  friendAchievementsPrivate = false,
 }: AchievementBadgesShowcaseProps) {
   const eyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
 
   const friendCompact = compact && variant === "friend";
+
+  if (variant === "friend" && friendAchievementsPrivate) {
+    const privacyClass = `text-center text-xs leading-relaxed ${
+      isDarkMode ? "text-slate-400" : "text-slate-500"
+    }`;
+    const text =
+      "Earned badges stay private on a free plan. They appear here when this member has Pro.";
+    if (friendCompact) {
+      return <p className={privacyClass}>{text}</p>;
+    }
+    return (
+      <div
+        className={`rounded-[22px] border px-4 py-5 text-center ${
+          isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200/80 bg-slate-50/80"
+        }`}
+      >
+        <p className={eyebrow}>Badges</p>
+        <p className={`mt-2 text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          Private
+        </p>
+        <p className={`mt-1 text-xs leading-5 ${privacyClass}`}>{text}</p>
+      </div>
+    );
+  }
 
   const badgeList = earned.map((achievement) => {
     const meta = getAchievementBadgeMeta(achievement.id);

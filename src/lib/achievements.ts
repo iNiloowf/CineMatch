@@ -1,3 +1,4 @@
+import { getRuntimeMinutes } from "@/lib/discover-quality";
 import type { Achievement, AppData, Movie } from "@/lib/types";
 
 export type AchievementMetrics = {
@@ -6,7 +7,10 @@ export type AchievementMetrics = {
   watchedSharedCount: number;
   acceptedLinksCount: number;
   mutualPickCount: number;
-  hasProSubscription: number;
+  /** Distinct titles marked watched (solo picks + shared list). */
+  watchedAnyCount: number;
+  /** Sum of TMDB runtimes (minutes) for those titles; excludes unknown runtime. */
+  watchedRuntimeMinutes: number;
 };
 
 export function getAchievementMetrics(data: AppData, userId: string): AchievementMetrics {
@@ -53,21 +57,52 @@ export function getAchievementMetrics(data: AppData, userId: string): Achievemen
     });
   }
 
+  const watchedTitleIds = new Set<string>();
+  for (const entry of data.watchedPickReviews) {
+    if (entry.userId === userId) {
+      watchedTitleIds.add(entry.movieId);
+    }
+  }
+  for (const link of links) {
+    for (const row of data.sharedWatch) {
+      if (row.pairKey === link.id && row.watched) {
+        watchedTitleIds.add(row.movieId);
+      }
+    }
+  }
+
+  const movieById = new Map(data.movies.map((m) => [m.id, m]));
+  let watchedRuntimeMinutes = 0;
+  for (const movieId of watchedTitleIds) {
+    const movie = movieById.get(movieId);
+    if (!movie) {
+      continue;
+    }
+    const mins = getRuntimeMinutes(movie.runtime);
+    if (mins != null) {
+      watchedRuntimeMinutes += mins;
+    }
+  }
+
   return {
     acceptedCount,
     swipeCount,
     watchedSharedCount,
     acceptedLinksCount,
     mutualPickCount: mutualPickIds.size,
-    hasProSubscription:
-      data.settings[userId]?.subscriptionTier === "pro" ||
-      data.settings[userId]?.adminModeSimulatePro
-        ? 1
-        : 0,
+    watchedAnyCount: watchedTitleIds.size,
+    watchedRuntimeMinutes,
   };
 }
 
-type AchievementKind = "accepts" | "swipes" | "watched" | "links" | "mutuals" | "pro";
+type AchievementKind =
+  | "accepts"
+  | "swipes"
+  | "watched"
+  | "links"
+  | "mutuals"
+  | "watchedAny"
+  | "watchedHours";
 
 type AchievementTemplate = {
   id: string;
@@ -116,6 +151,22 @@ const ACHIEVEMENT_TEMPLATES: AchievementTemplate[] = [
     kind: "swipes",
   },
   {
+    id: "watched-5",
+    title: "Five and Alive",
+    description: "Mark 5 movies as watched from picks or shared.",
+    target: 5,
+    requiresIds: ["first-pick"],
+    kind: "watchedAny",
+  },
+  {
+    id: "watchtime-20h",
+    title: "Marathon Mode",
+    description: "Log 20 hours of watched movie runtime.",
+    target: 20,
+    requiresIds: ["watched-5"],
+    kind: "watchedHours",
+  },
+  {
     id: "vault-25",
     title: "Deep Shelf",
     description: "Save 25 movies after filling your first shelf.",
@@ -147,13 +198,6 @@ const ACHIEVEMENT_TEMPLATES: AchievementTemplate[] = [
     requiresIds: ["connected"],
     kind: "mutuals",
   },
-  {
-    id: "pro-member",
-    title: "Pro Member",
-    description: "Unlock Pro by starting a subscription.",
-    target: 1,
-    kind: "pro",
-  },
 ];
 
 function rawMetric(template: AchievementTemplate, metrics: AchievementMetrics): number {
@@ -168,8 +212,10 @@ function rawMetric(template: AchievementTemplate, metrics: AchievementMetrics): 
       return metrics.acceptedLinksCount;
     case "mutuals":
       return metrics.mutualPickCount;
-    case "pro":
-      return metrics.hasProSubscription;
+    case "watchedAny":
+      return metrics.watchedAnyCount;
+    case "watchedHours":
+      return Math.floor(metrics.watchedRuntimeMinutes / 60);
     default:
       return 0;
   }
@@ -219,14 +265,18 @@ function buildDetailExplanation(
         return "After Explorer, you kept browsing until 60 swipes.";
       case "mutual-12":
         return "With active links, you and friends overlapped on 12+ titles.";
-      case "pro-member":
-        return "You activated Pro and unlocked premium account features.";
+      case "watched-5":
+        return "You marked at least five distinct titles watched from picks or shared.";
+      case "watchtime-20h":
+        return "Your finished titles add up to 20+ hours of runtime.";
       default:
         return template.description;
     }
   }
 
   const v = rawMetric(template, metrics);
+  const watchedHoursProgress = Math.floor(metrics.watchedRuntimeMinutes / 60);
+  const watchedMinutesRemain = Math.max(0, template.target * 60 - metrics.watchedRuntimeMinutes);
   switch (template.kind) {
     case "accepts":
       return `You have ${v} saved pick${v === 1 ? "" : "s"}; reach ${template.target} to unlock.`;
@@ -238,10 +288,12 @@ function buildDetailExplanation(
       return `You have ${v} active friend link${v === 1 ? "" : "s"}; reach ${template.target}.`;
     case "mutuals":
       return `You share ${v} mutual saved title${v === 1 ? "" : "s"} with friends; reach ${template.target}.`;
-    case "pro":
-      return v >= 1
-        ? "Pro is active on your account."
-        : "Activate Pro in Settings > Subscription to unlock this badge.";
+    case "watchedAny":
+      return `You finished ${v} distinct title${v === 1 ? "" : "s"}; reach ${template.target}.`;
+    case "watchedHours":
+      return `You have about ${watchedHoursProgress} logged hour${
+        watchedHoursProgress === 1 ? "" : "s"
+      } of runtime; reach ${template.target}h (~${watchedMinutesRemain} min to go).`;
     default:
       return template.description;
   }

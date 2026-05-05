@@ -16,6 +16,7 @@ import {
 import { partitionAchievements } from "@/lib/achievement-utils";
 import { shareMovieDeepLink } from "@/lib/share-movie-link";
 import { useAppState } from "@/lib/app-state";
+import { getEffectiveSubscriptionTier } from "@/lib/subscription-tier";
 import type { Movie } from "@/lib/types";
 
 export default function FriendProfilePage() {
@@ -68,6 +69,13 @@ export default function FriendProfilePage() {
     () => partitionAchievements(achievements).completed,
     [achievements],
   );
+
+  const friendShowsAchievementBadges = useMemo(() => {
+    if (!userId) {
+      return false;
+    }
+    return getEffectiveSubscriptionTier(data.settings[userId]) === "pro";
+  }, [data.settings, userId]);
 
   const savedMovies = useMemo(
     () => (userId ? getSavedMoviesForUser(data, userId) : []),
@@ -968,6 +976,7 @@ export default function FriendProfilePage() {
             isDarkMode={isDarkMode}
             variant="friend"
             compact
+            friendAchievementsPrivate={!friendShowsAchievementBadges}
           />
         </div>
       </SurfaceCard>

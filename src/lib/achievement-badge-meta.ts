@@ -37,6 +37,16 @@ export const ACHIEVEMENT_BADGE_BY_ID: Record<string, AchievementBadgeMeta> = {
     gradient: "from-sky-400 via-indigo-500 to-violet-800",
     caption: "20 swipes",
   },
+  "watched-5": {
+    glyph: "5",
+    gradient: "from-lime-400 via-emerald-500 to-teal-800",
+    caption: "5 watched",
+  },
+  "watchtime-20h": {
+    glyph: "20h",
+    gradient: "from-orange-400 via-red-500 to-rose-900",
+    caption: "20h runtime",
+  },
   "vault-25": {
     glyph: "25",
     gradient: "from-indigo-500 via-violet-600 to-slate-900",
@@ -56,11 +66,6 @@ export const ACHIEVEMENT_BADGE_BY_ID: Record<string, AchievementBadgeMeta> = {
     glyph: "12",
     gradient: "from-emerald-400 via-teal-500 to-cyan-800",
     caption: "12 mutual",
-  },
-  "pro-member": {
-    glyph: "PRO",
-    gradient: "from-amber-300 via-yellow-500 to-orange-600",
-    caption: "Pro member",
   },
 };
 
