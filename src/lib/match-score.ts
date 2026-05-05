@@ -22,11 +22,19 @@ type MatchContext = {
   genreAffinityWeights?: Map<string, number>;
   /** Decayed cumulative weight from Discover passes on genres (downweights). */
   rejectedGenreWeights?: Map<string, number>;
+  /**
+   * Multiplier on pass/reject penalties (default 1). Deck ordering uses 0 so “Next” doesn’t
+   * reshuffle the queue; on-card match uses {@link DISCOVER_REJECT_SWIPE_MATCH_DISPLAY_SCALE}.
+   */
+  rejectedSwipeImpactScale?: number;
   onboarding?: Pick<
     OnboardingPreferences,
     "favoriteGenres" | "dislikedGenres" | "mediaPreference"
   > | null;
 };
+
+/** Dampens how much recent Discover passes move the match % — profile + picks stay primary. */
+const DISCOVER_REJECT_SWIPE_MATCH_DISPLAY_SCALE = 0.35;
 
 function normalizeGenreSet(values: Iterable<string> | undefined) {
   const set = new Set<string>();
@@ -52,6 +60,7 @@ export function computeMovieMatchPercent(
   const dislikedGenres = normalizeGenreSet(context?.onboarding?.dislikedGenres);
   const affinity = context?.genreAffinityWeights;
   const rejectedW = context?.rejectedGenreWeights;
+  const rejectImpact = context?.rejectedSwipeImpactScale ?? 1;
 
   const movieGenres = movie.genre
     .map((genre) => genre.trim().toLowerCase())
@@ -68,6 +77,8 @@ export function computeMovieMatchPercent(
           add *= AFFINITY_OFF_FAVORITE_MULTIPLIER;
         }
         score += add;
+      } else if (w < 0) {
+        score += Math.max(-26, w * 2.65);
       }
     } else if (acceptedGenres.has(genre)) {
       score += 5.5;
@@ -81,8 +92,8 @@ export function computeMovieMatchPercent(
     }
 
     const rej = rejectedW?.get(genre) ?? 0;
-    if (rej > 0) {
-      score -= Math.min(18, rej * 6.2);
+    if (rej > 0 && rejectImpact > 0) {
+      score -= Math.min(18, rej * 6.2) * rejectImpact;
     }
   }
 
@@ -120,10 +131,13 @@ export function computeDiscoverPreferenceBlend(
       OnboardingPreferences,
       "favoriteGenres" | "dislikedGenres" | "mediaPreference"
     >;
+    /** 0 = ignore Discover pass history for this score (deck sort). Default 1. */
+    rejectedSwipeImpact?: number;
   },
 ): number {
   const w = Math.max(0, Math.min(1, personalizationWeight));
   const cold = 1 - w;
+  const rejImpact = opts.rejectedSwipeImpact ?? 1;
   const onboardingOnly = computeMovieMatchPercent(movie, {
     onboarding: opts.onboarding,
   });
@@ -131,6 +145,7 @@ export function computeDiscoverPreferenceBlend(
     genreAffinityWeights: opts.genreAffinity,
     rejectedGenreWeights: opts.rejectedGenreWeights,
     onboarding: opts.onboarding,
+    rejectedSwipeImpactScale: rejImpact,
   });
   return cold * onboardingOnly + w * full;
 }
@@ -163,6 +178,7 @@ export function computeDiscoverSwipeMatchPercent(
       genreAffinity: options.genreAffinity,
       rejectedGenreWeights: options.rejectedGenreWeights,
       onboarding: options.onboarding,
+      rejectedSwipeImpact: DISCOVER_REJECT_SWIPE_MATCH_DISPLAY_SCALE,
     },
   );
   const nudge =

@@ -28,6 +28,7 @@ import {
 } from "@/lib/discover-session";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import {
+  computeDiscoverSwipeMatchPercent,
   explainDiscoverSwipeMatch,
   type DiscoverSwipeMatchExplanation,
 } from "@/lib/match-score";
@@ -422,9 +423,30 @@ export function DiscoverPage2Content({
 
   const rankQueueByGenreMatchStrength = useCallback(
     (queue: Movie[], genres: string[]) => {
+      const calendarYear = new Date().getFullYear();
+      const tasteMatch = (movie: Movie) =>
+        computeDiscoverSwipeMatchPercent(movie, {
+          genreAffinity: discoverGenreAffinity,
+          rejectedGenreWeights: discoverRejectedGenreWeights,
+          onboarding: onboardingPreferences,
+          tasteYear: discoverTasteYear,
+          calendarYear,
+          personalizationWeight: discoverPersonalizationWeight,
+        });
+
       if (genres.length === 0) {
-        return queue;
+        return [...queue]
+          .map((movie, index) => ({ movie, index }))
+          .sort((left, right) => {
+            const d = tasteMatch(right.movie) - tasteMatch(left.movie);
+            if (d !== 0) {
+              return d;
+            }
+            return left.index - right.index;
+          })
+          .map((entry) => entry.movie);
       }
+
       const selected = new Set(genres);
       return queue
         .map((movie, index) => {
@@ -436,11 +458,21 @@ export function DiscoverPage2Content({
           if (left.matchCount !== right.matchCount) {
             return right.matchCount - left.matchCount;
           }
+          const d = tasteMatch(right.movie) - tasteMatch(left.movie);
+          if (d !== 0) {
+            return d;
+          }
           return left.index - right.index;
         })
         .map((entry) => entry.movie);
     },
-    [],
+    [
+      discoverGenreAffinity,
+      discoverRejectedGenreWeights,
+      discoverPersonalizationWeight,
+      discoverTasteYear,
+      onboardingPreferences,
+    ],
   );
 
   const filteredQueue = useMemo(() => {

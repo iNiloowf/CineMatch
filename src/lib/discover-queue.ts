@@ -5,6 +5,7 @@ import {
   buildRejectedGenreWeights,
   computeDiscoverPersonalizationWeight,
   computeTasteYearProfile,
+  normalizeDiscoverGenreKey,
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
 import { computeDiscoverPreferenceBlend } from "@/lib/match-score";
@@ -152,6 +153,28 @@ function pre2017RarityPenalty(
   const yearsBefore2017 = 2017 - movieYear;
   const raw = -Math.min(32, 6.5 + yearsBefore2017 * 0.28);
   return classicEngaged ? raw * CLASSIC_PRE_2017_PENALTY_RETAIN : raw;
+}
+
+/** Drop titles that touch any onboarding “genres to skip” (case-insensitive, real genres only). */
+function movieTouchesDislikedGenres(movie: Movie, dislikedGenres: string[]): boolean {
+  if (!dislikedGenres.length) {
+    return false;
+  }
+  const disliked = new Set(
+    dislikedGenres
+      .map((g) => normalizeDiscoverGenreKey(g))
+      .filter((g): g is string => g != null),
+  );
+  if (disliked.size === 0) {
+    return false;
+  }
+  for (const raw of movie.genre) {
+    const key = normalizeDiscoverGenreKey(raw);
+    if (key && disliked.has(key)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** First real genre tag (not Movie/Series) — used to mix the deck so it isn’t one-note. */
@@ -325,6 +348,7 @@ export function buildDiscoverQueue(options: {
             genreAffinity,
             rejectedGenreWeights,
             onboarding: onboardingPreferences,
+            rejectedSwipeImpact: 0,
           },
         );
 
@@ -334,8 +358,9 @@ export function buildDiscoverQueue(options: {
             ? 5
             : -6;
 
+        const popScale = currentUserId ? 0.36 : 1;
         const pop =
-          popularityBoost(movie) * (1 + 0.55 * cold);
+          popularityBoost(movie) * (1 + 0.55 * cold) * popScale;
         const yearGuest = Math.min(
           22,
           ((movie.year - 1980) / Math.max(1, calendarYear - 1980)) * 22,
@@ -348,6 +373,7 @@ export function buildDiscoverQueue(options: {
         const yearScore = currentUserId
           ? (1 - personalizationW) * yearGuest + personalizationW * yearPersonal
           : yearGuest;
+        const yearScale = currentUserId ? 0.62 : 1;
 
         const recencyDeck = recencyDeckBoost(movie.year, calendarYear, tasteYear);
         const staleReleasePenalty = pre2023DiscoverPenalty(
@@ -360,11 +386,11 @@ export function buildDiscoverQueue(options: {
         );
 
         return (
-          preferenceMatchScore * 1.24 +
+          preferenceMatchScore * 3.35 +
           mediaPreferenceBonus +
           pop * 1.28 +
-          yearScore +
-          recencyDeck +
+          yearScore * yearScale +
+          recencyDeck * (currentUserId ? 0.55 : 1) +
           staleReleasePenalty +
           pre2017Rarity
         );
@@ -402,7 +428,8 @@ export function buildDiscoverQueue(options: {
       (movie) =>
         passesDiscoverListEligibility(movie, calendarYear) &&
         !hiddenMovieIds.has(movie.id) &&
-        !hiddenTitleKeys.has(normalizeDiscoverTitleKey(movie.title)),
+        !hiddenTitleKeys.has(normalizeDiscoverTitleKey(movie.title)) &&
+        !movieTouchesDislikedGenres(movie, onboardingPreferences.dislikedGenres),
     );
     return rotateDiscoverQueue(diversifyDiscoverQueue(sortDiscoverQueue(filtered)));
   }

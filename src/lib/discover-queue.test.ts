@@ -87,6 +87,26 @@ describe("discover-queue", () => {
     expect(q.map((m) => m.id)).toContain("ok");
   });
 
+  it("excludes titles that include an onboarding disliked genre", () => {
+    const horror = { ...mkMovie("h1"), genre: ["Horror", "Thriller"] };
+    const comedy = { ...mkMovie("c1"), genre: ["Comedy"] };
+    const ob: OnboardingPreferences = {
+      ...onboarding,
+      dislikedGenres: ["Horror"],
+    };
+    const q = buildDiscoverQueue({
+      movies: [horror, comedy],
+      swipes: [],
+      currentUserId: "u1",
+      discoverShuffleSeed: "s",
+      discoverStartOffset: 0,
+      discoverVisibilityTimestamp: Date.now(),
+      onboardingPreferences: ob,
+    });
+    expect(q.map((m) => m.id)).not.toContain("h1");
+    expect(q.map((m) => m.id)).toContain("c1");
+  });
+
   it("buildDiscoverQueue hides accepted swipes for current user", () => {
     const a = mkMovie("a");
     const b = mkMovie("b");

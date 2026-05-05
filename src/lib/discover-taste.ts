@@ -51,7 +51,7 @@ export function mergePickEngagementIntoGenreCounts(
     if (!movie) {
       continue;
     }
-    const weight = recommended ? 2.35 : 0.42;
+    const weight = recommended ? 2.35 : -1.15;
     movie.genre.forEach((entry) => {
       const key = normalizeDiscoverGenreKey(entry);
       if (!key) {
