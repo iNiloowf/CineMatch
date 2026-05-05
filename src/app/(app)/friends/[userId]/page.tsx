@@ -635,16 +635,15 @@ export default function FriendProfilePage() {
                 <p
                   className={`text-sm font-semibold leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}
                 >
-                  Titles they loved after watching
+                  Loved after watching
                 </p>
                 <p className={`text-[11px] leading-snug ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                  From Picks — marked Recommended on their profile. Only people they’re linked with can see this
-                  list.
+                  Recommended on Picks · only linked friends see this.
                 </p>
               </>
             ) : (
               <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
-                Titles they loved after watching
+                Loved after watching
               </p>
             )}
           </div>
@@ -675,7 +674,7 @@ export default function FriendProfilePage() {
             id="friend-recommends-panel"
             role="region"
             aria-labelledby="friend-recommends-toggle"
-            className="px-5 pb-5 pt-0 sm:px-6"
+            className="px-5 pb-5 pt-4 sm:px-6 sm:pt-5"
           >
             {partnerRecommendations.length === 0 ? (
               <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -841,7 +840,7 @@ export default function FriendProfilePage() {
             id="friend-saved-panel"
             role="region"
             aria-labelledby="friend-saved-toggle"
-            className="flex flex-col gap-6 px-5 pb-5 pt-0 sm:px-6"
+            className="flex flex-col gap-6 px-5 pb-5 pt-4 sm:px-6 sm:pt-5"
           >
             {addMessage ? (
               <p
