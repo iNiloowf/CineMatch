@@ -376,6 +376,17 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
   const bodyOpen = isExpanded && !isClosing && panelReveal;
   const gridRowsFr: "0fr" | "1fr" = bodyOpen ? "1fr" : "0fr";
   const showExpandedChrome = isExpanded && !isClosing;
+  const showCollapsedSubtitle = !isExpanded && !isClosing;
+
+  const collapsedTileSubtitle = useMemo(() => {
+    if (!hasProAccess) {
+      return "Taste overlap & genre picks — Pro";
+    }
+    if (!insightsPartner) {
+      return "Who you match with — add a link";
+    }
+    return "Shared taste & suggestions for two";
+  }, [hasProAccess, insightsPartner]);
 
   const tileSurface = isDarkMode
     ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
@@ -438,6 +449,12 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                       </p>
                     )}
                   </>
+                ) : showCollapsedSubtitle ? (
+                  <p
+                    className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
+                  >
+                    {collapsedTileSubtitle}
+                  </p>
                 ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -524,28 +541,48 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                       ) : (
                         <div className="space-y-2 sm:space-y-3">
                           {acceptedConnectedPartners.length > 1 ? (
-                            <label className="block space-y-1">
+                            <label className="block space-y-1.5">
                               <span
-                                className={`text-[10px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}
+                                className={`block text-[10px] font-semibold uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}
                               >
                                 Compare with
                               </span>
-                              <select
-                                value={insightsPartner.id}
-                                onChange={(e) => setInsightsPartnerId(e.target.value)}
-                                aria-label="Choose friend for Premium insight"
-                                className={`w-full rounded-xl border px-3 py-2 text-sm font-medium outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/25 ${
-                                  isDarkMode
-                                    ? "border-white/14 bg-white/[0.06] text-white"
-                                    : "border-slate-200 bg-white text-slate-900"
-                                }`}
-                              >
-                                {acceptedConnectedPartners.map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.name}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="relative">
+                                <select
+                                  value={insightsPartner.id}
+                                  onChange={(e) => setInsightsPartnerId(e.target.value)}
+                                  aria-label="Choose friend for Premium insight"
+                                  className={`w-full min-h-[2.75rem] cursor-pointer appearance-none rounded-xl border py-2.5 pl-3 pr-11 text-left text-sm font-medium shadow-none transition outline-none focus-visible:border-violet-400 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-500/40 motion-reduce:transition-none ${
+                                    isDarkMode
+                                      ? "border-white/20 bg-white/[0.08] text-white [&:focus-visible]:bg-white/[0.1]"
+                                      : "border-slate-200/95 bg-white text-slate-900"
+                                  }`}
+                                >
+                                  {acceptedConnectedPartners.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <span
+                                  className={`pointer-events-none absolute bottom-0 right-0 top-0 flex w-11 items-center justify-center border-l ${
+                                    isDarkMode ? "border-white/12" : "border-slate-200/90"
+                                  }`}
+                                  aria-hidden
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    className={`h-4 w-4 shrink-0 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="m6 9 6 6 6-6" />
+                                  </svg>
+                                </span>
+                              </div>
                             </label>
                           ) : null}
                           {tasteOverlap ? (
