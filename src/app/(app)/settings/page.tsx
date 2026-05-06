@@ -777,6 +777,7 @@ export default function SettingsPage() {
       {currentUser ? (
         <SurfaceCard
           shimmer={false}
+          interactive={false}
           className="fade-up-enter !p-0 overflow-hidden"
           style={{ animationDelay: "0ms" }}
         >
@@ -828,7 +829,7 @@ export default function SettingsPage() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "40ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "40ms" }} interactive={false}>
         <p className={sectionEyebrow}>Appearance</p>
         <div className="mt-3.5 space-y-4">
           <SettingToggle
@@ -852,7 +853,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "75ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "75ms" }} interactive={false}>
         <p className={sectionEyebrow}>Notifications</p>
         <div className="mt-3.5 space-y-4">
           <SettingToggle
@@ -864,7 +865,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "110ms" }}>
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "110ms" }} interactive={false}>
         <p className={sectionEyebrow}>Subscription</p>
         <div
           className={`mt-3.5 w-full min-w-0 rounded-[18px] border px-4 py-4 ${
@@ -1110,7 +1111,7 @@ export default function SettingsPage() {
       </SurfaceCard>
 
       <div className={preferencesDivider}>
-        <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "140ms" }}>
+        <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "140ms" }} interactive={false}>
           <div className="space-y-1.5">
             <p className={sectionEyebrow}>Progress</p>
             <p
@@ -1217,7 +1218,7 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "160ms" }}>
+      <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "160ms" }} interactive={false}>
         <p className={sectionEyebrow}>Legal</p>
         <p className={`text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
           Review app policies and terms before using CineMatch.
