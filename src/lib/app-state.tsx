@@ -31,7 +31,10 @@ import {
   computeTasteYearProfile,
 } from "@/lib/discover-taste";
 import type { DiscoverPickEngagement } from "@/lib/discover-taste";
-import { CURRENT_USER_KEY } from "@/lib/app-state/constants";
+import {
+  CURRENT_USER_KEY,
+  onboardingIntroSessionStorageKey,
+} from "@/lib/app-state/constants";
 import { toPartnerViewUser } from "@/lib/app-state/partner-user";
 import { useAppToasts } from "@/lib/hooks/use-app-toasts";
 import { useDiscoverDeckSession } from "@/lib/hooks/use-discover-deck-session";
@@ -47,6 +50,7 @@ import {
 } from "@/lib/supabase/client";
 import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
 import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
+import { parseOnboardingPreferencesFromJson } from "@/lib/onboarding-preferences-json";
 import {
   getStoredAccountSnapshot,
   persistAccountSnapshot,
@@ -1323,6 +1327,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       seedSeenAchievementsFromHydratedData(activeUserId, mergedNoSettings);
       return mergedNoSettings;
     });
+
+    const serverOnboarding = parseOnboardingPreferencesFromJson(
+      payload.settings?.onboarding_preferences,
+    );
+    if (serverOnboarding) {
+      queueMicrotask(() => {
+        setOnboardingPreferences(serverOnboarding);
+        persistOnboardingPreferences(activeUserId, serverOnboarding);
+      });
+    }
 
     if (payload.settings) {
       const dbDarkMode = mapSettingsRow(payload.settings).darkMode;
@@ -3671,6 +3685,26 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     setOnboardingPreferences(completedPreferences);
     persistOnboardingPreferences(currentUserId, completedPreferences);
+
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && isSupabaseConfigured()) {
+      void (async () => {
+        const up = await supabase
+          .from("settings")
+          .update({
+            onboarding_preferences: completedPreferences,
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("user_id", currentUserId);
+        const upError = up.error as { message?: string; code?: string } | null;
+        if (
+          upError &&
+          isMissingOptionalSettingsColumnError(upError, "onboarding_preferences")
+        ) {
+          return;
+        }
+      })();
+    }
   };
 
   const resetOnboarding = async () => {
@@ -3678,9 +3712,39 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.removeItem(
+          onboardingIntroSessionStorageKey(currentUserId),
+        );
+      } catch {
+        // Ignore storage failures.
+      }
+    }
+
     const clearedPreferences = { ...DEFAULT_ONBOARDING_PREFERENCES };
     setOnboardingPreferences(clearedPreferences);
     persistOnboardingPreferences(currentUserId, clearedPreferences);
+
+    const supabase = getSupabaseBrowserClient();
+    if (supabase && isSupabaseConfigured()) {
+      void (async () => {
+        const up = await supabase
+          .from("settings")
+          .update({
+            onboarding_preferences: null,
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("user_id", currentUserId);
+        const upError = up.error as { message?: string; code?: string } | null;
+        if (
+          upError &&
+          isMissingOptionalSettingsColumnError(upError, "onboarding_preferences")
+        ) {
+          return;
+        }
+      })();
+    }
   };
 
   const retryAccountSync = useCallback(() => {

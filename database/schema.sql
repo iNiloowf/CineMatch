@@ -91,6 +91,9 @@ create table if not exists public.settings (
   updated_at timestamptz not null default now()
 );
 
+alter table public.settings
+  add column if not exists onboarding_preferences jsonb;
+
 create table if not exists public.movies (
   id text primary key,
   title text not null,

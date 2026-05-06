@@ -10,6 +10,7 @@ type SupabaseErrorLike = {
 type AuthMetadataLike = Record<string, unknown> | null | undefined;
 
 let settingsSupportsReduceMotion: boolean | null = null;
+let settingsSupportsOnboardingPreferences: boolean | null = null;
 
 function isMissingReduceMotionColumnError(error: SupabaseErrorLike) {
   if (!error) {
@@ -72,23 +73,43 @@ export async function fetchSettingsRowForSync(
 ): Promise<{ data: SettingsRow | null; error: SupabaseErrorLike }> {
   const baseSelect =
     "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync";
-  const selectWithAllOptionalColumns = `${baseSelect}, reduce_motion, subscription_tier, admin_mode_simulate_pro`;
+  const selectCoreOptional = `${baseSelect}, reduce_motion, subscription_tier, admin_mode_simulate_pro`;
   const selectWithoutSubscriptionColumns = `${baseSelect}, reduce_motion`;
   const selectWithoutOptionalColumns = baseSelect;
 
-  const primarySelect =
+  const basePrimarySelect =
     settingsSupportsReduceMotion === false
       ? selectWithoutSubscriptionColumns
-      : selectWithAllOptionalColumns;
+      : selectCoreOptional;
+  const selectToUse =
+    settingsSupportsOnboardingPreferences === false
+      ? basePrimarySelect
+      : `${basePrimarySelect}, onboarding_preferences`;
 
-  const primaryResult = await supabaseClient
+  let primaryResult = await supabaseClient
     .from("settings")
-    .select(primarySelect)
+    .select(selectToUse)
     .eq("user_id", activeUserId)
     .maybeSingle();
 
+  if (primaryResult.error) {
+    const pe = primaryResult.error as SupabaseErrorLike;
+    const missingOnboarding = isMissingOptionalSettingsColumnError(
+      pe,
+      "onboarding_preferences",
+    );
+    if (missingOnboarding && settingsSupportsOnboardingPreferences !== false) {
+      settingsSupportsOnboardingPreferences = false;
+      primaryResult = await supabaseClient
+        .from("settings")
+        .select(basePrimarySelect)
+        .eq("user_id", activeUserId)
+        .maybeSingle();
+    }
+  }
+
   if (!primaryResult.error) {
-    if (primarySelect === selectWithAllOptionalColumns) {
+    if (settingsSupportsReduceMotion !== false) {
       settingsSupportsReduceMotion = true;
       if (!primaryResult.data) {
         const authSubscriptionFallback = await getAuthSubscriptionFallback(supabaseClient);

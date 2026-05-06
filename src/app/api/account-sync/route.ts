@@ -26,6 +26,7 @@ type SettingsRow = {
   reduce_motion?: boolean | null;
   subscription_tier?: "free" | "pro" | null;
   admin_mode_simulate_pro?: boolean | null;
+  onboarding_preferences?: unknown | null;
 };
 
 type LinkRow = {
@@ -141,18 +142,31 @@ function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
 }
 
 async function fetchSettingsRow(userId: string, supabaseAdmin: SupabaseClient) {
-  const fullSelect =
+  const fullSelectBase =
     "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion, subscription_tier, admin_mode_simulate_pro";
+  const fullSelectWithOnboarding = `${fullSelectBase}, onboarding_preferences`;
   const fallbackSelect =
     "user_id, dark_mode, notifications, autoplay_trailers, hide_spoilers, cellular_sync, reduce_motion";
 
-  const fullResult = await supabaseAdmin
+  let fullResult = await supabaseAdmin
     .from("settings")
-    .select(fullSelect)
+    .select(fullSelectWithOnboarding)
     .eq("user_id", userId)
     .maybeSingle();
 
-  const fullError = fullResult.error as { message?: string; code?: string } | null;
+  let fullError = fullResult.error as { message?: string; code?: string } | null;
+  if (
+    fullError &&
+    isMissingOptionalSettingsColumnError(fullError, "onboarding_preferences")
+  ) {
+    fullResult = await supabaseAdmin
+      .from("settings")
+      .select(fullSelectBase)
+      .eq("user_id", userId)
+      .maybeSingle();
+    fullError = fullResult.error as { message?: string; code?: string } | null;
+  }
+
   if (!fullError) {
     if (!fullResult.data) {
       const authUserResult = await supabaseAdmin.auth.admin.getUserById(userId);

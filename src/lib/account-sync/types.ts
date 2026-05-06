@@ -34,6 +34,8 @@ export type SettingsRow = {
   reduce_motion?: boolean | null;
   subscription_tier?: "free" | "pro" | null;
   admin_mode_simulate_pro?: boolean | null;
+  /** Discover onboarding payload when the column exists; null / omitted before first completion. */
+  onboarding_preferences?: unknown | null;
 };
 
 export type SwipeRow = {
