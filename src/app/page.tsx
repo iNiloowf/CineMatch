@@ -7,7 +7,48 @@ import { SurfaceCard } from "@/components/surface-card";
 import { LegalPolicyModal } from "@/components/legal-policy-modal";
 import { useAppState } from "@/lib/app-state";
 import { loginFormSchema, MIN_AUTH_PASSWORD_LEN } from "@/lib/auth-form-schemas";
+import { readSignupPendingEmail } from "@/lib/signup-pending-email";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+
+function authCallbackParamsOnAuthLanding(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const { search, hash } = window.location;
+  if (
+    search.includes("code=") ||
+    search.includes("token_hash=") ||
+    search.includes("error=") ||
+    search.includes("error_description=")
+  ) {
+    return true;
+  }
+  if (!hash || hash === "#") {
+    return false;
+  }
+  const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+  return (
+    raw.includes("access_token=") ||
+    raw.includes("refresh_token=") ||
+    raw.includes("error=") ||
+    raw.includes("type=")
+  );
+}
+
+function forwardAuthLandingToCallback(): void {
+  const params = new URLSearchParams(
+    window.location.search.startsWith("?")
+      ? window.location.search.slice(1)
+      : window.location.search,
+  );
+  if (!params.has("next")) {
+    params.set("next", "/auth/email-confirmed");
+  }
+  const qs = params.toString();
+  window.location.replace(
+    `${window.location.origin}/auth/callback${qs ? `?${qs}` : ""}${window.location.hash}`,
+  );
+}
 
 type FieldErrors = {
   email?: string;
@@ -44,15 +85,32 @@ export default function SignInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
   const [isBootstrapTimedOut, setIsBootstrapTimedOut] = useState(false);
+  const [forceShowSignIn, setForceShowSignIn] = useState(false);
+  const [bootThemeDarkMode, setBootThemeDarkMode] = useState(false);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const root = document.documentElement;
+    const darkFromBoot =
+      root.classList.contains("theme-dark") || root.style.colorScheme === "dark";
+    setBootThemeDarkMode(darkFromBoot);
+  }, []);
 
   /**
    * Logged-in users on auth landing routes (`/` and WebView `/index.html`) must land on the app.
    * `router.replace` is sometimes a no-op in embedded WebViews/Capacitor, which leaves the
    * “Opening your movie lounge…” screen forever. Redirect as soon as we have a remembered user id
    * (do not wait for `isReady`) so slow native auth hydration cannot trap users here.
+   *
+   * Email confirmation links sometimes open the Site URL (`/`) with PKCE `code` or implicit hash
+   * tokens — forward those to `/auth/callback` first so users see `/auth/email-confirmed`.
+   * If the browser already created a session on `/` but signup pending state exists, send them to
+   * the confirmation screen before Discover.
    */
   useLayoutEffect(() => {
-    if (typeof window === "undefined" || !currentUserId) {
+    if (typeof window === "undefined") {
       return;
     }
     const normalizedPath = window.location.pathname.trim().toLowerCase();
@@ -65,8 +123,39 @@ export default function SignInPage() {
     if (!isAuthLandingPath) {
       return;
     }
+
+    if (authCallbackParamsOnAuthLanding()) {
+      forwardAuthLandingToCallback();
+      return;
+    }
+
+    if (!currentUserId) {
+      return;
+    }
+
+    if (readSignupPendingEmail()) {
+      window.location.replace(new URL("/auth/email-confirmed", window.location.origin).toString());
+      return;
+    }
+
+    console.warn("[auth-debug][signin-page] currentUserId present on auth landing; redirecting", {
+      currentUserId,
+      isReady,
+      path: normalizedPath,
+    });
     window.location.replace(new URL("/discover", window.location.origin).toString());
-  }, [currentUserId]);
+    console.warn("[auth-debug][signin-page] redirect attempt issued");
+  }, [currentUserId, isReady]);
+
+  useEffect(() => {
+    console.warn("[auth-debug][signin-page] state snapshot", {
+      isReady,
+      currentUserId,
+      isSubmitting,
+      isBootstrapTimedOut,
+      forceShowSignIn,
+    });
+  }, [currentUserId, forceShowSignIn, isBootstrapTimedOut, isReady, isSubmitting]);
 
   useEffect(() => {
     if (isReady || currentUserId) {
@@ -83,7 +172,30 @@ export default function SignInPage() {
     };
   }, [currentUserId, isReady]);
 
-  const pageBg = isDarkMode
+  useEffect(() => {
+    if (typeof window === "undefined" || !currentUserId || forceShowSignIn) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      console.warn(
+        "[auth-debug][signin-page] forcing sign-in UI after redirect stall",
+        { currentUserId, isReady, path: window.location.pathname },
+      );
+      setForceShowSignIn(true);
+      setAuthError(
+        "We restored your session but couldn’t open the app screen yet. Try Continue again.",
+      );
+    }, 7000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentUserId, forceShowSignIn, isReady]);
+
+  const loadingDarkMode = !isReady || currentUserId ? bootThemeDarkMode : isDarkMode;
+
+  const pageBg = loadingDarkMode
     ? "bg-[linear-gradient(180deg,#0f0b1a_0%,#181127_38%,#09090f_100%)]"
     : "bg-[radial-gradient(circle_at_top,rgba(196,181,253,0.45),transparent_32%),linear-gradient(180deg,#fcfbff_0%,#f5f7ff_36%,#eef4ff_72%,#fef7ff_100%)]";
 
@@ -120,15 +232,15 @@ export default function SignInPage() {
     </p>
   );
 
-  if ((!isReady && !isBootstrapTimedOut) || currentUserId) {
+  if (!forceShowSignIn && ((!isReady && !isBootstrapTimedOut) || currentUserId)) {
     return (
       <div className={`auth-landing-stage ${pageBg}`}>
-        <AuthLandingBlobs isDarkMode={isDarkMode} />
+        <AuthLandingBlobs isDarkMode={loadingDarkMode} />
         <div className="relative z-[1] mx-auto flex w-full min-w-0 max-w-md flex-1 flex-col items-center justify-center">
           <SurfaceCard className="auth-landing-stagger w-full text-center">
             <p
               className={`text-sm font-medium ${
-                isDarkMode ? "text-slate-200" : "text-slate-600"
+                loadingDarkMode ? "text-slate-200" : "text-slate-600"
               }`}
             >
               Opening your movie lounge…
@@ -141,6 +253,7 @@ export default function SignInPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.warn("[auth-debug][signin-page] handleSubmit start");
     setAuthError("");
     const parsed = loginFormSchema.safeParse({ email, password });
     if (!parsed.success) {
@@ -154,17 +267,20 @@ export default function SignInPage() {
     setFieldErrors({});
 
     setIsSubmitting(true);
+    setForceShowSignIn(false);
     const startedAt = Date.now();
     console.warn("[auth-debug] sign-in submit started");
 
     const result = await login(parsed.data.email, parsed.data.password);
 
     setIsSubmitting(false);
+    setForceShowSignIn(true);
     console.warn("[auth-debug] sign-in submit resolved", {
       ok: result.ok,
       shouldRedirect: result.ok ? Boolean(result.shouldRedirect) : false,
       elapsedMs: Date.now() - startedAt,
     });
+    console.warn("[auth-debug][signin-page] after login() returns", result);
 
     if (!result.ok) {
       setAuthError(result.message);
@@ -174,8 +290,21 @@ export default function SignInPage() {
     setAuthError("");
 
     if (result.shouldRedirect) {
+      console.warn("[auth-debug][signin-page] before redirect", {
+        path: window.location.pathname,
+      });
       // `router.push` may no-op in embedded WebViews; hard navigation is reliable.
       window.location.replace(new URL("/discover", window.location.origin).toString());
+      console.warn("[auth-debug][signin-page] after redirect attempt");
+      window.setTimeout(() => {
+        if (window.location.pathname.includes("discover")) {
+          return;
+        }
+        setForceShowSignIn(true);
+        setAuthError(
+          "Sign-in succeeded, but navigation did not complete. Please try Continue again.",
+        );
+      }, 2500);
     }
   };
 

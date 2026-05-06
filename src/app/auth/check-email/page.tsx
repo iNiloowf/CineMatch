@@ -51,6 +51,10 @@ export default function CheckEmailPage() {
     if (!isReady || !currentUserId) {
       return;
     }
+    if (readSignupPendingEmail()) {
+      router.replace("/auth/email-confirmed");
+      return;
+    }
     router.replace("/discover");
   }, [currentUserId, isReady, router]);
 
