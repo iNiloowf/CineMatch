@@ -1092,7 +1092,7 @@ export default function SettingsPage() {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "120ms" }}>
+      <SurfaceCard interactive={false}>
         <p className={sectionEyebrow}>Privacy</p>
         <div className="mt-3.5 space-y-4">
           <SettingToggle
@@ -1111,7 +1111,7 @@ export default function SettingsPage() {
       </SurfaceCard>
 
       <div className={preferencesDivider}>
-        <SurfaceCard className="fade-up-enter space-y-6" style={{ animationDelay: "140ms" }} interactive={false}>
+        <SurfaceCard className="space-y-6" interactive={false}>
           <div className="space-y-1.5">
             <p className={sectionEyebrow}>Progress</p>
             <p
