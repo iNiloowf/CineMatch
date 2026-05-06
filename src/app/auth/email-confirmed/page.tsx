@@ -51,12 +51,11 @@ export default function EmailConfirmedPage() {
           </p>
           <div className="space-y-2">
             <h1 className={`text-2xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-              You&apos;re all set
+              Email confirmed
             </h1>
             <p className={`text-sm leading-7 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-              Your email is verified and your CineMatch account is active. If you opened this link on the same device
-              where you signed up, you may already be signed in—otherwise use your email and password on the sign-in
-              page.
+              Your email has been confirmed successfully. You can now log in to CineMatch with your email and password.
+              If you opened this link on the same device where you signed up, you may already be signed in.
             </p>
           </div>
           {hasSession === null ? (
@@ -93,7 +92,7 @@ export default function EmailConfirmedPage() {
                         : "border-violet-300/90 bg-white/90 text-violet-800 hover:border-violet-400 hover:bg-violet-50"
                   }`}
                 >
-                  {hasSession ? "Open sign-in page" : "Sign in"}
+                  {hasSession ? "Open login page" : "Go to login"}
                 </Link>
               </div>
             </>
