@@ -439,9 +439,10 @@ export default function FriendsPage() {
       {actionMessage ? (
         <p
           role="status"
-          className={`rounded-2xl px-4 py-2 text-sm font-medium ${
+          className={`fade-up-enter rounded-2xl px-4 py-2 text-sm font-medium ${
             isDarkMode ? "border border-white/10 bg-white/5" : "border border-slate-200 bg-white"
           }`}
+          style={{ animationDelay: "24ms" }}
         >
           {actionMessage}
         </p>
@@ -453,6 +454,7 @@ export default function FriendsPage() {
             ? "border border-white/12 bg-[rgb(9,7,16)] shadow-[0_4px_22px_rgba(0,0,0,0.42)]"
             : "ui-glass-panel"
         }`}
+        style={{ animationDelay: "36ms" }}
       >
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <p id="friends-search-hint" className="sr-only">
@@ -521,9 +523,10 @@ export default function FriendsPage() {
       </div>
 
       <div
-        className="grid w-full min-w-0 grid-cols-2 gap-2 px-0.5 sm:gap-2.5 sm:px-1"
+        className="fade-up-enter grid w-full min-w-0 grid-cols-2 gap-2 px-0.5 sm:gap-2.5 sm:px-1"
         role="tablist"
         aria-label="Friends sections"
+        style={{ animationDelay: "72ms" }}
       >
         {TAB_META.map(({ id, label, hint }) => (
           <Link
@@ -576,7 +579,7 @@ export default function FriendsPage() {
       {tab === "friends" ? (
         <div className="space-y-[var(--app-section-gap)]">
           {q.trim().length > 0 ? (
-          <SurfaceCard className="space-y-3">
+          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "104ms" }}>
             {searchError ? (
               <p className="text-sm text-rose-500" role="alert">
                 {searchError}
@@ -715,7 +718,7 @@ export default function FriendsPage() {
           </SurfaceCard>
           ) : null}
 
-          <SurfaceCard className="space-y-4">
+          <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "132ms" }}>
             <h2 className="app-section-label">Your friends</h2>
             {friendsAccepted.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -799,7 +802,7 @@ export default function FriendsPage() {
 
       {tab === "requests" ? (
         <div className="space-y-[var(--app-section-gap)]">
-          <SurfaceCard className="space-y-3">
+          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "104ms" }}>
             <h2 className="app-section-label">Received</h2>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Inbox — accept or decline.
@@ -865,7 +868,7 @@ export default function FriendsPage() {
             )}
           </SurfaceCard>
 
-          <SurfaceCard className="space-y-3">
+          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "132ms" }}>
             <h2 className="app-section-label">Sent</h2>
             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Outbox — waiting on them to accept. Remove a pending request anytime before they respond.
