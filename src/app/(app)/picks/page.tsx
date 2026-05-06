@@ -505,6 +505,7 @@ export default function PicksPage() {
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
             style={{ animationDelay: "40ms" }}
+            interactive={false}
           >
             <p
               className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
@@ -536,7 +537,8 @@ export default function PicksPage() {
           </SurfaceCard>
           <SurfaceCard
             className="picks-stat-enter p-4 sm:p-5"
-            style={{ animationDelay: "120ms" }}
+            style={{ animationDelay: "40ms" }}
+            interactive={false}
           >
             <p
               className={`text-[10px] font-bold uppercase tracking-[0.18em] ${

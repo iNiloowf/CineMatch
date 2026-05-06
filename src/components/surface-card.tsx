@@ -30,6 +30,8 @@ type SurfaceCardProps = {
    * Dark mode adds `.glass-shimmer` (animated ::after). On some full-bleed cards that can read as a stray shadow/overlay after theme toggles — disable for those surfaces.
    */
   shimmer?: boolean;
+  /** Disable hover lift / hover-shadow emphasis for static metric cards. */
+  interactive?: boolean;
 } & ComponentPropsWithoutRef<"section">;
 
 export function SurfaceCard({
@@ -40,6 +42,7 @@ export function SurfaceCard({
   heroImageUrl,
   transparentShell = false,
   shimmer = true,
+  interactive = true,
   ...props
 }: SurfaceCardProps) {
   const { isDarkMode } = useAppState();
@@ -49,7 +52,9 @@ export function SurfaceCard({
     return (
       <section
         {...props}
-        className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] hover:-translate-y-0.5 ${className}`}
+        className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] ${
+          interactive ? "hover:-translate-y-0.5" : ""
+        } ${className}`}
       >
         {heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- external TMDB poster
@@ -86,19 +91,29 @@ export function SurfaceCard({
 
   /** Opaque dark fill — very transparent + backdrop-blur sampled stale frames (Discover → Settings, theme toggles). */
   const darkShell = transparentShell
-    ? "border border-white/16 bg-transparent shadow-[0_18px_50px_rgba(0,0,0,0.4)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+    ? `border border-white/16 bg-transparent shadow-[0_18px_50px_rgba(0,0,0,0.4)] ${
+        interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.45)]" : ""
+      }`
     : shimmer
-      ? "glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]"
-      : "border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]";
+      ? `glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
+          interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]" : ""
+        }`
+      : `border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
+          interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]" : ""
+        }`;
 
   const lightShell = transparentShell
     ? "border border-slate-200/80 bg-transparent shadow-[0_12px_40px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.45)]"
-    : "border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]";
+    : `border border-slate-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl ${
+        interactive ? "hover:shadow-[0_18px_48px_rgba(15,23,42,0.1)]" : ""
+      }`;
 
   return (
     <section
       {...props}
-      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] p-[var(--app-card-pad)] hover:-translate-y-0.5 ${
+      className={`ui-motion-surface fade-up-enter relative isolate w-full min-w-0 overflow-hidden rounded-[var(--radius-surface)] p-[var(--app-card-pad)] ${
+        interactive ? "hover:-translate-y-0.5" : ""
+      } ${
         isDarkMode ? darkShell : lightShell
       } ${className}`}
     >
