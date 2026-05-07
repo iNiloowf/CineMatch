@@ -3,8 +3,9 @@ import { z } from "zod";
 import { DISCOVER_REJECT_HIDE_WINDOW_MS } from "@/lib/discover-constants";
 import { passesDiscoverListEligibility } from "@/lib/discover-quality";
 import { forbiddenUserScopeResponse, requireAuthenticatedUser } from "@/server/api-auth-guard";
-import { apiJsonOk } from "@/server/api-response";
+import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
+import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { getDatabase, getMergedMovies } from "@/server/mock-db";
 import {
   fetchTmdbMediaByPicksId,
@@ -27,6 +28,21 @@ export async function GET(request: NextRequest) {
     parsedQuery.data;
   const userId = rawUserId?.trim() || undefined;
   const movieId = rawMovieId?.trim() || undefined;
+
+  if (!userId) {
+    const limited = checkRateLimit({
+      key: `movies:list:anon:${clientIp(request)}`,
+      max: 120,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limited.ok) {
+      return apiJsonError(429, "Too many requests. Please try again shortly.", {
+        code: API_ERROR_CODES.RATE_LIMITED,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+        request,
+      });
+    }
+  }
 
   if (userId) {
     const session = await requireAuthenticatedUser(request);

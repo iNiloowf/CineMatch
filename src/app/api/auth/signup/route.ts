@@ -13,6 +13,13 @@ const signupBodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV !== "development") {
+    return apiJsonError(404, "Not found.", {
+      code: API_ERROR_CODES.NOT_FOUND,
+      request,
+    });
+  }
+
   const parsedBody = await parseJsonBody(request, signupBodySchema);
   if (!parsedBody.ok) {
     return parsedBody.response;

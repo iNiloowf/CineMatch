@@ -3,6 +3,8 @@ import { z } from "zod";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { requireServerAdmin } from "@/server/admin-auth";
+import { checkRateLimit, clientIp } from "@/server/rate-limit";
+import { logSecurityAudit } from "@/server/security-audit";
 
 const updateSubscriptionSchema = z.object({
   subscriptionTier: z.enum(["free", "pro"]).optional(),
@@ -46,19 +48,37 @@ function readAdminSimulateFromMetadata(metadata: AuthMetadataLike): boolean {
   return raw === true;
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UPDATE_WINDOW_MS = 5 * 60 * 1000;
+const UPDATE_MAX = 120;
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ userId: string }> },
 ) {
+  const limited = checkRateLimit({
+    key: `admin:subscription-update:${clientIp(request)}`,
+    max: UPDATE_MAX,
+    windowMs: UPDATE_WINDOW_MS,
+  });
+  if (!limited.ok) {
+    return apiJsonError(429, "Too many subscription updates. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(limited.retryAfterSec) },
+      request,
+    });
+  }
+
   const adminAuth = await requireServerAdmin(request);
   if (!adminAuth.ok) {
     return adminAuth.response;
   }
-  const { supabaseAdmin } = adminAuth;
+  const { supabaseAdmin, identity } = adminAuth;
   const { userId } = await context.params;
 
-  if (!userId) {
-    return apiJsonError(400, "User id is required.", {
+  if (!userId || !UUID_RE.test(userId)) {
+    return apiJsonError(400, "A valid user id is required.", {
       code: API_ERROR_CODES.BAD_REQUEST,
       request,
     });
@@ -131,6 +151,20 @@ export async function PATCH(
         );
       }
 
+      void logSecurityAudit({
+        action: "admin_subscription_update",
+        actorUserId: identity.userId,
+        ip: clientIp(request),
+        metadata: {
+          targetUserId: userId,
+          usedFallback: true,
+          subscriptionTier: parsedBody.data.subscriptionTier ?? nextSubscriptionTier,
+          adminModeSimulatePro:
+            typeof parsedBody.data.adminModeSimulatePro === "boolean"
+              ? parsedBody.data.adminModeSimulatePro
+              : nextAdminSimulate,
+        },
+      });
       return apiJsonOk({ ok: true, usedFallback: "auth_metadata" }, request);
     }
 
@@ -140,6 +174,18 @@ export async function PATCH(
       { code: API_ERROR_CODES.INTERNAL, request },
     );
   }
+
+  void logSecurityAudit({
+    action: "admin_subscription_update",
+    actorUserId: identity.userId,
+    ip: clientIp(request),
+    metadata: {
+      targetUserId: userId,
+      usedFallback: false,
+      subscriptionTier: parsedBody.data.subscriptionTier,
+      adminModeSimulatePro: parsedBody.data.adminModeSimulatePro,
+    },
+  });
 
   return apiJsonOk({ ok: true }, request);
 }

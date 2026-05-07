@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseJsonBody } from "@/server/api-validation";
 import { loginUser } from "@/server/mock-db";
+import { checkRateLimit, clientIp } from "@/server/rate-limit";
+import { isTrustedBrowserOrigin } from "@/server/request-origin";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { z } from "zod";
 
@@ -13,6 +15,25 @@ const loginBodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  if (!isTrustedBrowserOrigin(request)) {
+    return apiJsonError(403, "Untrusted request origin.", {
+      code: API_ERROR_CODES.FORBIDDEN,
+      request,
+    });
+  }
+  const limited = checkRateLimit({
+    key: `auth:login:ip:${clientIp(request)}`,
+    max: 40,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.ok) {
+    return apiJsonError(429, "Too many login attempts. Please wait and try again.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(limited.retryAfterSec) },
+      request,
+    });
+  }
+
   const parsedBody = await parseJsonBody(request, loginBodySchema);
   if (!parsedBody.ok) {
     return parsedBody.response;

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { parseSearchParams } from "@/server/api-validation";
+import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { fetchTmdbTrailerEmbedUrl } from "@/server/tmdb";
 
 const trailerQuerySchema = z.object({
@@ -9,6 +10,19 @@ const trailerQuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  const limited = checkRateLimit({
+    key: `movies:trailer:${clientIp(request)}`,
+    max: 180,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.ok) {
+    return apiJsonError(429, "Too many trailer requests. Try again shortly.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(limited.retryAfterSec) },
+      request,
+    });
+  }
+
   const parsed = parseSearchParams(request, trailerQuerySchema);
   if (!parsed.ok) {
     return parsed.response;

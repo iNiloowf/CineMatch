@@ -4,7 +4,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const HIDDEN_ADMIN_PATH =
   process.env.ADMIN_ENTRY_PATH ?? "/studio/portal-v9-a9k2m7r4xq";
 const ADMIN_ENTRY_TOKEN_PARAM = "__admin_entry";
+const ADMIN_ENTRY_TS_PARAM = "__admin_ts";
+const ADMIN_ENTRY_SIG_PARAM = "__admin_sig";
 const BLOCKED_ADMIN_FALLBACK_PATH = "/__blocked-admin-route__";
+const ADMIN_ENTRY_TTL_MS = 60 * 1000;
 
 function getProjectRef() {
   try {
@@ -36,25 +39,87 @@ function rewriteWithRequestId(request: NextRequest, url: URL) {
   return response;
 }
 
-export function proxy(request: NextRequest) {
+function toBase64Url(bytes: ArrayBuffer) {
+  const raw = Array.from(new Uint8Array(bytes))
+    .map((b) => String.fromCharCode(b))
+    .join("");
+  return btoa(raw)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+async function signAdminEntry(secret: string, ts: string) {
+  const keyData = new TextEncoder().encode(secret);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(ts));
+  return toBase64Url(signature);
+}
+
+async function hasValidAdminEntrySignature(request: NextRequest, secret: string) {
+  if (request.nextUrl.searchParams.get(ADMIN_ENTRY_TOKEN_PARAM) !== "1") {
+    return false;
+  }
+  const ts = request.nextUrl.searchParams.get(ADMIN_ENTRY_TS_PARAM);
+  const sig = request.nextUrl.searchParams.get(ADMIN_ENTRY_SIG_PARAM);
+  if (!ts || !sig) {
+    return false;
+  }
+  const tsMs = Number.parseInt(ts, 10);
+  if (!Number.isFinite(tsMs)) {
+    return false;
+  }
+  if (Math.abs(Date.now() - tsMs) > ADMIN_ENTRY_TTL_MS) {
+    return false;
+  }
+  const expected = await signAdminEntry(secret, ts);
+  return sig === expected;
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const adminEntrySecret = process.env.ADMIN_ENTRY_SECRET ?? "";
 
   if (pathname === HIDDEN_ADMIN_PATH || pathname === `${HIDDEN_ADMIN_PATH}/`) {
+    if (!adminEntrySecret) {
+      const blocked = request.nextUrl.clone();
+      blocked.pathname = BLOCKED_ADMIN_FALLBACK_PATH;
+      blocked.search = "";
+      return rewriteWithRequestId(request, blocked);
+    }
+    const ts = String(Date.now());
+    const sig = await signAdminEntry(adminEntrySecret, ts);
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = "/admin";
     rewriteUrl.searchParams.set(ADMIN_ENTRY_TOKEN_PARAM, "1");
+    rewriteUrl.searchParams.set(ADMIN_ENTRY_TS_PARAM, ts);
+    rewriteUrl.searchParams.set(ADMIN_ENTRY_SIG_PARAM, sig);
     return rewriteWithRequestId(request, rewriteUrl);
   }
 
   if (pathname === "/admin" || pathname === "/admin/") {
-    const hasValidEntryToken =
-      request.nextUrl.searchParams.get(ADMIN_ENTRY_TOKEN_PARAM) === "1";
+    const hasValidEntryToken = adminEntrySecret
+      ? await hasValidAdminEntrySignature(request, adminEntrySecret)
+      : false;
 
     if (!hasValidEntryToken) {
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.pathname = BLOCKED_ADMIN_FALLBACK_PATH;
       rewriteUrl.search = "";
       return rewriteWithRequestId(request, rewriteUrl);
+    }
+  }
+
+  if (pathname.startsWith("/api/admin/")) {
+    const auth = request.headers.get("authorization") ?? "";
+    if (!auth.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
   }
 

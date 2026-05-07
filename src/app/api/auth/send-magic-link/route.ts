@@ -2,12 +2,14 @@ import { NextRequest } from "next/server";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkEmailCooldown } from "@/server/auth-email-rate-limit";
 import { parseJsonBody } from "@/server/api-validation";
+import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import {
   getResendClient,
   getResendFromEmail,
   getResendTestingTarget,
   isResendTestModeEnabled,
 } from "@/server/resend";
+import { isTrustedBrowserOrigin } from "@/server/request-origin";
 import { getSupabaseAdminClient } from "@/server/supabase-admin";
 import { z } from "zod";
 
@@ -20,6 +22,25 @@ function getAppUrl(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isTrustedBrowserOrigin(request)) {
+    return apiJsonError(403, "Untrusted request origin.", {
+      code: API_ERROR_CODES.FORBIDDEN,
+      request,
+    });
+  }
+  const limited = checkRateLimit({
+    key: `auth:magic-link:ip:${clientIp(request)}`,
+    max: 30,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.ok) {
+    return apiJsonError(429, "Too many requests. Please try again later.", {
+      code: API_ERROR_CODES.RATE_LIMITED,
+      headers: { "Retry-After": String(limited.retryAfterSec) },
+      request,
+    });
+  }
+
   const parsedBody = await parseJsonBody(request, sendMagicLinkBodySchema);
   if (!parsedBody.ok) {
     return parsedBody.response;
