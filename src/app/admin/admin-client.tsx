@@ -70,7 +70,7 @@ type TicketManageStatus = "open" | "under_review" | "closed";
 type AdminGate = "booting" | "sign_in" | "forbidden" | "ready";
 
 export default function AdminDesktopPage() {
-  const isDarkMode = true;
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [adminGate, setAdminGate] = useState<AdminGate>("booting");
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
@@ -91,6 +91,22 @@ export default function AdminDesktopPage() {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [userDeleteError, setUserDeleteError] = useState("");
   const adminGateRef = useRef<AdminGate>("booting");
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const stored = window.localStorage.getItem("cinematch-theme-mode");
+    if (stored === "light") {
+      setIsDarkMode(false);
+      return;
+    }
+    if (stored === "dark") {
+      setIsDarkMode(true);
+      return;
+    }
+    setIsDarkMode(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
 
   useEffect(() => {
     adminGateRef.current = adminGate;
@@ -616,6 +632,17 @@ export default function AdminDesktopPage() {
       }) as const,
     [],
   );
+  const adminTabs = useMemo(
+    () =>
+      [
+        { id: "overview" as const, label: "Overview", note: "Stats + activity" },
+        { id: "tickets" as const, label: "Tickets", note: "Support queue" },
+        { id: "users" as const, label: "Users", note: "Accounts" },
+        { id: "swipes" as const, label: "Swipes", note: "Recent actions" },
+        { id: "subscriptions" as const, label: "Subscriptions", note: "Plan control" },
+      ] satisfies Array<{ id: AdminTab; label: string; note: string }>,
+    [],
+  );
 
   const shell = isDarkMode
     ? "min-h-screen bg-[radial-gradient(circle_at_10%_15%,rgba(129,140,248,0.2),transparent_35%),radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.18),transparent_30%),linear-gradient(180deg,#080916_0%,#0b1020_42%,#05060f_100%)] text-slate-100"
@@ -1041,10 +1068,23 @@ export default function AdminDesktopPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">CineMatch Admin Desktop</h1>
               <p className={`mt-1 text-sm ${softText}`}>
-                Fixed loading loop and redesigned with cleaner iOS-style sections.
+                Better structure for daily moderation and operations.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !isDarkMode;
+                  setIsDarkMode(next);
+                  if (typeof window !== "undefined") {
+                    window.localStorage.setItem("cinematch-theme-mode", next ? "dark" : "light");
+                  }
+                }}
+                className="ui-btn ui-btn-secondary"
+              >
+                {isDarkMode ? "Light mode" : "Dark mode"}
+              </button>
               <button
                 type="button"
                 onClick={() =>
@@ -1064,45 +1104,40 @@ export default function AdminDesktopPage() {
               </button>
             </div>
           </div>
-
-          <div
-            className={`mt-4 inline-flex flex-wrap gap-2 rounded-full border p-1 ${
-              isDarkMode ? "border-white/15 bg-white/[0.04]" : "border-white/80 bg-white/70"
-            }`}
-          >
-            <AdminTabButton
-              label="Overview"
-              isActive={activeTab === "overview"}
-              isDarkMode={isDarkMode}
-              onClick={() => setActiveTab("overview")}
-            />
-            <AdminTabButton
-              label="Tickets"
-              isActive={activeTab === "tickets"}
-              isDarkMode={isDarkMode}
-              onClick={() => setActiveTab("tickets")}
-            />
-            <AdminTabButton
-              label="Users"
-              isActive={activeTab === "users"}
-              isDarkMode={isDarkMode}
-              onClick={() => setActiveTab("users")}
-            />
-            <AdminTabButton
-              label="Swipes"
-              isActive={activeTab === "swipes"}
-              isDarkMode={isDarkMode}
-              onClick={() => setActiveTab("swipes")}
-            />
-            <AdminTabButton
-              label="Subscriptions"
-              isActive={activeTab === "subscriptions"}
-              isDarkMode={isDarkMode}
-              onClick={() => setActiveTab("subscriptions")}
-            />
-          </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+          <aside className={`h-fit rounded-[24px] border p-3 ${glassPanel}`}>
+            <p className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${softText}`}>
+              Navigation
+            </p>
+            <nav className="space-y-1">
+              {adminTabs.map((tab) => {
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full rounded-[14px] border px-3 py-2.5 text-left transition ${
+                      active
+                        ? isDarkMode
+                          ? "border-violet-400/35 bg-violet-500/16 text-violet-100"
+                          : "border-violet-300/70 bg-violet-50 text-violet-800"
+                        : isDarkMode
+                          ? "border-transparent bg-white/[0.03] text-slate-300 hover:border-white/10 hover:bg-white/[0.06]"
+                          : "border-transparent bg-white/40 text-slate-700 hover:border-slate-200 hover:bg-white"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">{tab.label}</p>
+                    <p className={`mt-0.5 text-xs ${active ? "opacity-80" : softText}`}>{tab.note}</p>
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+
+          <section className="min-w-0">
         {dashboardError ? (
           <p
             className={`mb-4 rounded-[14px] border px-4 py-3 text-sm ${
@@ -1518,6 +1553,8 @@ export default function AdminDesktopPage() {
             </div>
           </section>
         ) : null}
+          </section>
+        </div>
       </div>
     </main>
   );
@@ -1552,32 +1589,3 @@ function StatCard({
   );
 }
 
-function AdminTabButton({
-  label,
-  isActive,
-  isDarkMode,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  isDarkMode: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-        isActive
-          ? isDarkMode
-            ? "bg-violet-500/25 text-violet-100 ring-1 ring-violet-300/40"
-            : "bg-violet-500/14 text-violet-700 ring-1 ring-violet-300/55"
-          : isDarkMode
-            ? "text-slate-300 hover:bg-white/10"
-            : "text-slate-600 hover:bg-slate-200/60"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
