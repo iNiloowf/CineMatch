@@ -40,6 +40,7 @@ export function DiscoverOnboardingModal({
   completeOnboarding,
 }: DiscoverOnboardingModalProps) {
   const [showIntro, setShowIntro] = useState(true);
+  const [hasEnteredFlow, setHasEnteredFlow] = useState(false);
   const [isSavingOnboarding, setIsSavingOnboarding] = useState(false);
   const [onboardingFavorites, setOnboardingFavorites] = useState<string[]>(
     onboardingPreferences.favoriteGenres,
@@ -52,11 +53,27 @@ export function DiscoverOnboardingModal({
   >(onboardingPreferences.mediaPreference);
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  const open =
+  const canEnterFlow =
     Boolean(currentUserId) &&
     isReady &&
     !isSyncingAccountData &&
     !isOnboardingComplete;
+  const open =
+    hasEnteredFlow
+      ? Boolean(currentUserId) && isReady && !isOnboardingComplete
+      : canEnterFlow;
+
+  useEffect(() => {
+    if (canEnterFlow) {
+      setHasEnteredFlow(true);
+    }
+  }, [canEnterFlow]);
+
+  useEffect(() => {
+    if (isOnboardingComplete || !currentUserId) {
+      setHasEnteredFlow(false);
+    }
+  }, [currentUserId, isOnboardingComplete]);
 
   useEffect(() => {
     if (!currentUserId) {

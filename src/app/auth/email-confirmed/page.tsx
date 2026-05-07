@@ -54,19 +54,13 @@ export default function EmailConfirmedPage() {
               Email confirmed
             </h1>
             <p className={`text-sm leading-7 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-              Your email has been confirmed successfully. You can now log in to CineMatch with your email and password.
-              If you opened this link on the same device where you signed up, you may already be signed in.
+              You’re all set. Use your email/password to sign in, or continue directly if this device is already signed in.
             </p>
           </div>
           {hasSession === null ? (
             <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Checking your session…</p>
           ) : (
             <>
-              {hasSession ? (
-                <p className={`rounded-[18px] px-4 py-3 text-sm leading-snug ${isDarkMode ? "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-400/25" : "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200/80"}`}>
-                  You&apos;re signed in on this device. Continue to Discover to start matching and saving picks.
-                </p>
-              ) : null}
               <div className="flex flex-col gap-3 pt-1">
                 {hasSession ? (
                   <Link

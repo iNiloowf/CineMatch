@@ -205,9 +205,8 @@ export default function CheckEmailPage() {
                 Check your email
               </h1>
               <p className={`text-sm leading-7 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                One more step: we sent a secure link to{" "}
-                <span className="font-semibold text-inherit">{emailDisplay}</span>. Open the message on this phone or
-                computer and tap <strong className="font-semibold">Confirm</strong> to activate your CineMatch account.
+                We sent a confirmation link to <span className="font-semibold text-inherit">{emailDisplay}</span>.
+                Open it and tap <strong className="font-semibold">Confirm</strong> to finish setup.
               </p>
             </div>
           </div>
@@ -222,8 +221,7 @@ export default function CheckEmailPage() {
                 Confirm your address
               </p>
               <p className={`text-sm leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                The link expires after a while for your security. Didn&apos;t get anything? Check spam and promotions,
-                then use resend below. You can also use a different email if you made a typo.
+                Didn&apos;t get it? Check spam/promotions, then resend below.
               </p>
             </div>
 
