@@ -127,8 +127,10 @@ export const PicksMovieRow = memo(function PicksMovieRow({
             {movie.genre.slice(0, 4).map((genre) => (
               <span
                 key={genre}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                className={`inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                  isDarkMode
+                    ? "border-white/10 bg-white/[0.08] text-slate-100 backdrop-blur-sm"
+                    : "border-slate-200/90 bg-white/80 text-slate-700 shadow-sm backdrop-blur-sm"
                 }`}
               >
                 {genre}
