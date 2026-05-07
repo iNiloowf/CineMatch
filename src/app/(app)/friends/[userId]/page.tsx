@@ -43,6 +43,7 @@ export default function FriendProfilePage() {
     () => linkedUsers.find((entry) => entry.user.id === userId),
     [linkedUsers, userId],
   );
+  const isAcceptedLink = linkEntry?.status === "accepted";
 
   const partner = linkEntry?.user ?? null;
   const myAcceptedIds = useMemo(
@@ -78,13 +79,13 @@ export default function FriendProfilePage() {
   }, [data.settings, userId]);
 
   const savedMovies = useMemo(
-    () => (userId ? getSavedMoviesForUser(data, userId) : []),
-    [data, userId],
+    () => (userId && isAcceptedLink ? getSavedMoviesForUser(data, userId) : []),
+    [data, isAcceptedLink, userId],
   );
 
   /** Titles they marked “Recommended” after watching (synced for linked friends). */
   const partnerRecommendations = useMemo(() => {
-    if (!userId) {
+    if (!userId || !isAcceptedLink) {
       return [];
     }
     const movieById = new Map(data.movies.map((m) => [m.id, m]));
@@ -107,7 +108,7 @@ export default function FriendProfilePage() {
       }
     }
     return out;
-  }, [data.movies, data.watchedPickReviews, userId]);
+  }, [data.movies, data.watchedPickReviews, isAcceptedLink, userId]);
 
   const selectedMovie = useMemo(() => {
     if (!selectedMovieId) {
@@ -120,6 +121,12 @@ export default function FriendProfilePage() {
     );
   }, [savedMovies, partnerRecommendations, selectedMovieId]);
   const partnerGenreInsights = useMemo(() => {
+    if (!isAcceptedLink) {
+      return {
+        liked: [] as Array<{ name: string; count: number }>,
+        disliked: [] as Array<{ name: string; count: number }>,
+      };
+    }
     const likedCounts = new Map<string, number>();
     const dislikedCounts = new Map<string, number>();
     const movieById = new Map(data.movies.map((movie) => [movie.id, movie]));
@@ -151,7 +158,7 @@ export default function FriendProfilePage() {
       liked: toSortedEntries(likedCounts),
       disliked: toSortedEntries(dislikedCounts),
     };
-  }, [data.movies, data.swipes, userId]);
+  }, [data.movies, data.swipes, isAcceptedLink, userId]);
 
   const sectionEyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
@@ -340,9 +347,9 @@ export default function FriendProfilePage() {
           eyebrow="Friend profile"
           title={partner.name}
           description={
-            linkEntry.status === "accepted"
+            isAcceptedLink
               ? "Their recommends and Discover picks — tap a title for details."
-              : "Pending link — picks appear when you’re both active."
+              : "Pending request — only basic profile is visible until they accept."
           }
         />
       </div>
@@ -519,6 +526,7 @@ export default function FriendProfilePage() {
         </SurfaceCard>
       )}
 
+      {isAcceptedLink ? (
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "130ms" }}>
         <button
           type="button"
@@ -612,7 +620,16 @@ export default function FriendProfilePage() {
           </div>
         ) : null}
       </SurfaceCard>
+      ) : (
+      <SurfaceCard className="fade-up-enter" style={{ animationDelay: "130ms" }} interactive={false}>
+        <p className={sectionEyebrow}>Privacy</p>
+        <p className={`mt-2 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          This account is still pending your friend request. Recommends, like/dislike genres, and saved picks stay hidden until they accept.
+        </p>
+      </SurfaceCard>
+      )}
 
+      {isAcceptedLink ? (
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "140ms" }}>
         <button
           type="button"
@@ -783,7 +800,9 @@ export default function FriendProfilePage() {
           </div>
         ) : null}
       </SurfaceCard>
+      ) : null}
 
+      {isAcceptedLink ? (
       <SurfaceCard className="fade-up-enter !overflow-hidden !p-0" style={{ animationDelay: "150ms" }}>
         <button
           type="button"
@@ -959,6 +978,7 @@ export default function FriendProfilePage() {
           </div>
         ) : null}
       </SurfaceCard>
+      ) : null}
 
       <SurfaceCard
         className="fade-up-enter !p-0 overflow-hidden"
