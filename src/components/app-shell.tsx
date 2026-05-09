@@ -25,6 +25,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     dismissFriendLinkNotifyToast,
   } = useAppState();
 
+  /** Only one overlay toast at a time so banners never stack (achievement → match → friend). */
+  const activeToastKind =
+    unlockedAchievement !== null
+      ? "achievement"
+      : mutualMatchToast !== null
+        ? "match"
+        : friendLinkNotifyToast !== null
+          ? "friend"
+          : null;
+
   return (
     <div
       data-app-shell-root="true"
@@ -57,21 +67,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      <AchievementToast
-        achievement={unlockedAchievement}
-        isDarkMode={isDarkMode}
-        onClose={dismissUnlockedAchievement}
-      />
-      <MatchToast
-        toast={mutualMatchToast}
-        isDarkMode={isDarkMode}
-        onClose={dismissMutualMatchToast}
-      />
-      <FriendLinkToast
-        toast={friendLinkNotifyToast}
-        isDarkMode={isDarkMode}
-        onClose={dismissFriendLinkNotifyToast}
-      />
+      {activeToastKind === "achievement" ? (
+        <AchievementToast
+          achievement={unlockedAchievement}
+          isDarkMode={isDarkMode}
+          onClose={dismissUnlockedAchievement}
+        />
+      ) : null}
+      {activeToastKind === "match" ? (
+        <MatchToast
+          toast={mutualMatchToast}
+          isDarkMode={isDarkMode}
+          onClose={dismissMutualMatchToast}
+        />
+      ) : null}
+      {activeToastKind === "friend" ? (
+        <FriendLinkToast
+          toast={friendLinkNotifyToast}
+          isDarkMode={isDarkMode}
+          onClose={dismissFriendLinkNotifyToast}
+        />
+      ) : null}
       <div
         data-app-shell-frame="true"
         className={`fade-up-enter mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col ${
