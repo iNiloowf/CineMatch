@@ -381,6 +381,7 @@ export function MovieSwipeCard({
           data-poster-layout="immersive"
           shimmer={false}
           transparentShell
+          interactive={false}
           className={`discover-swipe-card-motion flex h-full min-h-0 w-full min-w-0 max-h-full flex-1 flex-col overflow-hidden !border-0 !p-0 !shadow-none rounded-[28px] sm:rounded-[32px] [--swipe-y-gap:clamp(0.5rem,2vw,0.85rem)] ${
             isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
           } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
@@ -744,6 +745,7 @@ export function MovieSwipeCard({
     <>
       <SurfaceCard
         shimmer={false}
+        interactive={false}
         className={`discover-swipe-card-motion flex h-full min-h-0 flex-1 flex-col overflow-hidden p-3 [--swipe-y-gap:clamp(0.75rem,2.85vw,1.05rem)] sm:p-3.5 rounded-[24px] ${
           isSnapAnimating ? "discover-swipe-card-motion--snap" : ""
         } transition-transform ${swipeFeedback ? `discover-card-swipe-${swipeFeedback}` : ""}`}
