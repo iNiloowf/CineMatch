@@ -268,7 +268,7 @@ export default function ProfilePage() {
       setFavoriteMovieSearchMessage("");
       try {
         const response = await fetch(
-          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ""}`,
+          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}`,
           { cache: "no-store", signal: controller.signal },
         );
         if (!active) {
@@ -281,7 +281,9 @@ export default function ProfilePage() {
           return;
         }
         const payload = (await response.json()) as { movies?: Movie[] };
-        const movies = (payload.movies ?? []).filter((movie) => movie.mediaType === "movie");
+        const movies = (payload.movies ?? []).filter(
+          (movie) => movie.mediaType === "movie" || movie.mediaType === "series",
+        );
         registerMovies(movies);
         setFavoriteMovieSearchResults(movies);
         setFavoriteMovieSearchState("idle");
@@ -303,7 +305,7 @@ export default function ProfilePage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [favoriteMovieSearchQuery, isEditing, currentUserId, registerMovies]);
+  }, [favoriteMovieSearchQuery, isEditing, registerMovies]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -325,7 +327,7 @@ export default function ProfilePage() {
       setHeaderBgSearchMessage("");
       try {
         const response = await fetch(
-          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ""}`,
+          `/api/movies?source=tmdb&query=${encodeURIComponent(trimmed)}`,
           { cache: "no-store", signal: controller.signal },
         );
         if (!active) {
@@ -360,7 +362,7 @@ export default function ProfilePage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [headerBgSearchQuery, isEditing, currentUserId, registerMovies]);
+  }, [headerBgSearchQuery, isEditing, registerMovies]);
 
   const profileGenres = useMemo(
     () =>
