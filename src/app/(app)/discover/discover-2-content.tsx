@@ -1302,7 +1302,7 @@ export function DiscoverPage2Content({
             isOnboardingComplete={isOnboardingComplete}
           />
           <div
-            className={`ui-glass-panel discover-toolbar-enter discover-search-toolbar rounded-[22px] border px-3 py-2 sm:px-3.5 ${
+            className={`ui-glass-panel discover-toolbar-enter discover-search-toolbar mx-px rounded-[22px] border px-3 py-2 sm:px-3.5 ${
               isDarkMode ? "border-white/12" : "border-slate-200/90"
             }`}
           >
@@ -1915,7 +1915,7 @@ export function DiscoverPage2Content({
       <div
         className={`discover2-swipe-viewport relative z-0 flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible pt-1.5 pb-1 sm:pt-2 sm:pb-1.5 ${
           isDarkMode
-            ? "discover-card-viewport border border-white/12 px-0.5 sm:px-0.5"
+            ? "discover-card-viewport mx-px border-t border-white/12 px-0.5 sm:px-0.5"
             : "mt-0.5 rounded-[1.75rem] bg-gradient-to-b from-slate-100/90 to-white px-0 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.92),0_1px_0_rgba(15,23,42,0.06)]"
         }`}
       >
