@@ -19,6 +19,8 @@ export type MovieTrailerModalProps = {
   onClose: () => void;
   onRetryTrailer: () => void;
   onAccept: () => void;
+  acceptLabel?: string;
+  acceptMuted?: boolean;
   onReject: () => void;
 };
 
@@ -33,6 +35,8 @@ export function MovieTrailerModal({
   onClose,
   onRetryTrailer,
   onAccept,
+  acceptLabel = "Like",
+  acceptMuted = false,
   onReject,
 }: MovieTrailerModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -192,9 +196,15 @@ export function MovieTrailerModal({
                 type="button"
                 onClick={onAccept}
                 disabled={isInteractionLocked}
-                className="rounded-[20px] bg-violet-600 px-4 py-3 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(109,40,217,0.2)] transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-80"
+                className={`rounded-[20px] px-4 py-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 ${
+                  acceptMuted
+                    ? isDarkMode
+                      ? "border border-white/12 bg-white/8 text-slate-200 hover:bg-white/12"
+                      : "border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                    : "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.2)] hover:bg-violet-700"
+                }`}
               >
-                <span>Like</span>
+                <span>{acceptLabel}</span>
               </button>
             </div>
           </div>

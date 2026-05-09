@@ -102,6 +102,11 @@ export function MovieSwipeCard({
       ),
     [acceptedMovies],
   );
+  const alreadyAccepted = useMemo(
+    () => acceptedMovies.some((acceptedMovie) => acceptedMovie.id === movie.id),
+    [acceptedMovies, movie.id],
+  );
+  const acceptButtonLabel = alreadyAccepted ? "Saved" : "Like";
 
   const calendarYear = new Date().getFullYear();
   const matchScore = currentUserId
@@ -249,9 +254,17 @@ export function MovieSwipeCard({
   const handleTrailerLike = useCallback(() => {
     setIsTrailerVisible(false);
     window.requestAnimationFrame(() => {
+      if (alreadyAccepted) {
+        if (canGoNext) {
+          onNext();
+          return;
+        }
+        onReject();
+        return;
+      }
       onAccept();
     });
-  }, [onAccept]);
+  }, [alreadyAccepted, canGoNext, onAccept, onNext, onReject]);
 
   const maxDrag = immersive ? 80 : 42;
   const dragRotate = immersive ? 0.078 : 0.045;
@@ -355,6 +368,8 @@ export function MovieSwipeCard({
       onClose={() => setIsTrailerVisible(false)}
       onRetryTrailer={() => void fetchTrailerIfNeeded()}
       onAccept={handleTrailerLike}
+      acceptLabel={acceptButtonLabel}
+      acceptMuted={alreadyAccepted}
       onReject={handleTrailerReject}
     />
   ) : null;
@@ -702,13 +717,19 @@ export function MovieSwipeCard({
                 </button>
                 <button
                   type="button"
-                  onClick={onAccept}
+                  onClick={handleTrailerLike}
                   disabled={isInteractionLocked}
-                  className={`min-h-11 min-w-0 rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-2.5 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] transition enabled:hover:from-violet-500 enabled:hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 sm:px-3.5 sm:text-xs ${
-                    isDarkMode ? "" : "backdrop-blur-xl"
+                  className={`min-h-11 min-w-0 rounded-md border px-2.5 py-2.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 sm:px-3.5 sm:text-xs ${
+                    alreadyAccepted
+                      ? isDarkMode
+                        ? "border-white/20 bg-slate-900/95 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] enabled:hover:bg-slate-800/95"
+                        : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm backdrop-blur-xl enabled:hover:bg-white/70"
+                      : `border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] enabled:hover:from-violet-500 enabled:hover:to-violet-600 ${
+                          isDarkMode ? "" : "backdrop-blur-xl"
+                        }`
                   }`}
                 >
-                  Like
+                  {acceptButtonLabel}
                 </button>
               </div>
             </div>
@@ -1140,13 +1161,19 @@ export function MovieSwipeCard({
             </button>
             <button
               type="button"
-              onClick={onAccept}
+              onClick={handleTrailerLike}
               disabled={isInteractionLocked}
-              className={`min-h-11 min-w-0 rounded-md border border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 px-3 py-2.5 text-[11px] font-semibold text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] transition hover:from-violet-500 hover:to-violet-600 disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
-                isDarkMode ? "" : "backdrop-blur-xl"
+              className={`min-h-11 min-w-0 rounded-md border px-3 py-2.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
+                alreadyAccepted
+                  ? isDarkMode
+                    ? "border-white/20 bg-slate-900/95 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] enabled:hover:bg-slate-800/95"
+                    : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm backdrop-blur-xl enabled:hover:bg-white/70"
+                  : `border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] enabled:hover:from-violet-500 enabled:hover:to-violet-600 ${
+                      isDarkMode ? "" : "backdrop-blur-xl"
+                    }`
               }`}
             >
-              Like
+              {acceptButtonLabel}
             </button>
           </div>
         </div>
