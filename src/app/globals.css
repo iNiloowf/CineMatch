@@ -1462,16 +1462,9 @@ html[data-reduce-motion="true"] .toast-dismiss-progress-fill {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Bridge the flex gap under the search row so swipe/blur never reveals a bright seam */
+/* Keep search row edge clean; gap is handled by page stack spacing. */
 [data-app-shell-root][data-theme="dark"] .discover-search-toolbar::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: max(0.75rem, var(--discover-stack-gap));
-  background: var(--bg-scroll);
-  pointer-events: none;
+  content: none;
 }
 
 [data-app-shell-root][data-theme="dark"] .discover-search-toolbar .ui-input-shell,
