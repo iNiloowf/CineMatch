@@ -95,10 +95,10 @@ export function SurfaceCard({
         interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.45)]" : ""
       }`
     : shimmer
-      ? `glass-shimmer border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
+      ? `glass-shimmer border border-white/16 bg-gradient-to-br from-[#0a0a0d]/[0.97] via-[#0d0d10]/[0.97] to-[#0a0a0d]/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
           interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]" : ""
         }`
-      : `border border-white/16 bg-gradient-to-br from-slate-950/[0.97] via-[#14101f]/[0.97] to-slate-950/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
+      : `border border-white/16 bg-gradient-to-br from-[#0a0a0d]/[0.97] via-[#0d0d10]/[0.97] to-[#0a0a0d]/[0.97] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ${
           interactive ? "hover:shadow-[0_24px_60px_rgba(0,0,0,0.42)]" : ""
         }`;
 

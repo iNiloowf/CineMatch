@@ -169,8 +169,8 @@
 /* Dark shell: brighter meta copy + slightly stronger glass so WCAG-ish contrast holds */
 [data-app-shell-root][data-theme="dark"] {
   --bg-primary: #0d0a14;
-  --bg-scroll: #100c18;
-  --bg-stage: #0c0a14;
+  --bg-scroll: #0a0a0d;
+  --bg-stage: #0d0d10;
   --background: var(--bg-primary);
   --foreground: #f8fafc;
   --color-text-muted: #b8c0d4;
@@ -2421,8 +2421,8 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
 
 .theme-dark {
   --bg-primary: #0d0a14;
-  --bg-scroll: #100c18;
-  --bg-stage: #0c0a14;
+  --bg-scroll: #0a0a0d;
+  --bg-stage: #0d0d10;
   --background: var(--bg-primary);
   --foreground: #f8fafc;
   --color-surface-glass: rgba(2, 6, 23, 0.66);
