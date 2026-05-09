@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { ToastDismissProgressBar } from "@/components/toast-dismiss-progress-bar";
+import { getAchievementBadgeMeta } from "@/lib/achievement-badge-meta";
 import { TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
 import { Achievement } from "@/lib/types";
 import { playWaterDropletChime } from "@/lib/ui-sounds";
@@ -57,6 +58,7 @@ export function AchievementToast({
   const shell = isDarkMode
     ? "border border-violet-400/25 bg-slate-950/94 text-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
     : "border border-violet-200/90 bg-white/96 text-slate-900 shadow-[0_16px_44px_rgba(124,58,237,0.14)]";
+  const badgeMeta = getAchievementBadgeMeta(achievement.id);
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-4 z-[var(--z-banner)] flex justify-center px-4 pt-[max(0.25rem,env(safe-area-inset-top,0px))]">
@@ -90,7 +92,7 @@ export function AchievementToast({
             }`}
             aria-hidden="true"
           >
-            ★
+            {badgeMeta.glyph}
           </div>
           <div className="min-w-0 flex-1">
             <p
