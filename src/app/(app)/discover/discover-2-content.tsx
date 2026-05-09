@@ -978,7 +978,7 @@ export function DiscoverPage2Content({
 
   return (
     <div
-      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 w-full max-w-md min-w-0 flex-1 flex-col gap-1.5 overflow-x-hidden sm:gap-2"
+      className="discover-v2-page-stack discover-page-stack flex h-full min-h-0 w-full max-w-md min-w-0 flex-1 flex-col gap-1.5 overflow-x-visible sm:gap-2"
       data-discover-ab="discover2"
     >
       <DiscoverOnboardingModal
@@ -1915,7 +1915,7 @@ export function DiscoverPage2Content({
       <div
         className={`discover2-swipe-viewport relative z-0 flex min-h-0 flex-1 flex-col items-stretch justify-stretch overflow-x-clip overflow-y-visible pt-1.5 pb-1 sm:pt-2 sm:pb-1.5 ${
           isDarkMode
-            ? "discover-card-viewport border-t border-white/12 px-0.5 sm:px-0.5"
+            ? "discover-card-viewport border border-white/12 px-0.5 sm:px-0.5"
             : "mt-0.5 rounded-[1.75rem] bg-gradient-to-b from-slate-100/90 to-white px-0 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.92),0_1px_0_rgba(15,23,42,0.06)]"
         }`}
       >

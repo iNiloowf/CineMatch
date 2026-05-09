@@ -648,7 +648,7 @@ export function MovieSwipeCard({
                                   e.stopPropagation();
                                   handleToggleDescription();
                                 }}
-                                className="min-h-11 rounded-lg px-1 text-violet-300"
+                                className="rounded-lg px-1 py-0 text-violet-300"
                                 style={{ fontSize: "11px" }}
                               >
                                 Less
@@ -1097,7 +1097,7 @@ export function MovieSwipeCard({
                           event.stopPropagation();
                           handleToggleDescription();
                         }}
-                        className={`min-h-11 rounded-lg px-1 leading-5 ${
+                        className={`rounded-lg px-1 py-0 leading-tight ${
                           isDarkMode ? "text-violet-300" : "text-violet-600"
                         }`}
                         style={{ fontSize: "11px" }}
