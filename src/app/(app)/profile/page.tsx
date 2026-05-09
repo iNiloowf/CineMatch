@@ -1263,6 +1263,7 @@ export default function ProfilePage() {
 
       <SurfaceCard
         bare
+        interactive={false}
         backgroundClassName={proHeaderCardStyle}
         heroImageUrl={headerHeroPosterUrl}
         className={`fade-up-enter discover-toolbar-enter${selectedProfileStyle === "rainbow" ? " surface-rainbow-top-accent" : ""}`}
