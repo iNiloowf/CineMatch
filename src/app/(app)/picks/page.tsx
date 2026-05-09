@@ -370,6 +370,7 @@ export default function PicksPage() {
       movie={selectedMovie}
       isDarkMode={isDarkMode}
       onClose={() => setSelectedMovieId(null)}
+      closeOnGestureMove
       footer={() =>
         selectedMovie ? (
           <>

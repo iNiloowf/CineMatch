@@ -1,7 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import { ModalPortal } from "@/components/modal-portal";
 import { computeMovieMatchPercent } from "@/lib/match-score";
@@ -27,6 +35,8 @@ type MovieDetailsModalProps = {
   movie: Movie | null;
   isDarkMode: boolean;
   onClose: () => void;
+  /** Dismiss the modal when a touch gesture moves (used to avoid route-swipe while open). */
+  closeOnGestureMove?: boolean;
   /** Shown under the header, e.g. “Jamie’s pick” */
   contextLabel?: string;
   footer: MovieDetailsFooterRender;
@@ -36,11 +46,13 @@ export function MovieDetailsModal({
   movie,
   isDarkMode,
   onClose,
+  closeOnGestureMove = false,
   contextLabel,
   footer,
 }: MovieDetailsModalProps) {
   const { acceptedMovies, onboardingPreferences } = useAppState();
   const detailsPanelRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [isTrailerVisible, setIsTrailerVisible] = useState(false);
   useFocusTrap(Boolean(movie) && !isTrailerVisible, detailsPanelRef);
   const acceptedGenres = useMemo(() => {
@@ -150,16 +162,52 @@ export function MovieDetailsModal({
     return null;
   }
 
+  const closeAndResetGesture = () => {
+    touchStartRef.current = null;
+    onClose();
+    setIsTrailerVisible(false);
+  };
+
+  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (!closeOnGestureMove || event.touches.length !== 1) {
+      return;
+    }
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (!closeOnGestureMove || event.touches.length !== 1) {
+      return;
+    }
+    const start = touchStartRef.current;
+    if (!start) {
+      return;
+    }
+    const touch = event.touches[0];
+    const dx = Math.abs(touch.clientX - start.x);
+    const dy = Math.abs(touch.clientY - start.y);
+    if (dx < 8 && dy < 8) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    closeAndResetGesture();
+  };
+
   return (
     <ModalPortal open>
-    <div className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]">
+    <div
+      className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-slate-950/48 backdrop-blur-[3px]"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+    >
       <button
         type="button"
         aria-label="Close movie details"
         className="absolute inset-0 z-0 cursor-default bg-transparent"
         onClick={() => {
-          onClose();
-          setIsTrailerVisible(false);
+          closeAndResetGesture();
         }}
       />
       <div
@@ -194,8 +242,7 @@ export function MovieDetailsModal({
           <button
             type="button"
             onClick={() => {
-              onClose();
-              setIsTrailerVisible(false);
+              closeAndResetGesture();
             }}
             aria-label="Close movie details"
             className={`ui-shell-close ${
