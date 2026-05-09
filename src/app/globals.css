@@ -168,7 +168,7 @@
 
 /* Dark shell: brighter meta copy + slightly stronger glass so WCAG-ish contrast holds */
 [data-app-shell-root][data-theme="dark"] {
-  --bg-primary: #0d0a14;
+  --bg-primary: #0a0a0d;
   --bg-scroll: #0a0a0d;
   --bg-stage: #0d0d10;
   --background: var(--bg-primary);
@@ -2420,7 +2420,7 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
 }
 
 .theme-dark {
-  --bg-primary: #0d0a14;
+  --bg-primary: #0a0a0d;
   --bg-scroll: #0a0a0d;
   --bg-stage: #0d0d10;
   --background: var(--bg-primary);
@@ -2445,7 +2445,7 @@ html[data-reduce-motion="true"] .discover-swipe-card-motion {
 }
 
 .theme-dark [data-app-shell-root="true"] {
-  background: linear-gradient(180deg, #0f0b1a 0%, #181127 38%, #09090f 100%) !important;
+  background: transparent !important;
   color: #f8fafc !important;
 }
 

@@ -1362,7 +1362,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.classList.toggle("theme-dark", isDarkMode);
     document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
     if (typeof document.body !== "undefined") {
-      document.body.style.background = isDarkMode ? "#0d0a14" : "#f6f7fb";
+      document.body.style.background = isDarkMode ? "#0a0a0d" : "#f6f7fb";
       document.body.style.color = isDarkMode ? "#f8fafc" : "#0f172a";
     }
   }, [isDarkMode]);

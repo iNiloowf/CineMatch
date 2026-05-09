@@ -784,7 +784,7 @@ export default function SettingsPage() {
           <div
             className={`flex items-start gap-4 px-5 py-4 sm:px-6 sm:py-5 ${
               isDarkMode
-                ? "bg-gradient-to-br from-violet-950/40 to-white/[0.04]"
+                ? "bg-gradient-to-br from-white/[0.02] to-white/[0.04]"
                 : "bg-gradient-to-br from-violet-50/90 via-white to-sky-50/30"
             }`}
           >
