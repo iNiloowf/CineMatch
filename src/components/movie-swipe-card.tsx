@@ -722,8 +722,8 @@ export function MovieSwipeCard({
                   className={`min-h-11 min-w-0 rounded-md border px-2.5 py-2.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 sm:px-3.5 sm:text-xs ${
                     alreadyAccepted
                       ? isDarkMode
-                        ? "border-white/20 bg-slate-900/95 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] enabled:hover:bg-slate-800/95"
-                        : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm backdrop-blur-xl enabled:hover:bg-white/70"
+                        ? "border-emerald-400/45 bg-emerald-500/16 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] enabled:hover:bg-emerald-500/24"
+                        : "border-emerald-300/90 bg-emerald-50/95 text-emerald-800 shadow-sm backdrop-blur-xl enabled:hover:bg-emerald-100"
                       : `border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] enabled:hover:from-violet-500 enabled:hover:to-violet-600 ${
                           isDarkMode ? "" : "backdrop-blur-xl"
                         }`
@@ -1166,8 +1166,8 @@ export function MovieSwipeCard({
               className={`min-h-11 min-w-0 rounded-md border px-3 py-2.5 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 max-[380px]:px-2.5 sm:rounded-[10px] sm:px-3.5 sm:text-xs ${
                 alreadyAccepted
                   ? isDarkMode
-                    ? "border-white/20 bg-slate-900/95 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] enabled:hover:bg-slate-800/95"
-                    : "border-slate-300/80 bg-white/50 text-slate-800 shadow-sm backdrop-blur-xl enabled:hover:bg-white/70"
+                    ? "border-emerald-400/45 bg-emerald-500/16 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] enabled:hover:bg-emerald-500/24"
+                    : "border-emerald-300/90 bg-emerald-50/95 text-emerald-800 shadow-sm backdrop-blur-xl enabled:hover:bg-emerald-100"
                   : `border-violet-400/40 bg-gradient-to-b from-violet-500/88 to-violet-600/92 text-white shadow-[0_6px_22px_rgba(109,40,217,0.32)] enabled:hover:from-violet-500 enabled:hover:to-violet-600 ${
                       isDarkMode ? "" : "backdrop-blur-xl"
                     }`

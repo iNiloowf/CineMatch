@@ -199,8 +199,8 @@ export function MovieTrailerModal({
                 className={`rounded-[20px] px-4 py-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-80 ${
                   acceptMuted
                     ? isDarkMode
-                      ? "border border-white/12 bg-white/8 text-slate-200 hover:bg-white/12"
-                      : "border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                      ? "border border-emerald-400/45 bg-emerald-500/16 text-emerald-100 hover:bg-emerald-500/24"
+                      : "border border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm hover:bg-emerald-100"
                     : "bg-violet-600 text-white shadow-[0_4px_14px_rgba(109,40,217,0.2)] hover:bg-violet-700"
                 }`}
               >
