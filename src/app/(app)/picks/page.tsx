@@ -429,12 +429,12 @@ export default function PicksPage() {
             data-picks-pill-panel="true"
             data-pill-dragging={picksPillDrag.isDragging ? "true" : undefined}
             onTouchStart={picksPillDrag.onTouchStart}
-            className={`fade-up-enter relative flex overflow-hidden rounded-[var(--radius-lg)] p-1 ${
+            className={`fade-up-enter relative flex overflow-hidden rounded-[var(--radius-lg)] border p-1 ${
               picksPillDrag.isDragging ? "touch-none" : "touch-manipulation"
             } ${
               isDarkMode
-                ? "bg-white/[0.06] ring-1 ring-white/10"
-                : "bg-slate-100 ring-1 ring-slate-200/90"
+                ? "border-white/10 bg-white/[0.06]"
+                : "border-slate-200/90 bg-slate-100"
             }`}
             role="tablist"
             aria-label="Picks lists"
