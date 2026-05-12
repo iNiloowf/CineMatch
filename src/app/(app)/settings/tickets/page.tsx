@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/page-header";
 import { SurfaceCard } from "@/components/surface-card";
 import { AppRouteEmptyCard } from "@/components/app-route-status";
@@ -58,6 +58,13 @@ export default function MyTicketsPage() {
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const [followUpFeedback, setFollowUpFeedback] = useState<string | null>(null);
 
+  const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
+  const [newTicketSubject, setNewTicketSubject] = useState("");
+  const [newTicketMessage, setNewTicketMessage] = useState("");
+  const [newTicketPriority, setNewTicketPriority] = useState<"low" | "normal" | "high">("normal");
+  const [newTicketState, setNewTicketState] = useState<"idle" | "saving" | "error">("idle");
+  const [newTicketFeedback, setNewTicketFeedback] = useState("");
+
   const loadTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -106,6 +113,14 @@ export default function MyTicketsPage() {
   }, [selected?.id]);
 
   useEscapeToClose(Boolean(selected), () => setSelected(null));
+  useEscapeToClose(isNewTicketOpen, () => setIsNewTicketOpen(false));
+
+  useEffect(() => {
+    if (!isNewTicketOpen) {
+      setNewTicketState("idle");
+      setNewTicketFeedback("");
+    }
+  }, [isNewTicketOpen]);
 
   const sendFollowUp = useCallback(async () => {
     if (!selected) {
@@ -163,6 +178,69 @@ export default function MyTicketsPage() {
     }
   }, [followUpDraft, selected]);
 
+  const handleSubmitNewTicket = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const subject = newTicketSubject.trim();
+      const message = newTicketMessage.trim();
+
+      if (!subject || !message) {
+        setNewTicketState("error");
+        setNewTicketFeedback("Please fill out both subject and message.");
+        return;
+      }
+
+      const supabase = getSupabaseBrowserClient();
+      const sessionResult = supabase
+        ? await supabase.auth.getSession()
+        : { data: { session: null } };
+      const accessToken = sessionResult.data.session?.access_token ?? null;
+
+      if (!accessToken) {
+        setNewTicketState("error");
+        setNewTicketFeedback("Please sign in again, then submit your ticket.");
+        return;
+      }
+
+      setNewTicketState("saving");
+      setNewTicketFeedback("");
+
+      try {
+        const response = await fetch("/api/tickets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            subject,
+            message,
+            priority: newTicketPriority,
+          }),
+        });
+
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Ticket could not be submitted.");
+        }
+
+        setNewTicketSubject("");
+        setNewTicketMessage("");
+        setNewTicketPriority("normal");
+        setNewTicketState("idle");
+        setNewTicketFeedback("");
+        setIsNewTicketOpen(false);
+        void loadTickets();
+      } catch (error) {
+        setNewTicketState("error");
+        setNewTicketFeedback(
+          error instanceof Error ? error.message : "Ticket could not be submitted.",
+        );
+      }
+    },
+    [loadTickets, newTicketMessage, newTicketPriority, newTicketSubject],
+  );
+
   const eyebrow = isDarkMode
     ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-300/90"
     : "text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600/90";
@@ -207,6 +285,17 @@ export default function MyTicketsPage() {
         eyebrow="Support"
         title="My tickets"
         description="Full thread with the team. After an admin replies, you can send follow-ups here unless the ticket is closed."
+        action={
+          !loading && !error && !unavailable ? (
+            <button
+              type="button"
+              onClick={() => setIsNewTicketOpen(true)}
+              className="ui-btn ui-btn-primary h-11 px-4 sm:px-5"
+            >
+              New ticket
+            </button>
+          ) : null
+        }
       />
 
       {loading ? (
@@ -228,9 +317,8 @@ export default function MyTicketsPage() {
       ) : tickets.length === 0 ? (
         <AppRouteEmptyCard
           title="No tickets yet"
-          description="Open Settings → Account actions → Contact admin to send your first message."
+          description="Tap New ticket above to describe the issue. Our team will reply in this list."
           isDarkMode={isDarkMode}
-          primaryAction={{ label: "New ticket", href: "/settings" }}
         />
       ) : (
         <ul className="space-y-3">
@@ -262,6 +350,132 @@ export default function MyTicketsPage() {
           })}
         </ul>
       )}
+
+      <ModalPortal open={isNewTicketOpen}>
+        {isNewTicketOpen ? (
+        <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-md">
+          <button
+            type="button"
+            aria-label="Close"
+            className="absolute inset-0 cursor-default bg-transparent"
+            onClick={() => setIsNewTicketOpen(false)}
+          />
+          <div
+            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
+              isDarkMode
+                ? "border-white/12 bg-slate-950 text-slate-100"
+                : "border-slate-200/90 bg-white text-slate-900"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="New support ticket"
+          >
+            <span className="ui-modal-accent-bar" aria-hidden />
+            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-semibold text-inherit">New ticket</p>
+                <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Describe the issue and we’ll get back to you.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewTicketOpen(false)}
+                aria-label="Close"
+                className={`ui-shell-close ${
+                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  className="ui-icon-md ui-icon-stroke"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+            <form className="ui-shell-body space-y-3 !pt-4" onSubmit={(e) => void handleSubmitNewTicket(e)}>
+              <label className="block space-y-2 text-sm font-semibold">
+                Subject
+                <input
+                  value={newTicketSubject}
+                  onChange={(event) => setNewTicketSubject(event.target.value)}
+                  maxLength={120}
+                  placeholder="Example: Discover page is not loading"
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-semibold">
+                Message
+                <textarea
+                  value={newTicketMessage}
+                  onChange={(event) => setNewTicketMessage(event.target.value)}
+                  rows={4}
+                  maxLength={1200}
+                  placeholder="Describe the issue and steps to reproduce."
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white placeholder:text-slate-400"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                />
+              </label>
+              <label className="block space-y-2 text-sm font-semibold">
+                Priority
+                <select
+                  value={newTicketPriority}
+                  onChange={(event) =>
+                    setNewTicketPriority(event.target.value as "low" | "normal" | "high")
+                  }
+                  className={`w-full rounded-[14px] border px-3 py-2.5 text-sm outline-none ${
+                    isDarkMode
+                      ? "border-white/12 bg-white/8 text-white"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                >
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+              {newTicketFeedback ? (
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-rose-300" : "text-rose-700"
+                  }`}
+                >
+                  {newTicketFeedback}
+                </p>
+              ) : null}
+              <div className="ui-shell-footer !px-0 !pt-3">
+                <button
+                  type="button"
+                  onClick={() => setIsNewTicketOpen(false)}
+                  className="ui-btn ui-btn-secondary min-w-0 flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={newTicketState === "saving"}
+                  className="ui-btn ui-btn-primary min-w-0 flex-1 disabled:opacity-70"
+                >
+                  {newTicketState === "saving" ? "Sending…" : "Send ticket"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        ) : null}
+      </ModalPortal>
 
       <ModalPortal open={Boolean(selected)}>
         {selected ? (
