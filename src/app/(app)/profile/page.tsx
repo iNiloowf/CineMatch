@@ -18,6 +18,7 @@ import { useAppState } from "@/lib/app-state";
 import { describePublicHandleValidationError, normalizePublicHandleInput, publicHandleFormatHint } from "@/lib/public-handle";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { FavoriteMovieSummary, Movie, ProProfileStyle } from "@/lib/types";
+import { useWheelScrollContain } from "@/lib/hooks/use-wheel-scroll-contain";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
@@ -83,6 +84,8 @@ export default function ProfilePage() {
   const [mediaPreferenceDraft, setMediaPreferenceDraft] = useState<"movie" | "series" | "both">("both");
   const [isFavoriteGenresOpen, setIsFavoriteGenresOpen] = useState(false);
   const [isDislikedGenresOpen, setIsDislikedGenresOpen] = useState(false);
+  const favoriteGenresScrollRef = useRef<HTMLDivElement>(null);
+  const dislikedGenresScrollRef = useRef<HTMLDivElement>(null);
   const [favoriteMovieDraft, setFavoriteMovieDraft] = useState<FavoriteMovieSummary | null>(null);
   const [favoriteMovieSearchQuery, setFavoriteMovieSearchQuery] = useState("");
   const [favoriteMovieSearchResults, setFavoriteMovieSearchResults] = useState<Movie[]>([]);
@@ -125,6 +128,8 @@ export default function ProfilePage() {
   useEscapeToClose(Boolean(editingWatchedEntry), () => setEditingWatchedMovieId(null));
   useEscapeToClose(discoverSkipsModalOpen && !discoverSkipDetailMovie, () => setDiscoverSkipsModalOpen(false));
   useEscapeToClose(Boolean(discoverSkipDetailMovie), () => setDiscoverSkipDetailMovie(null));
+  useWheelScrollContain(favoriteGenresScrollRef, isFavoriteGenresOpen);
+  useWheelScrollContain(dislikedGenresScrollRef, isDislikedGenresOpen);
 
   useEffect(() => {
     if (isEditing && !prevIsEditing.current) {
@@ -1870,7 +1875,10 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       {isFavoriteGenresOpen ? (
-                        <div className="max-h-[min(40vh,14rem)] overflow-y-auto overscroll-contain pr-0.5">
+                        <div
+                          ref={favoriteGenresScrollRef}
+                          className="max-h-[min(40vh,14rem)] min-h-0 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 [scrollbar-gutter:stable]"
+                        >
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             {profileGenres.map((genre) => {
                               const active = favoriteGenresDraft.includes(genre);
@@ -1940,7 +1948,10 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       {isDislikedGenresOpen ? (
-                        <div className="max-h-[min(40vh,14rem)] overflow-y-auto overscroll-contain pr-0.5">
+                        <div
+                          ref={dislikedGenresScrollRef}
+                          className="max-h-[min(40vh,14rem)] min-h-0 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 [scrollbar-gutter:stable]"
+                        >
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             {profileGenres.map((genre) => {
                               const active = dislikedGenresDraft.includes(genre);
