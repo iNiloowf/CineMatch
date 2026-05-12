@@ -794,7 +794,7 @@ export default function ProfilePage() {
     watchedReviewTab === "recommended" ? recommendedWatchedPicks : notRecommendedWatchedPicks;
 
   const watchedReviewsEditorSection = (
-    <div className="space-y-3">
+    <div className="min-w-0 max-w-full space-y-3">
       {watchedPickReviews.length === 0 ? (
         <div
           className={`rounded-xl px-4 py-3.5 text-center text-sm leading-snug ${
@@ -804,9 +804,9 @@ export default function ProfilePage() {
           No watched reviews yet.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="min-w-0 max-w-full space-y-3">
           <div
-            className={`grid grid-cols-1 gap-1.5 rounded-xl p-0.5 sm:grid-cols-2 sm:gap-1 ${
+            className={`grid min-w-0 max-w-full grid-cols-1 gap-1.5 overflow-hidden rounded-xl p-0.5 sm:grid-cols-2 sm:gap-1 ${
               isDarkMode ? "bg-white/[0.06]" : "bg-slate-100/90"
             }`}
           >
@@ -817,8 +817,8 @@ export default function ProfilePage() {
               className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-xs font-semibold uppercase leading-snug tracking-wide transition ${
                 watchedReviewTab === "recommended"
                   ? isDarkMode
-                    ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30"
-                    : "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
+                    ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-inset ring-emerald-400/30"
+                    : "bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-200"
                   : isDarkMode
                     ? "text-slate-400"
                     : "text-slate-500"
@@ -835,8 +835,8 @@ export default function ProfilePage() {
               className={`min-w-0 rounded-[10px] px-2 py-2 text-center text-xs font-semibold uppercase leading-snug tracking-wide transition ${
                 watchedReviewTab === "notRecommended"
                   ? isDarkMode
-                    ? "bg-rose-500/20 text-rose-100 ring-1 ring-rose-400/30"
-                    : "bg-rose-100 text-rose-800 ring-1 ring-rose-200"
+                    ? "bg-rose-500/20 text-rose-100 ring-1 ring-inset ring-rose-400/30"
+                    : "bg-rose-100 text-rose-800 ring-1 ring-inset ring-rose-200"
                   : isDarkMode
                     ? "text-slate-400"
                     : "text-slate-500"
@@ -849,7 +849,7 @@ export default function ProfilePage() {
           </div>
 
           <div
-            className={`divide-y overflow-hidden rounded-xl font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] ${
+            className={`min-w-0 divide-y overflow-hidden rounded-xl font-[system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] ${
               isDarkMode ? "divide-white/10 bg-white/[0.04]" : "divide-slate-200/80 bg-slate-50/80"
             }`}
           >
@@ -1787,8 +1787,10 @@ export default function ProfilePage() {
                   ) : null}
                 </section>
 
-                <section className={`flex flex-col gap-3 p-3 sm:p-4 ${editSectionShell}`}>
-                  <div className="flex w-full min-h-9 items-center justify-between gap-2">
+                <section
+                  className={`flex min-w-0 max-w-full flex-col gap-3 overflow-hidden p-3 sm:p-4 ${editSectionShell}`}
+                >
+                  <div className="flex w-full min-h-9 min-w-0 items-center justify-between gap-2">
                     <p id="profile-edit-watched-reviews-heading" className={editSectionTitleClass}>
                       Watched reviews
                     </p>
