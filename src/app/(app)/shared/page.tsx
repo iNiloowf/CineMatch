@@ -17,7 +17,7 @@ import { useAppState } from "@/lib/app-state";
 import type { SharedMovieView } from "@/lib/types";
 
 export default function SharedWatchlistPage() {
-  const { sharedMovieGroups, toggleWatched, toggleSharedMovie, isDarkMode, hasProAccess } = useAppState();
+  const { sharedMovieGroups, toggleWatched, toggleSharedMovie, isDarkMode } = useAppState();
   const [openPartnerId, setOpenPartnerId] = useState<string | null>(null);
   const [detailsMovie, setDetailsMovie] = useState<SharedMovieView | null>(null);
 
@@ -137,7 +137,6 @@ export default function SharedWatchlistPage() {
                               key={key}
                               entry={entry}
                               isDarkMode={isDarkMode}
-                              hasProAccess={hasProAccess}
                               onOpenDetails={() => setDetailsMovie(entry)}
                               toggleSharedMovie={toggleSharedMovie}
                               toggleWatched={toggleWatched}
@@ -154,7 +153,6 @@ export default function SharedWatchlistPage() {
                             key={key}
                             entry={entry}
                             isDarkMode={isDarkMode}
-                            hasProAccess={hasProAccess}
                             onOpenDetails={() => setDetailsMovie(entry)}
                             toggleSharedMovie={toggleSharedMovie}
                             toggleWatched={toggleWatched}

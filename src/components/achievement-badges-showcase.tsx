@@ -12,7 +12,7 @@ type AchievementBadgesShowcaseProps = {
   /** Friend profile: show only the badge grid (no section title or intro paragraph). */
   compact?: boolean;
   /**
-   * Friend profile: free members don’t show which badges they earned (Pro-only visibility).
+   * Friend profile: when private, earned badges are hidden from viewers.
    * When true, ignore `earned` and show a short privacy notice instead.
    */
   friendAchievementsPrivate?: boolean;
@@ -36,7 +36,7 @@ export function AchievementBadgesShowcase({
       isDarkMode ? "text-slate-400" : "text-slate-500"
     }`;
     const text =
-      "Earned badges stay private on a free plan. They appear here when this member has Pro.";
+      "Earned badges stay private for this member until they choose to share them.";
     if (friendCompact) {
       return <p className={privacyClass}>{text}</p>;
     }

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { PosterBackdrop } from "@/components/poster-backdrop";
 import type { SharedMovieView } from "@/lib/types";
 
@@ -82,7 +81,6 @@ function TogglePill({
 export type SharedPartnerMovieCardProps = {
   entry: SharedMovieView;
   isDarkMode: boolean;
-  hasProAccess: boolean;
   onOpenDetails: () => void;
   toggleSharedMovie: (partnerId: string, movieId: string, checked: boolean) => Promise<void>;
   toggleWatched: (partnerId: string, movieId: string, checked: boolean) => Promise<void>;
@@ -91,7 +89,6 @@ export type SharedPartnerMovieCardProps = {
 export function SharedPartnerMovieCard({
   entry,
   isDarkMode,
-  hasProAccess,
   onOpenDetails,
   toggleSharedMovie,
   toggleWatched,
@@ -150,14 +147,11 @@ export function SharedPartnerMovieCard({
 
         <div className="space-y-2.5 pt-0.5">
           <TogglePill
-            label={hasProAccess ? "Keep in shared list" : "Keep in shared list (Pro)"}
+            label="Keep in shared list"
             checked={entry.shared}
-            locked={!hasProAccess}
+            locked={false}
             isDarkMode={isDarkMode}
             onChange={async (checked) => {
-              if (!hasProAccess) {
-                return;
-              }
               await toggleSharedMovie(entry.partner.id, entry.movie.id, checked);
             }}
           />
@@ -169,22 +163,6 @@ export function SharedPartnerMovieCard({
               await toggleWatched(entry.partner.id, entry.movie.id, checked);
             }}
           />
-          {!hasProAccess ? (
-            <div
-              className={`rounded-[14px] border px-3 py-2 text-[11px] leading-relaxed ${
-                isDarkMode
-                  ? "border-violet-400/25 bg-violet-500/10 text-violet-100"
-                  : "border-violet-200/90 bg-violet-50 text-violet-700"
-              }`}
-            >
-              <p>
-                Only “Keep in shared list” is Pro. “Watched together” is free for everyone.
-              </p>
-              <Link href="/settings" className="ui-btn ui-btn-primary mt-2 !px-3 !py-1.5 !text-[11px]">
-                Buy Pro
-              </Link>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>

@@ -311,7 +311,7 @@ export default function SettingsPage() {
 
   const handleOpenCheckout = async () => {
     if (hasProAccess) {
-      setBillingFeedback("You already have Pro access on this account.");
+      setBillingFeedback("This account already has full access.");
       return;
     }
 
@@ -319,14 +319,14 @@ export default function SettingsPage() {
       selectedPlanType === "pro_partner_gift" &&
       (!selectedGiftPartner || selectedGiftPartnerId === "none")
     ) {
-      setBillingFeedback("Pick one connected partner for the Partner Gift plan.");
+      setBillingFeedback("Pick one connected partner for the gift recipient.");
       return;
     }
 
     const accessToken = await resolveAccessToken();
 
     if (!accessToken) {
-      setBillingFeedback("Please sign in again, then try Pro checkout.");
+      setBillingFeedback("Please sign in again, then try checkout.");
       return;
     }
 
@@ -362,7 +362,7 @@ export default function SettingsPage() {
       setBillingFeedback(
         selectedPlanType === "pro_partner_gift"
           ? "Checkout opened. After successful payment, your one-time gift code appears here."
-          : "Checkout opened. Pro activates after Stripe confirms payment.",
+          : "Checkout opened. Full access activates after payment is confirmed.",
       );
     } catch (error) {
       setBillingFeedback(
@@ -406,7 +406,7 @@ export default function SettingsPage() {
       }
 
       setGiftRedeemState("success");
-      setGiftRedeemFeedback("Pro is now active on your account.");
+      setGiftRedeemFeedback("Full access is now active on your account.");
       setGiftRedeemCode("");
       refreshAccountData();
     } catch (error) {
@@ -682,7 +682,7 @@ export default function SettingsPage() {
                   Redeem partner gift
                 </p>
                 <p className={`mt-1 text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Enter the one-time code your partner shared from Pro + Partner Gift.
+                  Enter the one-time code your partner shared with you.
                 </p>
               </div>
               <button
@@ -866,7 +866,7 @@ export default function SettingsPage() {
       </SurfaceCard>
 
       <SurfaceCard className="fade-up-enter" style={{ animationDelay: "110ms" }} interactive={false}>
-        <p className={sectionEyebrow}>Subscription</p>
+        <p className={sectionEyebrow}>Account</p>
         <div
           className={`mt-3.5 w-full min-w-0 rounded-[18px] border px-4 py-4 ${
             isDarkMode ? "border-white/12 bg-white/[0.05]" : "border-slate-200/90 bg-slate-50/90"
@@ -887,7 +887,7 @@ export default function SettingsPage() {
             </span>
           </div>
           <p className={`mt-2 text-xs leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-            Subscription checkout and Pro-only lockouts are temporarily disabled. Everything is available on this build.
+            This build treats every signed-in account as having full app access. Paid tiers are not offered right now.
           </p>
         </div>
       </SurfaceCard>

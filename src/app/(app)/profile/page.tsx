@@ -43,7 +43,6 @@ export default function ProfilePage() {
     undoSwipe,
     isDarkMode,
     isReady,
-    hasProAccess,
   } = useAppState();
 
   const earnedBadges = useMemo(
@@ -104,7 +103,7 @@ export default function ProfilePage() {
     discoverSkips: false,
   });
   const [isProStudioOpen, setIsProStudioOpen] = useState(false);
-  /** Applies Pro Studio style immediately while save runs (server round-trip was slow). */
+  /** Applies profile theme immediately while save runs (server round-trip was slow). */
   const [optimisticProfileStyle, setOptimisticProfileStyle] = useState<ProProfileStyle | null>(null);
   const [discoverSkipsModalOpen, setDiscoverSkipsModalOpen] = useState(false);
   const [discoverSkipDetailMovie, setDiscoverSkipDetailMovie] = useState<Movie | null>(null);
@@ -717,7 +716,7 @@ export default function ProfilePage() {
     : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
 
   const handleSelectProfileStyle = async (style: ProProfileStyle) => {
-    if (!hasProAccess || style === selectedProfileStyle) {
+    if (style === selectedProfileStyle) {
       return;
     }
 
@@ -1403,17 +1402,6 @@ export default function ProfilePage() {
                   <h2 className={`min-w-0 truncate text-xl font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {currentUser.name}
                   </h2>
-                  {hasProAccess ? (
-                    <span
-                      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
-                        isDarkMode
-                          ? "border border-amber-300/35 bg-amber-400/20 text-amber-100"
-                          : "border border-amber-300 bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      PRO
-                    </span>
-                  ) : null}
                 </div>
                 <p className={`truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   {currentUser.email}
@@ -2172,7 +2160,7 @@ export default function ProfilePage() {
             </span>
             <div className="min-w-0">
               <p className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                Pro Studio
+                Profile look
               </p>
               <p className={`mt-0.5 text-[11px] font-medium leading-snug sm:text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                 Public card style for friends
@@ -2180,19 +2168,6 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span
-              className={`rounded-full whitespace-nowrap px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
-                hasProAccess
-                  ? isDarkMode
-                    ? "bg-emerald-500/18 text-emerald-100 ring-1 ring-emerald-400/30"
-                    : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/80"
-                  : isDarkMode
-                    ? "bg-white/10 text-slate-300 ring-1 ring-white/12"
-                    : "bg-slate-100 text-slate-600 ring-1 ring-slate-200/90"
-              }`}
-            >
-              {hasProAccess ? "Pro active" : "Pro required"}
-            </span>
             <span className={`text-base ${isDarkMode ? "text-slate-300" : "text-slate-500"}`} aria-hidden>
               {isProStudioOpen ? "−" : "+"}
             </span>
@@ -2201,20 +2176,6 @@ export default function ProfilePage() {
 
         {isProStudioOpen ? (
           <div className={`relative z-10 space-y-3 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5 ${isDarkMode ? "border-white/10" : "border-violet-200/70"}`}>
-            {!hasProAccess ? (
-              <div
-                className={`rounded-[16px] border px-4 py-3 text-sm ${
-                  isDarkMode
-                    ? "border-amber-400/30 bg-amber-500/10 text-amber-100"
-                    : "border-amber-200 bg-amber-50 text-amber-800"
-                }`}
-              >
-                Pro unlocks profile themes.
-                <Link href="/settings" className="ml-2 font-semibold underline underline-offset-2">
-                  Settings
-                </Link>
-              </div>
-            ) : (
               <>
                 <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Themes
@@ -2247,7 +2208,6 @@ export default function ProfilePage() {
                   Friends see this on your profile.
                 </p>
               </>
-            )}
           </div>
         ) : null}
       </SurfaceCard>

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ModalPortal } from "@/components/modal-portal";
-import { AvatarBadge } from "@/components/avatar-badge";
 import { MovieDetailsModal } from "@/components/movie-details-modal";
 import { PageHeader } from "@/components/page-header";
 import { PicksMovieRow } from "@/components/picks-movie-row";
@@ -14,11 +13,9 @@ import {
   VirtualScrollList,
 } from "@/components/virtual-scroll-list";
 import { useAppState } from "@/lib/app-state";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useSegmentedPillDrag } from "@/lib/use-segmented-pill-drag";
 
 type ShareToast = { message: string; variant: "success" | "error" };
-type SubscriptionPlanType = "pro_monthly" | "pro_yearly" | "pro_partner_gift";
 
 export default function PicksPage() {
   const {
@@ -26,7 +23,6 @@ export default function PicksPage() {
     currentUserId,
     acceptedMovies,
     sharedMovies,
-    linkedUsers,
     removePick,
     markPickWatched,
     unmarkPickWatched,
@@ -41,12 +37,6 @@ export default function PicksPage() {
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
   const shareToastTimerRef = useRef<number | null>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
-  const [isBuyProModalOpen, setIsBuyProModalOpen] = useState(false);
-  const [selectedPlanType, setSelectedPlanType] = useState<SubscriptionPlanType>("pro_monthly");
-  const [selectedGiftPartnerId, setSelectedGiftPartnerId] = useState("none");
-  const [isGiftPartnerPickerOpen, setIsGiftPartnerPickerOpen] = useState(false);
-  const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
-  const [billingFeedback, setBillingFeedback] = useState("");
 
   const reduceMotion = useMemo(() => {
     if (!currentUserId) {
@@ -124,22 +114,6 @@ export default function PicksPage() {
     () => new Set(sharedMovies.map((entry) => entry.movie.id)).size,
     [sharedMovies],
   );
-  const acceptedConnectedPartners = useMemo(
-    () =>
-      linkedUsers
-        .filter((entry) => entry.status === "accepted")
-        .map((entry) => entry.user)
-        .sort((left, right) => left.name.localeCompare(right.name)),
-    [linkedUsers],
-  );
-  const selectedGiftPartner = useMemo(
-    () =>
-      selectedGiftPartnerId === "none"
-        ? null
-        : acceptedConnectedPartners.find((partner) => partner.id === selectedGiftPartnerId) ?? null,
-    [acceptedConnectedPartners, selectedGiftPartnerId],
-  );
-
   useEffect(() => {
     return () => {
       if (shareToastTimerRef.current) {
@@ -147,45 +121,6 @@ export default function PicksPage() {
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!isBuyProModalOpen && !isGiftPartnerPickerOpen) {
-      return;
-    }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-      event.preventDefault();
-      if (isGiftPartnerPickerOpen) {
-        setIsGiftPartnerPickerOpen(false);
-        return;
-      }
-      setIsBuyProModalOpen(false);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isBuyProModalOpen, isGiftPartnerPickerOpen]);
-  useEffect(() => {
-    if (!isBuyProModalOpen) {
-      setIsGiftPartnerPickerOpen(false);
-    }
-  }, [isBuyProModalOpen]);
-  useEffect(() => {
-    if (selectedPlanType !== "pro_partner_gift") {
-      setSelectedGiftPartnerId("none");
-      setIsGiftPartnerPickerOpen(false);
-    }
-  }, [selectedPlanType]);
-  useEffect(() => {
-    if (selectedGiftPartnerId === "none") {
-      return;
-    }
-    const stillLinked = acceptedConnectedPartners.some((partner) => partner.id === selectedGiftPartnerId);
-    if (!stillLinked) {
-      setSelectedGiftPartnerId("none");
-    }
-  }, [acceptedConnectedPartners, selectedGiftPartnerId]);
 
   useEffect(() => {
     const anyOpen = Boolean(
@@ -306,64 +241,6 @@ export default function PicksPage() {
     },
     [unmarkPickWatched],
   );
-
-  const resolveAccessToken = useCallback(async () => {
-    const supabase = getSupabaseBrowserClient();
-    const sessionResult = supabase
-      ? await supabase.auth.getSession()
-      : { data: { session: null } };
-    return sessionResult.data.session?.access_token ?? null;
-  }, []);
-
-  const handleOpenCheckout = useCallback(async () => {
-    if (
-      selectedPlanType === "pro_partner_gift" &&
-      (!selectedGiftPartner || selectedGiftPartnerId === "none")
-    ) {
-      setBillingFeedback("Pick one connected partner for the Partner Gift plan.");
-      return;
-    }
-
-    const accessToken = await resolveAccessToken();
-    if (!accessToken) {
-      setBillingFeedback("Please sign in again, then try Pro checkout.");
-      return;
-    }
-
-    setIsOpeningCheckout(true);
-    setBillingFeedback("");
-    try {
-      const response = await fetch("/api/subscription/create-intent", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          planType: selectedPlanType,
-          partnerUserId:
-            selectedPlanType === "pro_partner_gift"
-              ? selectedGiftPartner?.id
-              : undefined,
-        }),
-      });
-      const payload = (await response.json()) as { error?: string; checkoutUrl?: string };
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Could not open checkout right now.");
-      }
-      if (!payload.checkoutUrl) {
-        throw new Error("Checkout URL is missing.");
-      }
-      window.open(payload.checkoutUrl, "_blank", "noopener,noreferrer");
-      setBillingFeedback("Checkout opened in a new tab.");
-    } catch (error) {
-      setBillingFeedback(
-        error instanceof Error ? error.message : "Could not open checkout right now.",
-      );
-    } finally {
-      setIsOpeningCheckout(false);
-    }
-  }, [resolveAccessToken, selectedGiftPartner, selectedGiftPartnerId, selectedPlanType]);
 
   const detailsModal = (
     <MovieDetailsModal
@@ -850,286 +727,6 @@ export default function PicksPage() {
                 </div>
               </div>
             </div>
-        ) : null}
-      </ModalPortal>
-      <ModalPortal open={isBuyProModalOpen}>
-        {isBuyProModalOpen ? (
-            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/45 backdrop-blur-md">
-          <button
-            type="button"
-            aria-label="Close buy pro modal"
-            className="absolute inset-0 cursor-default bg-transparent"
-            onClick={() => setIsBuyProModalOpen(false)}
-          />
-          <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto max-w-xl overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.22)] ${
-              isDarkMode
-                ? "border-white/12 bg-slate-950 text-slate-100"
-                : "border-slate-200/90 bg-white text-slate-900"
-            }`}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Buy Pro"
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className={`ui-shell-header ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
-              <div className="min-w-0 flex-1">
-                <p className="text-lg font-semibold text-inherit">Choose your Pro plan</p>
-                <p className={`mt-1 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Pick a subscription and continue to secure checkout.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsBuyProModalOpen(false)}
-                aria-label="Close"
-                className={`ui-shell-close ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="ui-icon-md ui-icon-stroke"
-                  aria-hidden
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="ui-shell-body space-y-3 !pt-4">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {[
-                  {
-                    id: "pro_monthly" as const,
-                    title: "Pro Monthly",
-                    price: "$5.99 / month",
-                    note: "Flexible billing",
-                  },
-                  {
-                    id: "pro_yearly" as const,
-                    title: "Pro Yearly",
-                    price: "$49.99 / year",
-                    note: "Best value",
-                  },
-                  {
-                    id: "pro_partner_gift" as const,
-                    title: "Pro + Partner Gift",
-                    price: "$9.99 one-time",
-                    note: "Includes one redeem code",
-                  },
-                ].map((plan) => (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => setSelectedPlanType(plan.id)}
-                    className={`rounded-[14px] border px-3 py-3 text-left transition ${
-                      selectedPlanType === plan.id
-                        ? isDarkMode
-                          ? "border-violet-400/45 bg-violet-500/12 ring-1 ring-violet-400/28"
-                          : "border-violet-300 bg-violet-50 ring-1 ring-violet-200/80"
-                        : isDarkMode
-                          ? "border-white/10 bg-white/[0.03]"
-                          : "border-slate-200/90 bg-white"
-                    }`}
-                  >
-                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      {plan.title}
-                    </p>
-                    <p className={`mt-1 text-xs font-semibold ${isDarkMode ? "text-violet-200" : "text-violet-700"}`}>
-                      {plan.price}
-                    </p>
-                    <p className={`mt-1 text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      {plan.note}
-                    </p>
-                  </button>
-                ))}
-              </div>
-              {selectedPlanType === "pro_partner_gift" ? (
-                acceptedConnectedPartners.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className={`text-sm font-semibold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                      Choose the connected partner for this gift
-                    </p>
-                    <button
-                      type="button"
-                      aria-haspopup="dialog"
-                      aria-expanded={isGiftPartnerPickerOpen}
-                      onClick={() => setIsGiftPartnerPickerOpen(true)}
-                      className={`flex w-full items-center justify-between gap-2 rounded-[14px] border px-3 py-2.5 text-left text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-violet-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 ${
-                        isDarkMode
-                          ? "border-white/12 bg-white/[0.06] text-white hover:border-white/18 hover:bg-white/[0.09]"
-                          : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
-                      }`}
-                    >
-                      <span className="flex min-w-0 flex-1 items-center gap-2.5">
-                        {selectedGiftPartner ? (
-                          <AvatarBadge
-                            initials={selectedGiftPartner.avatar}
-                            imageUrl={selectedGiftPartner.avatarImageUrl}
-                            sizeClassName="h-8 w-8 shrink-0"
-                            textClassName="text-[10px] font-bold"
-                          />
-                        ) : null}
-                        <span
-                          className={`min-w-0 truncate ${
-                            selectedGiftPartner
-                              ? isDarkMode
-                                ? "text-white"
-                                : "text-slate-900"
-                              : isDarkMode
-                                ? "text-slate-500"
-                                : "text-slate-400"
-                          }`}
-                        >
-                          {selectedGiftPartner?.name ?? "Select partner"}
-                        </span>
-                      </span>
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className={`ui-icon-md ui-icon-stroke shrink-0 opacity-70 ${
-                          isDarkMode ? "text-slate-300" : "text-slate-500"
-                        }`}
-                        aria-hidden
-                      >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <p className={`text-xs ${isDarkMode ? "text-amber-300" : "text-amber-700"}`}>
-                    You need at least one accepted connection to use Partner Gift.
-                  </p>
-                )
-              ) : null}
-              {billingFeedback ? (
-                <p className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                  {billingFeedback}
-                </p>
-              ) : null}
-            </div>
-            <div className="ui-shell-footer !flex !flex-col !pt-3">
-              <button
-                type="button"
-                onClick={() => setIsBuyProModalOpen(false)}
-                className="ui-btn ui-btn-secondary w-full"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleOpenCheckout()}
-                disabled={isOpeningCheckout}
-                className="ui-btn ui-btn-primary w-full disabled:opacity-70"
-              >
-                {isOpeningCheckout ? "Opening checkout..." : "Continue to secure checkout"}
-              </button>
-            </div>
-          </div>
-        </div>
-        ) : null}
-      </ModalPortal>
-      <ModalPortal open={isGiftPartnerPickerOpen}>
-        {isGiftPartnerPickerOpen ? (
-            <div className="ui-overlay z-[var(--z-modal)] bg-slate-950/50 backdrop-blur-md">
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => setIsGiftPartnerPickerOpen(false)}
-            className="absolute inset-0 cursor-default bg-transparent"
-          />
-          <div
-            className={`ui-shell ui-shell--dialog-md relative z-10 mx-auto w-full max-w-[min(92vw,26rem)] overflow-hidden rounded-[28px] border shadow-[0_24px_70px_rgba(15,23,42,0.28)] ${
-              isDarkMode
-                ? "border-white/12 bg-slate-950 text-slate-100"
-                : "border-slate-200/90 bg-white text-slate-900"
-            }`}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="picks-gift-partner-picker-title"
-          >
-            <span className="ui-modal-accent-bar" aria-hidden />
-            <div className={`ui-shell-header relative ${isDarkMode ? "!border-b-white/10" : "!border-b-slate-100"}`}>
-              <div className="min-w-0 flex-1 pt-0.5">
-                <p id="picks-gift-partner-picker-title" className="text-lg font-semibold text-inherit">
-                  Gift recipient
-                </p>
-                <p className={`mt-1 text-xs leading-snug ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Choose the connected partner who should receive the redeem code.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsGiftPartnerPickerOpen(false)}
-                aria-label="Close"
-                className={`ui-shell-close ${
-                  isDarkMode ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-md ui-icon-stroke" aria-hidden>
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="ui-shell-body max-h-[min(52vh,22rem)] space-y-2 overflow-y-auto !pt-4">
-              {acceptedConnectedPartners.map((partner) => {
-                const selected = partner.id === selectedGiftPartnerId;
-                return (
-                  <button
-                    key={partner.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedGiftPartnerId(partner.id);
-                      setIsGiftPartnerPickerOpen(false);
-                    }}
-                    className={`flex w-full items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left text-sm font-semibold transition active:scale-[0.99] ${
-                      selected
-                        ? isDarkMode
-                          ? "border-violet-400/45 bg-violet-500/15 text-violet-50 ring-1 ring-violet-400/30"
-                          : "border-violet-300 bg-violet-50 text-violet-900 ring-1 ring-violet-200/80"
-                        : isDarkMode
-                          ? "border-white/10 bg-white/[0.04] text-slate-100 hover:border-white/16 hover:bg-white/[0.07]"
-                          : "border-slate-200/90 bg-slate-50/80 text-slate-900 hover:border-slate-300 hover:bg-white"
-                    }`}
-                  >
-                    <span className="flex min-w-0 flex-1 items-center gap-2.5">
-                      <AvatarBadge
-                        initials={partner.avatar}
-                        imageUrl={partner.avatarImageUrl}
-                        sizeClassName="h-8 w-8 shrink-0"
-                        textClassName="text-[10px] font-bold"
-                      />
-                      <span className="min-w-0 truncate">{partner.name}</span>
-                    </span>
-                    {selected ? (
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                          isDarkMode ? "bg-violet-400/25 text-violet-100" : "bg-violet-200/80 text-violet-900"
-                        }`}
-                      >
-                        Selected
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="ui-shell-footer !flex !flex-col !flex-nowrap !gap-2 !px-4 !pt-3 sm:!px-5">
-              <button
-                type="button"
-                onClick={() => setIsGiftPartnerPickerOpen(false)}
-                className="ui-btn ui-btn-secondary w-full justify-center px-3 py-2.5 text-xs font-semibold leading-tight tracking-tight sm:text-[13px]"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
         ) : null}
       </ModalPortal>
       {detailsModal}

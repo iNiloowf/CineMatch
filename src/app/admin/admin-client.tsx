@@ -486,7 +486,7 @@ export default function AdminDesktopPage() {
         });
         const body = (await response.json()) as { error?: string };
         if (!response.ok) {
-          throw new Error(body.error ?? "Subscription update failed.");
+          throw new Error(body.error ?? "Access update failed.");
         }
 
         setDashboard((current) => {
@@ -525,14 +525,14 @@ export default function AdminDesktopPage() {
         });
         setSubscriptionActionState({
           userId,
-          message: "Subscription updated.",
+          message: "Access flags saved.",
           isError: false,
         });
       } catch (error) {
         setSubscriptionActionState({
           userId,
           message:
-            error instanceof Error ? error.message : "Subscription update failed.",
+            error instanceof Error ? error.message : "Access update failed.",
           isError: true,
         });
       } finally {
@@ -639,7 +639,7 @@ export default function AdminDesktopPage() {
         { id: "tickets" as const, label: "Tickets", note: "Support queue" },
         { id: "users" as const, label: "Users", note: "Accounts" },
         { id: "swipes" as const, label: "Swipes", note: "Recent actions" },
-        { id: "subscriptions" as const, label: "Subscriptions", note: "Plan control" },
+        { id: "subscriptions" as const, label: "Access flags", note: "Tier & test overrides" },
       ] satisfies Array<{ id: AdminTab; label: string; note: string }>,
     [],
   );
@@ -1174,7 +1174,7 @@ export default function AdminDesktopPage() {
               <StatCard label="Rejected swipes" value={dashboardStats?.rejectedSwipes ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Accepted links" value={dashboardStats?.acceptedLinks ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Open tickets" value={dashboardStats?.openTickets ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Pro users" value={dashboardStats?.proUsers ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Full-access users" value={dashboardStats?.proUsers ?? 0} isDarkMode={isDarkMode} />
             </div>
 
             <section className={`mb-6 overflow-hidden rounded-[24px] border ${glassPanel}`}>
@@ -1460,9 +1460,9 @@ export default function AdminDesktopPage() {
                 isDarkMode ? "border-white/10" : "border-slate-200/60"
               }`}
             >
-              <h2 className="text-lg font-semibold">Subscription Management</h2>
+              <h2 className="text-lg font-semibold">User access</h2>
               <p className={`mt-1 text-xs ${softText}`}>
-                Set Free/Pro and optionally simulate active Pro for test accounts.
+                Set standard vs full feature access and optional staff test override per account.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -1471,7 +1471,7 @@ export default function AdminDesktopPage() {
                   <tr>
                     <th className="px-4 py-2 text-left font-semibold">User</th>
                     <th className="px-4 py-2 text-left font-semibold">Email</th>
-                    <th className="px-4 py-2 text-left font-semibold">Current tier</th>
+                    <th className="px-4 py-2 text-left font-semibold">Stored tier</th>
                     <th className="px-4 py-2 text-left font-semibold">Effective access</th>
                     <th className="px-4 py-2 text-left font-semibold">Actions</th>
                   </tr>
@@ -1487,7 +1487,7 @@ export default function AdminDesktopPage() {
                             ? "bg-emerald-500/20 text-emerald-200"
                             : "bg-slate-500/20 text-slate-200"
                         }`}>
-                          {row.subscriptionTier.toUpperCase()}
+                          {row.subscriptionTier === "pro" ? "Full" : "Standard"}
                         </span>
                       </td>
                       <td className="px-4 py-2">
@@ -1496,7 +1496,7 @@ export default function AdminDesktopPage() {
                             ? "bg-violet-500/20 text-violet-100"
                             : "bg-slate-500/20 text-slate-200"
                         }`}>
-                          {row.effectiveSubscriptionTier.toUpperCase()}
+                          {row.effectiveSubscriptionTier === "pro" ? "Full" : "Standard"}
                         </span>
                       </td>
                       <td className="px-4 py-2">
@@ -1507,7 +1507,7 @@ export default function AdminDesktopPage() {
                             disabled={subscriptionSavingUserId === row.id}
                             className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
                           >
-                            Set Free
+                            Set standard
                           </button>
                           <button
                             type="button"
@@ -1515,7 +1515,7 @@ export default function AdminDesktopPage() {
                             disabled={subscriptionSavingUserId === row.id}
                             className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
                           >
-                            Set Pro
+                            Grant full access
                           </button>
                           <button
                             type="button"
@@ -1527,7 +1527,7 @@ export default function AdminDesktopPage() {
                             disabled={subscriptionSavingUserId === row.id}
                             className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
                           >
-                            {row.adminModeSimulatePro ? "Disable Sim" : "Enable Sim"}
+                            {row.adminModeSimulatePro ? "Clear test override" : "Enable test override"}
                           </button>
                         </div>
                         {subscriptionActionState?.userId === row.id ? (

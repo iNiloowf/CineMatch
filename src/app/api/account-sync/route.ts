@@ -238,7 +238,7 @@ async function fetchSettingsRow(userId: string, supabaseAdmin: SupabaseClient) {
 
 /**
  * Linked friends’ `settings.subscription_tier` can lag Stripe / Auth updates.
- * Merge `app_metadata` so viewers see Pro-only surfaces (e.g. achievement badges on friend profile).
+ * Merge `app_metadata` so viewers see the same access-gated surfaces (e.g. achievement badges on friend profile).
  */
 async function fetchPartnerSettingsRowWithAuthTier(
   partnerId: string,

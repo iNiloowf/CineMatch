@@ -42,7 +42,7 @@ function movieGenreList(movie: { genre: string[] }) {
     .filter((genre) => Boolean(genre) && genre !== "movie" && genre !== "series");
 }
 
-/** Pro: taste overlap + suggested top 3 with one linked friend (lives on Profile, not Picks). */
+/** Taste overlap + suggested picks with one linked friend (Profile). */
 export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationDelayMs?: number }) {
   const {
     currentUserId,
@@ -51,7 +51,6 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     linkedUsers,
     onboardingPreferences,
     isDarkMode,
-    hasProAccess,
   } = useAppState();
 
   const [isExpanded, setIsExpanded] = useState(true);
@@ -420,14 +419,11 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
   const showCollapsedSubtitle = !isExpanded && !isClosing;
 
   const collapsedTileSubtitle = useMemo(() => {
-    if (!hasProAccess) {
-      return "Taste overlap & genre picks — Pro";
-    }
     if (!insightsPartner) {
       return "Who you match with — add a link";
     }
     return "Shared taste & suggestions for two";
-  }, [hasProAccess, insightsPartner]);
+  }, [insightsPartner]);
 
   const tileSurface = isDarkMode
     ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
@@ -451,7 +447,7 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     <section
       className={`discover-toolbar-enter relative overflow-hidden rounded-[22px] sm:rounded-[24px] ${tileSurface}`}
       style={{ animationDelay: `${animationDelayMs}ms` }}
-      aria-label="Premium insight"
+      aria-label="Taste insight"
     >
       <span
         className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500"
@@ -476,18 +472,18 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                 <p
                   className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}
                 >
-                  Premium insight
+                  Taste insight
                 </p>
                 {showExpandedChrome ? (
                   <>
-                    {hasProAccess && insightsPartner && tasteOverlap ? (
+                    {insightsPartner && tasteOverlap ? (
                       <p
                         className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
                       >
                         Overlap vs {insightsPartner.name}
                         {acceptedConnectedPartners.length > 1 ? " · switch below" : ""}.
                       </p>
-                    ) : hasProAccess && !insightsPartner ? (
+                    ) : !insightsPartner ? (
                       <p
                         className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
                       >
@@ -497,7 +493,7 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                       <p
                         className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${isDarkMode ? "text-violet-200/85" : "text-violet-700/85"}`}
                       >
-                        Pro: overlap + 3 genre-based picks.
+                        Overlap and three genre-based suggestions.
                       </p>
                     )}
                   </>
@@ -510,23 +506,12 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                 ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {!hasProAccess ? (
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] ${
-                      isDarkMode
-                        ? "bg-violet-500/18 text-violet-100 ring-1 ring-violet-400/28"
-                        : "bg-violet-100 text-violet-700 ring-1 ring-violet-200/80"
-                    }`}
-                  >
-                    Pro
-                  </span>
-                ) : null}
                 <button
                   type="button"
                   onClick={toggleExpanded}
                   disabled={isClosing}
                   aria-expanded={Boolean(isExpanded && !isClosing)}
-                  aria-label={isExpanded ? "Collapse Premium insight" : "Expand Premium insight"}
+                  aria-label={isExpanded ? "Collapse taste insight" : "Expand taste insight"}
                   className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg text-base font-light transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 motion-reduce:active:scale-100"
                 >
                   <span className={`text-base ${isDarkMode ? "text-slate-300" : "text-slate-500"}`} aria-hidden>
@@ -552,21 +537,6 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                     : "opacity-100 [transform:translate3d(0,0,0)]"
               }`}
             >
-                  {!hasProAccess ? (
-                    <>
-                      <p
-                        className={`text-[11px] leading-snug sm:text-xs sm:leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
-                      >
-                        Shared-genre picks + taste overlap with a partner.
-                      </p>
-                      <Link
-                        href="/settings"
-                        className="ui-btn ui-btn-primary mt-1 inline-flex min-h-10 w-full items-center justify-center text-sm sm:w-auto"
-                      >
-                        View plans in Settings
-                      </Link>
-                    </>
-                  ) : (
                     <>
                       {!insightsPartner ? (
                         <p className={`text-[11px] leading-snug sm:text-xs ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
@@ -783,7 +753,6 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
                         </div>
                       )}
                     </>
-                  )}
             </div>
           </div>
         </div>
