@@ -242,9 +242,9 @@ export default function ProfilePage() {
           discoveryPreferences: false,
           discoverSkips: false,
         });
+        setIsFavoriteGenresOpen(false);
+        setIsDislikedGenresOpen(false);
       }
-      setIsFavoriteGenresOpen(false);
-      setIsDislikedGenresOpen(false);
     });
   }, [
     currentUser?.favoriteMovie,
