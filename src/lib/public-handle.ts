@@ -5,7 +5,7 @@ export const PUBLIC_HANDLE_MIN_LEN = 3;
 
 /** Normalizes a raw input to lowercase trimmed (does not validate). */
 export function normalizePublicHandleInput(input: string): string {
-  return input.trim().toLowerCase();
+  return input.trim().toLowerCase().replace(/^@+/, "");
 }
 
 export function isValidPublicHandleFormat(value: string): boolean {

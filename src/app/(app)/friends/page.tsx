@@ -18,6 +18,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import { getClientAccessToken } from "@/lib/get-access-token";
 import { useAppState } from "@/lib/app-state";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { normalizePublicHandleInput } from "@/lib/public-handle";
 import { getUserMessageForFailedFetch, getUserMessageForSearchFailure } from "@/lib/user-facing-errors";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import type { User } from "@/lib/types";
@@ -144,7 +145,7 @@ export default function FriendsPage() {
       if (!currentUserId) {
         return;
       }
-      const query = rawQuery.trim();
+      const query = normalizePublicHandleInput(rawQuery);
       if (query.length < 2) {
         setSearchResults([]);
         setSearchError(null);
@@ -204,7 +205,7 @@ export default function FriendsPage() {
     if (!currentUserId) {
       return;
     }
-    const query = q.trim();
+    const query = normalizePublicHandleInput(q);
     if (query.length < 2) {
       setSearchResults([]);
       setSearchError(null);
@@ -255,8 +256,11 @@ export default function FriendsPage() {
   );
 
   const runSearchNow = useCallback(() => {
-    void executeSearch(q);
+    void executeSearch(normalizePublicHandleInput(q));
   }, [q, executeSearch]);
+
+  const normalizedSearchQuery = normalizePublicHandleInput(q);
+  const showSearchPanel = normalizedSearchQuery.length > 0 || q.trim().length > 0;
 
   const addFriend = async (handle: string) => {
     setActionMessage(null);
@@ -576,22 +580,24 @@ export default function FriendsPage() {
         ))}
       </div>
 
-      {tab === "friends" ? (
-        <div className="space-y-[var(--app-section-gap)]">
-          {q.trim().length > 0 ? (
-          <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "104ms" }}>
-            {searchError ? (
-              <p className="text-sm text-rose-500" role="alert">
-                {searchError}
-              </p>
+      {showSearchPanel ? (
+        <SurfaceCard className="fade-up-enter space-y-3" style={{ animationDelay: "104ms" }}>
+          <h2 className="app-section-label">Find people</h2>
+          {searchError ? (
+            <p className="text-sm text-rose-500" role="alert">
+              {searchError}
+            </p>
+          ) : null}
+          <ul className="space-y-3">
+            {normalizedSearchQuery.length > 0 && normalizedSearchQuery.length < 2 && !searchBusy ? (
+              <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                Add one more character to search.
+              </li>
             ) : null}
-            <ul className="space-y-3">
-              {q.trim().length > 0 && q.trim().length < 2 && !searchBusy ? (
-                <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                  Add one more character to search.
-                </li>
-              ) : null}
-              {searchResults.length === 0 && !searchBusy && q.trim().length >= 2 && !searchError ? (
+            {searchResults.length === 0 &&
+            !searchBusy &&
+            normalizedSearchQuery.length >= 2 &&
+            !searchError ? (
                 <li className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                   No results — try another part of the User ID.
                 </li>
@@ -714,11 +720,16 @@ export default function FriendsPage() {
                   </li>
                 );
               })}
-            </ul>
-          </SurfaceCard>
-          ) : null}
+          </ul>
+        </SurfaceCard>
+      ) : null}
 
-          <SurfaceCard className="fade-up-enter space-y-4" style={{ animationDelay: "132ms" }}>
+      {tab === "friends" ? (
+        <div className="space-y-[var(--app-section-gap)]">
+          <SurfaceCard
+            className="fade-up-enter space-y-4"
+            style={{ animationDelay: showSearchPanel ? "132ms" : "104ms" }}
+          >
             <h2 className="app-section-label">Your friends</h2>
             {friendsAccepted.length === 0 ? (
               <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
