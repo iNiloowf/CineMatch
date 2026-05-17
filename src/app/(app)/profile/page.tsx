@@ -19,6 +19,17 @@ import { describePublicHandleValidationError, normalizePublicHandleInput, public
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { FavoriteMovieSummary, Movie, ProProfileStyle } from "@/lib/types";
 import { useWheelScrollContain } from "@/lib/hooks/use-wheel-scroll-contain";
+import {
+  profileActionTileAccentBar,
+  profileActionTileChevronClass,
+  profileActionTileHeaderRowClass,
+  profileActionTileIconWrap,
+  profileActionTileLinkRowClass,
+  profileActionTileSubtitleClass,
+  profileActionTileSurface,
+  profileActionTileTitleClass,
+  profileShortcutsStackClass,
+} from "@/lib/profile-action-tile";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
@@ -737,16 +748,6 @@ export default function ProfilePage() {
       : "bg-[conic-gradient(from_180deg_at_50%_50%,rgba(251,113,133,0.4),rgba(253,224,71,0.36),rgba(45,212,191,0.34),rgba(56,189,248,0.38),rgba(129,140,248,0.36),rgba(232,121,249,0.36),rgba(251,113,133,0.4))] opacity-[0.5]",
   };
 
-  const proStudioSurface = isDarkMode
-    ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
-    : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]";
-  const proStudioCardPatternClass = isDarkMode
-    ? "bg-[radial-gradient(circle_at_16%_18%,rgba(168,85,247,0.22)_0_16%,transparent_36%),radial-gradient(circle_at_82%_76%,rgba(59,130,246,0.16)_0_14%,transparent_34%),linear-gradient(135deg,rgba(109,40,217,0.16),transparent)] opacity-85"
-    : "bg-[radial-gradient(circle_at_16%_18%,rgba(168,85,247,0.14)_0_16%,transparent_36%),radial-gradient(circle_at_82%_76%,rgba(59,130,246,0.1)_0_14%,transparent_34%),linear-gradient(135deg,rgba(168,85,247,0.09),transparent)] opacity-90";
-  const proStudioIconWrap = isDarkMode
-    ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
-    : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
-
   const handleSelectProfileStyle = async (style: ProProfileStyle) => {
     if (style === selectedProfileStyle) {
       return;
@@ -778,16 +779,8 @@ export default function ProfilePage() {
       href: "/linked",
       title: "Friends",
       subtitle: "Who you match with",
+      tone: "violet" as const,
       accentBar: "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500",
-      surface: isDarkMode
-        ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
-        : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]",
-      iconWrap: isDarkMode
-        ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
-        : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm",
-      titleClass: isDarkMode ? "text-white" : "text-slate-900",
-      subClass: isDarkMode ? "text-violet-200/85" : "text-violet-700/85",
-      chevronClass: isDarkMode ? "text-violet-300/90" : "text-violet-500",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" strokeLinecap="round" />
@@ -801,16 +794,8 @@ export default function ProfilePage() {
       href: "/settings",
       title: "Settings",
       subtitle: "Theme & preferences",
+      tone: "slate" as const,
       accentBar: "bg-gradient-to-r from-slate-500 via-slate-600 to-violet-600",
-      surface: isDarkMode
-        ? "border-white/12 bg-gradient-to-br from-slate-950/95 to-violet-950/35 ring-1 ring-white/8"
-        : "border-slate-200/95 bg-gradient-to-br from-white via-slate-50/95 to-violet-50/35 ring-1 ring-slate-200/80 shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
-      iconWrap: isDarkMode
-        ? "bg-white/12 text-slate-100 ring-2 ring-white/18"
-        : "bg-slate-800 text-white ring-2 ring-slate-300/70 shadow-sm",
-      titleClass: isDarkMode ? "text-white" : "text-slate-900",
-      subClass: isDarkMode ? "text-slate-300" : "text-slate-600",
-      chevronClass: isDarkMode ? "text-slate-400" : "text-slate-500",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75" aria-hidden>
           <circle cx="12" cy="12" r="3.2" />
@@ -1322,7 +1307,7 @@ export default function ProfilePage() {
           >
             {isEditing ? (
               <div
-                className={`flex w-full shrink-0 items-center justify-end gap-2 border-b pb-3 ${
+                className={`flex w-full shrink-0 items-center justify-end gap-2.5 border-b pb-3 sm:gap-3 sm:pb-4 ${
                   isDarkMode ? "border-white/10" : "border-slate-200/80"
                 }`}
               >
@@ -1349,7 +1334,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saveFeedback === "saving"}
-                  className={`auth-primary-glow rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
+                  className={`auth-primary-glow inline-flex h-10 min-w-[5.25rem] items-center justify-center rounded-full px-5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-65 ${actionGradient} ${actionGradientHover} ${actionRing}`}
                 >
                   {saveFeedback === "saving" ? "Saving..." : "Save"}
                 </button>
@@ -2186,42 +2171,51 @@ export default function ProfilePage() {
         </form>
       </SurfaceCard>
 
-      <PremiumPickInsightsCard animationDelayMs={0} />
+      <section className={profileShortcutsStackClass} aria-label="Profile shortcuts">
+        <PremiumPickInsightsCard animationDelayMs={0} />
 
-      <SurfaceCard
-        className={`discover-toolbar-enter relative overflow-hidden !p-0 ${proStudioSurface}`}
-        style={{ animationDelay: "95ms" }}
-      >
-        <span className={`pointer-events-none absolute inset-0 ${proStudioCardPatternClass}`} aria-hidden />
-        <button
-          type="button"
-          onClick={() => setIsProStudioOpen((current) => !current)}
-          aria-expanded={isProStudioOpen}
-          className="relative z-10 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition sm:px-5"
+        <div
+          className={`discover-toolbar-enter ${profileActionTileSurface(isDarkMode, "violet")}`}
+          style={{ animationDelay: "95ms" }}
         >
-          <div className="flex min-w-0 items-center gap-3.5">
-            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${proStudioIconWrap}`}>
+          <span
+            className={profileActionTileAccentBar(
+              "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500",
+            )}
+            aria-hidden
+          />
+          <button
+            type="button"
+            onClick={() => setIsProStudioOpen((current) => !current)}
+            aria-expanded={isProStudioOpen}
+            className={profileActionTileHeaderRowClass}
+          >
+            <span className={profileActionTileIconWrap(isDarkMode, "violet")}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6" strokeWidth="1.75" aria-hidden>
                 <rect x="3.5" y="6.5" width="17" height="11" rx="2.5" />
                 <path d="M7.5 6.5 10 4h4l2.5 2.5" strokeLinecap="round" />
                 <path d="m10 11 5 2.8-5 2.8v-5.6Z" fill="currentColor" stroke="none" />
               </svg>
             </span>
-            <div className="min-w-0">
-              <p className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            <div className="min-w-0 flex-1 text-left">
+              <p
+                className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${profileActionTileTitleClass(isDarkMode)}`}
+              >
                 Profile look
               </p>
-              <p className={`mt-0.5 text-[11px] font-medium leading-snug sm:text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+              <p
+                className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${profileActionTileSubtitleClass(isDarkMode, "violet")}`}
+              >
                 Public card style for friends
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-base ${isDarkMode ? "text-slate-300" : "text-slate-500"}`} aria-hidden>
+            <span
+              className={`shrink-0 text-lg font-light sm:text-xl ${profileActionTileChevronClass(isDarkMode, "violet")}`}
+              aria-hidden
+            >
               {isProStudioOpen ? "−" : "+"}
             </span>
-          </div>
-        </button>
+          </button>
 
         {isProStudioOpen ? (
           <div className={`relative z-10 space-y-3 border-t px-4 pb-4 pt-3 sm:px-5 sm:pb-5 ${isDarkMode ? "border-white/10" : "border-violet-200/70"}`}>
@@ -2259,41 +2253,40 @@ export default function ProfilePage() {
               </>
           </div>
         ) : null}
-      </SurfaceCard>
+        </div>
 
-      <div className="grid grid-cols-1 gap-3 px-px sm:grid-cols-2 sm:gap-4">
-        {shortcutTiles.map((tile, index) => (
-          <Link
-            key={tile.href}
-            href={tile.href}
-            className={`discover-toolbar-enter group relative flex min-h-[5.85rem] overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.99] sm:min-h-[6.1rem] sm:rounded-[24px] ${tile.surface}`}
-            style={{ animationDelay: `${90 + index * 75}ms` }}
-          >
-            <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-transparent" aria-hidden />
-            <div className="flex w-full items-center gap-3 px-4 py-4 sm:gap-3.5 sm:px-5 sm:py-4">
-              <span
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-[1.04] sm:h-12 sm:w-12 ${tile.iconWrap}`}
-              >
-                {tile.icon}
-              </span>
+        <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+          {shortcutTiles.map((tile, index) => (
+            <Link
+              key={tile.href}
+              href={tile.href}
+              className={`discover-toolbar-enter group ${profileActionTileSurface(isDarkMode, tile.tone)} ${profileActionTileLinkRowClass}`}
+              style={{ animationDelay: `${90 + index * 75}ms` }}
+            >
+              <span className={profileActionTileAccentBar(tile.accentBar)} aria-hidden />
+              <span className={profileActionTileIconWrap(isDarkMode, tile.tone)}>{tile.icon}</span>
               <div className="min-w-0 flex-1 text-left">
-                <p className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${tile.titleClass}`}>
+                <p
+                  className={`text-[15px] font-bold leading-tight tracking-tight sm:text-base ${profileActionTileTitleClass(isDarkMode)}`}
+                >
                   {tile.title}
                 </p>
-                <p className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${tile.subClass}`}>
+                <p
+                  className={`mt-0.5 text-[11px] font-semibold leading-snug sm:text-xs ${profileActionTileSubtitleClass(isDarkMode, tile.tone)}`}
+                >
                   {tile.subtitle}
                 </p>
               </div>
               <span
-                className={`shrink-0 text-lg font-light transition group-hover:translate-x-0.5 sm:text-xl ${tile.chevronClass}`}
+                className={`shrink-0 text-lg font-light transition group-hover:translate-x-0.5 sm:text-xl ${profileActionTileChevronClass(isDarkMode, tile.tone)}`}
                 aria-hidden
               >
                 →
               </span>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <SurfaceCard className="discover-toolbar-enter space-y-4 !p-5 sm:!p-6" style={{ animationDelay: "280ms" }}>
         <AchievementBadgesShowcase earned={earnedBadges} isDarkMode={isDarkMode} variant="self" />

@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "@/lib/app-state";
 import { computeMovieMatchPercent } from "@/lib/match-score";
+import {
+  profileActionTileAccentBar,
+  profileActionTileHeaderRowClass,
+  profileActionTileIconWrap,
+  profileActionTileSurface,
+  profileActionTileSubtitleClass,
+  profileActionTileTitleClass,
+} from "@/lib/profile-action-tile";
 
 const PREMIUM_INSIGHTS_CLOSE_MS = 420;
 
@@ -425,13 +433,6 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
     return "Shared taste & suggestions for two";
   }, [insightsPartner]);
 
-  const tileSurface = isDarkMode
-    ? "border-white/14 bg-gradient-to-br from-violet-950/55 to-slate-950/80 ring-1 ring-white/10"
-    : "border-violet-200/90 bg-gradient-to-br from-white via-violet-50/80 to-fuchsia-50/50 ring-1 ring-violet-100/90 shadow-[0_12px_32px_rgba(109,40,217,0.12)]";
-  const iconTileWrap = isDarkMode
-    ? "bg-violet-500/25 text-violet-100 ring-2 ring-violet-400/35"
-    : "bg-violet-600 text-white ring-2 ring-violet-300/60 shadow-sm";
-
   const toggleExpanded = useCallback(() => {
     if (isClosing) {
       return;
@@ -445,18 +446,20 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
 
   return (
     <section
-      className={`discover-toolbar-enter relative overflow-hidden rounded-[22px] sm:rounded-[24px] ${tileSurface}`}
+      className={`discover-toolbar-enter ${profileActionTileSurface(isDarkMode, "violet")}`}
       style={{ animationDelay: `${animationDelayMs}ms` }}
       aria-label="Taste insight"
     >
       <span
-        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500"
+        className={profileActionTileAccentBar(
+          "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500",
+        )}
         aria-hidden
       />
-      <div className="relative p-4 sm:p-5">
-        <div className="flex gap-3 sm:gap-3.5">
+      <div className="relative z-10 w-full min-w-0">
+        <div className={profileActionTileHeaderRowClass}>
           <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${iconTileWrap}`}
+            className={profileActionTileIconWrap(isDarkMode, "violet")}
             aria-hidden
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" stroke="currentColor" strokeWidth="1.75">
@@ -524,12 +527,14 @@ export function PremiumPickInsightsCard({ animationDelayMs = 108 }: { animationD
         </div>
 
         <div
-          className="grid transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150"
+          className={`grid transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.25,0.46,0.45,0.94)] will-change-[grid-template-rows] motion-reduce:transition-none motion-reduce:duration-150 ${
+            isDarkMode ? "border-white/10" : "border-violet-200/70"
+          } border-t`}
           style={{ gridTemplateRows: gridRowsFr }}
         >
           <div className="min-h-0 overflow-hidden">
             <div
-              className={`pt-3 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 sm:pt-3.5 ${
+              className={`px-4 pb-4 pt-3 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] motion-reduce:transition-none motion-reduce:duration-150 sm:px-5 sm:pb-5 sm:pt-3.5 ${
                 isClosing
                   ? "opacity-0 [transform:translate3d(0,-6px,0)]"
                   : isExpanded && !panelReveal
