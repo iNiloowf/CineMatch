@@ -48,6 +48,10 @@ import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import {
+  ensureSupabaseBrowserSession,
+  isAuthSessionMissingMessage,
+} from "@/lib/supabase/ensure-browser-session";
 import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
 import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
 import { parseOnboardingPreferencesFromJson } from "@/lib/onboarding-preferences-json";
@@ -807,7 +811,7 @@ function mergeMoviesIntoData(current: AppData, movies: Movie[]) {
 }
 
 async function getCurrentAccessToken() {
-  await ensureAuthSessionMirrorLoaded();
+  await ensureSupabaseBrowserSession();
   const storedSession = getStoredAuthSession();
 
   if (storedSession?.accessToken) {
@@ -1441,6 +1445,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         setAccountRefreshKey((current) => current + 1);
         setIsReady(true);
       } else if (!sessionUser && storedSession?.userId) {
+        await ensureSupabaseBrowserSession(storedSession.userId);
         setCurrentUserId(storedSession.userId);
         setAccountRefreshKey((current) => current + 1);
         setPreferredDarkMode(
@@ -3435,6 +3440,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (supabase && isSupabaseConfigured()) {
+      const hasSupabaseSession = await ensureSupabaseBrowserSession(currentUserId);
+      if (!hasSupabaseSession) {
+        return {
+          ok: false,
+          message:
+            "Your sign-in session expired. Sign out and sign in again, then save your profile.",
+        };
+      }
+
       if (clearAvatar) {
         nextAvatarImageUrl = undefined;
       } else if (avatarFile) {
@@ -3460,14 +3474,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         authMetadata.avatar_image_url = nextAvatarImageUrl;
       }
 
-      const { error: authError } = await supabase.auth.updateUser({
+      let { error: authError } = await supabase.auth.updateUser({
         data: authMetadata,
       });
+
+      if (authError && isAuthSessionMissingMessage(authError.message)) {
+        const restored = await ensureSupabaseBrowserSession(currentUserId);
+        if (restored) {
+          ({ error: authError } = await supabase.auth.updateUser({
+            data: authMetadata,
+          }));
+        }
+      }
 
       if (authError) {
         return {
           ok: false,
-          message: authError.message || "Couldn’t update your sign-in profile.",
+          message: isAuthSessionMissingMessage(authError.message)
+            ? "Your sign-in session expired. Sign out and sign in again, then save your profile."
+            : authError.message || "Couldn’t update your sign-in profile.",
         };
       }
 
@@ -3689,6 +3714,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     if (supabase && isSupabaseConfigured()) {
       void (async () => {
+        if (!(await ensureSupabaseBrowserSession(currentUserId))) {
+          return;
+        }
         const up = await supabase
           .from("settings")
           .update({

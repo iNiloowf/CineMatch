@@ -2,6 +2,7 @@ import {
   ensureAuthSessionMirrorLoaded,
   getStoredAuthSession,
 } from "@/lib/auth-session-storage";
+import { ensureSupabaseBrowserSession } from "@/lib/supabase/ensure-browser-session";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 /**
@@ -9,7 +10,7 @@ import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/c
  * Mirrors the logic in app-state.
  */
 export async function getClientAccessToken(): Promise<string | null> {
-  await ensureAuthSessionMirrorLoaded();
+  await ensureSupabaseBrowserSession();
   const storedSession = getStoredAuthSession();
 
   if (storedSession?.accessToken) {
