@@ -23,6 +23,15 @@ import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type SaveFeedback = "idle" | "saving" | "saved" | "error";
 
+function normalizeGenreKey(genre: string): string {
+  return genre.trim().toLowerCase();
+}
+
+function genreDraftIncludes(draft: string[], genre: string): boolean {
+  const key = normalizeGenreKey(genre);
+  return draft.some((entry) => normalizeGenreKey(entry) === key);
+}
+
 export default function ProfilePage() {
   const {
     currentUser,
@@ -132,10 +141,22 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isEditing && !prevIsEditing.current) {
-      setEditSectionsOpen((prev) => ({ ...prev, basicInfo: true }));
+      setEditSectionsOpen((prev) => ({ ...prev, basicInfo: true, discoveryPreferences: true }));
+      setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
+      setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
+      setMediaPreferenceDraft(onboardingPreferences.mediaPreference);
+      setFavoriteMovieDraft(currentUser?.favoriteMovie ?? null);
+      setProfileHeaderMovieDraft(currentUser?.profileHeaderMovie ?? null);
     }
     prevIsEditing.current = isEditing;
-  }, [isEditing]);
+  }, [
+    isEditing,
+    onboardingPreferences.dislikedGenres,
+    onboardingPreferences.favoriteGenres,
+    onboardingPreferences.mediaPreference,
+    currentUser?.favoriteMovie,
+    currentUser?.profileHeaderMovie,
+  ]);
 
   useEffect(() => {
     if (isEditing && currentUser) {
@@ -217,6 +238,9 @@ export default function ProfilePage() {
   }, [saveFeedback]);
 
   useEffect(() => {
+    if (isEditing) {
+      return;
+    }
     queueMicrotask(() => {
       setFavoriteGenresDraft(onboardingPreferences.favoriteGenres.slice(0, FAVORITE_GENRE_LIMIT));
       setDislikedGenresDraft(onboardingPreferences.dislikedGenres);
@@ -231,19 +255,15 @@ export default function ProfilePage() {
       setHeaderBgSearchResults([]);
       setHeaderBgSearchState("idle");
       setHeaderBgSearchMessage("");
-      // Do not collapse edit accordions while the user is editing — account sync can
-      // refresh `favoriteMovie` / `onboardingPreferences` and would otherwise close Basic info mid-scroll.
-      if (!isEditing) {
-        setEditSectionsOpen({
-          basicInfo: false,
-          headerBackground: false,
-          watchedReviews: false,
-          discoveryPreferences: false,
-          discoverSkips: false,
-        });
-        setIsFavoriteGenresOpen(false);
-        setIsDislikedGenresOpen(false);
-      }
+      setEditSectionsOpen({
+        basicInfo: false,
+        headerBackground: false,
+        watchedReviews: false,
+        discoveryPreferences: false,
+        discoverSkips: false,
+      });
+      setIsFavoriteGenresOpen(false);
+      setIsDislikedGenresOpen(false);
     });
   }, [
     currentUser?.favoriteMovie,
@@ -379,6 +399,18 @@ export default function ProfilePage() {
       ).sort((left, right) => left.localeCompare(right)),
     [data.movies],
   );
+
+  /** Saved genres plus catalog genres so prior picks stay visible and toggleable in edit. */
+  const editGenreOptions = useMemo(() => {
+    const merged = new Set(profileGenres);
+    for (const genre of favoriteGenresDraft) {
+      merged.add(genre);
+    }
+    for (const genre of dislikedGenresDraft) {
+      merged.add(genre);
+    }
+    return Array.from(merged).sort((left, right) => left.localeCompare(right));
+  }, [profileGenres, favoriteGenresDraft, dislikedGenresDraft]);
 
   const skippedDiscoverMovies = useMemo(() => {
     if (!currentUserId) {
@@ -1868,8 +1900,8 @@ export default function ProfilePage() {
                           className="max-h-[min(40vh,14rem)] min-h-0 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 [scrollbar-gutter:stable]"
                         >
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                            {profileGenres.map((genre) => {
-                              const active = favoriteGenresDraft.includes(genre);
+                            {editGenreOptions.map((genre) => {
+                              const active = genreDraftIncludes(favoriteGenresDraft, genre);
                               const atFavoriteLimit =
                                 !active && favoriteGenresDraft.length >= FAVORITE_GENRE_LIMIT;
                               return (
@@ -1882,17 +1914,25 @@ export default function ProfilePage() {
                                       ? `Select up to ${FAVORITE_GENRE_LIMIT} favorite genres`
                                       : undefined
                                   }
-                                  onClick={() =>
+                                  onClick={() => {
+                                    const genreKey = normalizeGenreKey(genre);
                                     setFavoriteGenresDraft((current) => {
-                                      if (current.includes(genre)) {
-                                        return current.filter((entry) => entry !== genre);
+                                      if (genreDraftIncludes(current, genre)) {
+                                        return current.filter(
+                                          (entry) => normalizeGenreKey(entry) !== genreKey,
+                                        );
                                       }
                                       if (current.length >= FAVORITE_GENRE_LIMIT) {
                                         return current;
                                       }
                                       return [...current, genre];
-                                    })
-                                  }
+                                    });
+                                    setDislikedGenresDraft((current) =>
+                                      current.filter(
+                                        (entry) => normalizeGenreKey(entry) !== genreKey,
+                                      ),
+                                    );
+                                  }}
                                   className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold leading-tight transition ${
                                     active
                                       ? "bg-violet-600 text-white shadow-sm"
@@ -1941,19 +1981,28 @@ export default function ProfilePage() {
                           className="max-h-[min(40vh,14rem)] min-h-0 touch-pan-y overflow-y-auto overflow-x-hidden overscroll-y-contain pr-0.5 [scrollbar-gutter:stable]"
                         >
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                            {profileGenres.map((genre) => {
-                              const active = dislikedGenresDraft.includes(genre);
+                            {editGenreOptions.map((genre) => {
+                              const active = genreDraftIncludes(dislikedGenresDraft, genre);
                               return (
                                 <button
                                   key={`dislike-${genre}`}
                                   type="button"
-                                  onClick={() =>
-                                    setDislikedGenresDraft((current) =>
-                                      current.includes(genre)
-                                        ? current.filter((entry) => entry !== genre)
-                                        : [...current, genre],
-                                    )
-                                  }
+                                  onClick={() => {
+                                    const genreKey = normalizeGenreKey(genre);
+                                    setDislikedGenresDraft((current) => {
+                                      if (genreDraftIncludes(current, genre)) {
+                                        return current.filter(
+                                          (entry) => normalizeGenreKey(entry) !== genreKey,
+                                        );
+                                      }
+                                      return [...current, genre];
+                                    });
+                                    setFavoriteGenresDraft((current) =>
+                                      current.filter(
+                                        (entry) => normalizeGenreKey(entry) !== genreKey,
+                                      ),
+                                    );
+                                  }}
                                   className={`min-h-[2.25rem] w-full truncate rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold leading-tight transition ${
                                     active
                                       ? "bg-rose-600 text-white shadow-sm"
