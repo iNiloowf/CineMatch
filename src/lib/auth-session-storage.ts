@@ -11,7 +11,8 @@ import {
 } from "@/lib/auth/auth-credential-kv";
 
 export const AUTH_SESSION_STORAGE_KEY = AUTH_MIRROR_KV_KEY;
-export const AUTH_SESSION_TTL_MS = 10 * 24 * 60 * 60 * 1000;
+/** Keep users signed in on this device for at least seven days (sliding on activity). */
+export const AUTH_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type StoredAuthSession = {
   userId: string;
@@ -131,4 +132,18 @@ export function clearStoredAuthSession(): void {
   sessionMirror = null;
   mirrorLoaded = true;
   void removeAuthItem(AUTH_MIRROR_KV_KEY);
+}
+
+/** Extends the seven-day mirror window after a successful refresh or sign-in. */
+export function touchStoredAuthSessionExpiry(): void {
+  const current = sessionMirror;
+  if (!current || typeof window === "undefined") {
+    return;
+  }
+  persistStoredAuthSession({
+    userId: current.userId,
+    email: current.email,
+    accessToken: current.accessToken,
+    refreshToken: current.refreshToken,
+  });
 }

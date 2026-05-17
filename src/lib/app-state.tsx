@@ -48,9 +48,11 @@ import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { registerAuthSessionExpiredHandler } from "@/lib/auth/session-expired";
 import {
   ensureSupabaseBrowserSession,
   isAuthSessionMissingMessage,
+  maintainSupabaseBrowserSession,
 } from "@/lib/supabase/ensure-browser-session";
 import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
 import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
@@ -1615,6 +1617,40 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       authSubscription?.unsubscribe();
     };
   }, [refreshDiscoverShuffle]);
+
+  useEffect(() => {
+    return registerAuthSessionExpiredHandler(() => {
+      setCurrentUserId(null);
+      refreshDiscoverShuffle(null);
+      setAccountSyncError(null);
+      setAccountRefreshKey((current) => current + 1);
+    });
+  }, [refreshDiscoverShuffle]);
+
+  useEffect(() => {
+    if (!currentUserId || !isSupabaseConfigured()) {
+      return;
+    }
+
+    const userId = currentUserId;
+    const runMaintain = () => {
+      void maintainSupabaseBrowserSession(userId);
+    };
+
+    runMaintain();
+    const intervalId = window.setInterval(runMaintain, 30 * 60 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        runMaintain();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!isSupabaseConfigured() || isReady) {
@@ -3444,8 +3480,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (!hasSupabaseSession) {
         return {
           ok: false,
-          message:
-            "Your sign-in session expired. Sign out and sign in again, then save your profile.",
+          message: "Your session ended. Please sign in again.",
         };
       }
 
@@ -3488,11 +3523,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (authError) {
+        if (isAuthSessionMissingMessage(authError.message)) {
+          await ensureSupabaseBrowserSession(currentUserId);
+          return {
+            ok: false,
+            message: "Your session ended. Please sign in again.",
+          };
+        }
         return {
           ok: false,
-          message: isAuthSessionMissingMessage(authError.message)
-            ? "Your sign-in session expired. Sign out and sign in again, then save your profile."
-            : authError.message || "Couldn’t update your sign-in profile.",
+          message: authError.message || "Couldn’t update your sign-in profile.",
         };
       }
 
