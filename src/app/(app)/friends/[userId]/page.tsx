@@ -254,21 +254,32 @@ export default function FriendProfilePage() {
             void handleRemovePick(movie.id);
           }}
           aria-label={busy ? "Removing from your picks" : "Remove from my picks"}
-          className={`mr-2 shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
-            isDarkMode
-              ? "border-rose-400/35 bg-rose-500/15 text-rose-100 hover:bg-rose-500/25 active:bg-rose-500/35"
-              : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 active:bg-rose-200"
+          className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+            busy
+              ? isDarkMode
+                ? "bg-rose-500/35"
+                : "bg-rose-400/90"
+              : isDarkMode
+                ? "bg-rose-600 hover:bg-rose-500 active:bg-rose-500"
+                : "bg-rose-600 hover:bg-rose-500 active:bg-rose-700"
           }`}
         >
           {busy ? (
             <span
-              className={`ui-loading-spinner ui-loading-spinner--sm ${
-                isDarkMode ? "ui-loading-spinner--on-dark" : ""
-              }`}
+              className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
               aria-hidden
             />
           ) : (
-            "Remove"
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className="h-5 w-5"
+              aria-hidden
+            >
+              <path d="M5 12h14" strokeLinecap="round" />
+            </svg>
           )}
         </button>
       );
