@@ -2141,9 +2141,9 @@ export default function ProfilePage() {
                   {
                     value: profileWatchedTotal,
                     label: "Watched",
-                    href: "/picks" as const,
+                    href: "/picks?tab=watched",
                   },
-                ] as const
+                ]
               ).map((stat, index) => (
                 <Link
                   key={stat.label}

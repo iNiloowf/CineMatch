@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ModalPortal } from "@/components/modal-portal";
@@ -17,7 +18,12 @@ import { useSegmentedPillDrag } from "@/lib/use-segmented-pill-drag";
 
 type ShareToast = { message: string; variant: "success" | "error" };
 
+function picksTabFromSearchParam(tab: string | null): "queue" | "watched" {
+  return tab === "watched" ? "watched" : "queue";
+}
+
 export default function PicksPage() {
+  const searchParams = useSearchParams();
   const {
     data,
     currentUserId,
@@ -31,7 +37,9 @@ export default function PicksPage() {
   } = useAppState();
   const [pendingRemoveMovieId, setPendingRemoveMovieId] = useState<string | null>(null);
   const [pendingWatchedMovieId, setPendingWatchedMovieId] = useState<string | null>(null);
-  const [picksListTab, setPicksListTab] = useState<"queue" | "watched">("queue");
+  const [picksListTab, setPicksListTab] = useState<"queue" | "watched">(() =>
+    picksTabFromSearchParam(searchParams.get("tab")),
+  );
   const prevPicksListTabRef = useRef(picksListTab);
   const picksTabPanelRef = useRef<HTMLDivElement | null>(null);
   const [shareToast, setShareToast] = useState<ShareToast | null>(null);
@@ -64,6 +72,10 @@ export default function PicksPage() {
   useLayoutEffect(() => {
     prevPicksListTabRef.current = picksListTab;
   }, [picksListTab]);
+
+  useEffect(() => {
+    setPicksListTab(picksTabFromSearchParam(searchParams.get("tab")));
+  }, [searchParams]);
 
   const pendingRemoveMovie = useMemo(
     () =>
