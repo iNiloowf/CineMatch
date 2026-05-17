@@ -108,9 +108,6 @@ export function AchievementToast({
             <p className={`mt-1 text-sm leading-6 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
               {achievement.description}
             </p>
-            <p className={`mt-2 text-sm font-medium ${isDarkMode ? "text-violet-200" : "text-violet-700"}`}>
-              Nice — you just moved your goal forward.
-            </p>
           </div>
           <button
             type="button"
