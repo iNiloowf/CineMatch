@@ -3,6 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAuthenticatedUserWithAdmin } from "@/server/api-auth-guard";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkRateLimit } from "@/server/rate-limit";
+import {
+  OWN_PROFILE_SELECT,
+  PEER_PROFILE_SELECT,
+} from "@/lib/account-sync/profile-select";
+import { sanitizeAccountSyncPayloadForClient } from "@/lib/account-sync/sanitize-payload";
 
 type ProfileRow = {
   id: string;
@@ -296,13 +301,10 @@ export async function GET(request: NextRequest) {
 
   const settingsResult = await fetchSettingsRow(currentUserId, supabaseAdmin);
 
-  const profileSelect =
-    "id, email, public_handle, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type, profile_header_movie_id, profile_header_movie_title, profile_header_movie_year, profile_header_poster_url, profile_header_media_type";
-
   const [profileResult, linksResult] = await Promise.all([
     supabaseAdmin
       .from("profiles")
-      .select(profileSelect)
+      .select(OWN_PROFILE_SELECT)
       .eq("id", currentUserId)
       .maybeSingle(),
     supabaseAdmin
@@ -335,7 +337,7 @@ export async function GET(request: NextRequest) {
       allLinkedProfileIds.length > 0
         ? supabaseAdmin
             .from("profiles")
-            .select(profileSelect)
+            .select(PEER_PROFILE_SELECT)
             .in("id", allLinkedProfileIds)
         : Promise.resolve({ data: [] as ProfileRow[] }),
       supabaseAdmin
@@ -401,19 +403,20 @@ export async function GET(request: NextRequest) {
     (row): row is SettingsRow => row != null,
   );
 
-  return apiJsonOk(
-    {
-      profile: (profileResult.data ?? null) as ProfileRow | null,
-      settings: settingsResult.data,
-      links: linkRows,
-      invites: [] as InviteRow[],
-      partnerProfiles: (partnerProfilesResult.data ?? []) as ProfileRow[],
-      partnerSettings,
-      swipes: swipeRows,
-      sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
-      movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
-      watchedPickReviews: watchedPickReviewRows,
-    },
-    request,
-  );
+  const payload = sanitizeAccountSyncPayloadForClient(currentUserId, {
+    profile: (profileResult.data ?? null) as ProfileRow | null,
+    settings: settingsResult.data,
+    links: linkRows,
+    invites: [] as InviteRow[],
+    partnerProfiles: (((partnerProfilesResult.data ?? []) as Omit<ProfileRow, "email">[]) ?? []).map(
+      (row) => ({ ...row, email: "" }),
+    ),
+    partnerSettings,
+    swipes: swipeRows,
+    sharedWatch: (sharedWatchResult.data ?? []) as SharedWatchRow[],
+    movies: movieResults.flatMap((result) => (result.data ?? []) as MovieRow[]),
+    watchedPickReviews: watchedPickReviewRows,
+  });
+
+  return apiJsonOk(payload, request);
 }

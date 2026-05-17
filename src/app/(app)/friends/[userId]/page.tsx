@@ -388,7 +388,7 @@ export default function FriendProfilePage() {
                 <p className={`mt-1 truncate text-lg font-bold sm:text-xl ${friendNameClass}`}>
                   {partner.name}
                 </p>
-                <p className={`mt-0.5 truncate text-sm ${friendEmailClass}`}>{partner.email}</p>
+                <p className={`mt-0.5 truncate text-sm ${friendEmailClass}`}>@{partner.publicHandle}</p>
               </div>
             </div>
             {partner.bio ? (
@@ -462,7 +462,7 @@ export default function FriendProfilePage() {
               <p
                 className={`mt-0.5 truncate text-sm ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}
               >
-                {partner.email}
+                @{partner.publicHandle}
               </p>
             </div>
           </div>

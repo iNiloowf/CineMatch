@@ -1,3 +1,4 @@
+import { sanitizeAccountSyncPayloadForClient } from "@/lib/account-sync/sanitize-payload";
 import type { AccountSyncPayload } from "@/lib/account-sync/types";
 
 const ACCOUNT_CACHE_STORAGE_PREFIX = "cinematch-account-cache";
@@ -13,7 +14,13 @@ export function getStoredAccountSnapshot(userId: string) {
 
   try {
     const raw = window.localStorage.getItem(getAccountCacheKey(userId));
-    return raw ? (JSON.parse(raw) as AccountSyncPayload) : null;
+    if (!raw) {
+      return null;
+    }
+    return sanitizeAccountSyncPayloadForClient(
+      userId,
+      JSON.parse(raw) as AccountSyncPayload,
+    );
   } catch {
     return null;
   }

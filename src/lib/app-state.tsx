@@ -55,6 +55,7 @@ import {
   maintainSupabaseBrowserSession,
 } from "@/lib/supabase/ensure-browser-session";
 import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
+import { sanitizeAccountSyncPayloadForClient } from "@/lib/account-sync/sanitize-payload";
 import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
 import { parseOnboardingPreferencesFromJson } from "@/lib/onboarding-preferences-json";
 import {
@@ -1175,9 +1176,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     activeUserId: string,
     payload: AccountSyncPayload,
   ) => {
-    persistAccountSnapshot(activeUserId, payload);
+    const safePayload = sanitizeAccountSyncPayloadForClient(activeUserId, payload);
+    persistAccountSnapshot(activeUserId, safePayload);
 
-    const linkRows = dedupePartnerLinkRows(payload.links ?? []);
+    const linkRows = dedupePartnerLinkRows(safePayload.links ?? []);
     const acceptedLinks = linkRows.filter((link) => link.status === "accepted");
     const acceptedPartnerIds = Array.from(
       new Set(
@@ -1190,15 +1192,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       new Set([activeUserId, ...acceptedPartnerIds]),
     );
     const sharedLinkIds = acceptedLinks.map((link) => link.id);
-    const swipeRows = payload.swipes ?? [];
+    const swipeRows = safePayload.swipes ?? [];
 
     setData((current) => {
       let next = current;
 
-      const ownProfile = payload.profile ?? null;
+      const ownProfile = safePayload.profile ?? null;
       const allProfiles = [
         ...(ownProfile ? [ownProfile] : []),
-        ...(payload.partnerProfiles ?? []),
+        ...(safePayload.partnerProfiles ?? []),
       ];
 
       for (const profile of allProfiles) {
@@ -1206,7 +1208,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           id: profile.id,
           publicHandle: profile.public_handle,
           name: profile.full_name,
-          email: profile.email,
+          email: profile.id === activeUserId ? profile.email : "",
           avatar: profile.avatar_text,
           avatarImageUrl: profile.avatar_image_url ?? undefined,
           bio: profile.bio,
@@ -1217,8 +1219,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      const ownSettings = payload.settings ?? null;
-      next = mergeMoviesIntoData(next, (payload.movies ?? []).map(mapMovieRow));
+      const ownSettings = safePayload.settings ?? null;
+      next = mergeMoviesIntoData(next, (safePayload.movies ?? []).map(mapMovieRow));
 
       const serverMappedSwipes = swipeRows.map(mapSwipeRow);
       const serverActiveMovieIds = new Set(
@@ -1250,7 +1252,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         ...next.sharedWatch.filter(
           (item) => !sharedLinkIds.includes(item.pairKey),
         ),
-        ...(payload.sharedWatch ?? []).map((item) => ({
+        ...(safePayload.sharedWatch ?? []).map((item) => ({
           id: item.id,
           pairKey: item.linked_user_id,
           movieId: item.movie_id,
@@ -1260,7 +1262,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         })),
       ];
 
-      const serverWatchedPicks = (payload.watchedPickReviews ?? []).map(
+      const serverWatchedPicks = (safePayload.watchedPickReviews ?? []).map(
         mapWatchedPickReviewRow,
       );
       const reviewKey = (e: WatchedPickReview) => `${e.userId}:${e.movieId}`;
@@ -1311,7 +1313,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
             },
           },
           activeUserId,
-          payload.partnerSettings,
+          safePayload.partnerSettings,
         );
         seedSeenAchievementsFromHydratedData(activeUserId, merged);
         return merged;
@@ -1328,14 +1330,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           settings: next.settings,
         },
         activeUserId,
-        payload.partnerSettings,
+        safePayload.partnerSettings,
       );
       seedSeenAchievementsFromHydratedData(activeUserId, mergedNoSettings);
       return mergedNoSettings;
     });
 
     const serverOnboarding = parseOnboardingPreferencesFromJson(
-      payload.settings?.onboarding_preferences,
+      safePayload.settings?.onboarding_preferences,
     );
     if (serverOnboarding) {
       queueMicrotask(() => {
@@ -1344,8 +1346,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    if (payload.settings) {
-      const dbDarkMode = mapSettingsRow(payload.settings).darkMode;
+    if (safePayload.settings) {
+      const dbDarkMode = mapSettingsRow(safePayload.settings).darkMode;
       const nextDarkMode = getStoredUserTheme(activeUserId) ?? dbDarkMode;
       setPreferredDarkMode(nextDarkMode);
       persistUserTheme(activeUserId, nextDarkMode);

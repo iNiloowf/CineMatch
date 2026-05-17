@@ -9,7 +9,7 @@ export function toPartnerViewUser(partner: User): User {
     id: partner.id,
     publicHandle: partner.publicHandle,
     name: partner.name,
-    email: partner.email,
+    email: "",
     avatar: partner.avatar,
     avatarImageUrl: partner.avatarImageUrl,
     bio: partner.bio,

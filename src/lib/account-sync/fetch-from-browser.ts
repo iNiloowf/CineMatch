@@ -1,4 +1,9 @@
 import { chunkItems } from "@/lib/account-sync/chunk-items";
+import {
+  OWN_PROFILE_SELECT,
+  PEER_PROFILE_SELECT,
+} from "@/lib/account-sync/profile-select";
+import { sanitizeAccountSyncPayloadForClient } from "@/lib/account-sync/sanitize-payload";
 import { fetchSettingsRowForSync } from "@/lib/account-sync/settings-fetch";
 import type {
   AccountSyncPayload,
@@ -23,12 +28,9 @@ export async function fetchAccountSyncFromBrowser(
   supabaseClient: SupabaseClient,
   activeUserId: string,
 ): Promise<AccountSyncPayload | null> {
-  const profileSelect =
-    "id, email, public_handle, full_name, avatar_text, avatar_image_url, bio, city, profile_style, favorite_movie_id, favorite_movie_title, favorite_movie_year, favorite_movie_poster_url, favorite_movie_media_type, profile_header_movie_id, profile_header_movie_title, profile_header_movie_year, profile_header_poster_url, profile_header_media_type";
-
   const profileResult = await supabaseClient
     .from("profiles")
-    .select(profileSelect)
+    .select(OWN_PROFILE_SELECT)
     .eq("id", activeUserId)
     .maybeSingle();
 
@@ -69,8 +71,8 @@ export async function fetchAccountSyncFromBrowser(
   const partnerProfilesPromise =
     allLinkedProfileIds.length > 0
       ? supabaseClient
-          .from("profiles")
-          .select(profileSelect)
+          .from("profiles_peer")
+          .select(PEER_PROFILE_SELECT)
           .in("id", allLinkedProfileIds)
       : Promise.resolve({
           data: [] as ProfileRow[],
@@ -181,12 +183,14 @@ export async function fetchAccountSyncFromBrowser(
     }
   }
 
-  return {
+  const payload: AccountSyncPayload = {
     profile: (profileResult.data ?? null) as ProfileRow | null,
     settings: settingsResult.data ?? null,
     links: linkRows,
     invites: [] as InviteRow[],
-    partnerProfiles: ((partnerProfilesResult.data ?? []) as ProfileRow[]) ?? [],
+    partnerProfiles: (((partnerProfilesResult.data ?? []) as Omit<ProfileRow, "email">[]) ?? []).map(
+      (row) => ({ ...row, email: "" }),
+    ),
     partnerSettings,
     swipes: swipeRows,
     sharedWatch: ((sharedWatchResult.data ?? []) as SharedWatchRow[]) ?? [],
@@ -195,4 +199,6 @@ export async function fetchAccountSyncFromBrowser(
     ),
     watchedPickReviews: watchedPickReviewRows,
   };
+
+  return sanitizeAccountSyncPayloadForClient(activeUserId, payload);
 }
