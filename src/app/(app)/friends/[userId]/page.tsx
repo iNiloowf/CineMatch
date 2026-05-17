@@ -28,6 +28,7 @@ export default function FriendProfilePage() {
     currentUserId,
     linkedUsers,
     swipeMovie,
+    removePick,
     isDarkMode,
     isReady,
   } = useAppState();
@@ -218,6 +219,99 @@ export default function FriendProfilePage() {
     }
   };
 
+  const handleRemovePick = async (movieId: string) => {
+    if (!currentUserId) {
+      return;
+    }
+    setAddMessage(null);
+    setAddingId(movieId);
+    try {
+      await removePick(movieId);
+      setAddMessage("Removed from your picks.");
+      window.setTimeout(() => setAddMessage(null), 2200);
+    } catch {
+      setAddMessage("Couldn’t remove that title. Try again.");
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const renderFriendPickAction = (movie: Movie) => {
+    if (linkEntry?.status !== "accepted") {
+      return null;
+    }
+
+    const inMine = myAcceptedIds.has(movie.id);
+    const busy = addingId === movie.id;
+
+    if (inMine) {
+      return (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleRemovePick(movie.id);
+          }}
+          aria-label={busy ? "Removing from your picks" : "Remove from my picks"}
+          className={`mr-2 shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
+            isDarkMode
+              ? "border-rose-400/35 bg-rose-500/15 text-rose-100 hover:bg-rose-500/25 active:bg-rose-500/35"
+              : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 active:bg-rose-200"
+          }`}
+        >
+          {busy ? (
+            <span
+              className={`ui-loading-spinner ui-loading-spinner--sm ${
+                isDarkMode ? "ui-loading-spinner--on-dark" : ""
+              }`}
+              aria-hidden
+            />
+          ) : (
+            "Remove"
+          )}
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        disabled={busy}
+        onClick={(event) => {
+          event.stopPropagation();
+          void handleAddPick(movie.id);
+        }}
+        aria-label={busy ? "Adding to your picks" : "Add to my picks"}
+        className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
+          busy
+            ? isDarkMode
+              ? "bg-violet-500/35"
+              : "bg-violet-400/90"
+            : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
+        }`}
+      >
+        {busy ? (
+          <span
+            className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
+            aria-hidden
+          />
+        ) : (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            className="h-5 w-5"
+            aria-hidden
+          >
+            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          </svg>
+        )}
+      </button>
+    );
+  };
+
   const handleShareMovie = useCallback(async (movieId: string, title?: string) => {
     const msg = await shareMovieDeepLink(movieId, title);
     setAddMessage(msg);
@@ -304,7 +398,22 @@ export default function FriendProfilePage() {
               >
                 Watch trailer
               </button>
-              {linkEntry.status === "accepted" && !inMineSelected ? (
+              {linkEntry.status === "accepted" && inMineSelected ? (
+                <button
+                  type="button"
+                  className={`ui-btn min-h-12 w-full flex-1 sm:min-w-0 ${
+                    isDarkMode
+                      ? "border-rose-400/35 bg-rose-500/15 text-rose-50 hover:bg-rose-500/25"
+                      : "border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100"
+                  }`}
+                  onClick={() => {
+                    void handleRemovePick(selectedMovie.id);
+                    setSelectedMovieId(null);
+                  }}
+                >
+                  Remove from my picks
+                </button>
+              ) : linkEntry.status === "accepted" ? (
                 <button
                   type="button"
                   className={`ui-btn min-h-12 w-full flex-1 sm:min-w-0 ${
@@ -701,8 +810,6 @@ export default function FriendProfilePage() {
             ) : (
               <ul className="space-y-3">
                 {partnerRecommendations.map((movie, index) => {
-                  const inMine = myAcceptedIds.has(movie.id);
-
                   return (
                     <li
                       key={`partner-rec-${movie.id}`}
@@ -741,56 +848,11 @@ export default function FriendProfilePage() {
                             </p>
                             <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                               {movie.year}
-                              {inMine ? " · In your picks" : ""}
+                              {myAcceptedIds.has(movie.id) ? " · In your picks" : ""}
                             </p>
                           </div>
                         </button>
-                        {linkEntry?.status === "accepted" ? (
-                          inMine ? (
-                            <span
-                              className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              Yours
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={addingId === movie.id}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleAddPick(movie.id);
-                              }}
-                              aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
-                              className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
-                                addingId === movie.id
-                                  ? isDarkMode
-                                    ? "bg-violet-500/35"
-                                    : "bg-violet-400/90"
-                                  : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
-                              }`}
-                            >
-                              {addingId === movie.id ? (
-                                <span
-                                  className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
-                                  aria-hidden
-                                />
-                              ) : (
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.5"
-                                  className="h-5 w-5"
-                                  aria-hidden
-                                >
-                                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                                </svg>
-                              )}
-                            </button>
-                          )
-                        ) : null}
+                        {renderFriendPickAction(movie)}
                       </div>
                     </li>
                   );
@@ -879,8 +941,6 @@ export default function FriendProfilePage() {
             ) : (
               <ul className="space-y-3">
                 {savedMovies.map((movie, index) => {
-                  const inMine = myAcceptedIds.has(movie.id);
-
                   return (
                     <li
                       key={movie.id}
@@ -919,56 +979,11 @@ export default function FriendProfilePage() {
                             </p>
                             <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                               {movie.year}
-                              {inMine ? " · In your picks" : ""}
+                              {myAcceptedIds.has(movie.id) ? " · In your picks" : ""}
                             </p>
                           </div>
                         </button>
-                        {linkEntry?.status === "accepted" ? (
-                          inMine ? (
-                            <span
-                              className={`mr-2 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                                isDarkMode ? "bg-white/8 text-slate-400" : "bg-slate-100 text-slate-500"
-                              }`}
-                            >
-                              Yours
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={addingId === movie.id}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleAddPick(movie.id);
-                              }}
-                              aria-label={addingId === movie.id ? "Adding to your picks" : "Add to my picks"}
-                              className={`mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50 ${
-                                addingId === movie.id
-                                  ? isDarkMode
-                                    ? "bg-violet-500/35"
-                                    : "bg-violet-400/90"
-                                  : "ui-btn ui-btn-primary !min-h-0 !px-0 !py-0"
-                              }`}
-                            >
-                              {addingId === movie.id ? (
-                                <span
-                                  className="ui-loading-spinner ui-loading-spinner--sm ui-loading-spinner--on-media"
-                                  aria-hidden
-                                />
-                              ) : (
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.5"
-                                  className="h-5 w-5"
-                                  aria-hidden
-                                >
-                                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-                                </svg>
-                              )}
-                            </button>
-                          )
-                        ) : null}
+                        {renderFriendPickAction(movie)}
                       </div>
                     </li>
                   );
