@@ -314,6 +314,31 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  const activatedUserIds = new Set<string>();
+  {
+    const perPage = 200;
+    for (let page = 1; page <= 50; page += 1) {
+      const authPage = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (authPage.error) {
+        break;
+      }
+      const pageUsers = authPage.data?.users ?? [];
+      for (const authUser of pageUsers) {
+        const confirmedAt =
+          (authUser as { email_confirmed_at?: string | null; confirmed_at?: string | null })
+            .email_confirmed_at ??
+          (authUser as { confirmed_at?: string | null }).confirmed_at ??
+          null;
+        if (confirmedAt) {
+          activatedUserIds.add(authUser.id);
+        }
+      }
+      if (pageUsers.length < perPage) {
+        break;
+      }
+    }
+  }
+
   const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
   const movieById = new Map(
     (((movieTitlesResult.data ?? []) as MovieRow[]) ?? []).map((movie) => [
@@ -359,6 +384,7 @@ export async function POST(request: NextRequest) {
       subscriptionTier,
       adminModeSimulatePro,
       effectiveSubscriptionTier,
+      accountActivated: activatedUserIds.has(profile.id),
     };
   });
   const proUsers = userRows.filter(

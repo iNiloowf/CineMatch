@@ -30,6 +30,7 @@ type DashboardUserRow = {
   subscriptionTier: "free" | "pro";
   effectiveSubscriptionTier: "free" | "pro";
   adminModeSimulatePro: boolean;
+  accountActivated: boolean;
 };
 
 type DashboardSwipeRow = {
@@ -1305,7 +1306,7 @@ export default function AdminDesktopPage() {
                     <th className="px-4 py-2 text-right font-semibold">Accepted</th>
                     <th className="px-4 py-2 text-right font-semibold">Rejected</th>
                     <th className="px-4 py-2 text-right font-semibold">Links</th>
-                    <th className="px-4 py-2 text-left font-semibold">Plan</th>
+                    <th className="px-4 py-2 text-left font-semibold">Account</th>
                     <th className="px-4 py-2 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -1318,8 +1319,14 @@ export default function AdminDesktopPage() {
                       <td className="px-4 py-2 text-right">{row.rejected}</td>
                       <td className="px-4 py-2 text-right">{row.links}</td>
                       <td className="px-4 py-2">
-                        <span className="rounded-full bg-violet-500/20 px-2.5 py-1 text-xs font-semibold text-violet-200">
-                          {row.effectiveSubscriptionTier.toUpperCase()}
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            row.accountActivated
+                              ? "bg-emerald-500/20 text-emerald-200"
+                              : "bg-amber-500/20 text-amber-200"
+                          }`}
+                        >
+                          {row.accountActivated ? "Activated" : "Not activated"}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right">
