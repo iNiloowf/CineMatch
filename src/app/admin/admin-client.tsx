@@ -110,6 +110,18 @@ export default function AdminDesktopPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    document.documentElement.classList.toggle("theme-dark", isDarkMode);
+    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
+    if (document.body) {
+      document.body.style.background = isDarkMode ? "#0d0a14" : "#f6f7fb";
+      document.body.style.color = isDarkMode ? "#f8fafc" : "#0f172a";
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
     adminGateRef.current = adminGate;
   }, [adminGate]);
 
@@ -650,12 +662,22 @@ export default function AdminDesktopPage() {
     : "min-h-screen bg-[radial-gradient(circle_at_8%_12%,rgba(99,102,241,0.2),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.15),transparent_28%),linear-gradient(180deg,#f9fbff_0%,#eef4ff_42%,#e9ecff_100%)] text-slate-900";
   const glassPanel = isDarkMode
     ? "border-white/15 bg-white/[0.06] backdrop-blur-xl shadow-[0_24px_60px_rgba(2,8,24,0.45)]"
-    : "border-white/70 bg-white/75 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,23,42,0.14)]";
+    : "border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,23,42,0.14)]";
   const softText = isDarkMode ? "text-slate-300" : "text-slate-600";
+  const accentLink = isDarkMode
+    ? "text-violet-400 hover:opacity-80"
+    : "text-violet-600 hover:text-violet-800";
+  const dangerLink = isDarkMode
+    ? "text-rose-400 hover:text-rose-300"
+    : "text-rose-600 hover:text-rose-700";
+  const themeAttrs = {
+    "data-app-shell-root": "true" as const,
+    "data-theme": isDarkMode ? ("dark" as const) : ("light" as const),
+  };
 
   if (adminGate !== "ready") {
     return (
-      <main className={shell}>
+      <main className={shell} {...themeAttrs}>
         <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-10">
           {adminGate === "booting" ? (
             <section
@@ -681,7 +703,10 @@ export default function AdminDesktopPage() {
               <h1 className="text-2xl font-bold">Admin Desktop</h1>
               <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
                 No Supabase session was found in this browser. The admin API only accepts a{" "}
-                <strong className="text-slate-200">cloud (Supabase) sign-in</strong> — not the offline / browser-only
+                <strong className={isDarkMode ? "text-slate-200" : "text-slate-900"}>
+                  cloud (Supabase) sign-in
+                </strong>{" "}
+                — not the offline / browser-only
                 demo login.
               </p>
               <ol
@@ -761,7 +786,7 @@ export default function AdminDesktopPage() {
   }
 
   return (
-    <main className={shell}>
+    <main className={shell} {...themeAttrs}>
       <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8">
         <ModalPortal open={Boolean(selectedTicket)}>
           {selectedTicket ? (
@@ -801,7 +826,7 @@ export default function AdminDesktopPage() {
                     {selectedTicket.userEmail ? (
                       <a
                         href={`mailto:${selectedTicket.userEmail}`}
-                        className="text-xs font-semibold text-violet-400 hover:opacity-80"
+                        className={`text-xs font-semibold ${accentLink}`}
                       >
                         {selectedTicket.userEmail}
                       </a>
@@ -1018,7 +1043,10 @@ export default function AdminDesktopPage() {
                   : "border-rose-200/90 bg-white text-slate-900"
               }`}
             >
-              <h2 id="admin-delete-user-title" className="text-lg font-bold text-rose-300">
+              <h2
+                id="admin-delete-user-title"
+                className={`text-lg font-bold ${isDarkMode ? "text-rose-300" : "text-rose-700"}`}
+              >
                 Delete user permanently?
               </h2>
               <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
@@ -1152,7 +1180,13 @@ export default function AdminDesktopPage() {
         ) : null}
 
         {ticketsUnavailable ? (
-          <p className="mb-4 rounded-[14px] border border-amber-400/35 bg-amber-500/15 px-4 py-3 text-sm text-amber-100">
+          <p
+            className={`mb-4 rounded-[14px] border px-4 py-3 text-sm ${
+              isDarkMode
+                ? "border-amber-400/35 bg-amber-500/15 text-amber-100"
+                : "border-amber-300 bg-amber-50 text-amber-900"
+            }`}
+          >
             Ticket table is not initialized yet. Dashboard still loads, but tickets stay hidden
             until the latest Supabase migration is applied.
           </p>
@@ -1188,7 +1222,7 @@ export default function AdminDesktopPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("tickets")}
-                  className="text-sm font-semibold text-violet-500 hover:opacity-80"
+                  className={`text-sm font-semibold ${accentLink}`}
                 >
                   View all
                 </button>
@@ -1225,7 +1259,7 @@ export default function AdminDesktopPage() {
                                 setSelectedTicket(ticket);
                                 setTicketActionFeedback("");
                               }}
-                              className="text-sm font-semibold text-violet-400 hover:opacity-80"
+                              className={`text-sm font-semibold ${accentLink}`}
                             >
                               Open
                             </button>
@@ -1248,7 +1282,7 @@ export default function AdminDesktopPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("swipes")}
-                  className="text-sm font-semibold text-violet-500 hover:opacity-80"
+                  className={`text-sm font-semibold ${accentLink}`}
                 >
                   View all
                 </button>
@@ -1322,8 +1356,12 @@ export default function AdminDesktopPage() {
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                             row.accountActivated
-                              ? "bg-emerald-500/20 text-emerald-200"
-                              : "bg-amber-500/20 text-amber-200"
+                              ? isDarkMode
+                                ? "bg-emerald-500/20 text-emerald-200"
+                                : "bg-emerald-100 text-emerald-800"
+                              : isDarkMode
+                                ? "bg-amber-500/20 text-amber-200"
+                                : "bg-amber-100 text-amber-800"
                           }`}
                         >
                           {row.accountActivated ? "Activated" : "Not activated"}
@@ -1337,7 +1375,7 @@ export default function AdminDesktopPage() {
                             setUserDeleteError("");
                             setUserPendingDelete(row);
                           }}
-                          className="text-xs font-semibold text-rose-400 hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-40"
+                          className={`text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${dangerLink}`}
                         >
                           Delete
                         </button>
@@ -1404,7 +1442,7 @@ export default function AdminDesktopPage() {
                               setSelectedTicket(ticket);
                               setTicketActionFeedback("");
                             }}
-                            className="text-sm font-semibold text-violet-400 hover:opacity-80"
+                            className={`text-sm font-semibold ${accentLink}`}
                           >
                             Open
                           </button>
@@ -1491,8 +1529,12 @@ export default function AdminDesktopPage() {
                       <td className="px-4 py-2">
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           row.subscriptionTier === "pro"
-                            ? "bg-emerald-500/20 text-emerald-200"
-                            : "bg-slate-500/20 text-slate-200"
+                            ? isDarkMode
+                              ? "bg-emerald-500/20 text-emerald-200"
+                              : "bg-emerald-100 text-emerald-800"
+                            : isDarkMode
+                              ? "bg-slate-500/20 text-slate-200"
+                              : "bg-slate-100 text-slate-700"
                         }`}>
                           {row.subscriptionTier === "pro" ? "Full" : "Standard"}
                         </span>
@@ -1500,8 +1542,12 @@ export default function AdminDesktopPage() {
                       <td className="px-4 py-2">
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           row.effectiveSubscriptionTier === "pro"
-                            ? "bg-violet-500/20 text-violet-100"
-                            : "bg-slate-500/20 text-slate-200"
+                            ? isDarkMode
+                              ? "bg-violet-500/20 text-violet-100"
+                              : "bg-violet-100 text-violet-800"
+                            : isDarkMode
+                              ? "bg-slate-500/20 text-slate-200"
+                              : "bg-slate-100 text-slate-700"
                         }`}>
                           {row.effectiveSubscriptionTier === "pro" ? "Full" : "Standard"}
                         </span>
@@ -1581,7 +1627,7 @@ function StatCard({
       className={`rounded-[20px] border px-4 py-3 backdrop-blur-xl ${
         isDarkMode
           ? "border-white/15 bg-white/[0.06] shadow-[0_18px_40px_rgba(2,8,24,0.35)]"
-          : "border-white/80 bg-white/75 shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
+          : "border-slate-200/80 bg-white/85 shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
       }`}
     >
       <p
