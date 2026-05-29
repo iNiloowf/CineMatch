@@ -156,7 +156,24 @@ export function DiscoverPage2Content({
   const lastResolvedShareParamRef = useRef<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const moreMenuPanelRef = useRef<HTMLDivElement | null>(null);
+  const brandTextRef = useRef<HTMLParagraphElement | null>(null);
+  const [brandTextWidth, setBrandTextWidth] = useState<number | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+  useLayoutEffect(() => {
+    const node = brandTextRef.current;
+    if (!node || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const measure = () => {
+      setBrandTextWidth(Math.round(node.getBoundingClientRect().width));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isSearchOpen]);
+
   const profileTriggerLabel = useMemo(() => {
     if (currentUser?.avatarImageUrl) {
       return currentUser.name || "Profile";
@@ -1029,7 +1046,8 @@ export function DiscoverPage2Content({
           <div className="mx-0.5 flex items-center justify-between gap-2 px-0.5 py-0.5 sm:mx-1 sm:gap-3 sm:py-1">
             <div className="min-w-0 flex-1 pr-0.5">
               <p
-                className={`text-[14px] font-bold uppercase tracking-[0.18em] ${
+                ref={brandTextRef}
+                className={`inline-block text-[14px] font-bold uppercase tracking-[0.18em] ${
                   isDarkMode ? "text-fuchsia-200" : "text-violet-700"
                 }`}
               >
@@ -1045,6 +1063,11 @@ export function DiscoverPage2Content({
                   aria-expanded={isMoreMenuOpen}
                   aria-controls={isMoreMenuOpen ? "discover-more-menu" : undefined}
                   onClick={() => setIsMoreMenuOpen((current) => !current)}
+                  style={
+                    brandTextWidth
+                      ? { width: brandTextWidth, height: brandTextWidth }
+                      : undefined
+                  }
                   className={`flex min-h-11 min-w-11 items-center justify-center overflow-hidden rounded-full transition ${
                     isDarkMode
                       ? isMoreMenuOpen
@@ -1059,12 +1082,12 @@ export function DiscoverPage2Content({
                     <img
                       src={currentUser.avatarImageUrl}
                       alt=""
-                      className="h-11 w-11 rounded-full bg-transparent object-cover"
+                      className="h-full w-full rounded-full bg-transparent object-cover"
                       aria-hidden
                     />
                   ) : (
                     <span
-                      className={`flex h-11 w-11 items-center justify-center text-[11px] font-bold tracking-[0.08em] ${
+                      className={`flex h-full w-full items-center justify-center rounded-full text-[11px] font-bold tracking-[0.08em] ${
                         isDarkMode ? "bg-white/8 text-slate-100" : "bg-white text-slate-700"
                       }`}
                       aria-hidden
