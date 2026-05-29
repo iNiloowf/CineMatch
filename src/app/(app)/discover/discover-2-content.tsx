@@ -160,20 +160,6 @@ export function DiscoverPage2Content({
   const [brandTextWidth, setBrandTextWidth] = useState<number | null>(null);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
-  useLayoutEffect(() => {
-    const node = brandTextRef.current;
-    if (!node || typeof ResizeObserver === "undefined") {
-      return;
-    }
-    const measure = () => {
-      setBrandTextWidth(Math.round(node.getBoundingClientRect().width));
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [isSearchOpen]);
-
   const profileTriggerLabel = useMemo(() => {
     if (currentUser?.avatarImageUrl) {
       return currentUser.name || "Profile";
@@ -193,6 +179,20 @@ export function DiscoverPage2Content({
   const isSearchOpen = isSearchSheetOpen;
   const sharedMovieId = searchParams.get("movieId");
   useBodyScrollLock(isMoreMenuOpen);
+
+  useLayoutEffect(() => {
+    const node = brandTextRef.current;
+    if (!node || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const measure = () => {
+      setBrandTextWidth(Math.round(node.getBoundingClientRect().width));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isSearchOpen]);
 
   useEscapeToClose(isSearchOpen, () => {
     setSearchQuery("");
