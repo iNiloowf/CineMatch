@@ -57,7 +57,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
         Title and meta sit above the poster (not over the art) so faces/key art stay unobstructed.
       */}
       <div
-        className={`border-b px-4 pt-3.5 pb-3 sm:px-5 sm:pt-4 sm:pb-3.5 ${
+        className={`border-b px-4 pt-3.5 pb-2 sm:px-5 sm:pt-4 sm:pb-2.5 ${
           isDarkMode ? "border-white/10" : "border-slate-200/90"
         }`}
       >
@@ -121,7 +121,7 @@ export const PicksMovieRow = memo(function PicksMovieRow({
         </div>
       </div>
 
-      <div className="space-y-2.5 px-4 pb-4 pt-3 sm:space-y-3 sm:px-5 sm:pb-5 sm:pt-3.5">
+      <div className="space-y-2.5 px-4 pb-4 pt-1.5 sm:space-y-3 sm:px-5 sm:pb-5 sm:pt-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5">
             {movie.genre.slice(0, 4).map((genre) => (

@@ -404,7 +404,7 @@ export default function PicksPage() {
             >
               Saved
             </p>
-            <div className="mt-2 flex items-end gap-3">
+            <div className="mt-1 flex items-end gap-3">
               <span
                 className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
                   isDarkMode ? "bg-violet-500/18 text-violet-100" : "bg-violet-100 text-violet-700"
@@ -437,7 +437,7 @@ export default function PicksPage() {
             >
               Also shared
             </p>
-            <div className="mt-2 flex items-end gap-3">
+            <div className="mt-1 flex items-end gap-3">
               <span
                 className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
                   isDarkMode ? "bg-emerald-500/16 text-emerald-100" : "bg-emerald-100 text-emerald-700"
