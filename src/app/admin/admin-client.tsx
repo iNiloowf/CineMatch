@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { ConversationEntry } from "@/lib/support-ticket-conversation";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -624,7 +624,6 @@ export default function AdminDesktopPage() {
   const recentTickets = dashboard?.tickets ?? [];
   const ticketsUnavailable = dashboard?.ticketsUnavailable ?? false;
   const previewTickets = recentTickets.slice(0, 6);
-  const previewSwipes = recentSwipes.slice(0, 6);
 
   const ticketPriorityLabel = useMemo(
     () =>
@@ -648,40 +647,49 @@ export default function AdminDesktopPage() {
   const adminTabs = useMemo(
     () =>
       [
-        { id: "overview" as const, label: "Overview", note: "Stats + activity" },
-        { id: "tickets" as const, label: "Tickets", note: "Support queue" },
-        { id: "users" as const, label: "Users", note: "Accounts" },
-        { id: "swipes" as const, label: "Swipes", note: "Recent actions" },
-        { id: "subscriptions" as const, label: "Access flags", note: "Tier & test overrides" },
-      ] satisfies Array<{ id: AdminTab; label: string; note: string }>,
+        { id: "overview" as const, label: "Overview" },
+        { id: "tickets" as const, label: "Tickets" },
+        { id: "users" as const, label: "Users" },
+        { id: "swipes" as const, label: "Swipes" },
+        { id: "subscriptions" as const, label: "Access" },
+      ] satisfies Array<{ id: AdminTab; label: string }>,
     [],
   );
 
   const shell = isDarkMode
-    ? "min-h-screen bg-[radial-gradient(circle_at_10%_15%,rgba(129,140,248,0.2),transparent_35%),radial-gradient(circle_at_90%_10%,rgba(236,72,153,0.18),transparent_30%),linear-gradient(180deg,#080916_0%,#0b1020_42%,#05060f_100%)] text-slate-100"
-    : "min-h-screen bg-[radial-gradient(circle_at_8%_12%,rgba(99,102,241,0.2),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.15),transparent_28%),linear-gradient(180deg,#f9fbff_0%,#eef4ff_42%,#e9ecff_100%)] text-slate-900";
+    ? "min-h-[100dvh] bg-[linear-gradient(180deg,#0a0a12_0%,#0f111a_100%)] text-slate-100"
+    : "min-h-[100dvh] bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-900";
   const glassPanel = isDarkMode
-    ? "border-white/15 bg-white/[0.06] backdrop-blur-xl shadow-[0_24px_60px_rgba(2,8,24,0.45)]"
-    : "border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,23,42,0.14)]";
-  const softText = isDarkMode ? "text-slate-300" : "text-slate-600";
+    ? "border-white/12 bg-white/[0.05] shadow-[var(--elev-card)]"
+    : "border-slate-200/90 bg-white/90 shadow-[var(--elev-card)]";
+  const softText = isDarkMode ? "text-slate-400" : "text-slate-600";
   const accentLink = isDarkMode
-    ? "text-violet-400 hover:opacity-80"
+    ? "text-violet-400 hover:text-violet-300"
     : "text-violet-600 hover:text-violet-800";
   const dangerLink = isDarkMode
     ? "text-rose-400 hover:text-rose-300"
     : "text-rose-600 hover:text-rose-700";
+  const rowBorder = isDarkMode ? "border-white/10" : "border-slate-200/70";
+  const theadClass = isDarkMode ? "bg-white/[0.04] text-slate-400" : "bg-slate-50 text-slate-600";
   const themeAttrs = {
     "data-app-shell-root": "true" as const,
     "data-theme": isDarkMode ? ("dark" as const) : ("light" as const),
   };
+  const openTicket = (ticket: DashboardTicketRow) => {
+    setSelectedTicket(ticket);
+    setTicketActionFeedback("");
+  };
 
   if (adminGate !== "ready") {
     return (
-      <main className={shell} {...themeAttrs}>
-        <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-10">
+      <main
+        className={`${shell} pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]`}
+        {...themeAttrs}
+      >
+        <div className="mx-auto flex min-h-[100dvh] w-full max-w-xl items-center justify-center px-4 py-8">
           {adminGate === "booting" ? (
             <section
-              className={`w-full rounded-[30px] border p-8 text-center ${glassPanel}`}
+              className={`w-full rounded-[var(--radius-xl)] border p-8 text-center ${glassPanel}`}
               role="status"
               aria-live="polite"
               aria-label="Checking session"
@@ -699,54 +707,38 @@ export default function AdminDesktopPage() {
           ) : null}
 
           {adminGate === "sign_in" ? (
-            <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
-              <h1 className="text-2xl font-bold">Admin Desktop</h1>
+            <section className={`w-full rounded-[var(--radius-xl)] border p-6 ${glassPanel}`}>
+              <h1 className="text-xl font-bold sm:text-2xl">Admin</h1>
               <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
-                No Supabase session was found in this browser. The admin API only accepts a{" "}
-                <strong className={isDarkMode ? "text-slate-200" : "text-slate-900"}>
-                  cloud (Supabase) sign-in
-                </strong>{" "}
-                — not the offline / browser-only
-                demo login.
+                Sign in with your Supabase account on the home page, then return here. Offline demo login does not
+                work for admin.
               </p>
-              <ol
-                className={`mt-4 list-inside list-decimal space-y-2 text-sm leading-relaxed ${softText}`}
-              >
-                <li>
-                  On the home page, sign in with email and password (or OAuth) so your session is stored for this
-                  domain.
-                </li>
-                <li>
-                  After you are signed in, open this admin entry URL again (the hidden path that rewrites to admin).
-                </li>
-                <li>
-                  Your user must be allowlisted on the server:{" "}
-                  <span className="font-mono text-[11px]">ADMIN_EMAILS</span>,{" "}
-                  <span className="font-mono text-[11px]">ADMIN_USER_IDS</span>, or Supabase{" "}
-                  <span className="font-mono text-[11px]">app_metadata.role=admin</span>. Redeploy after changing env
-                  vars on Vercel.
-                </li>
-              </ol>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <p className={`mt-3 text-xs leading-relaxed ${softText}`}>
+                Your account must be allowlisted via{" "}
+                <span className="font-mono">ADMIN_EMAILS</span>,{" "}
+                <span className="font-mono">ADMIN_USER_IDS</span>, or{" "}
+                <span className="font-mono">app_metadata.role=admin</span>.
+              </p>
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
                 <Link href="/" className="ui-btn ui-btn-primary w-full text-center sm:w-auto">
-                  Open CineMatch (sign in)
+                  Sign in
                 </Link>
                 <button
                   type="button"
                   className="ui-btn ui-btn-secondary w-full sm:w-auto"
                   onClick={() => void handleRecheckSession()}
                 >
-                  I signed in — check again
+                  Check again
                 </button>
               </div>
             </section>
           ) : null}
 
           {adminGate === "forbidden" ? (
-            <section className={`w-full rounded-[30px] border p-6 ${glassPanel}`}>
-              <h1 className="text-2xl font-bold">Admin access denied</h1>
+            <section className={`w-full rounded-[var(--radius-xl)] border p-6 ${glassPanel}`}>
+              <h1 className="text-xl font-bold sm:text-2xl">Access denied</h1>
               <p className={`mt-2 text-sm ${softText}`}>
-                You are signed in, but this session is not authorized for the admin dashboard.
+                This account is not authorized for admin.
               </p>
               {dashboardError ? (
                 <p
@@ -786,11 +778,14 @@ export default function AdminDesktopPage() {
   }
 
   return (
-    <main className={shell} {...themeAttrs}>
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 lg:px-8">
+    <main
+      className={`${shell} pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]`}
+      {...themeAttrs}
+    >
+      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:py-6 lg:px-6">
         <ModalPortal open={Boolean(selectedTicket)}>
           {selectedTicket ? (
-          <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/45 backdrop-blur-md">
+          <div className="ui-overlay z-[var(--z-modal-backdrop)] bg-slate-950/50 backdrop-blur-sm p-0 sm:p-4">
             <button
               type="button"
               aria-label="Close"
@@ -801,39 +796,30 @@ export default function AdminDesktopPage() {
               className="absolute inset-0 cursor-default bg-transparent"
             />
             <div
-              className={`relative z-10 mx-auto flex max-h-[88vh] w-[min(94vw,980px)] flex-col overflow-hidden rounded-[30px] border shadow-[0_30px_90px_rgba(15,23,42,0.28)] ${
+              className={`relative z-10 mx-auto flex h-[100dvh] w-full max-w-none flex-col overflow-hidden border-0 shadow-none sm:h-auto sm:max-h-[min(88dvh,900px)] sm:w-[min(94vw,720px)] sm:rounded-[var(--radius-xl)] sm:border sm:shadow-[var(--elev-modal)] ${
                 isDarkMode
-                  ? "border-white/12 bg-slate-950 text-slate-100"
-                  : "border-slate-200/90 bg-white text-slate-900"
+                  ? "sm:border-white/12 bg-slate-950 text-slate-100"
+                  : "sm:border-slate-200 bg-white text-slate-900"
               }`}
             >
-              <span className="ui-modal-accent-bar" aria-hidden />
               <div
-                className={`flex items-start gap-3 border-b px-6 py-5 ${
-                  isDarkMode ? "border-white/10 bg-white/[0.02]" : "border-slate-200/90 bg-slate-50/70"
+                className={`flex items-start gap-3 border-b px-4 py-4 sm:px-5 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200"
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${softText}`}>
-                    Support ticket
+                  <p className="text-base font-bold leading-snug sm:text-lg">{selectedTicket.subject}</p>
+                  <p className={`mt-1 text-xs ${softText}`}>
+                    {selectedTicket.userName} · {new Date(selectedTicket.createdAt).toLocaleString()}
                   </p>
-                  <p className="mt-1 text-xl font-bold leading-tight text-inherit">{selectedTicket.subject}</p>
-                  <p className={`mt-2 text-xs ${softText}`}>
-                    {selectedTicket.userName} ({selectedTicket.userId}) • {new Date(selectedTicket.createdAt).toLocaleString()}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className={`text-xs ${softText}`}>User email:</span>
-                    {selectedTicket.userEmail ? (
-                      <a
-                        href={`mailto:${selectedTicket.userEmail}`}
-                        className={`text-xs font-semibold ${accentLink}`}
-                      >
-                        {selectedTicket.userEmail}
-                      </a>
-                    ) : (
-                      <span className={`text-xs ${softText}`}>Not available</span>
-                    )}
-                  </div>
+                  {selectedTicket.userEmail ? (
+                    <a
+                      href={`mailto:${selectedTicket.userEmail}`}
+                      className={`mt-1 inline-block text-xs font-medium ${accentLink}`}
+                    >
+                      {selectedTicket.userEmail}
+                    </a>
+                  ) : null}
                 </div>
                 <button
                   type="button"
@@ -853,51 +839,29 @@ export default function AdminDesktopPage() {
                 </button>
               </div>
 
-              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-                <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
-                  <div
-                    className={`rounded-[16px] border px-3 py-2 ${
-                      isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
-                    }`}
-                  >
-                    <p className={softText}>Ticket ID</p>
-                    <p className="mt-1 font-semibold text-inherit">{selectedTicket.id}</p>
-                  </div>
-                  <div
-                    className={`rounded-[16px] border px-3 py-2 ${
-                      isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
-                    }`}
-                  >
-                    <p className={softText}>Priority</p>
-                    <p className="mt-1 font-semibold text-inherit">{ticketPriorityLabel[selectedTicket.priority]}</p>
-                  </div>
-                  <div
-                    className={`rounded-[16px] border px-3 py-2 ${
+              <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <AdminBadge isDarkMode={isDarkMode} tone="neutral">
+                    {ticketPriorityLabel[selectedTicket.priority]}
+                  </AdminBadge>
+                  <AdminBadge
+                    isDarkMode={isDarkMode}
+                    tone={
                       selectedTicket.status === "closed"
-                        ? isDarkMode
-                          ? "border-emerald-400/30 bg-emerald-500/10"
-                          : "border-emerald-200 bg-emerald-50"
+                        ? "success"
                         : selectedTicket.status === "open"
-                          ? isDarkMode
-                            ? "border-amber-400/30 bg-amber-500/10"
-                            : "border-amber-200 bg-amber-50"
-                          : isDarkMode
-                            ? "border-violet-400/30 bg-violet-500/10"
-                            : "border-violet-200 bg-violet-50"
-                    }`}
+                          ? "warn"
+                          : "accent"
+                    }
                   >
-                    <p className={softText}>Status</p>
-                    <p className="mt-1 font-semibold text-inherit">{ticketStatusLabel[selectedTicket.status]}</p>
-                  </div>
+                    {ticketStatusLabel[selectedTicket.status]}
+                  </AdminBadge>
                 </div>
 
                 <div className="space-y-3">
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
-                    Conversation
-                  </p>
                   <div
-                    className={`rounded-[18px] border p-4 text-sm leading-7 ${
-                      isDarkMode ? "border-slate-500/25 bg-slate-900/40 text-slate-100" : "border-slate-200 bg-slate-50 text-slate-800"
+                    className={`rounded-[var(--radius-lg)] border p-3 text-sm leading-relaxed ${
+                      isDarkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
                     }`}
                   >
                     <p className={`text-[10px] font-semibold uppercase tracking-wide ${softText}`}>User</p>
@@ -920,14 +884,14 @@ export default function AdminDesktopPage() {
                   ).map((entry, index) => (
                     <div
                       key={`${entry.at}-${index}`}
-                      className={`rounded-[18px] border p-4 text-sm leading-7 ${
+                      className={`rounded-[var(--radius-lg)] border p-3 text-sm leading-relaxed ${
                         entry.from === "admin"
                           ? isDarkMode
-                            ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-50"
-                            : "border-emerald-200/90 bg-emerald-50 text-emerald-900"
+                            ? "border-emerald-400/20 bg-emerald-500/10"
+                            : "border-emerald-200 bg-emerald-50"
                           : isDarkMode
-                            ? "border-slate-500/25 bg-slate-900/40 text-slate-100"
-                            : "border-slate-200 bg-slate-50 text-slate-800"
+                            ? "border-white/10 bg-white/[0.03]"
+                            : "border-slate-200 bg-slate-50"
                       }`}
                     >
                       <p className={`text-[10px] font-semibold uppercase tracking-wide ${softText}`}>
@@ -940,16 +904,16 @@ export default function AdminDesktopPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="admin-ticket-reply" className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${softText}`}>
-                    Reply to user
+                  <label htmlFor="admin-ticket-reply" className={`text-xs font-medium ${softText}`}>
+                    Reply
                   </label>
                   <textarea
                     id="admin-ticket-reply"
                     value={adminReplyDraft}
                     onChange={(event) => setAdminReplyDraft(event.target.value)}
-                    rows={5}
-                    placeholder="Adds another admin message to the thread (previous replies stay visible)."
-                    className={`mt-2 w-full resize-y rounded-[16px] border px-3 py-2.5 text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 ${
+                    rows={4}
+                    placeholder="Write a reply to the user…"
+                    className={`mt-1.5 w-full resize-y rounded-[var(--radius-lg)] border px-3 py-2.5 text-sm leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 ${
                       isDarkMode
                         ? "border-white/14 bg-white/[0.06] text-slate-100 placeholder:text-slate-500"
                         : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
@@ -985,33 +949,33 @@ export default function AdminDesktopPage() {
               </div>
 
               <div
-                className={`grid grid-cols-1 gap-2 border-t px-6 py-4 sm:grid-cols-3 ${
-                  isDarkMode ? "border-white/10 bg-slate-950/95" : "border-slate-200 bg-white/95"
+                className={`grid grid-cols-1 gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:grid-cols-3 sm:px-5 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200"
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "under_review")}
                   disabled={isTicketActionLoading || selectedTicket.status === "under_review"}
-                  className="ui-btn ui-btn-secondary w-full disabled:opacity-60"
+                  className="ui-btn ui-btn-secondary w-full !py-2.5 text-sm disabled:opacity-60"
                 >
-                  Mark under review
+                  Under review
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleUpdateTicketStatus(selectedTicket.id, "closed")}
                   disabled={isTicketActionLoading || selectedTicket.status === "closed"}
-                  className="ui-btn ui-btn-secondary w-full disabled:opacity-60"
+                  className="ui-btn ui-btn-secondary w-full !py-2.5 text-sm disabled:opacity-60"
                 >
-                  Close ticket
+                  Close
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDeleteTicket(selectedTicket.id)}
                   disabled={isTicketActionLoading}
-                  className="ui-btn ui-btn-danger w-full disabled:opacity-60"
+                  className="ui-btn ui-btn-danger w-full !py-2.5 text-sm disabled:opacity-60"
                 >
-                  Delete ticket
+                  Delete
                 </button>
               </div>
             </div>
@@ -1021,7 +985,7 @@ export default function AdminDesktopPage() {
 
         <ModalPortal open={Boolean(userPendingDelete)}>
         {userPendingDelete ? (
-          <div className="ui-overlay z-[calc(var(--z-modal-backdrop)+1)] bg-slate-950/55 backdrop-blur-md">
+          <div className="ui-overlay z-[calc(var(--z-modal-backdrop)+1)] bg-slate-950/50 backdrop-blur-sm p-4">
             <button
               type="button"
               aria-label="Close"
@@ -1037,23 +1001,22 @@ export default function AdminDesktopPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="admin-delete-user-title"
-              className={`relative z-10 mx-auto w-[min(92vw,440px)] overflow-hidden rounded-[24px] border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] ${
+              className={`relative z-10 mx-auto w-full max-w-sm rounded-[var(--radius-xl)] border p-5 shadow-[var(--elev-modal)] ${
                 isDarkMode
                   ? "border-rose-500/25 bg-slate-950 text-slate-100"
-                  : "border-rose-200/90 bg-white text-slate-900"
+                  : "border-rose-200 bg-white text-slate-900"
               }`}
             >
               <h2
                 id="admin-delete-user-title"
-                className={`text-lg font-bold ${isDarkMode ? "text-rose-300" : "text-rose-700"}`}
+                className={`text-base font-bold sm:text-lg ${isDarkMode ? "text-rose-300" : "text-rose-700"}`}
               >
-                Delete user permanently?
+                Delete user?
               </h2>
               <p className={`mt-2 text-sm leading-relaxed ${softText}`}>
-                This removes the Supabase Auth account{" "}
-                <strong className={isDarkMode ? "text-white" : "text-slate-900"}>{userPendingDelete.email}</strong> (
-                {userPendingDelete.name}). Profile, settings, swipes, links, invites, and related rows are removed via
-                database cascades. Profile photos in storage are deleted first. This cannot be undone.
+                Permanently delete{" "}
+                <strong className={isDarkMode ? "text-white" : "text-slate-900"}>{userPendingDelete.email}</strong>.
+                This cannot be undone.
               </p>
               {userDeleteError ? (
                 <p
@@ -1092,17 +1055,13 @@ export default function AdminDesktopPage() {
         ) : null}
         </ModalPortal>
 
-        <div className={`mb-6 rounded-[30px] border p-5 sm:p-6 ${glassPanel}`}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">CineMatch Admin Desktop</h1>
-              <p className={`mt-1 text-sm ${softText}`}>
-                Better structure for daily moderation and operations.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
+        <header className={`mb-4 rounded-[var(--radius-xl)] border px-4 py-3 sm:px-5 ${glassPanel}`}>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-lg font-bold tracking-tight sm:text-xl">Admin</h1>
+            <div className="flex shrink-0 items-center gap-1.5">
               <button
                 type="button"
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                 onClick={() => {
                   const next = !isDarkMode;
                   setIsDarkMode(next);
@@ -1110,37 +1069,60 @@ export default function AdminDesktopPage() {
                     window.localStorage.setItem("cinematch-theme-mode", next ? "dark" : "light");
                   }
                 }}
-                className="ui-btn ui-btn-secondary"
+                className="ui-btn ui-btn-secondary !px-2.5 !py-2 text-xs sm:!px-3 sm:text-sm"
               >
-                {isDarkMode ? "Light mode" : "Dark mode"}
+                {isDarkMode ? "Light" : "Dark"}
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  void loadDashboard({ keepOldData: true })
-                }
-                className="ui-btn ui-btn-secondary"
+                aria-label="Refresh dashboard"
+                onClick={() => void loadDashboard({ keepOldData: true })}
+                className="ui-btn ui-btn-secondary !px-2.5 !py-2 text-xs sm:!px-3 sm:text-sm"
                 disabled={isLoadingDashboard}
               >
-                {isLoadingDashboard ? "Refreshing..." : "Refresh"}
+                {isLoadingDashboard ? "…" : "Refresh"}
               </button>
               <button
                 type="button"
                 onClick={() => void handleLogout()}
-                className="ui-btn ui-btn-secondary"
+                className="ui-btn ui-btn-secondary !px-2.5 !py-2 text-xs sm:!px-3 sm:text-sm"
               >
-                Log out
+                Out
               </button>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className={`h-fit rounded-[24px] border p-3 ${glassPanel}`}>
-            <p className={`px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${softText}`}>
-              Navigation
-            </p>
-            <nav className="space-y-1">
+        <nav
+          className={`mb-4 flex gap-2 overflow-x-auto rounded-[var(--radius-xl)] border p-2 lg:hidden ${glassPanel}`}
+          aria-label="Admin sections"
+        >
+          {adminTabs.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+                  active
+                    ? isDarkMode
+                      ? "bg-violet-500/25 text-violet-100"
+                      : "bg-violet-100 text-violet-800"
+                    : isDarkMode
+                      ? "text-slate-400 hover:text-slate-200"
+                      : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[11rem_minmax(0,1fr)]">
+          <aside className={`hidden h-fit rounded-[var(--radius-xl)] border p-2 lg:block ${glassPanel}`}>
+            <nav className="space-y-0.5" aria-label="Admin sections">
               {adminTabs.map((tab) => {
                 const active = activeTab === tab.id;
                 return (
@@ -1148,18 +1130,17 @@ export default function AdminDesktopPage() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full rounded-[14px] border px-3 py-2.5 text-left transition ${
+                    className={`w-full rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-sm font-semibold transition ${
                       active
                         ? isDarkMode
-                          ? "border-violet-400/35 bg-violet-500/16 text-violet-100"
-                          : "border-violet-300/70 bg-violet-50 text-violet-800"
+                          ? "bg-violet-500/20 text-violet-100"
+                          : "bg-violet-50 text-violet-800"
                         : isDarkMode
-                          ? "border-transparent bg-white/[0.03] text-slate-300 hover:border-white/10 hover:bg-white/[0.06]"
-                          : "border-transparent bg-white/40 text-slate-700 hover:border-slate-200 hover:bg-white"
+                          ? "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
-                    <p className="text-sm font-semibold">{tab.label}</p>
-                    <p className={`mt-0.5 text-xs ${active ? "opacity-80" : softText}`}>{tab.note}</p>
+                    {tab.label}
                   </button>
                 );
               })}
@@ -1193,181 +1174,136 @@ export default function AdminDesktopPage() {
         ) : null}
 
         {!dashboardStats ? (
-          <section className={`mb-6 rounded-[24px] border px-4 py-6 text-center text-sm ${glassPanel}`}>
-            Loading dashboard data...
+          <section className={`mb-4 rounded-[var(--radius-xl)] border px-4 py-8 text-center text-sm ${glassPanel}`}>
+            <div
+              className={
+                isDarkMode
+                  ? "ui-loading-spinner ui-loading-spinner--on-dark mx-auto"
+                  : "ui-loading-spinner mx-auto"
+              }
+              aria-hidden
+            />
+            <p className={`mt-3 ${softText}`}>Loading…</p>
           </section>
         ) : null}
 
         {activeTab === "overview" ? (
           <>
-            <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
               <StatCard label="Users" value={dashboardStats?.users ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Movies" value={dashboardStats?.movies ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Swipes" value={dashboardStats?.swipes ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Watched" value={dashboardStats?.watchedEntries ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Accepted swipes" value={dashboardStats?.acceptedSwipes ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Rejected swipes" value={dashboardStats?.rejectedSwipes ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Accepted links" value={dashboardStats?.acceptedLinks ?? 0} isDarkMode={isDarkMode} />
               <StatCard label="Open tickets" value={dashboardStats?.openTickets ?? 0} isDarkMode={isDarkMode} />
-              <StatCard label="Full-access users" value={dashboardStats?.proUsers ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Full access" value={dashboardStats?.proUsers ?? 0} isDarkMode={isDarkMode} />
             </div>
 
-            <section className={`mb-6 overflow-hidden rounded-[24px] border ${glassPanel}`}>
+            <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
               <div
                 className={`flex items-center justify-between border-b px-4 py-3 ${
-                  isDarkMode ? "border-white/10" : "border-slate-200/60"
+                  isDarkMode ? "border-white/10" : "border-slate-200"
                 }`}
               >
-                <h2 className="text-lg font-semibold">Recent Tickets</h2>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("tickets")}
-                  className={`text-sm font-semibold ${accentLink}`}
-                >
-                  View all
-                </button>
+                <h2 className="text-base font-semibold">Recent tickets</h2>
+                {previewTickets.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("tickets")}
+                    className={`text-sm font-medium ${accentLink}`}
+                  >
+                    All
+                  </button>
+                ) : null}
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                    <tr>
-                      <th className="px-4 py-2 text-left font-semibold">User</th>
-                      <th className="px-4 py-2 text-left font-semibold">Subject</th>
-                      <th className="px-4 py-2 text-left font-semibold">Priority</th>
-                      <th className="px-4 py-2 text-left font-semibold">Status</th>
-                      <th className="px-4 py-2 text-left font-semibold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewTickets.length === 0 ? (
-                      <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td colSpan={5} className="px-4 py-4 text-center">
-                          No support tickets yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      previewTickets.map((ticket) => (
-                        <tr key={ticket.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                          <td className="px-4 py-2">{ticket.userName}</td>
-                          <td className="px-4 py-2 font-medium">{ticket.subject}</td>
-                          <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
-                          <td className="px-4 py-2">{ticketStatusLabel[ticket.status]}</td>
-                          <td className="px-4 py-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedTicket(ticket);
-                                setTicketActionFeedback("");
-                              }}
-                              className={`text-sm font-semibold ${accentLink}`}
-                            >
-                              Open
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
 
-            <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
-              <div
-                className={`flex items-center justify-between border-b px-4 py-3 ${
-                  isDarkMode ? "border-white/10" : "border-slate-200/60"
-                }`}
-              >
-                <h2 className="text-lg font-semibold">Recent Swipes</h2>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("swipes")}
-                  className={`text-sm font-semibold ${accentLink}`}
-                >
-                  View all
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                    <tr>
-                      <th className="px-4 py-2 text-left font-semibold">User</th>
-                      <th className="px-4 py-2 text-left font-semibold">Movie</th>
-                      <th className="px-4 py-2 text-left font-semibold">Decision</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewSwipes.length === 0 ? (
-                      <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td colSpan={3} className="px-4 py-4 text-center">
-                          No swipe activity yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      previewSwipes.map((swipe, index) => (
-                        <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                          <td className="px-4 py-2">{swipe.userName}</td>
-                          <td className="px-4 py-2">{swipe.movieTitle}</td>
-                          <td className="px-4 py-2">{swipe.decision}</td>
+              {previewTickets.length === 0 ? (
+                <AdminEmpty softText={softText}>No tickets yet.</AdminEmpty>
+              ) : (
+                <>
+                  <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
+                    {previewTickets.map((ticket) => (
+                      <button
+                        key={ticket.id}
+                        type="button"
+                        onClick={() => openTicket(ticket)}
+                        className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:opacity-90"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{ticket.subject}</p>
+                          <p className={`mt-0.5 truncate text-xs ${softText}`}>{ticket.userName}</p>
+                        </div>
+                        <AdminBadge
+                          isDarkMode={isDarkMode}
+                          tone={ticket.status === "open" ? "warn" : ticket.status === "closed" ? "success" : "accent"}
+                        >
+                          {ticketStatusLabel[ticket.status]}
+                        </AdminBadge>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="min-w-full text-sm">
+                      <thead className={theadClass}>
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">User</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Subject</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                          <th className="px-4 py-2.5 text-left font-medium" />
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody>
+                        {previewTickets.map((ticket) => (
+                          <tr key={ticket.id} className={`border-t ${rowBorder}`}>
+                            <td className="px-4 py-2.5">{ticket.userName}</td>
+                            <td className="px-4 py-2.5 font-medium">{ticket.subject}</td>
+                            <td className="px-4 py-2.5">{ticketStatusLabel[ticket.status]}</td>
+                            <td className="px-4 py-2.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => openTicket(ticket)}
+                                className={`text-sm font-medium ${accentLink}`}
+                              >
+                                Open
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </section>
           </>
         ) : null}
 
         {activeTab === "users" ? (
-          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+          <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
             <div
               className={`border-b px-4 py-3 ${
-                isDarkMode ? "border-white/10" : "border-slate-200/60"
+                isDarkMode ? "border-white/10" : "border-slate-200"
               }`}
             >
-              <h2 className="text-lg font-semibold">Users</h2>
-              <p className={`mt-1 text-xs ${softText}`}>
-                Delete removes the auth user; linked data is cleaned up by database cascades.
-              </p>
+              <h2 className="text-base font-semibold">Users</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Name</th>
-                    <th className="px-4 py-2 text-left font-semibold">Email</th>
-                    <th className="px-4 py-2 text-right font-semibold">Accepted</th>
-                    <th className="px-4 py-2 text-right font-semibold">Rejected</th>
-                    <th className="px-4 py-2 text-right font-semibold">Links</th>
-                    <th className="px-4 py-2 text-left font-semibold">Account</th>
-                    <th className="px-4 py-2 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            {userRows.length === 0 ? (
+              <AdminEmpty softText={softText}>No users found.</AdminEmpty>
+            ) : (
+              <>
+                <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
                   {userRows.map((row) => (
-                    <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td className="px-4 py-2 font-medium">{row.name}</td>
-                      <td className="px-4 py-2">{row.email}</td>
-                      <td className="px-4 py-2 text-right">{row.accepted}</td>
-                      <td className="px-4 py-2 text-right">{row.rejected}</td>
-                      <td className="px-4 py-2 text-right">{row.links}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            row.accountActivated
-                              ? isDarkMode
-                                ? "bg-emerald-500/20 text-emerald-200"
-                                : "bg-emerald-100 text-emerald-800"
-                              : isDarkMode
-                                ? "bg-amber-500/20 text-amber-200"
-                                : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {row.accountActivated ? "Activated" : "Not activated"}
+                    <div key={row.id} className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{row.name}</p>
+                          <p className={`truncate text-xs ${softText}`}>{row.email}</p>
+                        </div>
+                        <AdminBadge isDarkMode={isDarkMode} tone={row.accountActivated ? "success" : "warn"}>
+                          {row.accountActivated ? "Active" : "Pending"}
+                        </AdminBadge>
+                      </div>
+                      <div className={`mt-2 flex items-center justify-between text-xs ${softText}`}>
+                        <span>
+                          {row.accepted}↑ · {row.rejected}↓ · {row.links} links
                         </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
                         <button
                           type="button"
                           disabled={row.id === currentAdminUserId || isDeletingUser}
@@ -1375,235 +1311,351 @@ export default function AdminDesktopPage() {
                             setUserDeleteError("");
                             setUserPendingDelete(row);
                           }}
-                          className={`text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${dangerLink}`}
+                          className={`font-medium disabled:opacity-40 ${dangerLink}`}
                         >
                           Delete
                         </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                  {userRows.length === 0 ? (
-                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={7} className="px-4 py-4 text-center">
-                        No users found in database.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="min-w-full text-sm">
+                    <thead className={theadClass}>
+                      <tr>
+                        <th className="px-4 py-2.5 text-left font-medium">Name</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Email</th>
+                        <th className="px-4 py-2.5 text-right font-medium">Swipes</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                        <th className="px-4 py-2.5 text-right font-medium" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userRows.map((row) => (
+                        <tr key={row.id} className={`border-t ${rowBorder}`}>
+                          <td className="px-4 py-2.5 font-medium">{row.name}</td>
+                          <td className="px-4 py-2.5">{row.email}</td>
+                          <td className={`px-4 py-2.5 text-right text-xs ${softText}`}>
+                            {row.accepted} / {row.rejected}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <AdminBadge isDarkMode={isDarkMode} tone={row.accountActivated ? "success" : "warn"}>
+                              {row.accountActivated ? "Active" : "Pending"}
+                            </AdminBadge>
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            <button
+                              type="button"
+                              disabled={row.id === currentAdminUserId || isDeletingUser}
+                              onClick={() => {
+                                setUserDeleteError("");
+                                setUserPendingDelete(row);
+                              }}
+                              className={`text-xs font-medium disabled:opacity-40 ${dangerLink}`}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </section>
         ) : null}
 
         {activeTab === "tickets" ? (
-          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+          <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
             <div
               className={`border-b px-4 py-3 ${
-                isDarkMode ? "border-white/10" : "border-slate-200/60"
+                isDarkMode ? "border-white/10" : "border-slate-200"
               }`}
             >
-              <h2 className="text-lg font-semibold">Support Tickets</h2>
+              <h2 className="text-base font-semibold">Tickets</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Time</th>
-                    <th className="px-4 py-2 text-left font-semibold">User</th>
-                    <th className="px-4 py-2 text-left font-semibold">Subject</th>
-                    <th className="px-4 py-2 text-left font-semibold">Message</th>
-                    <th className="px-4 py-2 text-left font-semibold">Priority</th>
-                    <th className="px-4 py-2 text-left font-semibold">Status</th>
-                    <th className="px-4 py-2 text-left font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTickets.length === 0 ? (
-                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={7} className="px-4 py-4 text-center">
-                        No support tickets yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    recentTickets.map((ticket) => (
-                      <tr key={ticket.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td className="px-4 py-2">{new Date(ticket.createdAt).toLocaleString()}</td>
-                        <td className="px-4 py-2">{ticket.userName}</td>
-                        <td className="px-4 py-2 font-medium">{ticket.subject}</td>
-                        <td className="px-4 py-2">
-                          <span className="line-clamp-2">{ticket.message}</span>
-                        </td>
-                        <td className="px-4 py-2">{ticketPriorityLabel[ticket.priority]}</td>
-                        <td className="px-4 py-2">{ticketStatusLabel[ticket.status]}</td>
-                        <td className="px-4 py-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedTicket(ticket);
-                              setTicketActionFeedback("");
-                            }}
-                            className={`text-sm font-semibold ${accentLink}`}
-                          >
-                            Open
-                          </button>
-                        </td>
+            {recentTickets.length === 0 ? (
+              <AdminEmpty softText={softText}>No tickets yet.</AdminEmpty>
+            ) : (
+              <>
+                <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
+                  {recentTickets.map((ticket) => (
+                    <button
+                      key={ticket.id}
+                      type="button"
+                      onClick={() => openTicket(ticket)}
+                      className="w-full px-4 py-3 text-left transition hover:opacity-90"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.subject}</p>
+                        <AdminBadge
+                          isDarkMode={isDarkMode}
+                          tone={ticket.status === "open" ? "warn" : ticket.status === "closed" ? "success" : "accent"}
+                        >
+                          {ticketStatusLabel[ticket.status]}
+                        </AdminBadge>
+                      </div>
+                      <p className={`mt-1 truncate text-xs ${softText}`}>
+                        {ticket.userName} · {new Date(ticket.createdAt).toLocaleDateString()}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="min-w-full text-sm">
+                    <thead className={theadClass}>
+                      <tr>
+                        <th className="px-4 py-2.5 text-left font-medium">Subject</th>
+                        <th className="px-4 py-2.5 text-left font-medium">User</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Time</th>
+                        <th className="px-4 py-2.5 text-left font-medium" />
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {recentTickets.map((ticket) => (
+                        <tr key={ticket.id} className={`border-t ${rowBorder}`}>
+                          <td className="px-4 py-2.5 font-medium">{ticket.subject}</td>
+                          <td className="px-4 py-2.5">{ticket.userName}</td>
+                          <td className="px-4 py-2.5">{ticketStatusLabel[ticket.status]}</td>
+                          <td className={`px-4 py-2.5 text-xs ${softText}`}>
+                            {new Date(ticket.createdAt).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <button
+                              type="button"
+                              onClick={() => openTicket(ticket)}
+                              className={`text-sm font-medium ${accentLink}`}
+                            >
+                              Open
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </section>
         ) : null}
 
         {activeTab === "swipes" ? (
-          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+          <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
             <div
               className={`border-b px-4 py-3 ${
-                isDarkMode ? "border-white/10" : "border-slate-200/60"
+                isDarkMode ? "border-white/10" : "border-slate-200"
               }`}
             >
-              <h2 className="text-lg font-semibold">Recent Swipes</h2>
+              <h2 className="text-base font-semibold">Swipes</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Time</th>
-                    <th className="px-4 py-2 text-left font-semibold">User</th>
-                    <th className="px-4 py-2 text-left font-semibold">Movie</th>
-                    <th className="px-4 py-2 text-left font-semibold">Decision</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentSwipes.length === 0 ? (
-                    <tr className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td colSpan={4} className="px-4 py-4 text-center">
-                        No swipe activity yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    recentSwipes.map((swipe, index) => (
-                      <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                        <td className="px-4 py-2">{new Date(swipe.createdAt).toLocaleString()}</td>
-                        <td className="px-4 py-2">{swipe.userName}</td>
-                        <td className="px-4 py-2">{swipe.movieTitle}</td>
-                        <td className="px-4 py-2">{swipe.decision}</td>
+            {recentSwipes.length === 0 ? (
+              <AdminEmpty softText={softText}>No swipe activity yet.</AdminEmpty>
+            ) : (
+              <>
+                <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
+                  {recentSwipes.map((swipe, index) => (
+                    <div key={`${swipe.userId}-${swipe.movieId}-${index}`} className="px-4 py-3">
+                      <p className="text-sm font-medium">{swipe.movieTitle}</p>
+                      <p className={`mt-0.5 text-xs ${softText}`}>
+                        {swipe.userName} · {swipe.decision} ·{" "}
+                        {new Date(swipe.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="min-w-full text-sm">
+                    <thead className={theadClass}>
+                      <tr>
+                        <th className="px-4 py-2.5 text-left font-medium">Movie</th>
+                        <th className="px-4 py-2.5 text-left font-medium">User</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Decision</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Time</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {recentSwipes.map((swipe, index) => (
+                        <tr key={`${swipe.userId}-${swipe.movieId}-${index}`} className={`border-t ${rowBorder}`}>
+                          <td className="px-4 py-2.5">{swipe.movieTitle}</td>
+                          <td className="px-4 py-2.5">{swipe.userName}</td>
+                          <td className="px-4 py-2.5 capitalize">{swipe.decision}</td>
+                          <td className={`px-4 py-2.5 text-xs ${softText}`}>
+                            {new Date(swipe.createdAt).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </section>
         ) : null}
 
         {activeTab === "subscriptions" ? (
-          <section className={`overflow-hidden rounded-[24px] border ${glassPanel}`}>
+          <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
             <div
               className={`border-b px-4 py-3 ${
-                isDarkMode ? "border-white/10" : "border-slate-200/60"
+                isDarkMode ? "border-white/10" : "border-slate-200"
               }`}
             >
-              <h2 className="text-lg font-semibold">User access</h2>
-              <p className={`mt-1 text-xs ${softText}`}>
-                Set standard vs full feature access and optional staff test override per account.
-              </p>
+              <h2 className="text-base font-semibold">Access</h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className={isDarkMode ? "bg-white/5 text-slate-300" : "bg-slate-50/70 text-slate-600"}>
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">User</th>
-                    <th className="px-4 py-2 text-left font-semibold">Email</th>
-                    <th className="px-4 py-2 text-left font-semibold">Stored tier</th>
-                    <th className="px-4 py-2 text-left font-semibold">Effective access</th>
-                    <th className="px-4 py-2 text-left font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            {userRows.length === 0 ? (
+              <AdminEmpty softText={softText}>No users found.</AdminEmpty>
+            ) : (
+              <>
+                <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
                   {userRows.map((row) => (
-                    <tr key={row.id} className={isDarkMode ? "border-t border-white/10" : "border-t border-slate-200/60"}>
-                      <td className="px-4 py-2 font-medium">{row.name}</td>
-                      <td className="px-4 py-2">{row.email}</td>
-                      <td className="px-4 py-2">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          row.subscriptionTier === "pro"
-                            ? isDarkMode
-                              ? "bg-emerald-500/20 text-emerald-200"
-                              : "bg-emerald-100 text-emerald-800"
-                            : isDarkMode
-                              ? "bg-slate-500/20 text-slate-200"
-                              : "bg-slate-100 text-slate-700"
-                        }`}>
+                    <div key={row.id} className="space-y-2 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">{row.name}</p>
+                        <p className={`text-xs ${softText}`}>{row.email}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <AdminBadge isDarkMode={isDarkMode} tone={row.subscriptionTier === "pro" ? "success" : "neutral"}>
                           {row.subscriptionTier === "pro" ? "Full" : "Standard"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          row.effectiveSubscriptionTier === "pro"
-                            ? isDarkMode
-                              ? "bg-violet-500/20 text-violet-100"
-                              : "bg-violet-100 text-violet-800"
-                            : isDarkMode
-                              ? "bg-slate-500/20 text-slate-200"
-                              : "bg-slate-100 text-slate-700"
-                        }`}>
-                          {row.effectiveSubscriptionTier === "pro" ? "Full" : "Standard"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "free" })}
-                            disabled={subscriptionSavingUserId === row.id}
-                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
-                          >
-                            Set standard
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "pro" })}
-                            disabled={subscriptionSavingUserId === row.id}
-                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
-                          >
-                            Grant full access
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleUpdateSubscription(row.id, {
-                                adminModeSimulatePro: !row.adminModeSimulatePro,
-                              })
-                            }
-                            disabled={subscriptionSavingUserId === row.id}
-                            className="ui-btn ui-btn-secondary !px-3 !py-1.5 !text-xs"
-                          >
-                            {row.adminModeSimulatePro ? "Clear test override" : "Enable test override"}
-                          </button>
-                        </div>
-                        {subscriptionActionState?.userId === row.id ? (
-                          <p
-                            className={`mt-2 text-xs ${
-                              subscriptionActionState.isError
-                                ? isDarkMode
-                                  ? "text-rose-300"
-                                  : "text-rose-700"
-                                : isDarkMode
-                                  ? "text-emerald-300"
-                                  : "text-emerald-700"
-                            }`}
-                          >
-                            {subscriptionActionState.message}
-                          </p>
+                        </AdminBadge>
+                        {row.adminModeSimulatePro ? (
+                          <AdminBadge isDarkMode={isDarkMode} tone="accent">
+                            Test override
+                          </AdminBadge>
                         ) : null}
-                      </td>
-                    </tr>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "free" })}
+                          disabled={subscriptionSavingUserId === row.id}
+                          className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                        >
+                          Standard
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "pro" })}
+                          disabled={subscriptionSavingUserId === row.id}
+                          className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                        >
+                          Full
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void handleUpdateSubscription(row.id, {
+                              adminModeSimulatePro: !row.adminModeSimulatePro,
+                            })
+                          }
+                          disabled={subscriptionSavingUserId === row.id}
+                          className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                        >
+                          {row.adminModeSimulatePro ? "Clear override" : "Test override"}
+                        </button>
+                      </div>
+                      {subscriptionActionState?.userId === row.id ? (
+                        <p
+                          className={`text-xs ${
+                            subscriptionActionState.isError
+                              ? isDarkMode
+                                ? "text-rose-300"
+                                : "text-rose-700"
+                              : isDarkMode
+                                ? "text-emerald-300"
+                                : "text-emerald-700"
+                          }`}
+                        >
+                          {subscriptionActionState.message}
+                        </p>
+                      ) : null}
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="min-w-full text-sm">
+                    <thead className={theadClass}>
+                      <tr>
+                        <th className="px-4 py-2.5 text-left font-medium">User</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Tier</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Effective</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userRows.map((row) => (
+                        <tr key={row.id} className={`border-t ${rowBorder}`}>
+                          <td className="px-4 py-2.5">
+                            <p className="font-medium">{row.name}</p>
+                            <p className={`text-xs ${softText}`}>{row.email}</p>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <AdminBadge isDarkMode={isDarkMode} tone={row.subscriptionTier === "pro" ? "success" : "neutral"}>
+                              {row.subscriptionTier === "pro" ? "Full" : "Standard"}
+                            </AdminBadge>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <AdminBadge
+                              isDarkMode={isDarkMode}
+                              tone={row.effectiveSubscriptionTier === "pro" ? "accent" : "neutral"}
+                            >
+                              {row.effectiveSubscriptionTier === "pro" ? "Full" : "Standard"}
+                            </AdminBadge>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <div className="flex flex-wrap gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "free" })}
+                                disabled={subscriptionSavingUserId === row.id}
+                                className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                              >
+                                Standard
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleUpdateSubscription(row.id, { subscriptionTier: "pro" })}
+                                disabled={subscriptionSavingUserId === row.id}
+                                className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                              >
+                                Full
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleUpdateSubscription(row.id, {
+                                    adminModeSimulatePro: !row.adminModeSimulatePro,
+                                  })
+                                }
+                                disabled={subscriptionSavingUserId === row.id}
+                                className="ui-btn ui-btn-secondary !px-2.5 !py-1.5 !text-xs"
+                              >
+                                {row.adminModeSimulatePro ? "Clear override" : "Override"}
+                              </button>
+                            </div>
+                            {subscriptionActionState?.userId === row.id ? (
+                              <p
+                                className={`mt-1.5 text-xs ${
+                                  subscriptionActionState.isError
+                                    ? isDarkMode
+                                      ? "text-rose-300"
+                                      : "text-rose-700"
+                                    : isDarkMode
+                                      ? "text-emerald-300"
+                                      : "text-emerald-700"
+                                }`}
+                              >
+                                {subscriptionActionState.message}
+                              </p>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </section>
         ) : null}
           </section>
@@ -1624,21 +1676,44 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-[20px] border px-4 py-3 backdrop-blur-xl ${
+      className={`rounded-[var(--radius-lg)] border px-3 py-2.5 sm:px-4 sm:py-3 ${
         isDarkMode
-          ? "border-white/15 bg-white/[0.06] shadow-[0_18px_40px_rgba(2,8,24,0.35)]"
-          : "border-slate-200/80 bg-white/85 shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
+          ? "border-white/12 bg-white/[0.04]"
+          : "border-slate-200/90 bg-white/90"
       }`}
     >
-      <p
-        className={`text-xs font-semibold uppercase tracking-[0.14em] ${
-          isDarkMode ? "text-slate-400" : "text-slate-500"
-        }`}
-      >
+      <p className={`text-[10px] font-semibold uppercase tracking-wide sm:text-xs ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>
         {label}
       </p>
-      <p className="mt-1 text-2xl font-bold">{value}</p>
+      <p className="mt-0.5 text-xl font-bold sm:text-2xl">{value}</p>
     </div>
   );
+}
+
+function AdminBadge({
+  children,
+  tone,
+  isDarkMode,
+}: {
+  children: ReactNode;
+  tone: "success" | "warn" | "neutral" | "accent";
+  isDarkMode: boolean;
+}) {
+  const styles = {
+    success: isDarkMode ? "bg-emerald-500/20 text-emerald-200" : "bg-emerald-100 text-emerald-800",
+    warn: isDarkMode ? "bg-amber-500/20 text-amber-200" : "bg-amber-100 text-amber-800",
+    neutral: isDarkMode ? "bg-white/10 text-slate-300" : "bg-slate-100 text-slate-700",
+    accent: isDarkMode ? "bg-violet-500/20 text-violet-100" : "bg-violet-100 text-violet-800",
+  } as const;
+
+  return (
+    <span className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:text-xs ${styles[tone]}`}>
+      {children}
+    </span>
+  );
+}
+
+function AdminEmpty({ children, softText }: { children: ReactNode; softText: string }) {
+  return <p className={`px-4 py-8 text-center text-sm ${softText}`}>{children}</p>;
 }
 
