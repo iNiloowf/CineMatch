@@ -32,7 +32,7 @@ import {
   explainDiscoverSwipeMatch,
   type DiscoverSwipeMatchExplanation,
 } from "@/lib/match-score";
-import { TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
+import { SWIPE_TOAST_AUTO_DISMISS_MS } from "@/lib/toast-auto-dismiss";
 import type { Movie } from "@/lib/types";
 
 /**
@@ -897,7 +897,7 @@ export function DiscoverPage2Content({
         setLastSwipe((current) =>
           current?.movie.id === swipedMovie.id ? null : current,
         );
-      }, TOAST_AUTO_DISMISS_MS);
+      }, SWIPE_TOAST_AUTO_DISMISS_MS);
 
       void swipeMovie(swipedMovie.id, decision);
     },
@@ -974,6 +974,13 @@ export function DiscoverPage2Content({
     registerMovies([restoredSwipe.movie]);
     setBrowseIndex(restoredSwipe.browseIndex);
     setFocusedMovieId(restoredSwipe.focusedMovieId);
+  };
+
+  const handleDismissSwipeToast = () => {
+    if (undoToastTimeoutRef.current) {
+      window.clearTimeout(undoToastTimeoutRef.current);
+    }
+    setLastSwipe(null);
   };
 
   return (
@@ -1902,11 +1909,25 @@ export function DiscoverPage2Content({
               >
                 Undo
               </button>
+              <button
+                type="button"
+                onClick={handleDismissSwipeToast}
+                aria-label="Dismiss"
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                  isDarkMode ? "bg-white/10 text-slate-200 hover:bg-white/14" : "bg-slate-100 text-slate-600 hover:bg-slate-200/90"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="ui-icon-sm ui-icon-stroke" aria-hidden>
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
             </div>
             <ToastDismissProgressBar
               key={`${lastSwipe.movie.id}-${lastSwipe.decision}`}
               isDarkMode={isDarkMode}
               accent="violet"
+              durationMs={SWIPE_TOAST_AUTO_DISMISS_MS}
             />
           </div>
         </div>
