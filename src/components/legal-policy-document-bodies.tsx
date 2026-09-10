@@ -161,9 +161,17 @@ export function PrivacyPolicyDocumentBody({
 
       <h2 className={h2}>13. Contact</h2>
       <p className={p}>
-        For privacy questions or requests, contact us at the support or legal email address published for CineMatch
-        (replace this sentence with your real contact email before production). You may also use in-app support if
-        available.
+        For privacy questions or requests, contact us at the support email published for CineMatch, or use in-app
+        support (Settings). To request account and data deletion, use{" "}
+        <Link
+          href="/account-deletion"
+          target={crossLinkTarget === "_blank" ? "_blank" : undefined}
+          rel={linkRel}
+          className="font-semibold underline underline-offset-2 hover:opacity-90"
+        >
+          Account deletion
+        </Link>
+        .
       </p>
     </div>
   );
