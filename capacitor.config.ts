@@ -11,8 +11,11 @@ const config: CapacitorConfig = {
   appName: "CineMatch",
   webDir: "public",
   server: {
-    url: "https://cinematch.ca",
+    // Must match the live host. Apex `cinematch.ca` 307s to `www.cinematch.ca`;
+    // Capacitor opens a different host in Chrome instead of the WebView.
+    url: "https://www.cinematch.ca",
     cleartext: false,
+    allowNavigation: ["www.cinematch.ca", "cinematch.ca"],
   },
   android: {
     allowMixedContent: false,
