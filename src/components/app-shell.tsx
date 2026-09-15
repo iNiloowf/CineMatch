@@ -55,15 +55,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     >
       <a
         href="#main-content"
-        className={`fixed z-[calc(var(--z-modal-backdrop)+3)] -translate-y-[140%] rounded-xl px-4 py-2 text-sm font-semibold shadow-lg transition-transform duration-150 focus:translate-y-4 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent ${
+        className={`app-skip-link absolute z-[calc(var(--z-modal-backdrop)+3)] rounded-xl px-4 py-2 text-sm font-semibold shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent ${
           isDarkMode
             ? "bg-violet-500 text-white focus:ring-violet-300"
             : "bg-violet-600 text-white focus:ring-violet-400"
         }`}
-        style={{
-          top: "max(0.75rem, env(safe-area-inset-top, 0px))",
-          left: "max(1rem, env(safe-area-inset-left, 0px))",
-        }}
       >
         Skip to main content
       </a>

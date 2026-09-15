@@ -244,6 +244,30 @@
 }
 
 /**
+ * A11y skip link: stay fully off-canvas until keyboard focus.
+ * `fixed` + partial translate used to peek under large safe-area insets on phones.
+ * Parent shell uses overflow-y-hidden so absolute off-screen placement stays clipped.
+ */
+.app-skip-link {
+  top: 0;
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  transform: translateY(calc(-100% - 1.5rem));
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.app-skip-link:focus,
+.app-skip-link:focus-visible {
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-skip-link {
+    transition: none;
+  }
+}
+
+/**
  * In-card section title (uppercase meta) — use instead of ad-hoc `text-xs uppercase` stacks.
  * Pairs with body copy: `.app-body-muted` or `text-sm` + `text-slate-*`.
  */
