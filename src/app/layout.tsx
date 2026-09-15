@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import Script from "next/script";
+import { AndroidHardwareBackHandler } from "@/components/android-hardware-back-handler";
 import { AppBootstrapGate } from "@/components/app-bootstrap-gate";
 import { AppStateProvider } from "@/lib/app-state";
 import { htmlMetadataIcons } from "@/lib/pwa-app-icons";
@@ -52,6 +53,7 @@ export default async function RootLayout({
           nonce={nonce}
         />
         <AppStateProvider>
+          <AndroidHardwareBackHandler />
           <AppBootstrapGate>{children}</AppBootstrapGate>
         </AppStateProvider>
       </body>
