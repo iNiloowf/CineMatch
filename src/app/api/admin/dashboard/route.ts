@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { API_ERROR_CODES, apiJsonError, apiJsonOk } from "@/server/api-response";
 import { checkRateLimit, clientIp } from "@/server/rate-limit";
 import { requireServerAdmin } from "@/server/admin-auth";
 import { parseConversation } from "@/lib/support-ticket-conversation";
 import { logSecurityAudit } from "@/server/security-audit";
+import {
+  rankMoviesByWeeklyLikes,
+  utcWeekRange,
+} from "@/lib/admin-weekly-likes";
 
 type ProfileRow = {
   id: string;
@@ -33,6 +38,8 @@ type LinkRow = {
 type MovieRow = {
   id: string;
   title: string;
+  release_year?: number | null;
+  poster_image_url?: string | null;
 };
 
 type TicketRow = {
@@ -60,6 +67,34 @@ type AuthSubscriptionFallback = {
 
 const ADMIN_WINDOW_MS = 5 * 60 * 1000;
 const ADMIN_MAX = 120;
+const WEEKLY_SWIPES_PAGE_SIZE = 1000;
+const WEEKLY_SWIPES_MAX_ROWS = 20_000;
+const WEEKLY_TOP_MOVIES_LIMIT = 25;
+
+async function fetchWeeklyAcceptedSwipes(
+  supabaseAdmin: SupabaseClient,
+  weekStartIso: string,
+) {
+  const rows: Array<{ user_id: string; movie_id: string }> = [];
+  for (let from = 0; from < WEEKLY_SWIPES_MAX_ROWS; from += WEEKLY_SWIPES_PAGE_SIZE) {
+    const page = await supabaseAdmin
+      .from("swipes")
+      .select("user_id, movie_id")
+      .eq("decision", "accepted")
+      .gte("created_at", weekStartIso)
+      .order("created_at", { ascending: true })
+      .range(from, from + WEEKLY_SWIPES_PAGE_SIZE - 1);
+    if (page.error) {
+      return page;
+    }
+    const data = (page.data ?? []) as Array<{ user_id: string; movie_id: string }>;
+    rows.push(...data);
+    if (data.length < WEEKLY_SWIPES_PAGE_SIZE) {
+      break;
+    }
+  }
+  return { data: rows, error: null };
+}
 
 function isMissingOptionalSettingsColumnError(
   error: SupabaseErrorLike,
@@ -129,6 +164,8 @@ export async function POST(request: NextRequest) {
     return adminAuth.response;
   }
   const { supabaseAdmin, identity } = adminAuth;
+  const weekRange = utcWeekRange();
+  const weekStartIso = weekRange.start.toISOString();
 
   const [
     usersCountResult,
@@ -143,6 +180,7 @@ export async function POST(request: NextRequest) {
     swipesResult,
     linksResult,
     recentSwipesResult,
+    weeklyAcceptedSwipesResult,
   ] = await Promise.all([
     supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("movies").select("id", { count: "exact", head: true }),
@@ -178,6 +216,7 @@ export async function POST(request: NextRequest) {
       .select("user_id, movie_id, decision, created_at")
       .order("created_at", { ascending: false })
       .limit(20),
+    fetchWeeklyAcceptedSwipes(supabaseAdmin, weekStartIso),
   ]);
 
   const settingsResult = await supabaseAdmin
@@ -252,7 +291,8 @@ export async function POST(request: NextRequest) {
     profilesResult.error ??
     swipesResult.error ??
     linksResult.error ??
-    recentSwipesResult.error;
+    recentSwipesResult.error ??
+    weeklyAcceptedSwipesResult.error;
 
   if (firstError) {
     return apiJsonError(500, firstError.message, {
@@ -265,6 +305,17 @@ export async function POST(request: NextRequest) {
   const swipes = (swipesResult.data ?? []) as Pick<SwipeRow, "user_id" | "decision">[];
   const links = (linksResult.data ?? []) as LinkRow[];
   const recentSwipes = (recentSwipesResult.data ?? []) as SwipeRow[];
+  const weeklyAcceptedSwipes = (weeklyAcceptedSwipesResult.data ?? []) as Array<{
+    user_id: string;
+    movie_id: string;
+  }>;
+  const weeklyRanks = rankMoviesByWeeklyLikes(
+    weeklyAcceptedSwipes.map((row) => ({
+      movieId: row.movie_id,
+      userId: row.user_id,
+    })),
+    WEEKLY_TOP_MOVIES_LIMIT,
+  );
   let recentTickets: TicketRow[] = [];
   let openTicketsCount = 0;
   let ticketsUnavailable = false;
@@ -301,10 +352,18 @@ export async function POST(request: NextRequest) {
     recentTickets = (recentTicketsResult.data ?? []) as TicketRow[];
   }
 
-  const movieIds = Array.from(new Set(recentSwipes.map((swipe) => swipe.movie_id)));
+  const movieIds = Array.from(
+    new Set([
+      ...recentSwipes.map((swipe) => swipe.movie_id),
+      ...weeklyRanks.map((row) => row.movieId),
+    ]),
+  );
   const movieTitlesResult =
     movieIds.length > 0
-      ? await supabaseAdmin.from("movies").select("id, title").in("id", movieIds)
+      ? await supabaseAdmin
+          .from("movies")
+          .select("id, title, release_year, poster_image_url")
+          .in("id", movieIds)
       : { data: [] as MovieRow[], error: null };
 
   if (movieTitlesResult.error) {
@@ -390,6 +449,17 @@ export async function POST(request: NextRequest) {
   const proUsers = userRows.filter(
     (row) => row.effectiveSubscriptionTier === "pro",
   ).length;
+  const weeklyUniqueLikers = new Set(weeklyAcceptedSwipes.map((row) => row.user_id)).size;
+  const weeklyTopMovies = weeklyRanks.map((row) => {
+    const movie = movieById.get(row.movieId);
+    return {
+      movieId: row.movieId,
+      title: movie?.title ?? row.movieId,
+      year: movie?.release_year ?? null,
+      posterImageUrl: movie?.poster_image_url ?? null,
+      likeCount: row.likeCount,
+    };
+  });
 
   void logSecurityAudit({
     action: "admin_dashboard_view",
@@ -418,6 +488,13 @@ export async function POST(request: NextRequest) {
       },
       ticketsUnavailable,
       userRows,
+      weekly: {
+        weekStart: weekStartIso,
+        weekEnd: weekRange.end.toISOString(),
+        likeCount: weeklyAcceptedSwipes.length,
+        uniqueLikers: weeklyUniqueLikers,
+        movies: weeklyTopMovies,
+      },
       recentSwipes: recentSwipes.map((swipe) => ({
         userId: swipe.user_id,
         userName: profileById.get(swipe.user_id)?.full_name ?? swipe.user_id,

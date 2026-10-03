@@ -42,6 +42,22 @@ type DashboardSwipeRow = {
   createdAt: string;
 };
 
+type WeeklyTopMovieRow = {
+  movieId: string;
+  title: string;
+  year: number | null;
+  posterImageUrl: string | null;
+  likeCount: number;
+};
+
+type WeeklyDashboard = {
+  weekStart: string;
+  weekEnd: string;
+  likeCount: number;
+  uniqueLikers: number;
+  movies: WeeklyTopMovieRow[];
+};
+
 type DashboardTicketRow = {
   id: string;
   userId: string;
@@ -63,9 +79,10 @@ type DashboardPayload = {
   recentSwipes: DashboardSwipeRow[];
   tickets: DashboardTicketRow[];
   ticketsUnavailable?: boolean;
+  weekly?: WeeklyDashboard;
 };
 
-type AdminTab = "overview" | "tickets" | "users" | "swipes" | "subscriptions";
+type AdminTab = "overview" | "week" | "tickets" | "users" | "swipes" | "subscriptions";
 type TicketManageStatus = "open" | "under_review" | "closed";
 
 type AdminGate = "booting" | "sign_in" | "forbidden" | "ready";
@@ -623,6 +640,9 @@ export default function AdminDesktopPage() {
   const recentSwipes = dashboard?.recentSwipes ?? [];
   const recentTickets = dashboard?.tickets ?? [];
   const ticketsUnavailable = dashboard?.ticketsUnavailable ?? false;
+  const weekly = dashboard?.weekly;
+  const weeklyMovies = weekly?.movies ?? [];
+  const weeklyTopMovie = weeklyMovies[0] ?? null;
   const previewTickets = recentTickets.slice(0, 6);
 
   const ticketPriorityLabel = useMemo(
@@ -648,6 +668,7 @@ export default function AdminDesktopPage() {
     () =>
       [
         { id: "overview" as const, label: "Overview" },
+        { id: "week" as const, label: "Week" },
         { id: "tickets" as const, label: "Tickets" },
         { id: "users" as const, label: "Users" },
         { id: "swipes" as const, label: "Swipes" },
@@ -1264,6 +1285,123 @@ export default function AdminDesktopPage() {
                                 Open
                               </button>
                             </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </section>
+          </>
+        ) : null}
+
+        {activeTab === "week" ? (
+          <>
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              <StatCard label="Likes this week" value={weekly?.likeCount ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="People who liked" value={weekly?.uniqueLikers ?? 0} isDarkMode={isDarkMode} />
+              <StatCard label="Titles liked" value={weeklyMovies.length} isDarkMode={isDarkMode} />
+            </div>
+
+            <section className={`mb-4 overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
+              <div
+                className={`border-b px-4 py-3 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200"
+                }`}
+              >
+                <h2 className="text-base font-semibold">Most liked this week</h2>
+                <p className={`mt-1 text-xs ${softText}`}>
+                  Counted from unique users who accepted a title since Monday 00:00 UTC
+                  {weekly?.weekStart
+                    ? ` (${new Date(weekly.weekStart).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })} – ${new Date(weekly.weekEnd).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })})`
+                    : ""}
+                  .
+                </p>
+              </div>
+              {weeklyTopMovie ? (
+                <div className="flex items-center gap-4 px-4 py-4">
+                  {weeklyTopMovie.posterImageUrl ? (
+                    <img
+                      src={weeklyTopMovie.posterImageUrl}
+                      alt=""
+                      className="h-24 w-16 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`flex h-24 w-16 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
+                        isDarkMode ? "bg-white/10 text-slate-400" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      No art
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${softText}`}>#1 this week</p>
+                    <p className="mt-0.5 truncate text-lg font-semibold">
+                      {weeklyTopMovie.title}
+                      {weeklyTopMovie.year ? ` (${weeklyTopMovie.year})` : ""}
+                    </p>
+                    <p className={`mt-1 text-sm ${softText}`}>
+                      {weeklyTopMovie.likeCount} {weeklyTopMovie.likeCount === 1 ? "user liked" : "users liked"} this
+                      title
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <AdminEmpty softText={softText}>No likes recorded this week yet.</AdminEmpty>
+              )}
+            </section>
+
+            <section className={`overflow-hidden rounded-[var(--radius-xl)] border ${glassPanel}`}>
+              <div
+                className={`border-b px-4 py-3 ${
+                  isDarkMode ? "border-white/10" : "border-slate-200"
+                }`}
+              >
+                <h2 className="text-base font-semibold">Weekly ranking</h2>
+              </div>
+              {weeklyMovies.length === 0 ? (
+                <AdminEmpty softText={softText}>No liked titles to rank this week.</AdminEmpty>
+              ) : (
+                <>
+                  <div className={`md:hidden divide-y ${isDarkMode ? "divide-white/10" : "divide-slate-200"}`}>
+                    {weeklyMovies.map((movie, index) => (
+                      <div key={movie.movieId} className="flex items-center gap-3 px-4 py-3">
+                        <span className={`w-6 shrink-0 text-sm font-semibold ${softText}`}>{index + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{movie.title}</p>
+                          <p className={`text-xs ${softText}`}>
+                            {movie.likeCount} {movie.likeCount === 1 ? "like" : "likes"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
+                    <table className="min-w-full text-sm">
+                      <thead className={theadClass}>
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">Rank</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Movie</th>
+                          <th className="px-4 py-2.5 text-right font-medium">User likes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weeklyMovies.map((movie, index) => (
+                          <tr key={movie.movieId} className={`border-t ${rowBorder}`}>
+                            <td className={`px-4 py-2.5 ${softText}`}>{index + 1}</td>
+                            <td className="px-4 py-2.5 font-medium">
+                              {movie.title}
+                              {movie.year ? ` (${movie.year})` : ""}
+                            </td>
+                            <td className="px-4 py-2.5 text-right">{movie.likeCount}</td>
                           </tr>
                         ))}
                       </tbody>
