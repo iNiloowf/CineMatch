@@ -11,6 +11,8 @@ export type DiscoverOnboardingModalProps = {
   currentUserId: string | null;
   isReady: boolean;
   isSyncingAccountData: boolean;
+  /** False until this login has loaded account onboarding from the server (or local completion). */
+  isOnboardingStatusKnown: boolean;
   isOnboardingComplete: boolean;
   isDarkMode: boolean;
   onboardingPreferences: {
@@ -33,6 +35,7 @@ export function DiscoverOnboardingModal({
   currentUserId,
   isReady,
   isSyncingAccountData,
+  isOnboardingStatusKnown,
   isOnboardingComplete,
   isDarkMode,
   onboardingPreferences,
@@ -56,6 +59,7 @@ export function DiscoverOnboardingModal({
   const canEnterFlow =
     Boolean(currentUserId) &&
     isReady &&
+    isOnboardingStatusKnown &&
     !isSyncingAccountData &&
     !isOnboardingComplete;
   const open =

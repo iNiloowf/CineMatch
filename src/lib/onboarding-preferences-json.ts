@@ -46,3 +46,15 @@ export function parseOnboardingPreferencesFromJson(
     completedAt,
   };
 }
+
+/** Auth `user_metadata` copy so a second device knows onboarding already finished. */
+export function readOnboardingFromUserMetadata(
+  metadata: unknown,
+): OnboardingPreferences | null {
+  if (!metadata || typeof metadata !== "object") {
+    return null;
+  }
+  return parseOnboardingPreferencesFromJson(
+    (metadata as Record<string, unknown>).onboarding_preferences,
+  );
+}

@@ -53,6 +53,7 @@ export type DiscoverPageContentProps = {
     completedAt: string | null;
   };
   isOnboardingComplete: boolean;
+  isOnboardingStatusKnown: boolean;
   isReady: boolean;
   isSyncingAccountData: boolean;
   completeOnboarding: (payload: {
@@ -92,6 +93,7 @@ export function DiscoverPage1Content({
   logout,
   onboardingPreferences,
   isOnboardingComplete,
+  isOnboardingStatusKnown,
   isReady,
   isSyncingAccountData,
   completeOnboarding,
@@ -912,6 +914,7 @@ export function DiscoverPage1Content({
         currentUserId={currentUserId}
         isReady={isReady}
         isSyncingAccountData={isSyncingAccountData}
+        isOnboardingStatusKnown={isOnboardingStatusKnown}
         isOnboardingComplete={isOnboardingComplete}
         isDarkMode={isDarkMode}
         onboardingPreferences={onboardingPreferences}

@@ -57,7 +57,10 @@ import {
 import { fetchAccountSyncFromBrowser } from "@/lib/account-sync/fetch-from-browser";
 import { sanitizeAccountSyncPayloadForClient } from "@/lib/account-sync/sanitize-payload";
 import { isMissingOptionalSettingsColumnError } from "@/lib/account-sync/settings-fetch";
-import { parseOnboardingPreferencesFromJson } from "@/lib/onboarding-preferences-json";
+import {
+  parseOnboardingPreferencesFromJson,
+  readOnboardingFromUserMetadata,
+} from "@/lib/onboarding-preferences-json";
 import {
   getStoredAccountSnapshot,
   persistAccountSnapshot,
@@ -130,6 +133,8 @@ type AppStateContextValue = {
   currentUser: User | null;
   onboardingPreferences: OnboardingPreferences;
   isOnboardingComplete: boolean;
+  /** False while this login is still waiting to learn if onboarding was already finished. */
+  isOnboardingStatusKnown: boolean;
   isDarkMode: boolean;
   isReady: boolean;
   isSyncingAccountData: boolean;
@@ -1080,6 +1085,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark";
   });
+  const [onboardingSyncUserId, setOnboardingSyncUserId] = useState<string | null>(null);
   const [onboardingPreferences, setOnboardingPreferences] =
     useState<OnboardingPreferences>(() => {
       if (typeof window === "undefined") {
@@ -1123,6 +1129,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const friendLinksBaselineRef = useRef(false);
   const isDarkMode = preferredDarkMode;
   const isOnboardingComplete = Boolean(onboardingPreferences.completedAt);
+  const isOnboardingStatusKnown =
+    !isSupabaseConfigured() ||
+    isOnboardingComplete ||
+    (currentUserId != null && onboardingSyncUserId === currentUserId);
   const currentSettings = currentUserId ? data.settings[currentUserId] : null;
   const subscriptionTier: SubscriptionTier = currentSettings?.subscriptionTier ?? "free";
   const effectiveSubscriptionTier: SubscriptionTier =
@@ -1161,15 +1171,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!currentUserId) {
-      queueMicrotask(() => {
-        setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
-      });
+      setOnboardingSyncUserId(null);
+      setOnboardingPreferences({ ...DEFAULT_ONBOARDING_PREFERENCES });
       return;
     }
 
-    queueMicrotask(() => {
-      setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
-    });
+    setOnboardingSyncUserId(null);
+    setOnboardingPreferences(getStoredOnboardingPreferences(currentUserId));
   }, [currentUserId]);
 
   const applyHydratedAccountPayload = (
@@ -1339,12 +1347,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const serverOnboarding = parseOnboardingPreferencesFromJson(
       safePayload.settings?.onboarding_preferences,
     );
-    if (serverOnboarding) {
-      queueMicrotask(() => {
+    queueMicrotask(() => {
+      if (serverOnboarding) {
         setOnboardingPreferences(serverOnboarding);
         persistOnboardingPreferences(activeUserId, serverOnboarding);
-      });
-    }
+      }
+      setOnboardingSyncUserId(activeUserId);
+    });
 
     if (safePayload.settings) {
       const dbDarkMode = mapSettingsRow(safePayload.settings).darkMode;
@@ -1874,10 +1883,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const supabaseClient = supabase;
     const activeUserId = currentUserId;
+    setIsSyncingAccountData(true);
 
     async function loadSupabaseAppData() {
       await ensureAuthSessionMirrorLoaded();
-      setIsSyncingAccountData(true);
       setAccountSyncError(null);
       const sessionResult = await supabaseClient.auth.getSession();
       const storedAuthSession = getStoredAuthSession();
@@ -1933,6 +1942,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        setOnboardingSyncUserId(activeUserId);
         setAccountSyncError(
           "No response from the server after several tries. Check your connection, then tap Retry.",
         );
@@ -2003,6 +2013,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        setOnboardingSyncUserId(activeUserId);
         setAccountSyncError(
           "Couldn’t load your profile and picks from the server. Check Wi-Fi or mobile data, then Retry.",
         );
@@ -2011,6 +2022,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       if (!active) {
         return;
+      }
+
+      if (!parseOnboardingPreferencesFromJson(payload.settings?.onboarding_preferences)) {
+        const localOnboarding = getStoredOnboardingPreferences(activeUserId);
+        const authUser = await supabaseClient.auth.getUser();
+        const fromMetadata =
+          authUser.data.user?.id === activeUserId
+            ? readOnboardingFromUserMetadata(authUser.data.user.user_metadata)
+            : null;
+        const recovered = localOnboarding.completedAt ? localOnboarding : fromMetadata;
+        if (recovered?.completedAt) {
+          setOnboardingPreferences(recovered);
+          persistOnboardingPreferences(activeUserId, recovered);
+          void supabaseClient.auth.updateUser({
+            data: { onboarding_preferences: recovered },
+          });
+          void supabaseClient
+            .from("settings")
+            .update({
+              onboarding_preferences: recovered,
+              updated_at: new Date().toISOString(),
+            } as never)
+            .eq("user_id", activeUserId);
+        }
       }
 
       applyHydratedAccountPayload(activeUserId, payload);
@@ -3752,6 +3787,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     setOnboardingPreferences(completedPreferences);
     persistOnboardingPreferences(currentUserId, completedPreferences);
+    setOnboardingSyncUserId(currentUserId);
 
     const supabase = getSupabaseBrowserClient();
     if (supabase && isSupabaseConfigured()) {
@@ -3759,6 +3795,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         if (!(await ensureSupabaseBrowserSession(currentUserId))) {
           return;
         }
+        await supabase.auth.updateUser({
+          data: { onboarding_preferences: completedPreferences },
+        });
         const up = await supabase
           .from("settings")
           .update({
@@ -3799,6 +3838,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     if (supabase && isSupabaseConfigured()) {
       void (async () => {
+        await supabase.auth.updateUser({
+          data: { onboarding_preferences: null },
+        });
         const up = await supabase
           .from("settings")
           .update({
@@ -3906,6 +3948,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         onboardingPreferences,
         isOnboardingComplete,
+        isOnboardingStatusKnown,
         isDarkMode,
         isReady,
         isSyncingAccountData,

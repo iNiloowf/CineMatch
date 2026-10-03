@@ -7,6 +7,7 @@ import { SurfaceCard } from "@/components/surface-card";
 import { LegalPolicyModal } from "@/components/legal-policy-modal";
 import { useAppState } from "@/lib/app-state";
 import { loginFormSchema, MIN_AUTH_PASSWORD_LEN } from "@/lib/auth-form-schemas";
+import { hasSeenFeatureIntro } from "@/lib/feature-intro-seen";
 import { readSignupPendingEmail } from "@/lib/signup-pending-email";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -145,6 +146,16 @@ export default function SignInPage() {
     });
     window.location.replace(new URL("/discover", window.location.origin).toString());
     console.warn("[auth-debug][signin-page] redirect attempt issued");
+  }, [currentUserId, isReady]);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || !isReady || currentUserId) {
+      return;
+    }
+    if (authCallbackParamsOnAuthLanding() || hasSeenFeatureIntro()) {
+      return;
+    }
+    window.location.replace(new URL("/features/discover", window.location.origin).toString());
   }, [currentUserId, isReady]);
 
   useEffect(() => {
